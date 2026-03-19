@@ -136,13 +136,20 @@ export default function UsersPage() {
     };
 
     const groupedUsers = users.reduce((acc: any, user: any) => {
-        // Normalize location: trim and capitalize first letter to handle API inconsistency
-        let rawLocation = (user.officeLocation || '').trim();
-        let location = rawLocation ? (rawLocation.charAt(0).toUpperCase() + rawLocation.slice(1)) : 'Unassigned / Remote';
-        
-        // Custom Rule: Partner domain users go into Eastern Region Sub Contractors
-        if (user.userPrincipalName?.toLowerCase().endsWith('@partner.eqncs.com')) {
+        let location;
+
+        // Priority 1: Disabled Users (always grouped together)
+        if (user.accountEnabled === false) {
+            location = 'Disabled Users';
+        } 
+        // Priority 2: Partner domain users
+        else if (user.userPrincipalName?.toLowerCase().endsWith('@partner.eqncs.com')) {
             location = 'Eastern Region Sub Contractors';
+        }
+        // Priority 3: Regular grouping by Office Location
+        else {
+            let rawLocation = (user.officeLocation || '').trim();
+            location = rawLocation ? (rawLocation.charAt(0).toUpperCase() + rawLocation.slice(1)) : 'Unassigned / Remote';
         }
 
         if (!acc[location]) {
@@ -153,6 +160,8 @@ export default function UsersPage() {
     }, {});
 
     const sortedLocations = Object.keys(groupedUsers).sort((a, b) => {
+        if (a === 'Disabled Users') return 1;
+        if (b === 'Disabled Users') return -1;
         if (a === 'Unassigned / Remote') return 1;
         if (b === 'Unassigned / Remote') return -1;
         return a.localeCompare(b);
