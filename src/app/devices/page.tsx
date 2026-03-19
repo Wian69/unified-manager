@@ -123,12 +123,12 @@ export default function DevicesPage() {
                 </div>
             </div>
 
-            {/* Device Details Slide-out Panel */}
+            {/* Device Details Full Page Overlay */}
             {selectedDeviceId && (
-                <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/40 backdrop-blur-sm transition-opacity">
-                    <div className="w-full max-w-2xl h-full bg-[#0b0f19] border-l border-slate-800 flex flex-col shadow-2xl animate-in slide-in-from-right duration-300">
-                        <div className="flex justify-between items-center p-6 border-b border-slate-800 shrink-0 bg-[#0b0f19]">
-                            <h2 className="text-xl font-bold text-white">Device Details</h2>
+                <div className="fixed inset-0 lg:left-64 z-50 bg-[#0b0f19] flex flex-col animate-in fade-in duration-300 overflow-y-auto">
+                    <div className="w-full max-w-5xl mx-auto flex flex-col min-h-full">
+                        <div className="flex justify-between items-center p-8 border-b border-slate-800/60 shrink-0">
+                            <h2 className="text-3xl font-bold text-white">Device Details</h2>
                             <button onClick={() => setSelectedDeviceId(null)} className="text-slate-400 hover:text-white transition-colors">
                                 <X size={24} />
                             </button>

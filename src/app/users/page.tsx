@@ -160,10 +160,10 @@ export default function UsersPage() {
             </div>
 
             {selectedUserId && (
-                <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/40 backdrop-blur-sm transition-opacity">
-                    <div className="w-full max-w-2xl h-full bg-[#0b0f19] border-l border-slate-800 flex flex-col shadow-2xl animate-in slide-in-from-right duration-300">
-                        <div className="flex justify-between items-center p-6 border-b border-slate-800 shrink-0 bg-[#0b0f19]">
-                            <h2 className="text-xl font-bold text-white">Edit User Profile</h2>
+                <div className="fixed inset-0 lg:left-64 z-50 bg-[#0b0f19] flex flex-col animate-in fade-in duration-300 overflow-y-auto">
+                    <div className="w-full max-w-5xl mx-auto flex flex-col min-h-full">
+                        <div className="flex justify-between items-center p-8 border-b border-slate-800/60 shrink-0">
+                            <h2 className="text-3xl font-bold text-white">Edit User Profile</h2>
                             <button onClick={() => setSelectedUserId(null)} className="text-slate-400 hover:text-white transition-colors">
                                 <X size={24} />
                             </button>
@@ -227,11 +227,11 @@ export default function UsersPage() {
                             ) : null}
                         </div>
 
-                        <div className="p-6 border-t border-slate-800 bg-[#0b0f19] shrink-0">
+                        <div className="p-8 border-t border-slate-800/60 mt-auto shrink-0 flex justify-end">
                             <button 
                                 onClick={handleSave}
                                 disabled={saving || loadingDetails}
-                                className="w-full flex justify-center items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-medium py-3 px-4 rounded-xl transition-colors shadow-lg shadow-purple-900/20 disabled:opacity-50"
+                                className="w-full md:w-auto flex justify-center items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-medium py-3 px-8 rounded-xl transition-colors shadow-lg shadow-purple-900/20 disabled:opacity-50"
                             >
                                 {saving ? <RefreshCw className="animate-spin" size={20} /> : <Save size={20} />}
                                 {saving ? "Syncing to Entra ID..." : "Save Changes"}

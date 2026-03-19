@@ -9,12 +9,20 @@ export async function GET() {
         const client = getGraphClient();
         console.log('[API] Fetched graph client, calling /deviceManagement/managedDevices...');
 
-        // Fetch managed devices from Intune
-        const devicesResponse = await client.api('/deviceManagement/managedDevices')
-            .select('id,deviceName,operatingSystem,complianceState,lastSyncDateTime,serialNumber')
+        let allDevices: any[] = [];
+        let response = await client.api('/deviceManagement/managedDevices')
+            .select('id,deviceName,operatingSystem,lastSyncDateTime,complianceState,serialNumber')
+            .top(999)
             .get();
+        
+        allDevices = allDevices.concat(response.value || []);
 
-        const devices = devicesResponse.value || [];
+        while (response['@odata.nextLink']) {
+            response = await client.api(response['@odata.nextLink']).get();
+            allDevices = allDevices.concat(response.value || []);
+        }
+
+        const devices = allDevices;
         console.log(`[API] Successfully fetched ${devices.length} devices.`);
 
         // Sort alphabetically by deviceName

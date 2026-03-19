@@ -7,12 +7,20 @@ export async function GET() {
     try {
         const client = getGraphClient();
         
-        // Fetch users from Entra ID
-        const usersResponse = await client.api('/users')
+        let allUsers: any[] = [];
+        let response = await client.api('/users')
             .select('id,displayName,userPrincipalName,jobTitle,department,accountEnabled')
+            .top(999)
             .get();
+            
+        allUsers = allUsers.concat(response.value || []);
+        
+        while (response['@odata.nextLink']) {
+            response = await client.api(response['@odata.nextLink']).get();
+            allUsers = allUsers.concat(response.value || []);
+        }
 
-        const users = usersResponse.value || [];
+        const users = allUsers;
 
         // Sort alphabetically by displayName
         users.sort((a: any, b: any) => (a.displayName || '').localeCompare(b.displayName || ''));
