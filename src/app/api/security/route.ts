@@ -10,11 +10,14 @@ export async function GET() {
         let recommendations = [];
         let recentAlerts = [];
 
+        const errors: Record<string, string> = {};
+
         // 1. Fetch Secure Score
         try {
             const scoreResponse = await client.api('/security/secureScores').top(1).get();
             secureScore = scoreResponse.value?.[0] || null;
         } catch (e: any) {
+            errors.secureScore = e.message;
             console.warn('[API] Secure Score fetch failed:', e.message);
         }
 
@@ -23,6 +26,7 @@ export async function GET() {
             const recommendationsResponse = await client.api('/security/vulnerabilityManagement/recommendations').top(20).get();
             recommendations = recommendationsResponse.value || [];
         } catch (e: any) {
+            errors.recommendations = e.message;
             console.warn('[API] TVM Recommendations fetch failed:', e.message);
         }
 
@@ -34,6 +38,7 @@ export async function GET() {
                 .get();
             vulnerabilities = vulnerabilitiesResponse.value || [];
         } catch (e: any) {
+            errors.vulnerabilities = e.message;
             console.warn('[API] TVM Vulnerabilities fetch failed:', e.message);
         }
 
@@ -45,6 +50,7 @@ export async function GET() {
                 .get();
             recentAlerts = alertsResponse.value || [];
         } catch (e: any) {
+            errors.alerts = e.message;
             console.warn('[API] Alerts fetch failed:', e.message);
         }
 
@@ -52,7 +58,8 @@ export async function GET() {
             secureScore,
             recommendations,
             vulnerabilities,
-            recentAlerts
+            recentAlerts,
+            errors
         });
     } catch (error: any) {
         console.error('[API] Graph API Error (Security):', error.message);
