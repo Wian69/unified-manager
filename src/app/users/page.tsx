@@ -30,7 +30,7 @@ export default function UsersPage() {
     const fetchUsers = async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/users', { cache: 'no-store' });
+            const res = await fetch(`/api/users?t=${Date.now()}`, { cache: 'no-store' });
             const data = await res.json();
             if (data.users) {
                 setUsers(data.users);
@@ -50,7 +50,7 @@ export default function UsersPage() {
         setSelectedUserId(id);
         setLoadingDetails(true);
         try {
-            const res = await fetch(`/api/users/${id}`, { cache: 'no-store' });
+            const res = await fetch(`/api/users/${id}?t=${Date.now()}`, { cache: 'no-store' });
             const data = await res.json();
             setSelectedUser(data);
             setEditForm({
@@ -205,6 +205,7 @@ export default function UsersPage() {
                                                     <th className="px-6 py-4">Display Name</th>
                                                     <th className="px-6 py-4">Principal Name</th>
                                                     <th className="px-6 py-4">Job Title</th>
+                                                    <th className="px-6 py-4">Office</th>
                                                     <th className="px-6 py-4">Status</th>
                                                 </tr>
                                             </thead>
@@ -218,6 +219,7 @@ export default function UsersPage() {
                                                         <td className="px-6 py-4 font-medium text-slate-200">{u.displayName || 'Unknown'}</td>
                                                         <td className="px-6 py-4 text-slate-400">{u.userPrincipalName || 'N/A'}</td>
                                                         <td className="px-6 py-4">{u.jobTitle || 'N/A'}</td>
+                                                        <td className="px-6 py-4 text-slate-400 italic">{u.officeLocation || 'N/A'}</td>
                                                         <td className="px-6 py-4">
                                                             <span className={`px-2 py-1 text-xs font-semibold rounded-full ${u.accountEnabled ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
                                                                 {u.accountEnabled ? 'Active' : 'Disabled'}
