@@ -145,14 +145,13 @@ export default function SecurityPage() {
                         <h3 className="text-rose-100 font-bold text-lg">Permission or Data Error</h3>
                         <p className="text-rose-200/70 text-sm mt-1">
                             {error.includes("403") || error.includes("Forbidden") || error.includes("AccessDenied")
-                                ? "Your Azure App Registration is missing the required permissions to view security data. Please add the following 'Application Permissions' in Azure AD and Grant Admin Consent."
+                                ? "Your Azure App Registration is missing the required permissions. Please add the following 'Application Permissions' in Azure AD and Grant Admin Consent."
                                 : error}
                         </p>
                         {(error.includes("403") || error.includes("Forbidden") || error.includes("AccessDenied")) && (
                             <div className="mt-4 flex flex-wrap gap-2 text-[10px] font-black">
-                                <span className="bg-rose-500/20 text-rose-300 px-3 py-1 rounded-md border border-rose-500/30">SecureScore.Read.All</span>
-                                <span className="bg-rose-500/20 text-rose-300 px-3 py-1 rounded-md border border-rose-500/30">SecurityEvents.Read.All</span>
-                                <span className="bg-rose-500/20 text-rose-300 px-3 py-1 rounded-md border border-rose-500/30">DeviceManagementConfiguration.ReadWrite.All</span>
+                                <span className="bg-rose-500/20 text-rose-300 px-3 py-1 rounded-md border border-rose-500/30">SecurityEvents.Read.All (Required for Score & Alerts)</span>
+                                <span className="bg-rose-500/20 text-rose-300 px-3 py-1 rounded-md border border-rose-500/30">DeviceManagementConfiguration.ReadWrite.All (Required for Automation)</span>
                             </div>
                         )}
                     </div>

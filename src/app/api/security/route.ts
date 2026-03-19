@@ -6,27 +6,41 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
     try {
         const client = getGraphClient();
-        
-        // Fetch Secure Score from Microsoft Defender / Security Center
-        const scoreResponse = await client.api('/security/secureScores')
-            .top(1)
-            .get();
+        let secureScore = null;
+        let recommendations = [];
+        let recentAlerts = [];
 
-        // Fetch Security Recommendations (Control Profiles)
-        // These contain the vulnerabilities and remediation steps
-        const recommendationsResponse = await client.api('/security/secureScoreControlProfiles')
-            .get();
+        // 1. Fetch Secure Score
+        try {
+            const scoreResponse = await client.api('/security/secureScores').top(1).get();
+            secureScore = scoreResponse.value?.[0] || null;
+        } catch (e: any) {
+            console.warn('[API] Secure Score fetch failed:', e.message);
+        }
 
-        // Fetch Recent Security Alerts
-        const alertsResponse = await client.api('/security/alerts')
-            .filter("status ne 'resolved'") // Show non-resolved alerts
-            .top(10)
-            .get();
+        // 2. Fetch Security Recommendations
+        try {
+            const recommendationsResponse = await client.api('/security/secureScoreControlProfiles').get();
+            recommendations = recommendationsResponse.value || [];
+        } catch (e: any) {
+            console.warn('[API] Recommendations fetch failed:', e.message);
+        }
+
+        // 3. Fetch Recent Alerts
+        try {
+            const alertsResponse = await client.api('/security/alerts')
+                .top(5)
+                .orderby('eventDateTime desc')
+                .get();
+            recentAlerts = alertsResponse.value || [];
+        } catch (e: any) {
+            console.warn('[API] Alerts fetch failed:', e.message);
+        }
 
         return NextResponse.json({
-            secureScore: scoreResponse.value?.[0] || null,
-            recommendations: recommendationsResponse.value || [],
-            recentAlerts: alertsResponse.value || [],
+            secureScore,
+            recommendations,
+            recentAlerts
         });
     } catch (error: any) {
         console.error('[API] Graph API Error (Security):', error.message);
