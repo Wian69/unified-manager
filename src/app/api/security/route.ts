@@ -21,25 +21,29 @@ export async function GET() {
             console.warn('[API] Secure Score fetch failed:', e.message);
         }
 
-        // 2. Fetch TVM Vulnerability Recommendations
+        // 2. Fetch TVM Vulnerability Recommendations (BETA)
         try {
-            const recommendationsResponse = await client.api('/security/vulnerabilityManagement/recommendations').top(20).get();
+            const recommendationsResponse = await client.api('/security/vulnerabilityManagement/recommendations')
+                .version('beta')
+                .top(20)
+                .get();
             recommendations = recommendationsResponse.value || [];
         } catch (e: any) {
             errors.recommendations = e.message;
-            console.warn('[API] TVM Recommendations fetch failed:', e.message);
+            console.warn('[API] TVM Recommendations fetch failed (Beta):', e.message);
         }
 
-        // 3. Fetch Specific Vulnerabilities (CVE Catalog)
+        // 3. Fetch Specific Vulnerabilities (CVE Catalog) (BETA)
         let vulnerabilities = [];
         try {
             const vulnerabilitiesResponse = await client.api('/security/vulnerabilityManagement/vulnerabilities')
+                .version('beta')
                 .top(20)
                 .get();
             vulnerabilities = vulnerabilitiesResponse.value || [];
         } catch (e: any) {
             errors.vulnerabilities = e.message;
-            console.warn('[API] TVM Vulnerabilities fetch failed:', e.message);
+            console.warn('[API] TVM Vulnerabilities fetch failed (Beta):', e.message);
         }
 
         // 4. Fetch Recent Alerts
