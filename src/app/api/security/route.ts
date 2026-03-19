@@ -18,12 +18,22 @@ export async function GET() {
             console.warn('[API] Secure Score fetch failed:', e.message);
         }
 
-        // 2. Fetch Security Recommendations
+        // 2. Fetch TVM Vulnerability Recommendations (CVEs)
         try {
-            const recommendationsResponse = await client.api('/security/secureScoreControlProfiles').get();
+            // This is the modern Microsoft Graph endpoint for Defender Vulnerability Management
+            const recommendationsResponse = await client.api('/security/vulnerabilityManagement/recommendations')
+                .top(20)
+                .get();
             recommendations = recommendationsResponse.value || [];
         } catch (e: any) {
-            console.warn('[API] Recommendations fetch failed:', e.message);
+            console.warn('[API] TVM Recommendations fetch failed:', e.message);
+            // Fallback to Secure Score recommendations if TVM is not available or licensed
+            try {
+                const ssRecs = await client.api('/security/secureScoreControlProfiles').get();
+                recommendations = ssRecs.value || [];
+            } catch (ssErr: any) {
+                console.warn('[API] Secure Score fallback also failed:', ssErr.message);
+            }
         }
 
         // 3. Fetch Recent Alerts

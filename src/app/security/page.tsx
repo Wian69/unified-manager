@@ -57,8 +57,10 @@ export default function SecurityPage() {
     };
 
     const extractScript = (html: string) => {
+        if (!html) return "# No remediation steps provided by Microsoft.";
         const text = html.replace(/<[^>]*>/g, '\n').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').trim();
-        return `# Remediation Script for Secure Score\n# Source: Microsoft recommendation\n\n${text}\n\n# Note: Please verify the commands above before deployment.`;
+        const cves = deployingRec?.cveIds?.join(', ') || 'No CVE assigned';
+        return `# Remediation Script for Vulnerability: ${deployingRec?.vulnerabilityTitle || deployingRec?.title || 'Unknown'}\n# Associated CVEs: ${cves}\n# Source: Microsoft Defender for Endpoint\n\n${text}\n\n# Note: Please verify the commands above before deployment.`;
     };
 
     const handleDeployClick = (rec: any) => {
@@ -80,7 +82,7 @@ export default function SecurityPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     controlId: deployingRec.id,
-                    title: deployingRec.title,
+                    title: deployingRec.vulnerabilityTitle || deployingRec.title,
                     scriptContent: extractScript(deployingRec.remediationSteps),
                     groupIds: selectedGroups
                 })
@@ -194,9 +196,9 @@ export default function SecurityPage() {
                 {/* Recommendations Card */}
                 <div className="lg:col-span-2 bg-slate-900/40 rounded-2xl border border-slate-800/60 p-6 backdrop-blur-md flex flex-col">
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-xl font-bold text-slate-200">Security Recommendations</h2>
-                        <span className="bg-rose-500/20 text-rose-400 text-xs font-bold px-3 py-1 rounded-full border border-rose-500/30">
-                            {recommendations.length} Gains Available
+                        <h2 className="text-xl font-bold text-slate-200">Security Vulnerabilities</h2>
+                        <span className="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-3 py-1 rounded-full border border-emerald-500/30">
+                            {recommendations.length} Fixes Available
                         </span>
                     </div>
 
@@ -206,40 +208,74 @@ export default function SecurityPage() {
                                 <div key={i} className="h-16 bg-slate-800/20 rounded-xl animate-pulse" />
                             ))
                         ) : recommendations.length > 0 ? (
-                            recommendations.filter((r: any) => r.deprecated !== true).slice(0, 15).map((r: any) => (
+                            recommendations.map((r: any) => (
                                 <div key={r.id} className="bg-slate-800/20 rounded-xl border border-slate-700/50 overflow-hidden">
                                     <button 
                                         onClick={() => setExpandedRec(expandedRec === r.id ? null : r.id)}
                                         className="w-full flex items-center justify-between p-4 text-left hover:bg-slate-700/20 transition-colors"
                                     >
                                         <div className="flex items-center gap-4">
-                                            <div className="p-2 bg-rose-500/10 text-rose-400 rounded-lg">
+                                            <div className={`p-2 rounded-lg ${
+                                                r.severity === 'critical' ? 'bg-rose-500/20 text-rose-400' : 
+                                                r.severity === 'high' ? 'bg-orange-500/20 text-orange-400' :
+                                                'bg-amber-500/20 text-amber-400'
+                                            }`}>
                                                 <AlertTriangle size={20} />
                                             </div>
-                                            <div>
-                                                <p className="font-semibold text-slate-200">{r.title}</p>
-                                                <p className="text-xs text-slate-500">Impact: +{r.maxScore} Max Points</p>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-semibold text-slate-100 truncate">{r.vulnerabilityTitle || r.title}</p>
+                                                <div className="flex gap-2 mt-1">
+                                                    <span className="text-[10px] uppercase font-bold text-slate-500">{r.severity || 'Medium'} Impact</span>
+                                                    {r.exposedDevicesCount > 0 && (
+                                                        <span className="text-[10px] font-bold text-emerald-400">{r.exposedDevicesCount} Devices Impacted</span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
-                                        {expandedRec === r.id ? <ChevronDown size={20} className="text-slate-500" /> : <ChevronRight size={20} className="text-slate-500" />}
+                                        <div className="flex items-center gap-4 px-2">
+                                            <div className="text-right hidden sm:block">
+                                                <p className="text-xs font-bold text-emerald-500">+{r.impactScore || r.maxScore}</p>
+                                                <p className="text-[8px] text-slate-500 uppercase">Score Gain</p>
+                                            </div>
+                                            {expandedRec === r.id ? <ChevronDown size={20} className="text-slate-500" /> : <ChevronRight size={20} className="text-slate-500" />}
+                                        </div>
                                     </button>
                                     
                                     {expandedRec === r.id && (
                                         <div className="p-5 border-t border-slate-700/50 bg-slate-900/20 animate-in slide-in-from-top-2 duration-200">
                                             <div className="flex flex-col gap-4">
+                                                {/* Meta Info */}
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="bg-slate-950/40 p-3 rounded-lg border border-slate-800">
+                                                        <p className="text-[8px] text-slate-500 uppercase font-bold mb-1">Impact Score</p>
+                                                        <p className="text-sm font-bold text-emerald-400">{r.impactScore || r.maxScore}</p>
+                                                    </div>
+                                                    <div className="bg-slate-950/40 p-3 rounded-lg border border-slate-800">
+                                                        <p className="text-[8px] text-slate-500 uppercase font-bold mb-1">CVE Identifiers</p>
+                                                        <div className="flex flex-wrap gap-1">
+                                                            {r.cveIds?.length > 0 ? r.cveIds.slice(0, 3).map((cveId: string) => (
+                                                                <span key={cveId} className="text-[9px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded border border-slate-700">{cveId}</span>
+                                                            )) : <span className="text-[9px] text-slate-600">No CVE assigned</span>}
+                                                            {r.cveIds?.length > 3 && <span className="text-[9px] text-slate-600">+{r.cveIds.length - 3} more</span>}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
                                                 <div>
                                                     <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
                                                         <Info size={14} /> Description
                                                     </h4>
-                                                    <p className="text-sm text-slate-300 leading-relaxed overflow-hidden" dangerouslySetInnerHTML={{ __html: r.description }} />
+                                                    <p className="text-sm text-slate-400 leading-relaxed overflow-hidden" dangerouslySetInnerHTML={{ __html: r.description }} />
                                                 </div>
-                                                <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-700/50">
-                                                    <h4 className="text-xs font-bold text-rose-400 uppercase tracking-widest mb-2">Remediation Steps</h4>
+
+                                                <div className="bg-slate-950/60 p-4 rounded-xl border border-emerald-500/20">
+                                                    <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-2">Remediation Steps</h4>
                                                     <div className="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed" dangerouslySetInnerHTML={{ __html: r.remediationSteps }} />
                                                 </div>
+
                                                 <button 
                                                     onClick={() => handleDeployClick(r)}
-                                                    className="w-full flex items-center justify-center gap-2 bg-rose-500 hover:bg-rose-400 text-white font-bold py-3 rounded-xl transition-all shadow-lg active:scale-95"
+                                                    className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg active:scale-95 shadow-emerald-900/20"
                                                 >
                                                     <Rocket size={18} />
                                                     Deploy remediation to Intune
