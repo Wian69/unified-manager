@@ -6,8 +6,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         const id = (await params).id;
         const client = getGraphClient();
         
+        const selectFields = [
+            'id','displayName','givenName','surname','userPrincipalName','userType','createdDateTime',
+            'jobTitle','companyName','department','employeeId','employeeType','employeeHireDate',
+            'officeLocation','streetAddress','city','state','postalCode','country',
+            'businessPhones','mobilePhone','mail','mailNickname','accountEnabled'
+        ].join(',');
+
         const userResponse = await client.api(`/users/${id}`)
-            .select('id,displayName,userPrincipalName,jobTitle,department,mobilePhone,officeLocation,businessPhones,accountEnabled')
+            .select(selectFields)
             .get();
 
         return NextResponse.json(userResponse);
@@ -26,13 +33,24 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         const body = await request.json();
         const client = getGraphClient();
         
-        // Allowed fields to update
+        // Ensure we only pass valid string/boolean fields that are meant to be updated
         const updateData: any = {};
-        if (body.displayName !== undefined) updateData.displayName = body.displayName;
-        if (body.jobTitle !== undefined) updateData.jobTitle = body.jobTitle;
-        if (body.department !== undefined) updateData.department = body.department;
-        if (body.mobilePhone !== undefined) updateData.mobilePhone = body.mobilePhone;
-        if (body.officeLocation !== undefined) updateData.officeLocation = body.officeLocation;
+        const updatableFields = [
+            'displayName','givenName','surname','jobTitle','companyName','department',
+            'officeLocation','streetAddress','city','state','postalCode','country',
+            'mobilePhone'
+        ];
+
+        updatableFields.forEach(field => {
+            if (body[field] !== undefined) {
+                updateData[field] = body[field];
+            }
+        });
+
+        // Special handling for businessPhones which is an array of strings in Graph API
+        if (body.businessPhones !== undefined) {
+            updateData.businessPhones = body.businessPhones ? [body.businessPhones] : [];
+        }
 
         await client.api(`/users/${id}`).update(updateData);
 

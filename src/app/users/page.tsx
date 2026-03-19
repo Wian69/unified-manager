@@ -41,10 +41,19 @@ export default function UsersPage() {
             setSelectedUser(data);
             setEditForm({
                 displayName: data.displayName || '',
+                givenName: data.givenName || '',
+                surname: data.surname || '',
                 jobTitle: data.jobTitle || '',
+                companyName: data.companyName || '',
                 department: data.department || '',
+                officeLocation: data.officeLocation || '',
+                streetAddress: data.streetAddress || '',
+                city: data.city || '',
+                state: data.state || '',
+                postalCode: data.postalCode || '',
+                country: data.country || '',
                 mobilePhone: data.mobilePhone || '',
-                officeLocation: data.officeLocation || ''
+                businessPhones: data.businessPhones && data.businessPhones.length > 0 ? data.businessPhones[0] : ''
             });
         } catch (error) {
             console.error("Failed to fetch user details", error);
@@ -62,7 +71,6 @@ export default function UsersPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(editForm),
             });
-            // Refresh list after save and close modal
             await fetchUsers();
             setSelectedUserId(null);
         } catch (error) {
@@ -72,6 +80,19 @@ export default function UsersPage() {
             setSaving(false);
         }
     };
+
+    const InputField = ({ label, field, readOnly = false }: { label: string, field: string, readOnly?: boolean }) => (
+        <div>
+            <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">{label}</label>
+            <input 
+                type="text" 
+                value={readOnly ? (selectedUser?.[field] || '') : (editForm[field] || '')} 
+                onChange={(e) => !readOnly && setEditForm({...editForm, [field]: e.target.value})}
+                readOnly={readOnly}
+                className={`w-full bg-slate-900 border ${readOnly ? 'border-slate-800 text-slate-500 cursor-not-allowed' : 'border-slate-700 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500'} rounded-lg px-4 py-2.5 outline-none transition-all`}
+            />
+        </div>
+    );
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500 relative">
@@ -109,9 +130,7 @@ export default function UsersPage() {
                         <tbody className="divide-y divide-slate-800/60">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={4} className="px-6 py-8 text-center text-slate-500">
-                                        Loading users...
-                                    </td>
+                                    <td colSpan={4} className="px-6 py-8 text-center text-slate-500">Loading users...</td>
                                 </tr>
                             ) : users.length > 0 ? (
                                 users.map((u: any) => (
@@ -132,9 +151,7 @@ export default function UsersPage() {
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan={4} className="px-6 py-8 text-center text-slate-500">
-                                        No users found.
-                                    </td>
+                                    <td colSpan={4} className="px-6 py-8 text-center text-slate-500">No users found.</td>
                                 </tr>
                             )}
                         </tbody>
@@ -142,86 +159,82 @@ export default function UsersPage() {
                 </div>
             </div>
 
-            {/* Edit Modal Overlay */}
             {selectedUserId && (
                 <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/40 backdrop-blur-sm transition-opacity">
-                    <div className="w-full max-w-md h-full bg-[#0b0f19] border-l border-slate-800 flex flex-col shadow-2xl animate-in slide-in-from-right duration-300">
-                        <div className="flex justify-between items-center p-6 border-b border-slate-800">
-                            <h2 className="text-xl font-bold text-white">Edit User</h2>
+                    <div className="w-full max-w-2xl h-full bg-[#0b0f19] border-l border-slate-800 flex flex-col shadow-2xl animate-in slide-in-from-right duration-300">
+                        <div className="flex justify-between items-center p-6 border-b border-slate-800 shrink-0 bg-[#0b0f19]">
+                            <h2 className="text-xl font-bold text-white">Edit User Profile</h2>
                             <button onClick={() => setSelectedUserId(null)} className="text-slate-400 hover:text-white transition-colors">
                                 <X size={24} />
                             </button>
                         </div>
                         
-                        <div className="p-6 flex-1 overflow-y-auto">
+                        <div className="p-6 flex-1 overflow-y-auto w-full">
                             {loadingDetails ? (
                                 <div className="flex flex-col items-center justify-center h-40 text-slate-500 gap-3">
                                     <RefreshCw className="animate-spin text-purple-400" size={32} />
-                                    Loading Entra ID details...
+                                    Loading advanced Entra ID details...
                                 </div>
                             ) : selectedUser ? (
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-xs font-medium text-slate-400 uppercase mb-1">Display Name</label>
-                                        <input 
-                                            type="text" 
-                                            value={editForm.displayName} 
-                                            onChange={(e) => setEditForm({...editForm, displayName: e.target.value})}
-                                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-medium text-slate-400 uppercase mb-1">Job Title</label>
-                                        <input 
-                                            type="text" 
-                                            value={editForm.jobTitle} 
-                                            onChange={(e) => setEditForm({...editForm, jobTitle: e.target.value})}
-                                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-all"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-medium text-slate-400 uppercase mb-1">Department</label>
-                                        <input 
-                                            type="text" 
-                                            value={editForm.department} 
-                                            onChange={(e) => setEditForm({...editForm, department: e.target.value})}
-                                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-all"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-medium text-slate-400 uppercase mb-1">Mobile Phone</label>
-                                        <input 
-                                            type="text" 
-                                            value={editForm.mobilePhone} 
-                                            onChange={(e) => setEditForm({...editForm, mobilePhone: e.target.value})}
-                                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-all"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-medium text-slate-400 uppercase mb-1">Office Location</label>
-                                        <input 
-                                            type="text" 
-                                            value={editForm.officeLocation} 
-                                            onChange={(e) => setEditForm({...editForm, officeLocation: e.target.value})}
-                                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-all"
-                                        />
-                                    </div>
-                                    <div className="mt-6 p-4 bg-slate-900/50 rounded-xl border border-slate-800">
-                                        <p className="text-xs text-slate-400 break-all"><span className="font-semibold text-slate-300">UPN:</span> {selectedUser.userPrincipalName}</p>
-                                        <p className="text-xs text-slate-400 break-all mt-1"><span className="font-semibold text-slate-300">ID:</span> {selectedUser.id}</p>
-                                    </div>
+                                <div className="space-y-8 pb-10">
+                                    {/* Identity Section */}
+                                    <section>
+                                        <h3 className="text-lg font-bold text-slate-200 mb-4 border-b border-slate-800 pb-2">Identity</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <InputField label="Display Name" field="displayName" />
+                                            <InputField label="First Name" field="givenName" />
+                                            <InputField label="Last Name" field="surname" />
+                                            <InputField label="User Principal Name" field="userPrincipalName" readOnly />
+                                            <InputField label="Object ID" field="id" readOnly />
+                                            <InputField label="User Type" field="userType" readOnly />
+                                            <InputField label="Created Date Time" field="createdDateTime" readOnly />
+                                            <InputField label="Mail Nickname" field="mailNickname" readOnly />
+                                        </div>
+                                    </section>
+
+                                    {/* Job Information Section */}
+                                    <section>
+                                        <h3 className="text-lg font-bold text-slate-200 mb-4 border-b border-slate-800 pb-2">Job Information</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <InputField label="Job Title" field="jobTitle" />
+                                            <InputField label="Company Name" field="companyName" />
+                                            <InputField label="Department" field="department" />
+                                            <InputField label="Office Location" field="officeLocation" />
+                                            <InputField label="Employee Type" field="employeeType" readOnly />
+                                            <InputField label="Employee Hire Date" field="employeeHireDate" readOnly />
+                                        </div>
+                                    </section>
+
+                                    {/* Contact Information Section */}
+                                    <section>
+                                        <h3 className="text-lg font-bold text-slate-200 mb-4 border-b border-slate-800 pb-2">Contact Information</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <InputField label="Mobile Phone" field="mobilePhone" />
+                                            <InputField label="Business Phone" field="businessPhones" />
+                                            <div className="col-span-full">
+                                                <InputField label="Street Address" field="streetAddress" />
+                                            </div>
+                                            <InputField label="City" field="city" />
+                                            <InputField label="State or Province" field="state" />
+                                            <InputField label="ZIP / Postal Code" field="postalCode" />
+                                            <InputField label="Country or Region" field="country" />
+                                            <div className="col-span-full">
+                                                <InputField label="Email" field="mail" readOnly />
+                                            </div>
+                                        </div>
+                                    </section>
                                 </div>
                             ) : null}
                         </div>
 
-                        <div className="p-6 border-t border-slate-800 bg-slate-900/20">
+                        <div className="p-6 border-t border-slate-800 bg-[#0b0f19] shrink-0">
                             <button 
                                 onClick={handleSave}
                                 disabled={saving || loadingDetails}
                                 className="w-full flex justify-center items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-medium py-3 px-4 rounded-xl transition-colors shadow-lg shadow-purple-900/20 disabled:opacity-50"
                             >
                                 {saving ? <RefreshCw className="animate-spin" size={20} /> : <Save size={20} />}
-                                {saving ? "Saving to Entra ID..." : "Save Changes"}
+                                {saving ? "Syncing to Entra ID..." : "Save Changes"}
                             </button>
                         </div>
                     </div>
