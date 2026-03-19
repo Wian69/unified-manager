@@ -21,7 +21,7 @@ export default function RootLayout({
         <div className="flex h-screen overflow-hidden">
           <Sidebar />
           <main className="flex-1 ml-64 overflow-y-auto bg-gradient-to-br from-[#0b0f19] to-[#111827]">
-            <div className="p-8 max-w-7xl mx-auto min-h-full">
+            <div className="p-8 w-full min-h-full">
               {children}
             </div>
           </main>

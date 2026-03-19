@@ -126,7 +126,7 @@ export default function DevicesPage() {
             {/* Device Details Full Page Overlay */}
             {selectedDeviceId && (
                 <div className="fixed inset-0 lg:left-64 z-50 bg-[#0b0f19] flex flex-col animate-in fade-in duration-300 overflow-y-auto">
-                    <div className="w-full max-w-5xl mx-auto flex flex-col min-h-full">
+                    <div className="w-full flex flex-col min-h-full">
                         <div className="flex justify-between items-center p-8 border-b border-slate-800/60 shrink-0">
                             <h2 className="text-3xl font-bold text-white">Device Details</h2>
                             <button onClick={() => setSelectedDeviceId(null)} className="text-slate-400 hover:text-white transition-colors">
