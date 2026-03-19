@@ -110,14 +110,14 @@ export default function SecurityPage() {
     const recommendations = security?.recommendations || [];
     const recentAlerts = security?.recentAlerts || [];
 
-    const percentage = score ? Math.round((score.currentScore / score.maxScore) * 100) : 0;
+    const percentage = score ? (score.currentScore / score.maxScore) * 100 : 0;
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500 pb-20">
             {/* Header */}
             <div className="flex justify-between items-center bg-slate-900/40 p-6 rounded-2xl border border-slate-800/60 backdrop-blur-md">
                 <div className="flex items-center gap-4">
-                    <div className="p-3 bg-rose-500/20 text-rose-400 rounded-xl">
+                    <div className="p-3 bg-emerald-500/20 text-emerald-400 rounded-xl">
                         <Shield size={28} />
                     </div>
                     <div>
@@ -171,22 +171,22 @@ export default function SecurityPage() {
                     <h2 className="text-xl font-bold text-slate-200 mb-6 w-full text-left">Microsoft Secure Score</h2>
                     {loading ? (
                         <div className="py-10 text-slate-500 flex flex-col items-center">
-                            <RefreshCw size={40} className="animate-spin text-rose-500 mb-4" />
+                            <RefreshCw size={40} className="animate-spin text-emerald-500 mb-4" />
                             Calculating score...
                         </div>
                     ) : (
                         <div className="relative flex flex-col items-center">
-                            <div className="text-7xl font-black text-rose-500 drop-shadow-lg leading-none">
-                                {score ? Math.round(score.currentScore) : "-"}
+                            <div className="text-7xl font-black text-emerald-500 drop-shadow-lg leading-none">
+                                {score ? Math.floor(score.currentScore) : "-"}
                             </div>
                             <div className="text-slate-400 mt-2 font-medium">Out of {score?.maxScore || "-"} points</div>
                             <div className="mt-8 w-full bg-slate-800 rounded-full h-3 overflow-hidden border border-slate-700">
                                 <div 
-                                    className="bg-rose-500 h-full transition-all duration-1000" 
+                                    className="bg-emerald-500 h-full transition-all duration-1000" 
                                     style={{ width: `${percentage}%` }}
                                 />
                             </div>
-                            <p className="text-xs text-slate-500 mt-4 text-center">Your security posture is at **{percentage}%** implementation.</p>
+                            <p className="text-xs text-slate-500 mt-4 text-center italic">Your security posture is at <span className="text-emerald-400 font-bold">{percentage.toFixed(1)}%</span> implementation.</p>
                         </div>
                     )}
                 </div>
