@@ -84,8 +84,17 @@ export default function UsersPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(editForm),
             });
-            await fetchUsers();
+            
+            // Update local state immediately for instant grouping feedback
+            setUsers(prevUsers => prevUsers.map(u => 
+                u.id === selectedUserId 
+                    ? { ...u, ...editForm } 
+                    : u
+            ));
+            
             setSelectedUserId(null);
+            // Still background refresh to ensure sync with server
+            fetchUsers();
         } catch (error) {
             console.error("Failed to update user", error);
             alert("Failed to save user changes.");
