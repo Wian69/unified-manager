@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Users, RefreshCw, X, Save } from "lucide-react";
+import { Users, RefreshCw, X, Save, ChevronDown, ChevronRight } from "lucide-react";
 
 const InputField = ({ label, field, value, onChange, readOnly = false }: { label: string, field: string, value: string, onChange?: (val: string) => void, readOnly?: boolean }) => (
     <div>
@@ -19,6 +19,7 @@ const InputField = ({ label, field, value, onChange, readOnly = false }: { label
 export default function UsersPage() {
     const [users, setUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [collapsedLocations, setCollapsedLocations] = useState<Set<string>>(new Set());
 
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
     const [selectedUser, setSelectedUser] = useState<any>(null);
@@ -127,6 +128,18 @@ export default function UsersPage() {
         return a.localeCompare(b);
     });
 
+    const toggleLocation = (location: string) => {
+        setCollapsedLocations(prev => {
+            const next = new Set(prev);
+            if (next.has(location)) {
+                next.delete(location);
+            } else {
+                next.add(location);
+            }
+            return next;
+        });
+    };
+
     return (
         <div className="space-y-10 animate-in fade-in duration-500 relative">
             <div className="flex justify-between items-center bg-slate-900/40 p-6 rounded-2xl border border-slate-800/60 backdrop-blur-md">
@@ -139,14 +152,22 @@ export default function UsersPage() {
                         <p className="text-slate-400">View and manage Entra ID accounts by office location.</p>
                     </div>
                 </div>
-                <button 
-                    onClick={fetchUsers}
-                    disabled={loading}
-                    className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-lg transition-colors border border-slate-700"
-                >
-                    <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
-                    Refresh
-                </button>
+                <div className="flex items-center gap-3">
+                    <button 
+                        onClick={() => setCollapsedLocations(new Set(collapsedLocations.size === sortedLocations.length ? [] : sortedLocations))}
+                        className="text-xs font-bold text-slate-500 hover:text-slate-300 transition-colors uppercase tracking-wider"
+                    >
+                        {collapsedLocations.size === sortedLocations.length ? 'Expand All' : 'Collapse All'}
+                    </button>
+                    <button 
+                        onClick={fetchUsers}
+                        disabled={loading}
+                        className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-lg transition-colors border border-slate-700"
+                    >
+                        <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
+                        Refresh
+                    </button>
+                </div>
             </div>
 
             {loading ? (
@@ -155,48 +176,61 @@ export default function UsersPage() {
                     Loading all users and categorizing by location...
                 </div>
             ) : sortedLocations.length > 0 ? (
-                sortedLocations.map((location) => (
-                    <div key={location} className="space-y-4">
-                        <div className="flex items-center gap-3 px-2">
-                            <h2 className="text-xl font-bold text-slate-200">{location}</h2>
-                            <span className="px-2 py-0.5 bg-slate-800 text-slate-400 text-xs font-bold rounded-full border border-slate-700">
-                                {groupedUsers[location].length} Users
-                            </span>
+                sortedLocations.map((location) => {
+                    const isCollapsed = collapsedLocations.has(location);
+                    return (
+                        <div key={location} className="space-y-4">
+                            <button 
+                                onClick={() => toggleLocation(location)}
+                                className="flex items-center gap-3 px-2 w-full text-left group transition-all"
+                            >
+                                <div className="text-slate-500 group-hover:text-white transition-colors">
+                                    {isCollapsed ? <ChevronRight size={20} /> : <ChevronDown size={20} />}
+                                </div>
+                                <h2 className="text-xl font-bold text-slate-200">{location}</h2>
+                                <span className="px-2 py-0.5 bg-slate-800 text-slate-400 text-xs font-bold rounded-full border border-slate-700">
+                                    {groupedUsers[location].length} Users
+                                </span>
+                                <div className="h-px bg-slate-800/60 flex-1 ml-4" />
+                            </button>
+                            
+                            {!isCollapsed && (
+                                <div className="bg-slate-900/40 rounded-2xl border border-slate-800/60 overflow-hidden backdrop-blur-md animate-in slide-in-from-top-2 duration-200">
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-left text-sm text-slate-300">
+                                            <thead className="bg-slate-950/50 text-slate-400 uppercase font-medium border-b border-slate-800/60">
+                                                <tr>
+                                                    <th className="px-6 py-4">Display Name</th>
+                                                    <th className="px-6 py-4">Principal Name</th>
+                                                    <th className="px-6 py-4">Job Title</th>
+                                                    <th className="px-6 py-4">Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-800/60">
+                                                {groupedUsers[location].map((u: any) => (
+                                                    <tr 
+                                                        key={u.id} 
+                                                        onClick={() => handleUserClick(u.id)}
+                                                        className="hover:bg-slate-800/50 transition-colors cursor-pointer"
+                                                    >
+                                                        <td className="px-6 py-4 font-medium text-slate-200">{u.displayName || 'Unknown'}</td>
+                                                        <td className="px-6 py-4 text-slate-400">{u.userPrincipalName || 'N/A'}</td>
+                                                        <td className="px-6 py-4">{u.jobTitle || 'N/A'}</td>
+                                                        <td className="px-6 py-4">
+                                                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${u.accountEnabled ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
+                                                                {u.accountEnabled ? 'Active' : 'Disabled'}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                        <div className="bg-slate-900/40 rounded-2xl border border-slate-800/60 overflow-hidden backdrop-blur-md">
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left text-sm text-slate-300">
-                                    <thead className="bg-slate-950/50 text-slate-400 uppercase font-medium border-b border-slate-800/60">
-                                        <tr>
-                                            <th className="px-6 py-4">Display Name</th>
-                                            <th className="px-6 py-4">Principal Name</th>
-                                            <th className="px-6 py-4">Job Title</th>
-                                            <th className="px-6 py-4">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-800/60">
-                                        {groupedUsers[location].map((u: any) => (
-                                            <tr 
-                                                key={u.id} 
-                                                onClick={() => handleUserClick(u.id)}
-                                                className="hover:bg-slate-800/50 transition-colors cursor-pointer"
-                                            >
-                                                <td className="px-6 py-4 font-medium text-slate-200">{u.displayName || 'Unknown'}</td>
-                                                <td className="px-6 py-4 text-slate-400">{u.userPrincipalName || 'N/A'}</td>
-                                                <td className="px-6 py-4">{u.jobTitle || 'N/A'}</td>
-                                                <td className="px-6 py-4">
-                                                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${u.accountEnabled ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
-                                                        {u.accountEnabled ? 'Active' : 'Disabled'}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                ))
+                    );
+                })
             ) : (
                 <div className="bg-slate-900/40 rounded-2xl border border-slate-800/60 p-12 text-center text-slate-500 backdrop-blur-md">
                     No users found.
