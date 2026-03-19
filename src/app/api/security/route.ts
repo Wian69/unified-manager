@@ -12,14 +12,20 @@ export async function GET() {
             .top(1)
             .get();
 
+        // Fetch Security Recommendations (Control Profiles)
+        // These contain the vulnerabilities and remediation steps
+        const recommendationsResponse = await client.api('/security/secureScoreControlProfiles')
+            .get();
+
         // Fetch Recent Security Alerts
         const alertsResponse = await client.api('/security/alerts')
-            .filter("status eq 'newInProgress'")
-            .top(5)
+            .filter("status ne 'resolved'") // Show non-resolved alerts
+            .top(10)
             .get();
 
         return NextResponse.json({
             secureScore: scoreResponse.value?.[0] || null,
+            recommendations: recommendationsResponse.value || [],
             recentAlerts: alertsResponse.value || [],
         });
     } catch (error: any) {
