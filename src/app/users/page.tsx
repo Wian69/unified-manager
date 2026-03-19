@@ -107,7 +107,13 @@ export default function UsersPage() {
     };
 
     const groupedUsers = users.reduce((acc: any, user: any) => {
-        const location = user.officeLocation || 'Unassigned / Remote';
+        let location = user.officeLocation || 'Unassigned / Remote';
+        
+        // Custom Rule: Partner domain users go into Eastern Region Sub Contractors
+        if (user.userPrincipalName?.toLowerCase().endsWith('@partner.eqncs.com')) {
+            location = 'Eastern Region Sub Contractors';
+        }
+
         if (!acc[location]) {
             acc[location] = [];
         }
