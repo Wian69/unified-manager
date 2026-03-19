@@ -248,15 +248,19 @@ export default function SecurityPage() {
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <div className="bg-slate-950/40 p-3 rounded-lg border border-slate-800">
                                                         <p className="text-[8px] text-slate-500 uppercase font-bold mb-1">Impact Score</p>
-                                                        <p className="text-sm font-bold text-emerald-400">{r.impactScore || r.maxScore}</p>
+                                                        <p className="text-sm font-bold text-emerald-400">{r.impactScore || r.maxScore || 0}</p>
                                                     </div>
                                                     <div className="bg-slate-950/40 p-3 rounded-lg border border-slate-800">
                                                         <p className="text-[8px] text-slate-500 uppercase font-bold mb-1">CVE Identifiers</p>
                                                         <div className="flex flex-wrap gap-1">
-                                                            {r.cveIds?.length > 0 ? r.cveIds.slice(0, 3).map((cveId: string) => (
-                                                                <span key={cveId} className="text-[9px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded border border-slate-700">{cveId}</span>
-                                                            )) : <span className="text-[9px] text-slate-600">No CVE assigned</span>}
-                                                            {r.cveIds?.length > 3 && <span className="text-[9px] text-slate-600">+{r.cveIds.length - 3} more</span>}
+                                                            {r.associatedVulnerabilities?.length > 0 ? r.associatedVulnerabilities.slice(0, 3).map((v: any) => (
+                                                                <span key={v.id} className="text-[9px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded border border-slate-700">{v.id}</span>
+                                                            )) : r.vulnerabilityId ? (
+                                                                <span className="text-[9px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded border border-slate-700">{r.vulnerabilityId}</span>
+                                                            ) : (
+                                                                <span className="text-[9px] text-slate-600">No CVE assigned</span>
+                                                            )}
+                                                            {r.associatedVulnerabilities?.length > 3 && <span className="text-[9px] text-slate-600">+{r.associatedVulnerabilities.length - 3} more</span>}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -332,7 +336,7 @@ export default function SecurityPage() {
                         <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
                             <div>
                                 <h3 className="text-xl font-bold text-white">Deploy Remediation</h3>
-                                <p className="text-sm text-slate-400 mt-1">{deployingRec.title}</p>
+                                <p className="text-sm text-slate-400 mt-1">{deployingRec.vulnerabilityTitle || deployingRec.title}</p>
                             </div>
                             <button 
                                 onClick={() => setIsDeployModalOpen(false)}
@@ -345,7 +349,7 @@ export default function SecurityPage() {
                         <div className="p-6 flex-1 overflow-y-auto space-y-6 custom-scrollbar">
                             {/* Script Preview */}
                             <div>
-                                <h4 className="text-xs font-bold text-rose-500 uppercase tracking-widest mb-3">Proposed Intune Script</h4>
+                                <h4 className="text-xs font-bold text-emerald-500 uppercase tracking-widest mb-3">Proposed Intune Script</h4>
                                 <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono text-[11px] text-slate-400 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">
                                     {extractScript(deployingRec.remediationSteps)}
                                 </div>
