@@ -25,9 +25,15 @@ export async function GET() {
         // Sort alphabetically by displayName
         users.sort((a: any, b: any) => (a.displayName || '').localeCompare(b.displayName || ''));
 
-        return NextResponse.json({
+        return new NextResponse(JSON.stringify({
             users: users,
             activeUsers: users.filter((u: any) => u.accountEnabled).length,
+        }), {
+            status: 200,
+            headers: {
+                'Cache-Control': 'no-store, max-age=0',
+                'Content-Type': 'application/json',
+            }
         });
     } catch (error: any) {
         console.error('[API] Graph API Error (Users):', error.message);

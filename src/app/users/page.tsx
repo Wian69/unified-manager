@@ -30,7 +30,7 @@ export default function UsersPage() {
     const fetchUsers = async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/users');
+            const res = await fetch('/api/users', { cache: 'no-store' });
             const data = await res.json();
             if (data.users) {
                 setUsers(data.users);
@@ -50,7 +50,7 @@ export default function UsersPage() {
         setSelectedUserId(id);
         setLoadingDetails(true);
         try {
-            const res = await fetch(`/api/users/${id}`);
+            const res = await fetch(`/api/users/${id}`, { cache: 'no-store' });
             const data = await res.json();
             setSelectedUser(data);
             setEditForm({
