@@ -52,13 +52,26 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
             updateData.businessPhones = body.businessPhones ? [body.businessPhones] : [];
         }
 
-        await client.api(`/users/${id}`).update(updateData);
-
-        return NextResponse.json({ success: true, message: "User updated successfully" });
+        console.log(`[API] Updating user ${id}:`, JSON.stringify(updateData, null, 2));
+        
+        try {
+            await client.api(`/users/${id}`).update(updateData);
+            return NextResponse.json({ success: true, message: "User updated successfully" });
+        } catch (graphError: any) {
+            console.error('[API] Graph API Update Detail Error:', graphError.body || graphError.message);
+            return NextResponse.json(
+                { 
+                    error: "Microsoft Graph rejected the update", 
+                    details: graphError.message,
+                    body: graphError.body ? JSON.parse(graphError.body) : null
+                },
+                { status: graphError.statusCode || 500 }
+            );
+        }
     } catch (error: any) {
-        console.error('[API] Graph API Error (Update User):', error.message);
+        console.error('[API] General Update Error:', error.message);
         return NextResponse.json(
-            { error: "Failed to update user", details: error.message },
+            { error: "Failed to process update request", details: error.message },
             { status: 500 }
         );
     }

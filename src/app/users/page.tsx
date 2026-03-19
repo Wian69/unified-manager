@@ -80,11 +80,19 @@ export default function UsersPage() {
         if (!selectedUserId) return;
         setSaving(true);
         try {
-            await fetch(`/api/users/${selectedUserId}`, {
+            const res = await fetch(`/api/users/${selectedUserId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(editForm),
             });
+            
+            const result = await res.json();
+            
+            if (!res.ok) {
+                console.error("Save failed:", result);
+                alert(`Sync failed: ${result.error || "Microsoft Graph rejected the change."}\n\nDetails: ${result.details || "Unknown error"}`);
+                return;
+            }
             
             // Update local state immediately for instant grouping feedback
             setUsers(prevUsers => prevUsers.map(u => 
@@ -99,9 +107,9 @@ export default function UsersPage() {
             setTimeout(() => {
                 fetchUsers();
             }, 3000);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to update user", error);
-            alert("Failed to save user changes.");
+            alert("Failed to save user changes: " + error.message);
         } finally {
             setSaving(false);
         }
