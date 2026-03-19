@@ -108,7 +108,9 @@ export default function UsersPage() {
     };
 
     const groupedUsers = users.reduce((acc: any, user: any) => {
-        let location = user.officeLocation || 'Unassigned / Remote';
+        // Normalize location: trim and capitalize first letter to handle API inconsistency
+        let rawLocation = (user.officeLocation || '').trim();
+        let location = rawLocation ? (rawLocation.charAt(0).toUpperCase() + rawLocation.slice(1)) : 'Unassigned / Remote';
         
         // Custom Rule: Partner domain users go into Eastern Region Sub Contractors
         if (user.userPrincipalName?.toLowerCase().endsWith('@partner.eqncs.com')) {
