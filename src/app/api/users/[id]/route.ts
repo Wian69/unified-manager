@@ -36,20 +36,33 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         // Ensure we only pass valid string/boolean fields that are meant to be updated
         const updateData: any = {};
         const updatableFields = [
-            'displayName','givenName','surname','jobTitle','companyName','department',
+            'displayName','givenName','surname','jobTitle',
             'officeLocation','streetAddress','city','state','postalCode','country',
             'mobilePhone'
         ];
 
         updatableFields.forEach(field => {
             if (body[field] !== undefined) {
+                // If it's an empty string, set it to null to clear the field in Entra ID
+                // Microsoft Graph prefers null over empty string for clearing many properties
+                updateData[field] = body[field] === '' ? null : body[field];
+            }
+        });
+
+        // Optional fields that might be read-only in some tenants - only include if not empty
+        ['companyName', 'department'].forEach(field => {
+            if (body[field]) {
                 updateData[field] = body[field];
             }
         });
 
         // Special handling for businessPhones which is an array of strings in Graph API
         if (body.businessPhones !== undefined) {
-            updateData.businessPhones = body.businessPhones ? [body.businessPhones] : [];
+            if (body.businessPhones === '') {
+                updateData.businessPhones = [];
+            } else {
+                updateData.businessPhones = [body.businessPhones];
+            }
         }
 
         console.log(`[API] Updating user ${id}:`, JSON.stringify(updateData, null, 2));

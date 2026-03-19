@@ -79,11 +79,31 @@ export default function UsersPage() {
     const handleSave = async () => {
         if (!selectedUserId) return;
         setSaving(true);
+        const diff: any = {};
+        Object.keys(editForm).forEach(key => {
+            let currentValue = selectedUser[key];
+            let newValue = editForm[key];
+            
+            // Normalize businessPhones for comparison (array vs string)
+            if (key === 'businessPhones') {
+                currentValue = (selectedUser.businessPhones && selectedUser.businessPhones.length > 0) ? selectedUser.businessPhones[0] : '';
+            }
+            
+            if (newValue !== currentValue) {
+                diff[key] = newValue;
+            }
+        });
+
+        if (Object.keys(diff).length === 0) {
+            setSelectedUserId(null);
+            return;
+        }
+
         try {
             const res = await fetch(`/api/users/${selectedUserId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(editForm),
+                body: JSON.stringify(diff),
             });
             
             const result = await res.json();
