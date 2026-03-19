@@ -6,6 +6,7 @@ import { Shield, RefreshCw, AlertTriangle, CheckCircle, ChevronDown, ChevronRigh
 export default function SecurityPage() {
     const [security, setSecurity] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [expandedRec, setExpandedRec] = useState<string | null>(null);
 
     // Remediation Deployment State
@@ -19,12 +20,19 @@ export default function SecurityPage() {
 
     const fetchSecurity = async () => {
         setLoading(true);
+        setError(null);
         try {
             const res = await fetch('/api/security');
             const data = await res.json();
-            setSecurity(data);
-        } catch (error) {
+            
+            if (!res.ok) {
+                setError(data.details || data.error || "Failed to fetch security data");
+            } else {
+                setSecurity(data);
+            }
+        } catch (error: any) {
             console.error("Failed to fetch security", error);
+            setError(error.message);
         } finally {
             setLoading(false);
         }
@@ -126,6 +134,37 @@ export default function SecurityPage() {
                     Refresh
                 </button>
             </div>
+
+            {/* Error Alert */}
+            {error && (
+                <div className="bg-rose-500/10 border border-rose-500/50 rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center gap-6 animate-in slide-in-from-top-4 duration-500">
+                    <div className="p-3 bg-rose-500 text-white rounded-xl shadow-lg">
+                        <AlertTriangle size={24} />
+                    </div>
+                    <div className="flex-1">
+                        <h3 className="text-rose-100 font-bold text-lg">Permission or Data Error</h3>
+                        <p className="text-rose-200/70 text-sm mt-1">
+                            {error.includes("403") || error.includes("Forbidden") || error.includes("AccessDenied")
+                                ? "Your Azure App Registration is missing the required permissions to view security data. Please add the following 'Application Permissions' in Azure AD and Grant Admin Consent."
+                                : error}
+                        </p>
+                        {(error.includes("403") || error.includes("Forbidden") || error.includes("AccessDenied")) && (
+                            <div className="mt-4 flex flex-wrap gap-2 text-[10px] font-black">
+                                <span className="bg-rose-500/20 text-rose-300 px-3 py-1 rounded-md border border-rose-500/30">SecureScore.Read.All</span>
+                                <span className="bg-rose-500/20 text-rose-300 px-3 py-1 rounded-md border border-rose-500/30">SecurityEvents.Read.All</span>
+                                <span className="bg-rose-500/20 text-rose-300 px-3 py-1 rounded-md border border-rose-500/30">DeviceManagementConfiguration.ReadWrite.All</span>
+                            </div>
+                        )}
+                    </div>
+                    <a 
+                        href="https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade" 
+                        target="_blank"
+                        className="bg-rose-500 hover:bg-rose-400 text-white px-6 py-2 rounded-xl font-bold transition-all shadow-lg active:scale-95 text-sm"
+                    >
+                        Go to Azure Portal
+                    </a>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Score Card */}
