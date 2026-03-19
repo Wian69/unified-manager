@@ -94,8 +94,23 @@ export default function UsersPage() {
         </div>
     );
 
+    const groupedUsers = users.reduce((acc: any, user: any) => {
+        const location = user.officeLocation || 'Unassigned / Remote';
+        if (!acc[location]) {
+            acc[location] = [];
+        }
+        acc[location].push(user);
+        return acc;
+    }, {});
+
+    const sortedLocations = Object.keys(groupedUsers).sort((a, b) => {
+        if (a === 'Unassigned / Remote') return 1;
+        if (b === 'Unassigned / Remote') return -1;
+        return a.localeCompare(b);
+    });
+
     return (
-        <div className="space-y-6 animate-in fade-in duration-500 relative">
+        <div className="space-y-10 animate-in fade-in duration-500 relative">
             <div className="flex justify-between items-center bg-slate-900/40 p-6 rounded-2xl border border-slate-800/60 backdrop-blur-md">
                 <div className="flex items-center gap-4">
                     <div className="p-3 bg-purple-500/20 text-purple-400 rounded-xl">
@@ -103,7 +118,7 @@ export default function UsersPage() {
                     </div>
                     <div>
                         <h1 className="text-2xl font-bold text-white">User Management</h1>
-                        <p className="text-slate-400">View and manage Entra ID accounts.</p>
+                        <p className="text-slate-400">View and manage Entra ID accounts by office location.</p>
                     </div>
                 </div>
                 <button 
@@ -116,48 +131,59 @@ export default function UsersPage() {
                 </button>
             </div>
 
-            <div className="bg-slate-900/40 rounded-2xl border border-slate-800/60 overflow-hidden backdrop-blur-md">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm text-slate-300">
-                        <thead className="bg-slate-950/50 text-slate-400 uppercase font-medium border-b border-slate-800/60">
-                            <tr>
-                                <th className="px-6 py-4">Display Name</th>
-                                <th className="px-6 py-4">Principal Name</th>
-                                <th className="px-6 py-4">Job Title</th>
-                                <th className="px-6 py-4">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-800/60">
-                            {loading ? (
-                                <tr>
-                                    <td colSpan={4} className="px-6 py-8 text-center text-slate-500">Loading users...</td>
-                                </tr>
-                            ) : users.length > 0 ? (
-                                users.map((u: any) => (
-                                    <tr 
-                                        key={u.id} 
-                                        onClick={() => handleUserClick(u.id)}
-                                        className="hover:bg-slate-800/50 transition-colors cursor-pointer"
-                                    >
-                                        <td className="px-6 py-4 font-medium text-slate-200">{u.displayName || 'Unknown'}</td>
-                                        <td className="px-6 py-4 text-slate-400">{u.userPrincipalName || 'N/A'}</td>
-                                        <td className="px-6 py-4">{u.jobTitle || 'N/A'}</td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${u.accountEnabled ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
-                                                {u.accountEnabled ? 'Active' : 'Disabled'}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan={4} className="px-6 py-8 text-center text-slate-500">No users found.</td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+            {loading ? (
+                <div className="bg-slate-900/40 rounded-2xl border border-slate-800/60 p-12 text-center text-slate-500 backdrop-blur-md">
+                    <RefreshCw className="animate-spin text-purple-400 mx-auto mb-4" size={32} />
+                    Loading all users and categorizing by location...
                 </div>
-            </div>
+            ) : sortedLocations.length > 0 ? (
+                sortedLocations.map((location) => (
+                    <div key={location} className="space-y-4">
+                        <div className="flex items-center gap-3 px-2">
+                            <h2 className="text-xl font-bold text-slate-200">{location}</h2>
+                            <span className="px-2 py-0.5 bg-slate-800 text-slate-400 text-xs font-bold rounded-full border border-slate-700">
+                                {groupedUsers[location].length} Users
+                            </span>
+                        </div>
+                        <div className="bg-slate-900/40 rounded-2xl border border-slate-800/60 overflow-hidden backdrop-blur-md">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-sm text-slate-300">
+                                    <thead className="bg-slate-950/50 text-slate-400 uppercase font-medium border-b border-slate-800/60">
+                                        <tr>
+                                            <th className="px-6 py-4">Display Name</th>
+                                            <th className="px-6 py-4">Principal Name</th>
+                                            <th className="px-6 py-4">Job Title</th>
+                                            <th className="px-6 py-4">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-800/60">
+                                        {groupedUsers[location].map((u: any) => (
+                                            <tr 
+                                                key={u.id} 
+                                                onClick={() => handleUserClick(u.id)}
+                                                className="hover:bg-slate-800/50 transition-colors cursor-pointer"
+                                            >
+                                                <td className="px-6 py-4 font-medium text-slate-200">{u.displayName || 'Unknown'}</td>
+                                                <td className="px-6 py-4 text-slate-400">{u.userPrincipalName || 'N/A'}</td>
+                                                <td className="px-6 py-4">{u.jobTitle || 'N/A'}</td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${u.accountEnabled ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
+                                                        {u.accountEnabled ? 'Active' : 'Disabled'}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                ))
+            ) : (
+                <div className="bg-slate-900/40 rounded-2xl border border-slate-800/60 p-12 text-center text-slate-500 backdrop-blur-md">
+                    No users found.
+                </div>
+            )}
 
             {selectedUserId && (
                 <div className="fixed inset-0 lg:left-64 z-50 bg-[#0b0f19] flex flex-col animate-in fade-in duration-300 overflow-y-auto">

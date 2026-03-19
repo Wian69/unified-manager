@@ -9,7 +9,7 @@ export async function GET() {
         
         let allUsers: any[] = [];
         let response = await client.api('/users')
-            .select('id,displayName,userPrincipalName,jobTitle,department,accountEnabled')
+            .select('id,displayName,userPrincipalName,jobTitle,department,officeLocation,accountEnabled')
             .top(999)
             .get();
             
