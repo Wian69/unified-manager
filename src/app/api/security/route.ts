@@ -18,25 +18,26 @@ export async function GET() {
             console.warn('[API] Secure Score fetch failed:', e.message);
         }
 
-        // 2. Fetch TVM Vulnerability Recommendations (CVEs)
+        // 2. Fetch TVM Vulnerability Recommendations
         try {
-            // This is the modern Microsoft Graph endpoint for Defender Vulnerability Management
-            const recommendationsResponse = await client.api('/security/vulnerabilityManagement/recommendations')
-                .top(20)
-                .get();
+            const recommendationsResponse = await client.api('/security/vulnerabilityManagement/recommendations').top(20).get();
             recommendations = recommendationsResponse.value || [];
         } catch (e: any) {
             console.warn('[API] TVM Recommendations fetch failed:', e.message);
-            // Fallback to Secure Score recommendations if TVM is not available or licensed
-            try {
-                const ssRecs = await client.api('/security/secureScoreControlProfiles').get();
-                recommendations = ssRecs.value || [];
-            } catch (ssErr: any) {
-                console.warn('[API] Secure Score fallback also failed:', ssErr.message);
-            }
         }
 
-        // 3. Fetch Recent Alerts
+        // 3. Fetch Specific Vulnerabilities (CVE Catalog)
+        let vulnerabilities = [];
+        try {
+            const vulnerabilitiesResponse = await client.api('/security/vulnerabilityManagement/vulnerabilities')
+                .top(20)
+                .get();
+            vulnerabilities = vulnerabilitiesResponse.value || [];
+        } catch (e: any) {
+            console.warn('[API] TVM Vulnerabilities fetch failed:', e.message);
+        }
+
+        // 4. Fetch Recent Alerts
         try {
             const alertsResponse = await client.api('/security/alerts')
                 .top(5)
@@ -50,6 +51,7 @@ export async function GET() {
         return NextResponse.json({
             secureScore,
             recommendations,
+            vulnerabilities,
             recentAlerts
         });
     } catch (error: any) {
