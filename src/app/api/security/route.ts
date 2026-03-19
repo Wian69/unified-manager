@@ -33,29 +33,35 @@ export async function GET() {
             console.warn('[API] TVM Recommendations fetch failed (Beta):', e.message);
         }
 
-        // 3. Fetch Specific Vulnerabilities (CVE Catalog) (BETA)
+        // 3. Sequential Vulnerability Discovery (CVE Catalog)
         let vulnerabilities = [];
-        try {
-            const vulnerabilitiesResponse = await client.api('/security/vulnerabilityManagement/vulnerabilities')
-                .version('beta')
-                .top(20)
-                .get();
-            vulnerabilities = vulnerabilitiesResponse.value || [];
-        } catch (e: any) {
-            errors.vulnerabilities = e.message;
-            console.warn('[API] TVM Vulnerabilities fetch failed (Beta):', e.message);
-            
-            // Fallback to Threat Intelligence (MDTI) if TVM fails
+        const discoveryReport: string[] = [];
+        
+        const vulnerabilityEndpoints = [
+            { path: '/security/vulnerabilityManagement/vulnerabilities', version: 'beta', name: 'TVM Beta' },
+            { path: '/security/vulnerabilityManagement/vulnerabilities', version: 'v1.0', name: 'TVM V1.0' },
+            { path: '/security/threatIntelligence/vulnerabilities', version: 'v1.0', name: 'MDTI V1.0' },
+            { path: '/security/vulnerabilities', version: 'v1.0', name: 'Security V1.0' }
+        ];
+
+        for (const endpoint of vulnerabilityEndpoints) {
             try {
-                const tiResponse = await client.api('/security/threatIntelligence/vulnerabilities')
+                const response = await client.api(endpoint.path)
+                    .version(endpoint.version as any)
                     .top(20)
                     .get();
-                vulnerabilities = tiResponse.value || [];
-                if (vulnerabilities.length > 0) {
-                    delete errors.vulnerabilities; // Clear error if fallback worked
+                
+                if (response.value && response.value.length > 0) {
+                    vulnerabilities = response.value;
+                    discoveryReport.push(`MATCH: Found ${vulnerabilities.length} CVEs at ${endpoint.name}`);
+                    delete errors.vulnerabilities; // Clear previous errors if we found data
+                    break;
+                } else {
+                    discoveryReport.push(`EMPTY: ${endpoint.name} returned 0 results`);
                 }
-            } catch (tiErr: any) {
-                console.warn('[API] MDTI Fallback also failed:', tiErr.message);
+            } catch (e: any) {
+                discoveryReport.push(`FAIL: ${endpoint.name} -> ${e.message}`);
+                errors.vulnerabilities = `Last attempt failed: ${e.message}. See discovery logs.`;
             }
         }
 
@@ -76,7 +82,8 @@ export async function GET() {
             recommendations,
             vulnerabilities,
             recentAlerts,
-            errors
+            errors,
+            discoveryReport
         });
     } catch (error: any) {
         console.error('[API] Graph API Error (Security):', error.message);

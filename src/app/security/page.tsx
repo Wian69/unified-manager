@@ -188,11 +188,20 @@ export default function SecurityPage() {
                         ) : (
                             <div className="text-center py-10 bg-slate-900/20 rounded-2xl border border-dashed border-slate-700">
                                 {security?.errors?.vulnerabilities ? (
-                                    <>
+                                    <div className="px-6">
                                         <AlertTriangle size={40} className="mx-auto text-rose-500 mb-3 opacity-50" />
-                                        <p className="text-rose-400 font-bold mb-1">Vulnerability Fetch Failed</p>
-                                        <p className="text-[10px] text-slate-500 px-10">{security.errors.vulnerabilities}</p>
-                                    </>
+                                        <p className="text-rose-400 font-bold mb-1">Vulnerability Discovery Failed</p>
+                                        <p className="text-[10px] text-slate-500 mb-4">{security.errors.vulnerabilities}</p>
+                                        
+                                        {security.discoveryReport && (
+                                            <div className="text-left bg-slate-950/50 p-4 rounded-xl border border-slate-800 font-mono text-[9px] text-slate-500 max-h-40 overflow-y-auto">
+                                                <p className="text-emerald-500/50 mb-2 uppercase font-black">Segment Discovery Log:</p>
+                                                {security.discoveryReport.map((line: string, idx: number) => (
+                                                    <div key={idx} className="mb-1">{line}</div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 ) : (
                                     <>
                                         <CheckCircle size={40} className="mx-auto text-emerald-500 mb-3 opacity-50" />
