@@ -55,10 +55,19 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         console.log(`[API] Updating user ${id}:`, JSON.stringify(updateData, null, 2));
         
         try {
+            const fs = require('fs');
+            const logPath = './sync_error.log';
+            fs.appendFileSync(logPath, `\n[${new Date().toISOString()}] Updating user ${id}: ${JSON.stringify(updateData)}\n`);
+            
             await client.api(`/users/${id}`).update(updateData);
             return NextResponse.json({ success: true, message: "User updated successfully" });
         } catch (graphError: any) {
-            console.error('[API] Graph API Update Detail Error:', graphError.body || graphError.message);
+            const fs = require('fs');
+            const logPath = './sync_error.log';
+            const errorMsg = graphError.body || graphError.message;
+            fs.appendFileSync(logPath, `[${new Date().toISOString()}] ERROR updating user ${id}: ${errorMsg}\n`);
+            
+            console.error('[API] Graph API Update Detail Error:', errorMsg);
             return NextResponse.json(
                 { 
                     error: "Microsoft Graph rejected the update", 
