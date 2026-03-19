@@ -3,6 +3,19 @@
 import { useEffect, useState } from "react";
 import { Users, RefreshCw, X, Save } from "lucide-react";
 
+const InputField = ({ label, field, value, onChange, readOnly = false }: { label: string, field: string, value: string, onChange?: (val: string) => void, readOnly?: boolean }) => (
+    <div>
+        <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">{label}</label>
+        <input 
+            type="text" 
+            value={value || ''} 
+            onChange={(e) => onChange && onChange(e.target.value)}
+            readOnly={readOnly}
+            className={`w-full bg-slate-900 border ${readOnly ? 'border-slate-800 text-slate-500 cursor-not-allowed' : 'border-slate-700 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500'} rounded-lg px-4 py-2.5 outline-none transition-all`}
+        />
+    </div>
+);
+
 export default function UsersPage() {
     const [users, setUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -80,19 +93,6 @@ export default function UsersPage() {
             setSaving(false);
         }
     };
-
-    const InputField = ({ label, field, readOnly = false }: { label: string, field: string, readOnly?: boolean }) => (
-        <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">{label}</label>
-            <input 
-                type="text" 
-                value={readOnly ? (selectedUser?.[field] || '') : (editForm[field] || '')} 
-                onChange={(e) => !readOnly && setEditForm({...editForm, [field]: e.target.value})}
-                readOnly={readOnly}
-                className={`w-full bg-slate-900 border ${readOnly ? 'border-slate-800 text-slate-500 cursor-not-allowed' : 'border-slate-700 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500'} rounded-lg px-4 py-2.5 outline-none transition-all`}
-            />
-        </div>
-    );
 
     const groupedUsers = users.reduce((acc: any, user: any) => {
         const location = user.officeLocation || 'Unassigned / Remote';
@@ -207,14 +207,14 @@ export default function UsersPage() {
                                     <section>
                                         <h3 className="text-lg font-bold text-slate-200 mb-4 border-b border-slate-800 pb-2">Identity</h3>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <InputField label="Display Name" field="displayName" />
-                                            <InputField label="First Name" field="givenName" />
-                                            <InputField label="Last Name" field="surname" />
-                                            <InputField label="User Principal Name" field="userPrincipalName" readOnly />
-                                            <InputField label="Object ID" field="id" readOnly />
-                                            <InputField label="User Type" field="userType" readOnly />
-                                            <InputField label="Created Date Time" field="createdDateTime" readOnly />
-                                            <InputField label="Mail Nickname" field="mailNickname" readOnly />
+                                            <InputField label="Display Name" field="displayName" value={editForm.displayName} onChange={(v) => setEditForm({...editForm, displayName: v})} />
+                                            <InputField label="First Name" field="givenName" value={editForm.givenName} onChange={(v) => setEditForm({...editForm, givenName: v})} />
+                                            <InputField label="Last Name" field="surname" value={editForm.surname} onChange={(v) => setEditForm({...editForm, surname: v})} />
+                                            <InputField label="User Principal Name" field="userPrincipalName" value={selectedUser?.userPrincipalName} readOnly />
+                                            <InputField label="Object ID" field="id" value={selectedUser?.id} readOnly />
+                                            <InputField label="User Type" field="userType" value={selectedUser?.userType} readOnly />
+                                            <InputField label="Created Date Time" field="createdDateTime" value={selectedUser?.createdDateTime} readOnly />
+                                            <InputField label="Mail Nickname" field="mailNickname" value={selectedUser?.mailNickname} readOnly />
                                         </div>
                                     </section>
 
@@ -222,12 +222,12 @@ export default function UsersPage() {
                                     <section>
                                         <h3 className="text-lg font-bold text-slate-200 mb-4 border-b border-slate-800 pb-2">Job Information</h3>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <InputField label="Job Title" field="jobTitle" />
-                                            <InputField label="Company Name" field="companyName" />
-                                            <InputField label="Department" field="department" />
-                                            <InputField label="Office Location" field="officeLocation" />
-                                            <InputField label="Employee Type" field="employeeType" readOnly />
-                                            <InputField label="Employee Hire Date" field="employeeHireDate" readOnly />
+                                            <InputField label="Job Title" field="jobTitle" value={editForm.jobTitle} onChange={(v) => setEditForm({...editForm, jobTitle: v})} />
+                                            <InputField label="Company Name" field="companyName" value={editForm.companyName} onChange={(v) => setEditForm({...editForm, companyName: v})} />
+                                            <InputField label="Department" field="department" value={editForm.department} onChange={(v) => setEditForm({...editForm, department: v})} />
+                                            <InputField label="Office Location" field="officeLocation" value={editForm.officeLocation} onChange={(v) => setEditForm({...editForm, officeLocation: v})} />
+                                            <InputField label="Employee Type" field="employeeType" value={selectedUser?.employeeType} readOnly />
+                                            <InputField label="Employee Hire Date" field="employeeHireDate" value={selectedUser?.employeeHireDate} readOnly />
                                         </div>
                                     </section>
 
@@ -235,17 +235,17 @@ export default function UsersPage() {
                                     <section>
                                         <h3 className="text-lg font-bold text-slate-200 mb-4 border-b border-slate-800 pb-2">Contact Information</h3>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <InputField label="Mobile Phone" field="mobilePhone" />
-                                            <InputField label="Business Phone" field="businessPhones" />
+                                            <InputField label="Mobile Phone" field="mobilePhone" value={editForm.mobilePhone} onChange={(v) => setEditForm({...editForm, mobilePhone: v})} />
+                                            <InputField label="Business Phone" field="businessPhones" value={editForm.businessPhones} onChange={(v) => setEditForm({...editForm, businessPhones: v})} />
                                             <div className="col-span-full">
-                                                <InputField label="Street Address" field="streetAddress" />
+                                                <InputField label="Street Address" field="streetAddress" value={editForm.streetAddress} onChange={(v) => setEditForm({...editForm, streetAddress: v})} />
                                             </div>
-                                            <InputField label="City" field="city" />
-                                            <InputField label="State or Province" field="state" />
-                                            <InputField label="ZIP / Postal Code" field="postalCode" />
-                                            <InputField label="Country or Region" field="country" />
+                                            <InputField label="City" field="city" value={editForm.city} onChange={(v) => setEditForm({...editForm, city: v})} />
+                                            <InputField label="State or Province" field="state" value={editForm.state} onChange={(v) => setEditForm({...editForm, state: v})} />
+                                            <InputField label="ZIP / Postal Code" field="postalCode" value={editForm.postalCode} onChange={(v) => setEditForm({...editForm, postalCode: v})} />
+                                            <InputField label="Country or Region" field="country" value={editForm.country} onChange={(v) => setEditForm({...editForm, country: v})} />
                                             <div className="col-span-full">
-                                                <InputField label="Email" field="mail" readOnly />
+                                                <InputField label="Email" field="mail" value={selectedUser?.mail} readOnly />
                                             </div>
                                         </div>
                                     </section>
