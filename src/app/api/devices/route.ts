@@ -1,0 +1,31 @@
+import { NextResponse } from 'next/server';
+import { getGraphClient } from '@/lib/graph';
+
+export const dynamic = 'force-dynamic';
+
+export async function GET() {
+    console.log('[API] GET /api/devices initiated...');
+    try {
+        const client = getGraphClient();
+        console.log('[API] Fetched graph client, calling /deviceManagement/managedDevices...');
+
+        // Fetch managed devices from Intune
+        const devicesResponse = await client.api('/deviceManagement/managedDevices')
+            .select('id,deviceName,operatingSystem,complianceState,lastSyncDateTime,serialNumber')
+            .get();
+
+        const devices = devicesResponse.value || [];
+        console.log(`[API] Successfully fetched ${devices.length} devices.`);
+
+        return NextResponse.json({
+            devices: devices,
+            activeCount: devices.filter((d: any) => d.complianceState === 'compliant').length,
+        });
+    } catch (error: any) {
+        console.error('[API] Graph API Error (Devices):', error.message);
+        return NextResponse.json(
+            { error: "Failed to fetch devices", details: error.message },
+            { status: 500 }
+        );
+    }
+}
