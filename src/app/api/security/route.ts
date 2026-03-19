@@ -44,6 +44,19 @@ export async function GET() {
         } catch (e: any) {
             errors.vulnerabilities = e.message;
             console.warn('[API] TVM Vulnerabilities fetch failed (Beta):', e.message);
+            
+            // Fallback to Threat Intelligence (MDTI) if TVM fails
+            try {
+                const tiResponse = await client.api('/security/threatIntelligence/vulnerabilities')
+                    .top(20)
+                    .get();
+                vulnerabilities = tiResponse.value || [];
+                if (vulnerabilities.length > 0) {
+                    delete errors.vulnerabilities; // Clear error if fallback worked
+                }
+            } catch (tiErr: any) {
+                console.warn('[API] MDTI Fallback also failed:', tiErr.message);
+            }
         }
 
         // 4. Fetch Recent Alerts
