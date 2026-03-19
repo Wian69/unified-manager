@@ -52,7 +52,7 @@ export default function Dashboard() {
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <DashboardCard 
                     title="Total Devices" 
                     value={loading ? "..." : (data.devices?.devices?.length || 0)} 
@@ -66,12 +66,6 @@ export default function Dashboard() {
                     icon={<Users size={28} />}
                 />
                 <DashboardCard 
-                    title="Secure Score" 
-                    value={loading ? "..." : (data.security?.secureScore?.currentScore ? Math.round(data.security.secureScore.currentScore) : "-")} 
-                    description={loading ? "Loading..." : `${data.security?.recentAlerts?.length || 0} recent alerts`}
-                    icon={<Shield size={28} />}
-                />
-                <DashboardCard 
                     title="SharePoint Sites" 
                     value={loading ? "..." : (data.sharepoint?.drives?.length || 0)} 
                     description={loading ? "Loading..." : "Active document drives"}
@@ -79,17 +73,15 @@ export default function Dashboard() {
                 />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-                {/* Recent Devices Table Placeholder */}
-                <div className="bg-slate-900/40 backdrop-blur-md rounded-2xl border border-slate-800/60 p-6">
+                <div className="lg:col-span-full bg-slate-900/40 backdrop-blur-md rounded-2xl border border-slate-800/60 p-6">
                     <h2 className="text-xl font-bold text-slate-200 mb-4">Recent Devices</h2>
                     {loading ? (
                         <div className="animate-pulse space-y-4">
                             {[1,2,3].map(i => <div key={i} className="h-12 bg-slate-800/50 rounded-lg"></div>)}
                         </div>
                     ) : (data.devices?.devices?.length > 0 ? (
-                        <div className="space-y-4">
-                            {data.devices.devices.slice(0, 5).map((d: any) => (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {data.devices.devices.slice(0, 10).map((d: any) => (
                                 <div key={d.id} className="flex justify-between items-center bg-slate-800/30 p-4 rounded-xl">
                                     <div className="flex items-center gap-3">
                                         <Laptop size={20} className="text-slate-400" />
@@ -108,37 +100,6 @@ export default function Dashboard() {
                         <p className="text-slate-500 text-sm">No devices found. Check Intune enrollment.</p>
                     ))}
                 </div>
-
-                {/* Secure Alerts Table Placeholder */}
-                <div className="bg-slate-900/40 backdrop-blur-md rounded-2xl border border-slate-800/60 p-6">
-                    <h2 className="text-xl font-bold text-slate-200 mb-4">Security Alerts</h2>
-                    {loading ? (
-                        <div className="animate-pulse space-y-4">
-                            {[1,2,3].map(i => <div key={i} className="h-12 bg-slate-800/50 rounded-lg"></div>)}
-                        </div>
-                    ) : (data.security?.recentAlerts?.length > 0 ? (
-                        <div className="space-y-4">
-                            {data.security.recentAlerts.slice(0, 5).map((a: any) => (
-                                <div key={a.id} className="flex justify-between items-center bg-slate-800/30 p-4 rounded-xl border-l-2 border-red-500">
-                                    <div className="flex items-center gap-3">
-                                        <Shield size={20} className="text-rose-400" />
-                                        <div>
-                                            <p className="font-medium text-sm">{a.title}</p>
-                                            <p className="text-xs text-slate-500">{a.severity} Severity</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="flex flex-col items-center justify-center p-8 text-center bg-slate-800/20 rounded-xl">
-                            <Shield size={32} className="text-emerald-500 mb-3" />
-                            <p className="text-slate-300 font-medium">No active security alerts</p>
-                            <p className="text-slate-500 text-sm mt-1">Your environment is secure.</p>
-                        </div>
-                    ))}
-                </div>
-            </div>
         </div>
     );
 }

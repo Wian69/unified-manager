@@ -13,7 +13,6 @@ export default function Sidebar() {
                 <NavItem href="/" icon={<Home size={20} />} label="Dashboard" />
                 <NavItem href="/devices" icon={<Laptop size={20} />} label="Devices" />
                 <NavItem href="/users" icon={<Users size={20} />} label="Users" />
-                <NavItem href="/security" icon={<Shield size={20} />} label="Security" />
                 <NavItem href="/sharepoint" icon={<HardDrive size={20} />} label="SharePoint" />
             </nav>
             <div className="p-6 text-xs text-slate-500 border-t border-slate-800">
