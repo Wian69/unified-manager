@@ -12,8 +12,12 @@ export async function GET() {
             .select('id,name,description,webUrl')
             .get();
 
+        const drives = drivesResponse.value || [];
+        // Sort alphabetically by name
+        drives.sort((a: any, b: any) => (a.name || '').localeCompare(b.name || ''));
+
         return NextResponse.json({
-            drives: drivesResponse.value || [],
+            drives: drives,
         });
     } catch (error: any) {
         console.error('[API] Graph API Error (SharePoint):', error.message);

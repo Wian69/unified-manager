@@ -17,6 +17,9 @@ export async function GET() {
         const devices = devicesResponse.value || [];
         console.log(`[API] Successfully fetched ${devices.length} devices.`);
 
+        // Sort alphabetically by deviceName
+        devices.sort((a: any, b: any) => (a.deviceName || '').localeCompare(b.deviceName || ''));
+
         return NextResponse.json({
             devices: devices,
             activeCount: devices.filter((d: any) => d.complianceState === 'compliant').length,

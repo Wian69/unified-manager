@@ -14,6 +14,9 @@ export async function GET() {
 
         const users = usersResponse.value || [];
 
+        // Sort alphabetically by displayName
+        users.sort((a: any, b: any) => (a.displayName || '').localeCompare(b.displayName || ''));
+
         return NextResponse.json({
             users: users,
             activeUsers: users.filter((u: any) => u.accountEnabled).length,
