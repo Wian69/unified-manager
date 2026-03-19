@@ -88,13 +88,16 @@ export default function UsersPage() {
             // Update local state immediately for instant grouping feedback
             setUsers(prevUsers => prevUsers.map(u => 
                 u.id === selectedUserId 
-                    ? { ...u, ...editForm } 
+                    ? { ...u, ...editForm, officeLocation: editForm.officeLocation?.trim() } 
                     : u
             ));
             
             setSelectedUserId(null);
-            // Still background refresh to ensure sync with server
-            fetchUsers();
+            
+            // Delay background refresh by 3 seconds to avoid eventual consistency issues with Graph API
+            setTimeout(() => {
+                fetchUsers();
+            }, 3000);
         } catch (error) {
             console.error("Failed to update user", error);
             alert("Failed to save user changes.");
