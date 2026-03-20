@@ -1,12 +1,31 @@
 import { NextResponse } from 'next/server';
 import { getWatchlist, saveWatchlist } from '@/lib/db';
+import { getGraphClient } from '@/lib/graph';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
     try {
         const watchlist = getWatchlist();
-        return NextResponse.json({ watchlist });
+        const client = getGraphClient();
+        
+        // Enrich watchlist with real-time Drive usage data
+        const enrichedWatchlist = [];
+        for (const user of watchlist) {
+            try {
+                const driveRes = await client.api(`/users/${user.id}/drive`).select('quota').get();
+                enrichedWatchlist.push({
+                    ...user,
+                    driveUsed: driveRes.quota?.used || 0
+                });
+            } catch (err: any) {
+                console.error(`[Watchlist] Drive fetch failed for ${user.userPrincipalName}:`, err.message);
+                // Fallback to 0 if drive is not provisioned or access denied
+                enrichedWatchlist.push({ ...user, driveUsed: 0 });
+            }
+        }
+
+        return NextResponse.json({ watchlist: enrichedWatchlist });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
