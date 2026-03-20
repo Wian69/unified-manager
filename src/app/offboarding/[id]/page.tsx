@@ -5,6 +5,7 @@ import { ArrowLeft, RefreshCw, ShieldAlert, FileText, Activity, Trash2, User } f
 import Link from "next/link";
 import SharePointDeletionsModule from "@/components/SharePointDeletionsModule";
 import EmailTraceModule from "@/components/EmailTraceModule";
+import TeamsChatModule from "@/components/TeamsChatModule";
 import ActivityCard from "@/components/ActivityCard";
 
 export default function UserOffboardingPage({ params }: { params: Promise<{ id: string }> }) {
@@ -134,6 +135,13 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
 
                     <section>
                         <EmailTraceModule 
+                            userId={id}
+                            userDisplayName={user.displayName}
+                        />
+                    </section>
+
+                    <section>
+                        <TeamsChatModule 
                             userId={id}
                             userDisplayName={user.displayName}
                         />
