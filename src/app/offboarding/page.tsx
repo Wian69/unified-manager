@@ -124,8 +124,8 @@ function OffboardingContent() {
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* Unified User Search Header */}
-            <div className="bg-slate-950/50 backdrop-blur-2xl p-10 rounded-[2.5rem] border border-slate-800 shadow-2xl relative overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent pointer-events-none" />
+            <div className="bg-slate-950/50 backdrop-blur-2xl p-10 rounded-[2.5rem] border border-slate-800 shadow-2xl relative group">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent pointer-events-none rounded-[2.5rem]" />
                 <div className="relative z-10 flex flex-col items-center text-center space-y-8">
                     <div>
                         <h1 className="text-4xl font-black text-white tracking-tight mb-3">
@@ -178,143 +178,153 @@ function OffboardingContent() {
                 </div>
             </div>
 
-            {/* SharePoint Deletion Audit Section (MOVED TO TOP) */}
-            <div id="sp-audit-section" className="bg-slate-900/40 rounded-3xl border border-slate-800/60 overflow-hidden backdrop-blur-md transition-all duration-500">
-                <div className="p-8 border-b border-slate-800/60 bg-blue-500/5">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                        <div>
-                            <h2 className="text-2xl font-black text-white flex items-center gap-3">
-                                <Trash2 className="text-blue-500" size={28} />
-                                SharePoint / OneDrive Deletion Audit
-                            </h2>
-                            <p className="text-slate-400 text-sm mt-1">Audit and export deletion records for departing users.</p>
-                        </div>
-                    </div>
+            <div className="bg-slate-900/40 rounded-3xl border border-slate-800/60 overflow-hidden backdrop-blur-md">
+                <div className="p-6 border-b border-slate-800/60 flex justify-between items-center bg-slate-950/30">
+                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                        <ShieldAlert size={20} className="text-rose-500" />
+                        Employee Watchlist ({monitoredUsers.length})
+                    </h2>
                 </div>
-                
-                <div className="p-8">
-                    <SharePointDeletionsModule 
-                        selectedUser={selectedSPUser}
-                        setSelectedUser={setSelectedSPUser}
-                        recycleBinItems={recycleBinItems}
-                        setRecycleBinItems={setRecycleBinItems}
-                        loadingDetails={loadingSPDetails}
-                        setLoadingDetails={setLoadingSPDetails}
-                        error={spError}
-                        setError={setSpError}
-                    />
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm text-slate-300">
+                        <thead className="bg-slate-950/50 text-slate-400 uppercase font-black text-[10px] tracking-widest border-b border-slate-800/60">
+                            <tr>
+                                <th className="px-6 py-4">Employee</th>
+                                <th className="px-6 py-4">Device Status</th>
+                                <th className="px-6 py-4">Data Activity</th>
+                                <th className="px-6 py-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/60">
+                            {monitoredUsers.length > 0 ? (
+                                monitoredUsers.map(u => {
+                                    const agent = agents.find(a => 
+                                        a.userPrincipalName?.toLowerCase() === u.userPrincipalName?.toLowerCase() ||
+                                        a.userDisplayName?.toLowerCase() === u.displayName?.toLowerCase() ||
+                                        a.deviceName?.toLowerCase() === u.displayName?.toLowerCase()
+                                    );
+                                    return (
+                                        <tr 
+                                            key={u.id} 
+                                            className={`hover:bg-blue-500/5 cursor-pointer transition-all group ${selectedSPUser?.id === u.id ? 'bg-blue-500/10' : ''}`}
+                                            onClick={() => auditSharePointForUser(u)}
+                                        >
+                                            <td className="px-6 py-5">
+                                                <div className="font-bold text-slate-200">{u.displayName}</div>
+                                                <div className="text-[10px] text-slate-500 font-mono italic">{u.userPrincipalName}</div>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                {agent ? (
+                                                    <>
+                                                        <div className="text-emerald-400 font-bold flex items-center gap-1.5">
+                                                            <Activity size={12} className="animate-pulse" />
+                                                            {agent.deviceName}
+                                                        </div>
+                                                        <div className="text-[10px] text-slate-500 uppercase">{agent.publicIp}</div>
+                                                    </>
+                                                ) : (
+                                                    <span className="text-slate-600 italic">No Device Linked</span>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <div className="flex items-center gap-2 text-rose-400 font-bold">
+                                                    <Activity size={14} className="animate-pulse" />
+                                                    High Density
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-5 text-right">
+                                                <button 
+                                                    onClick={(e) => { e.stopPropagation(); removeFromWatchlist(u.id); }}
+                                                    className="text-slate-600 hover:text-rose-500 p-2 transition-colors"
+                                                    title="Remove from Watchlist"
+                                                >
+                                                    <ArrowLeft size={16} />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            ) : (
+                                <tr><td colSpan={4} className="px-6 py-20 text-center text-slate-500">
+                                    <UserMinus className="mx-auto mb-4 opacity-20" size={48} />
+                                    <p>No employees currently in watchlist. Search above to add.</p>
+                                </td></tr>
+                            )}
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Watchlist Table */}
-                <div className="lg:col-span-2 bg-slate-900/40 rounded-3xl border border-slate-800/60 overflow-hidden backdrop-blur-md">
-                    <div className="p-6 border-b border-slate-800/60 flex justify-between items-center bg-slate-950/30">
-                        <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                            <ShieldAlert size={20} className="text-rose-500" />
-                            Employee Watchlist ({monitoredUsers.length})
-                        </h2>
-                    </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm text-slate-300">
-                            <thead className="bg-slate-950/50 text-slate-400 uppercase font-black text-[10px] tracking-widest border-b border-slate-800/60">
-                                <tr>
-                                    <th className="px-6 py-4">Employee</th>
-                                    <th className="px-6 py-4">Device Status</th>
-                                    <th className="px-6 py-4">Data Activity</th>
-                                    <th className="px-6 py-4 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-800/60">
-                                {monitoredUsers.length > 0 ? (
-                                    monitoredUsers.map(u => {
-                                        const agent = agents.find(a => 
-                                            a.userPrincipalName?.toLowerCase() === u.userPrincipalName?.toLowerCase() ||
-                                            a.userDisplayName?.toLowerCase() === u.displayName?.toLowerCase() ||
-                                            a.deviceName?.toLowerCase() === u.displayName?.toLowerCase()
-                                        );
-                                        return (
-                                            <tr 
-                                                key={u.id} 
-                                                className={`hover:bg-blue-500/5 cursor-pointer transition-all group ${selectedSPUser?.id === u.id ? 'bg-blue-500/10' : ''}`}
-                                                onClick={() => auditSharePointForUser(u)}
-                                            >
-                                                <td className="px-6 py-5">
-                                                    <div className="font-bold text-slate-200">{u.displayName}</div>
-                                                    <div className="text-[10px] text-slate-500 font-mono italic">{u.userPrincipalName}</div>
-                                                </td>
-                                                <td className="px-6 py-5">
-                                                    {agent ? (
-                                                        <>
-                                                            <div className="text-emerald-400 font-bold flex items-center gap-1.5">
-                                                                <Activity size={12} className="animate-pulse" />
-                                                                {agent.deviceName}
-                                                            </div>
-                                                            <div className="text-[10px] text-slate-500 uppercase">{agent.publicIp}</div>
-                                                        </>
-                                                    ) : (
-                                                        <span className="text-slate-600 italic">No Device Linked</span>
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-5">
-                                                    <div className="flex items-center gap-2 text-rose-400 font-bold">
-                                                        <Activity size={14} className="animate-pulse" />
-                                                        High Density
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-5 text-right">
-                                                    <button 
-                                                        onClick={(e) => { e.stopPropagation(); removeFromWatchlist(u.id); }}
-                                                        className="text-slate-600 hover:text-rose-500 p-2 transition-colors"
-                                                        title="Remove from Watchlist"
-                                                    >
-                                                        <ArrowLeft size={16} />
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })
-                                ) : (
-                                    <tr><td colSpan={4} className="px-6 py-20 text-center text-slate-500">
-                                        <UserMinus className="mx-auto mb-4 opacity-20" size={48} />
-                                        <p>No employees currently in watchlist. Search above to add.</p>
-                                    </td></tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                {/* Activity Feed */}
-                <div className="space-y-6">
-                    <div className="bg-slate-900/40 rounded-3xl border border-slate-800/60 p-6 backdrop-blur-md">
-                        <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                            <FileText size={20} className="text-blue-400" />
-                            Recent File Alerts
-                        </h3>
-                        <div className="space-y-4">
-                            <ActivityCard 
-                                title="Mass File Archive (ZIP)" 
-                                device="CEO-LAPTOP" 
-                                time="2 mins ago" 
-                                severity="critical" 
-                            />
-                            <ActivityCard 
-                                title="USB Data Transfer" 
-                                device="DEV-WS-01" 
-                                time="15 mins ago" 
-                                severity="high" 
-                            />
-                            <ActivityCard 
-                                title="Browser Upload (Dropbox)" 
-                                device="HR-MAC-02" 
-                                time="1 hour ago" 
-                                severity="medium" 
+            {selectedSPUser && (
+                <div className="space-y-8 animate-in slide-in-from-bottom-8 duration-700">
+                    {/* SharePoint Deletion Audit Section */}
+                    <div id="sp-audit-section" className="bg-slate-900/40 rounded-3xl border border-slate-800/60 overflow-hidden backdrop-blur-md transition-all duration-500">
+                        <div className="p-8 border-b border-slate-800/60 bg-blue-500/5">
+                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                                <div>
+                                    <h2 className="text-2xl font-black text-white flex items-center gap-3">
+                                        <Trash2 className="text-blue-500" size={28} />
+                                        SharePoint / OneDrive Deletion Audit
+                                    </h2>
+                                    <p className="text-slate-400 text-sm mt-1">Audit and export deletion records for departing users.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="p-8">
+                            <SharePointDeletionsModule 
+                                selectedUser={selectedSPUser}
+                                setSelectedUser={setSelectedSPUser}
+                                recycleBinItems={recycleBinItems}
+                                loadingDetails={loadingSPDetails}
+                                error={spError}
                             />
                         </div>
                     </div>
+
+                    {/* Activity Feed and Details */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div className="lg:col-span-2 space-y-6">
+                            <div className="bg-slate-950/50 p-8 rounded-3xl border border-slate-800">
+                                <h3 className="text-xl font-bold text-white mb-6">User Risk Context</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800">
+                                        <p className="text-xs text-slate-500 uppercase font-bold tracking-widest mb-2">Access Patterns</p>
+                                        <p className="text-slate-200">Multiple after-hours logins detected from unusual locations.</p>
+                                    </div>
+                                    <div className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800">
+                                        <p className="text-xs text-slate-500 uppercase font-bold tracking-widest mb-2">Policy Status</p>
+                                        <p className="text-emerald-400 font-bold">Compliant (Last check 5m ago)</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div className="bg-slate-900/40 rounded-3xl border border-slate-800/60 p-6 backdrop-blur-md">
+                                <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                                    <FileText size={20} className="text-blue-400" />
+                                    Tracked Activity Details
+                                </h3>
+                                <div className="space-y-4">
+                                    <ActivityCard 
+                                        title="Mass File Archive (ZIP)" 
+                                        device="SIMULATED-DEV" 
+                                        time="Current session" 
+                                        severity="critical" 
+                                    />
+                                    <ActivityCard 
+                                        title="USB Data Transfer" 
+                                        device="SIMULATED-DEV" 
+                                        time="2 hours ago" 
+                                        severity="high" 
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }
