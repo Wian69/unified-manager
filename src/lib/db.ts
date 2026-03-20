@@ -6,6 +6,12 @@ const AGENTS_FILE = path.join(DB_DIR, 'agents.json');
 const COMMANDS_FILE = path.join(DB_DIR, 'commands.json');
 const WATCHLIST_FILE = path.join(DB_DIR, 'watchlist.json');
 
+const ensureFileSync = (file: string, initialData: any) => {
+    if (!fs.existsSync(file)) {
+        fs.writeFileSync(file, JSON.stringify(initialData, null, 2));
+    }
+};
+
 let isInitialized = false;
 
 function initDB() {
