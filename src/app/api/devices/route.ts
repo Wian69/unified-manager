@@ -15,14 +15,7 @@ export async function GET() {
             .top(999)
             .get();
         
-        allDevices = allDevices.concat(response.value || []);
-
-        while (response['@odata.nextLink']) {
-            response = await client.api(response['@odata.nextLink']).get();
-            allDevices = allDevices.concat(response.value || []);
-        }
-
-        const devices = allDevices;
+        const devices = response.value || [];
         console.log(`[API] Successfully fetched ${devices.length} devices.`);
 
         // Sort alphabetically by deviceName
