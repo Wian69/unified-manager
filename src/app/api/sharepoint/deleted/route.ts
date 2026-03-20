@@ -14,11 +14,23 @@ export async function GET(request: Request) {
         if (userId) {
             try {
                 // 1. Get user's personal site ID from their drive
-                const driveResponse = await client.api(`/users/${userId}/drive`)
-                    .select('id,sharepointIds,webUrl')
-                    .get();
+                const driveResponse = await client.api(`/users/${userId}/drive`).get();
                 
-                const siteId = driveResponse.sharepointIds?.siteId;
+                // Extract site ID from sharePointIds (casing can vary in different Graph responses)
+                let siteId = driveResponse.sharePointIds?.siteId || driveResponse.sharepointIds?.siteId;
+                
+                // Fallback: Resolve site ID from personal site URL if drive metadata is missing
+                if (!siteId && driveResponse.webUrl) {
+                    const personalSiteUrl = driveResponse.webUrl.split('/Documents')[0];
+                    const url = new URL(personalSiteUrl);
+                    try {
+                        const siteResponse = await client.api(`/sites/${url.hostname}:${url.pathname}`).get();
+                        siteId = siteResponse.id;
+                    } catch (siteErr) {
+                        console.error('[API] Fallback site resolution failed:', siteErr);
+                    }
+                }
+
                 if (!siteId) {
                     return NextResponse.json({ 
                         error: "Personal Site (OneDrive) not provisioned. This site is only created after the user signs in to OneDrive for the first time.",
@@ -27,12 +39,31 @@ export async function GET(request: Request) {
                 }
 
                 // 2. Fetch live recycle bin items from the site
-                const recycleBinResponse = await client.api(`/sites/${siteId}/recycleBin/items`)
-                    .select('id,name,size,lastModifiedDateTime,deletedBy,webUrl')
-                    .top(100)
-                    .get();
+                // Note: For Personal Sites, the recycleBin endpoint is more reliably exposed in the Beta API.
+                const siteGuid = siteId.includes(',') ? siteId.split(',')[1] : siteId;
+                
+                let rawItems: any[] = [];
+                try {
+                    // Try Beta endpoint first for Personal Sites as it's the most reliable for 'recycleBin' segment
+                    const betaResponse = await client.api(`https://graph.microsoft.com/beta/sites/${siteGuid}/recycleBin/items`)
+                        .select('id,name,size,lastModifiedDateTime,deletedBy,webUrl')
+                        .top(100)
+                        .get();
+                    rawItems = betaResponse.value || [];
+                } catch (betaErr) {
+                    // Fallback to v1.0 if Beta fails or is restricted
+                    try {
+                        const v1Response = await client.api(`/sites/${siteGuid}/recycleBin/items`)
+                            .select('id,name,size,lastModifiedDateTime,deletedBy,webUrl')
+                            .top(100)
+                            .get();
+                        rawItems = v1Response.value || [];
+                    } catch (v1Err) {
+                        console.error('[API] Recycle bin retrieval failed in both Beta and v1.0');
+                    }
+                }
 
-                const items = (recycleBinResponse.value || []).map((item: any) => ({
+                const items = rawItems.map((item: any) => ({
                     id: item.id,
                     name: item.name,
                     size: item.size || 0,
@@ -64,7 +95,11 @@ export async function GET(request: Request) {
             .get();
 
         let csvData = '';
-        if (response && typeof response === 'object' && (response as any).getReader) {
+        if (typeof response === 'string') {
+            csvData = response;
+        } else if (Buffer.isBuffer(response)) {
+            csvData = response.toString('utf-8');
+        } else if (response && typeof response === 'object' && (response as any).getReader) {
             const reader = (response as any).getReader();
             const decoder = new TextDecoder();
             while (true) {
@@ -72,10 +107,6 @@ export async function GET(request: Request) {
                 if (done) break;
                 csvData += decoder.decode(value, { stream: true });
             }
-        } else if (typeof response === 'string') {
-            csvData = response;
-        } else if (Buffer.isBuffer(response)) {
-            csvData = response.toString('utf-8');
         }
 
         if (!csvData) {
