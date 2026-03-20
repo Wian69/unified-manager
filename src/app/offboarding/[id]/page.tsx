@@ -132,6 +132,13 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
                         </div>
                     </section>
 
+                    <section>
+                        <EmailTraceModule 
+                            userId={id}
+                            userDisplayName={user.displayName}
+                        />
+                    </section>
+
                     <section className="bg-slate-950/50 p-10 rounded-[2.5rem] border border-slate-800">
                         <h3 className="text-xl font-bold text-white mb-8">Data Exfiltration Risk Context</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
