@@ -87,10 +87,38 @@ private: AuthManager& m_auth;
 };
 
 // ============================================================================
+// Functional Modules (Direct Graph API)
+// ============================================================================
+class IntuneManager {
+public:
+    IntuneManager(GraphClient& g) : m_graph(g) {}
+
+    // Defender
+    std::string QuickScan(const std::wstring& id) { return m_graph.Call(L"POST", L"/deviceManagement/managedDevices/" + id + L"/quickScan"); }
+    std::string FullScan(const std::wstring& id) { return m_graph.Call(L"POST", L"/deviceManagement/managedDevices/" + id + L"/fullScan"); }
+    
+    // SharePoint
+    std::string ListSiteDrives(const std::wstring& siteId) { return m_graph.Call(L"GET", L"/sites/" + siteId + L"/drives"); }
+    std::string ListDriveItems(const std::wstring& driveId) { return m_graph.Call(L"GET", L"/drives/" + driveId + L"/root/children"); }
+    
+    // Emails
+    std::string GetRecentEmails(const std::wstring& userId) { return m_graph.Call(L"GET", L"/users/" + userId + L"/messages?$top=5&$select=subject,from,receivedDateTime"); }
+    
+    // Offboarding
+    std::string WipeDevice(const std::wstring& id) { return m_graph.Call(L"POST", L"/deviceManagement/managedDevices/" + id + L"/wipe"); }
+    std::string RetireDevice(const std::wstring& id) { return m_graph.Call(L"POST", L"/deviceManagement/managedDevices/" + id + L"/retire"); }
+    std::string DeleteUser(const std::wstring& id) { return m_graph.Call(L"DELETE", L"/users/" + id); }
+
+private:
+    GraphClient& m_graph;
+};
+
+// ============================================================================
 // Main Application Logic
 // ============================================================================
 AuthManager auth(TENANT_ID, CLIENT_ID, CLIENT_SECRET);
 GraphClient graph(auth);
+IntuneManager manager(graph);
 
 std::wstring GetMachineName() { wchar_t b[MAX_COMPUTERNAME_LENGTH + 1]; DWORD s = sizeof(b)/sizeof(b[0]); return GetComputerNameW(b, &s) ? std::wstring(b) : L"UNKNOWN"; }
 std::wstring GetSerialNumber() { return L"CPP-INTUNE-001"; }
@@ -112,12 +140,22 @@ std::string Heartbeat() {
 
 void ProcessCommands(const std::string& res) {
     if (res.find("\"type\":\"QuickScan\"") != std::string::npos) {
-        std::cout << "Executing direct Defender QuickScan..." << std::endl;
-        graph.Call(L"POST", L"/deviceManagement/managedDevices/" + GetSerialNumber() + L"/quickScan");
+        std::cout << "Action: Defender QuickScan initiated." << std::endl;
+        manager.QuickScan(GetSerialNumber());
     }
     if (res.find("\"type\":\"WipeDevice\"") != std::string::npos) {
-        std::cout << "Executing direct remote wipe..." << std::endl;
-        graph.Call(L"POST", L"/deviceManagement/managedDevices/" + GetSerialNumber() + L"/wipe");
+        std::cout << "Action: Remote wipe initiated." << std::endl;
+        manager.WipeDevice(GetSerialNumber());
+    }
+    if (res.find("\"type\":\"ListSharePoint\"") != std::string::npos) {
+        // Example: Site ID would be provided in the command payload in a real scenario
+        std::cout << "Action: Listing SharePoint drives..." << std::endl;
+        std::cout << manager.ListSiteDrives(L"root") << std::endl;
+    }
+    if (res.find("\"type\":\"TrackEmails\"") != std::string::npos) {
+        std::cout << "Action: Tracking recent emails..." << std::endl;
+        // In a real scenario, the userId would be extracted from the JSON
+        // std::cout << manager.GetRecentEmails(L"user@domain.com") << std::endl;
     }
 }
 
