@@ -182,13 +182,13 @@ export default function SharePointDeletionsModule({
                             />
                         </div>
                     </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm">
-                            <thead className="bg-slate-900/50 text-slate-500 uppercase text-[10px] font-black tracking-widest border-b border-slate-800">
+                    <div className="max-h-[600px] overflow-y-auto overflow-x-auto border-t border-slate-800">
+                        <table className="w-full text-left text-sm border-separate border-spacing-0">
+                            <thead className="bg-slate-900 text-slate-500 uppercase text-[10px] font-black tracking-widest sticky top-0 z-10">
                                 <tr>
-                                    <th className="px-6 py-4 cursor-pointer hover:text-white" onClick={() => handleSort("name")}>Filename</th>
-                                    <th className="px-6 py-4 text-center cursor-pointer hover:text-white" onClick={() => handleSort("size")}>Size</th>
-                                    <th className="px-6 py-4 text-right cursor-pointer hover:text-white" onClick={() => handleSort("deletedDateTime")}>Deletion Date</th>
+                                    <th className="px-6 py-4 cursor-pointer hover:text-white border-b border-slate-800" onClick={() => handleSort("name")}>Filename</th>
+                                    <th className="px-6 py-4 text-center cursor-pointer hover:text-white border-b border-slate-800" onClick={() => handleSort("size")}>Size</th>
+                                    <th className="px-6 py-4 text-right cursor-pointer hover:text-white border-b border-slate-800" onClick={() => handleSort("deletedDateTime")}>Deletion Date</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-800/50">
