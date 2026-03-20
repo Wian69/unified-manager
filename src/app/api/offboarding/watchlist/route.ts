@@ -6,7 +6,10 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
     try {
+        const logFile = 'C:\\Users\\WianDuRandt\\.gemini\\antigravity\\scratch\\unified-manager\\debug_api.log';
+        fs.appendFileSync(logFile, `[${new Date().toISOString()}] GET Watchlist Request Received\n`);
         const watchlist = getWatchlist();
+        fs.appendFileSync(logFile, `[${new Date().toISOString()}] Loaded ${watchlist.length} users from disk\n`);
         const client = getGraphClient();
         
         // Enrich watchlist with real-time Drive usage data
@@ -36,7 +39,8 @@ export async function GET() {
 export async function POST(req: Request) {
     try {
         const { watchlist } = await req.json();
-        console.log(`[Watchlist API] Received ${watchlist?.length || 0} users for persistence.`);
+        const logFile = 'C:\\Users\\WianDuRandt\\.gemini\\antigravity\\scratch\\unified-manager\\debug_api.log';
+        fs.appendFileSync(logFile, `[${new Date().toISOString()}] POST Watchlist Received: ${watchlist?.length || 0} users\n`);
         saveWatchlist(watchlist || []);
         return NextResponse.json({ success: true });
     } catch (error: any) {
