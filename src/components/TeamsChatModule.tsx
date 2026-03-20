@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Search, MessageSquare, Download, RefreshCw, ShieldAlert, Users, Globe, ChevronDown, ChevronUp, AlertTriangle, User, Paperclip } from "lucide-react";
+import { Search, MessageSquare, Download, RefreshCw, ShieldAlert, Users, Globe, ChevronDown, ChevronUp, AlertTriangle, User, Paperclip, Activity } from "lucide-react";
 
 export default function TeamsChatModule({ userId, userDisplayName }: { userId: string, userDisplayName: string }) {
     const [chats, setChats] = useState<any[]>([]);
