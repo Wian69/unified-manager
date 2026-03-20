@@ -70,7 +70,7 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
     }
 
     return (
-        <div className="max-w-7xl mx-auto p-8 space-y-12 animate-in fade-in duration-700">
+        <div className="p-8 space-y-12 animate-in fade-in duration-700">
             {/* Header Navigation */}
             <div className="flex items-center justify-between">
                 <Link href="/offboarding" className="group flex items-center gap-3 text-slate-400 hover:text-white transition-all">

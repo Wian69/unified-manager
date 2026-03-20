@@ -101,15 +101,15 @@ function OffboardingContent() {
             {/* Unified User Search Header */}
             <div className="bg-slate-950/50 backdrop-blur-2xl p-10 rounded-[2.5rem] border border-slate-800 shadow-2xl relative group">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent pointer-events-none rounded-[2.5rem]" />
-                <div className="relative z-10 flex flex-col items-center text-center space-y-8">
+                <div className="relative z-10 flex flex-col items-start text-left space-y-8">
                     <div>
                         <h1 className="text-4xl font-black text-white tracking-tight mb-3">
                             Offboarding <span className="text-blue-500">Monitor</span>
                         </h1>
-                        <p className="text-slate-400 max-w-lg mx-auto italic">Start typing to find an employee...</p>
+                        <p className="text-slate-400 italic">Start typing to find an employee...</p>
                     </div>
 
-                    <div className="w-full max-w-2xl relative">
+                    <div className="w-full relative">
                         <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
                         <div className="relative flex items-center bg-slate-900 border border-slate-800 rounded-2xl p-2 shadow-2xl">
                             <Search className="ml-4 text-slate-500" size={24} />
