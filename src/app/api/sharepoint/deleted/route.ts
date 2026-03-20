@@ -44,20 +44,36 @@ export async function GET(request: Request) {
                 
                 let rawItems: any[] = [];
                 try {
-                    // Try Beta endpoint first for Personal Sites as it's the most reliable for 'recycleBin' segment
-                    const betaResponse = await client.api(`https://graph.microsoft.com/beta/sites/${siteGuid}/recycleBin/items`)
+                    // Try Beta endpoint first for Personal Sites
+                    let response = await client.api(`https://graph.microsoft.com/beta/sites/${siteGuid}/recycleBin/items`)
                         .select('id,name,size,lastModifiedDateTime,deletedDateTime,deletedBy,webUrl')
-                        .top(100)
+                        .top(999)
                         .get();
-                    rawItems = betaResponse.value || [];
+                    
+                    rawItems = rawItems.concat(response.value || []);
+                    let nextLink = response['@odata.nextLink'];
+
+                    while (nextLink) {
+                        response = await client.api(nextLink).get();
+                        rawItems = rawItems.concat(response.value || []);
+                        nextLink = response['@odata.nextLink'];
+                    }
                 } catch (betaErr) {
-                    // Fallback to v1.0 if Beta fails or is restricted
+                    // Fallback to v1.0
                     try {
-                        const v1Response = await client.api(`/sites/${siteGuid}/recycleBin/items`)
+                        let response = await client.api(`/sites/${siteGuid}/recycleBin/items`)
                             .select('id,name,size,lastModifiedDateTime,deletedDateTime,deletedBy,webUrl')
-                            .top(100)
+                            .top(999)
                             .get();
-                        rawItems = v1Response.value || [];
+                        
+                        rawItems = rawItems.concat(response.value || []);
+                        let nextLink = response['@odata.nextLink'];
+
+                        while (nextLink) {
+                            response = await client.api(nextLink).get();
+                            rawItems = rawItems.concat(response.value || []);
+                            nextLink = response['@odata.nextLink'];
+                        }
                     } catch (v1Err) {
                         console.error('[API] Recycle bin retrieval failed in both Beta and v1.0');
                     }
