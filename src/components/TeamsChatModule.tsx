@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Search, MessageSquare, Download, RefreshCw, ShieldAlert, Users, Globe, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
+import { Search, MessageSquare, Download, RefreshCw, ShieldAlert, Users, Globe, ChevronDown, ChevronUp, AlertTriangle, User, Paperclip } from "lucide-react";
 
 export default function TeamsChatModule({ userId, userDisplayName }: { userId: string, userDisplayName: string }) {
     const [chats, setChats] = useState<any[]>([]);
@@ -9,6 +9,8 @@ export default function TeamsChatModule({ userId, userDisplayName }: { userId: s
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [expandedChatId, setExpandedChatId] = useState<string | null>(null);
+    const [messages, setMessages] = useState<Record<string, any[]>>({});
+    const [loadingMessages, setLoadingMessages] = useState<string | null>(null);
 
     const fetchChats = async () => {
         setLoading(true);
@@ -26,14 +28,39 @@ export default function TeamsChatModule({ userId, userDisplayName }: { userId: s
         }
     };
 
+    const fetchMessages = async (chatId: string) => {
+        if (messages[chatId]) return; // Already loaded
+        
+        setLoadingMessages(chatId);
+        try {
+            const res = await fetch(`/api/teams/chats?chatId=${chatId}`);
+            const result = await res.json();
+            if (result.success) {
+                setMessages(prev => ({ ...prev, [chatId]: result.data }));
+            }
+        } catch (err) {
+            console.error("Failed to fetch messages:", err);
+        } finally {
+            setLoadingMessages(null);
+        }
+    };
+
     useEffect(() => {
         if (userId) fetchChats();
     }, [userId]);
 
+    const handleExpand = (chatId: string) => {
+        if (expandedChatId === chatId) {
+            setExpandedChatId(null);
+        } else {
+            setExpandedChatId(chatId);
+            fetchMessages(chatId);
+        }
+    };
+
     const filteredChats = chats.filter(chat => 
         chat.topic?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        chat.lastMessage?.body?.content?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        chat.externalParticipants?.some((p: string) => p.toLowerCase().includes(searchQuery.toLowerCase()))
+        chat.lastMessage?.body?.content?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const downloadCSV = () => {
@@ -138,7 +165,7 @@ export default function TeamsChatModule({ userId, userDisplayName }: { userId: s
                                     <React.Fragment key={chat.id}>
                                         <tr 
                                             className="hover:bg-indigo-500/5 cursor-pointer transition-colors group"
-                                            onClick={() => setExpandedChatId(expandedChatId === chat.id ? null : chat.id)}
+                                            onClick={() => handleExpand(chat.id)}
                                         >
                                             <td className="px-8 py-6">
                                                 <div className="flex items-center gap-4">
@@ -180,44 +207,68 @@ export default function TeamsChatModule({ userId, userDisplayName }: { userId: s
                                             </td>
                                         </tr>
                                         {expandedChatId === chat.id && (
-                                            <tr className="bg-indigo-500/5">
+                                            <tr className="bg-slate-900/50">
                                                 <td colSpan={4} className="px-8 py-8 border-b border-slate-800/40 animate-in slide-in-from-top-2 duration-300">
                                                     <div className="space-y-6">
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                            <div>
-                                                                <p className="text-[10px] text-indigo-400 uppercase font-black tracking-widest mb-3">Conversation Context</p>
-                                                                <div className="bg-slate-950 p-6 rounded-2xl border border-slate-800 text-slate-300 text-sm leading-relaxed font-sans max-h-40 overflow-y-auto"
-                                                                     dangerouslySetInnerHTML={{ __html: chat.lastMessage?.body?.content || 'No detailed message available.' }}
-                                                                />
-                                                            </div>
-                                                            <div>
-                                                                <p className="text-[10px] text-amber-500 uppercase font-black tracking-widest mb-3 flex items-center gap-2">
-                                                                    <Users size={10} />
-                                                                    Participants & Visibility
-                                                                </p>
-                                                                <div className="space-y-2">
-                                                                    <div className="flex items-center justify-between p-3 bg-slate-900 rounded-xl border border-slate-800">
-                                                                        <span className="text-xs text-slate-400">Total Members:</span>
-                                                                        <span className="text-xs font-bold text-white">{chat.membersCount}</span>
+                                                        <div className="flex items-center justify-between">
+                                                            <p className="text-[10px] text-indigo-400 uppercase font-black tracking-widest flex items-center gap-2">
+                                                                <Activity size={10} />
+                                                                Conversation History (Last 20 messages)
+                                                            </p>
+                                                            {chat.isExternal && (
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="text-[9px] text-rose-500 font-bold uppercase">External:</span>
+                                                                    <div className="flex gap-1">
+                                                                        {chat.externalParticipants.map((p: string, idx: number) => (
+                                                                            <span key={idx} className="px-2 py-0.5 bg-rose-500/10 text-rose-500 text-[8px] rounded border border-rose-500/20">
+                                                                                {p}
+                                                                            </span>
+                                                                        ))}
                                                                     </div>
-                                                                    {chat.isExternal && (
-                                                                        <div className="p-4 bg-rose-500/5 rounded-xl border border-rose-500/10">
-                                                                            <p className="text-[10px] text-rose-500 font-bold uppercase mb-2 flex items-center gap-2">
-                                                                                <AlertTriangle size={10} />
-                                                                                External Participants
-                                                                            </p>
-                                                                            <div className="flex flex-wrap gap-2">
-                                                                                {chat.externalParticipants.map((p: string, idx: number) => (
-                                                                                    <span key={idx} className="px-2 py-1 bg-rose-500/10 text-rose-500 text-[10px] rounded border border-rose-500/20 font-medium">
-                                                                                        {p}
-                                                                                    </span>
-                                                                                ))}
-                                                                            </div>
-                                                                        </div>
-                                                                    )}
                                                                 </div>
-                                                            </div>
+                                                            )}
                                                         </div>
+
+                                                        {loadingMessages === chat.id ? (
+                                                            <div className="flex flex-col items-center py-12 gap-3">
+                                                                <RefreshCw size={24} className="animate-spin text-indigo-500" />
+                                                                <p className="text-[9px] text-slate-500 font-mono uppercase tracking-widest">Retrieving Secure Log...</p>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="space-y-4 max-h-96 overflow-y-auto pr-4 custom-scrollbar">
+                                                                {messages[chat.id]?.slice().reverse().map((msg: any) => (
+                                                                    <div key={msg.id} className={`flex flex-col ${msg.from?.user?.id === userId ? 'items-end' : 'items-start'}`}>
+                                                                        <div className="flex items-center gap-2 mb-1 px-1">
+                                                                            <span className="text-[9px] font-bold text-slate-400">{msg.from?.user?.displayName || 'System'}</span>
+                                                                            <span className="text-[8px] text-slate-600">{new Date(msg.createdDateTime).toLocaleString()}</span>
+                                                                        </div>
+                                                                        <div className={`p-4 rounded-2xl max-w-[80%] text-sm shadow-xl ${
+                                                                            msg.from?.user?.id === userId 
+                                                                                ? 'bg-indigo-600 text-white rounded-tr-none' 
+                                                                                : 'bg-slate-800 text-slate-200 rounded-tl-none border border-slate-700'
+                                                                        }`}>
+                                                                            <div dangerouslySetInnerHTML={{ __html: msg.body?.content }} />
+                                                                            {msg.attachments?.length > 0 && (
+                                                                                <div className="mt-3 pt-3 border-t border-white/10 space-y-2">
+                                                                                    {msg.attachments.map((at: any) => (
+                                                                                        <div key={at.id} className="flex items-center gap-2 text-[10px] bg-black/20 p-2 rounded-lg">
+                                                                                            <Paperclip size={12} className="shrink-0" />
+                                                                                            <span className="truncate">{at.name}</span>
+                                                                                        </div>
+                                                                                    ))}
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                                {(!messages[chat.id] || messages[chat.id].length === 0) && (
+                                                                    <div className="text-center py-12">
+                                                                        <MessageSquare size={24} className="mx-auto text-slate-800 mb-2 opacity-30" />
+                                                                        <p className="text-[10px] text-slate-600 font-mono italic">No message history discovered for this thread.</p>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </td>
                                             </tr>

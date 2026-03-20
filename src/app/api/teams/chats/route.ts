@@ -3,17 +3,31 @@ import { getGraphClient } from '@/lib/graph';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: Request) {
-    const { searchParams } = new URL(request.url);
+export async function GET(req: Request) {
+    const { searchParams } = new URL(req.url);
     const userId = searchParams.get('userId');
+    const chatId = searchParams.get('chatId');
 
-    if (!userId) {
-        return NextResponse.json({ error: "Missing userId" }, { status: 400 });
+    if (!userId && !chatId) {
+        return NextResponse.json({ error: 'Missing userId or chatId' }, { status: 400 });
     }
 
     try {
         const client = getGraphClient();
-        
+
+        // SCENARIO 1: Fetch messages for a specific chat
+        if (chatId) {
+            const messagesResponse = await client.api(`/chats/${chatId}/messages`)
+                .top(20)
+                .get();
+            
+            return NextResponse.json({ 
+                success: true, 
+                data: messagesResponse.value || [] 
+            });
+        }
+
+        // SCENARIO 2: Fetch list of chats for a user (with external detection)
         // 1. Fetch User Profile to get the internal domain
         const userProfile = await client.api(`/users/${userId}`).select('userPrincipalName').get();
         const internalDomain = userProfile.userPrincipalName.split('@')[1]?.toLowerCase();
@@ -23,11 +37,10 @@ export async function GET(request: Request) {
             .expand('lastMessagePreview')
             .top(20)
             .get();
-        
-        const chats = chatsResponse.value || [];
-        const detailedChats = [];
 
-        // 2. Process each chat to find members and identify external participants
+        const chats = chatsResponse.value || [];
+        const enrichedChats = [];
+
         for (const chat of chats) {
             try {
                 const membersResponse = await client.api(`/chats/${chat.id}/members`).get();
@@ -35,45 +48,43 @@ export async function GET(request: Request) {
                 
                 // Identify external members
                 const externalMembers = members.filter((m: any) => {
-                    // Check email domain if available
                     if (m.email) {
                         const domain = m.email.split('@')[1]?.toLowerCase();
                         return domain && domain !== internalDomain;
                     }
-                    // For AAD users, check tenantId vs the system's tenant if possible
-                    // But usually email is the most reliable cross-tenant indicator for users
                     return false;
                 });
 
-                // Get chat name (either topic or the other person's name)
-                let chatName = chat.topic || "Unnamed Chat";
-                if (!chat.topic && members.length === 2) {
+                // Get chat name
+                let topic = chat.topic;
+                if (!topic) {
                     const otherMember = members.find((m: any) => m.userId !== userId);
-                    if (otherMember) chatName = otherMember.displayName;
+                    topic = otherMember ? otherMember.displayName : 'Private Chat';
                 }
 
-                detailedChats.push({
-                    id: chat.id,
-                    topic: chatName,
-                    chatType: chat.chatType,
-                    lastMessage: chat.lastMessagePreview,
-                    membersCount: members.length,
+                enrichedChats.push({
+                    ...chat,
+                    topic,
                     isExternal: externalMembers.length > 0,
-                    externalParticipants: externalMembers.map((m: any) => m.displayName)
+                    externalParticipants: externalMembers.map((m: any) => m.email),
+                    membersCount: members.length,
+                    lastMessage: chat.lastMessagePreview
                 });
-            } catch (chatErr: any) {
-                console.error(`[API] Error processing chat ${chat.id}:`, chatErr.message);
+            } catch (err) {
+                enrichedChats.push({ ...chat, topic: 'Protected Chat', isExternal: false });
             }
         }
 
-        return NextResponse.json({
-            data: detailedChats,
+        return NextResponse.json({ 
+            success: true, 
+            data: enrichedChats 
         });
+
     } catch (error: any) {
-        console.error('[API] Teams Chat Error:', error.message);
-        return NextResponse.json(
-            { error: "Failed to fetch Teams chats", details: error.message },
-            { status: 500 }
-        );
+        console.error('[Teams API Error]:', error);
+        return NextResponse.json({ 
+            error: error.message,
+            details: error.response?.data?.error?.message 
+        }, { status: 500 });
     }
 }
