@@ -8,6 +8,7 @@ export default function DevicesPage() {
     const [devices, setDevices] = useState<any[]>([]);
     const [agents, setAgents] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
     const [selectedDeviceData, setSelectedDeviceData] = useState<any>(null);
@@ -24,10 +25,16 @@ export default function DevicesPage() {
             const intuneData = await intuneRes.json();
             const agentData = await agentRes.json();
 
-            if (intuneData.devices) setDevices(intuneData.devices);
+            if (intuneData.devices) {
+                setDevices(intuneData.devices);
+                setError(null);
+            } else if (intuneData.error) {
+                setError(intuneData.details || intuneData.error);
+            }
             if (agentData.agents) setAgents(agentData.agents);
-        } catch (error) {
-            console.error("Failed to fetch devices", error);
+        } catch (err: any) {
+            console.error("Failed to fetch devices", err);
+            setError(err.message || "An unexpected error occurred while fetching devices.");
         } finally {
             setLoading(false);
         }
@@ -113,7 +120,19 @@ export default function DevicesPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-800/60">
-                            {loading ? (
+                            {error ? (
+                                <tr>
+                                    <td colSpan={6} className="px-6 py-8">
+                                        <div className="bg-rose-500/10 border border-rose-500/20 p-4 rounded-xl text-rose-400 text-sm font-mono whitespace-pre-wrap">
+                                            <div className="font-bold flex items-center gap-2 mb-1">
+                                                <X size={14} />
+                                                API Connectivity Failure
+                                            </div>
+                                            {error}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : loading ? (
                                 <tr>
                                     <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
                                         Loading devices...
