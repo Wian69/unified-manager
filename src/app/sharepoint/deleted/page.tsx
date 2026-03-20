@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Trash2, HardDrive, RefreshCw, TriangleAlert, ExternalLink, User } from "lucide-react";
+import { Trash2, HardDrive, RefreshCw, TriangleAlert, ExternalLink, User, Search } from "lucide-react";
 
 interface DeletionItem {
     siteUrl: string;
@@ -14,6 +14,8 @@ interface DeletionItem {
 
 export default function SharePointDeletionsPage() {
     const [data, setData] = useState<DeletionItem[]>([]);
+    const [filteredData, setFilteredData] = useState<DeletionItem[]>([]);
+    const [searchTerm, setSearchTerm] = useState("");
     const [totalCount, setTotalCount] = useState(0);
     const [totalSize, setTotalSize] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -27,6 +29,7 @@ export default function SharePointDeletionsPage() {
             const result = await res.json();
             if (result.data) {
                 setData(result.data);
+                setFilteredData(result.data);
                 setTotalCount(result.totalDeletedCount || 0);
                 setTotalSize(result.totalDeletedSize || 0);
             } else if (result.error) {
@@ -43,6 +46,14 @@ export default function SharePointDeletionsPage() {
     useEffect(() => {
         fetchData();
     }, []);
+
+    useEffect(() => {
+        const filtered = data.filter(item => 
+            (item.owner || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (item.siteUrl || "").toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        setFilteredData(filtered);
+    }, [searchTerm, data]);
 
     const formatBytes = (bytes: number) => {
         if (bytes === 0) return '0 Bytes';
@@ -102,10 +113,25 @@ export default function SharePointDeletionsPage() {
                 </div>
             </div>
 
+            <div className="bg-slate-900/40 rounded-3xl border border-slate-800/60 p-6 backdrop-blur-md relative overflow-hidden group">
+                <div className="relative z-10 flex flex-col md:flex-row gap-4 items-center">
+                    <div className="relative w-full">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={20} />
+                        <input 
+                            type="text" 
+                            placeholder="Search for user or personal site..." 
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl py-3 pl-12 pr-4 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
+                        />
+                    </div>
+                </div>
+            </div>
+
             <div className="bg-slate-900/40 rounded-3xl border border-slate-800/60 backdrop-blur-md overflow-hidden shadow-2xl">
                 <div className="px-6 py-4 border-b border-slate-800/60 flex justify-between items-center bg-slate-950/30">
                     <h2 className="font-bold text-slate-200">Deletions by User (Personal Sites)</h2>
-                    <span className="text-xs text-slate-500 font-mono uppercase tracking-widest">{data.length} active sites found</span>
+                    <span className="text-xs text-slate-500 font-mono uppercase tracking-widest">{filteredData.length} matches found</span>
                 </div>
                 
                 <div className="overflow-x-auto">
@@ -126,8 +152,8 @@ export default function SharePointDeletionsPage() {
                                         <td colSpan={5} className="px-6 py-6 h-12 bg-slate-800/10"></td>
                                     </tr>
                                 ))
-                            ) : data.length > 0 ? (
-                                data.map((item, idx) => (
+                            ) : filteredData.length > 0 ? (
+                                filteredData.map((item, idx) => (
                                     <tr key={idx} className="hover:bg-slate-800/20 transition-colors group">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
