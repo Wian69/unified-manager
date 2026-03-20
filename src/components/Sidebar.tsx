@@ -21,7 +21,6 @@ export default function Sidebar() {
         { name: 'Offboarding', icon: UserMinus, path: '/offboarding' },
         { name: 'Users', icon: Users, path: '/users' },
         { name: 'SharePoint', icon: HardDrive, path: '/sharepoint' },
-        { name: 'File Deletions', icon: Trash2, path: '/sharepoint/deleted' },
     ];
 
     return (

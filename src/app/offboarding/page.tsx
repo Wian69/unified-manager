@@ -1,9 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { UserMinus, ShieldAlert, FileText, Activity, RefreshCw, Trash2, Search, ArrowLeft, Download, User, Calendar, ExternalLink } from "lucide-react";
 
 export default function OffboardingPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex flex-col items-center justify-center min-h-[400px] text-slate-500 gap-4">
+                <RefreshCw size={40} className="animate-spin text-blue-500" />
+                <p className="font-mono text-sm uppercase tracking-widest">Initialising Offboarding Monitor...</p>
+            </div>
+        }>
+            <OffboardingContent />
+        </Suspense>
+    );
+}
+
+function OffboardingContent() {
     const [agents, setAgents] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -71,8 +85,46 @@ export default function OffboardingPage() {
         fetchOffboardingAgents();
     }, []);
 
+    const searchParams = useSearchParams();
+    const directUser = searchParams.get('user');
+
+    useEffect(() => {
+        if (directUser && agents.length > 0) {
+            // Find the agent with this UPN or just audit the UPN directly
+            auditSharePointForAgent({ userPrincipalName: directUser, userDisplayName: directUser.split('@')[0] });
+        }
+    }, [directUser, agents.length]);
+
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
+            {/* SharePoint Deletion Audit Section (MOVED TO TOP) */}
+            <div id="sp-audit-section" className="bg-slate-900/40 rounded-3xl border border-slate-800/60 overflow-hidden backdrop-blur-md transition-all duration-500">
+                <div className="p-8 border-b border-slate-800/60 bg-blue-500/5">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                        <div>
+                            <h2 className="text-2xl font-black text-white flex items-center gap-3">
+                                <Trash2 className="text-blue-500" size={28} />
+                                SharePoint / OneDrive Deletion Audit
+                            </h2>
+                            <p className="text-slate-400 text-sm mt-1">Audit and export deletion records for departing users.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div className="p-8">
+                    <SharePointDeletionsModule 
+                        selectedUser={selectedSPUser}
+                        setSelectedUser={setSelectedSPUser}
+                        recycleBinItems={recycleBinItems}
+                        setRecycleBinItems={setRecycleBinItems}
+                        loadingDetails={loadingSPDetails}
+                        setLoadingDetails={setLoadingSPDetails}
+                        error={spError}
+                        setError={setSpError}
+                    />
+                </div>
+            </div>
+
             <div className="flex justify-between items-center bg-rose-500/5 p-8 rounded-3xl border border-rose-500/20 backdrop-blur-xl">
                 <div className="flex items-center gap-5">
                     <div className="p-4 bg-rose-500/20 text-rose-400 rounded-2xl shadow-lg shadow-rose-500/10">
@@ -187,34 +239,6 @@ export default function OffboardingPage() {
                             />
                         </div>
                     </div>
-                </div>
-            </div>
-
-            {/* SharePoint Deletion Audit Section */}
-            <div id="sp-audit-section" className="bg-slate-900/40 rounded-3xl border border-slate-800/60 overflow-hidden backdrop-blur-md transition-all duration-500">
-                <div className="p-8 border-b border-slate-800/60 bg-blue-500/5">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                        <div>
-                            <h2 className="text-2xl font-black text-white flex items-center gap-3">
-                                <Trash2 className="text-blue-500" size={28} />
-                                SharePoint / OneDrive Deletion Audit
-                            </h2>
-                            <p className="text-slate-400 text-sm mt-1">Audit and export deletion records for departing users.</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div className="p-8">
-                    <SharePointDeletionsModule 
-                        selectedUser={selectedSPUser}
-                        setSelectedUser={setSelectedSPUser}
-                        recycleBinItems={recycleBinItems}
-                        setRecycleBinItems={setRecycleBinItems}
-                        loadingDetails={loadingSPDetails}
-                        setLoadingDetails={setLoadingSPDetails}
-                        error={spError}
-                        setError={setSpError}
-                    />
                 </div>
             </div>
         </div>

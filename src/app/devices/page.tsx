@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import { Laptop, RefreshCw, X } from "lucide-react";
 
 export default function DevicesPage() {
@@ -268,7 +269,17 @@ export default function DevicesPage() {
                                             </div>
                                             <div>
                                                 <span className="block text-xs font-semibold uppercase text-slate-500 mb-1">UPN</span>
-                                                <span className="text-slate-300">{selectedDeviceData.device.userPrincipalName || 'N/A'}</span>
+                                                <div className="flex items-center gap-3">
+                                                    <span className="text-slate-300">{selectedDeviceData.device.userPrincipalName || 'N/A'}</span>
+                                                    {selectedDeviceData.device.userPrincipalName && (
+                                                        <Link 
+                                                            href={`/offboarding?user=${encodeURIComponent(selectedDeviceData.device.userPrincipalName)}`}
+                                                            className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 rounded text-[9px] font-black uppercase tracking-tighter transition-all border border-blue-600/30"
+                                                        >
+                                                            Audit Deletions
+                                                        </Link>
+                                                    )}
+                                                </div>
                                             </div>
                                             <div>
                                                 <span className="block text-xs font-semibold uppercase text-slate-500 mb-1">Enrolled Date</span>
