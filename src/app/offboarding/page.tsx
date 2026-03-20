@@ -21,64 +21,88 @@ function OffboardingContent() {
     const [agents, setAgents] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
+    // Unified Monitoring State
+    const [monitoredUsers, setMonitoredUsers] = useState<any[]>([]);
+    const [globalSearchQuery, setGlobalSearchQuery] = useState("");
+    const [globalSearchResults, setGlobalSearchResults] = useState<any[]>([]);
+    const [searchingGlobal, setSearchingGlobal] = useState(false);
+
     // SharePoint Audit State (Lifted for linking)
     const [selectedSPUser, setSelectedSPUser] = useState<any | null>(null);
     const [recycleBinItems, setRecycleBinItems] = useState<any[]>([]);
     const [loadingSPDetails, setLoadingSPDetails] = useState(false);
     const [spError, setSpError] = useState<string | null>(null);
 
+    const handleGlobalSearch = async () => {
+        if (!globalSearchQuery.trim()) return;
+        setSearchingGlobal(true);
+        try {
+            const res = await fetch(`/api/users?search=${encodeURIComponent(globalSearchQuery)}`);
+            const data = await res.json();
+            setGlobalSearchResults(data.users || []);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setSearchingGlobal(false);
+        }
+    };
+
+    const addToWatchlist = (user: any) => {
+        if (!monitoredUsers.find(u => u.id === user.id)) {
+            setMonitoredUsers(prev => [...prev, user]);
+        }
+        setGlobalSearchResults([]);
+        setGlobalSearchQuery("");
+        auditSharePointForUser(user);
+    };
+
+    const removeFromWatchlist = (userId: string) => {
+        setMonitoredUsers(prev => prev.filter(u => u.id !== userId));
+        if (selectedSPUser?.id === userId) {
+            setSelectedSPUser(null);
+            setRecycleBinItems([]);
+        }
+    };
+
+    const auditSharePointForUser = async (user: any) => {
+        setLoadingSPDetails(true);
+        setSpError(null);
+        setSelectedSPUser(user);
+        setRecycleBinItems([]);
+
+        try {
+            const res = await fetch(`/api/sharepoint/deleted?userId=${user.id}`);
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            setRecycleBinItems(data.data || []);
+            document.getElementById('sp-audit-section')?.scrollIntoView({ behavior: 'smooth' });
+        } catch (err: any) {
+            setSpError(err.message);
+        } finally {
+            setLoadingSPDetails(false);
+        }
+    };
+
     const fetchOffboardingAgents = async () => {
         setLoading(true);
         try {
             const res = await fetch('/api/agent/list');
             const data = await res.json();
-            // Simulate UPNs for the demo to link to SharePoint users
-            const enrichedAgents = (data.agents || []).map((a: any) => ({
-                ...a,
-                userPrincipalName: a.userPrincipalName || `${a.deviceName.toLowerCase()}@xxeqncs.onmicrosoft.com`,
-                userDisplayName: a.userDisplayName || a.deviceName
-            }));
-            setAgents(enrichedAgents);
+            setAgents(data.agents || []);
         } catch (error) {
-            console.error("Failed to fetch offboarding data", error);
+            console.error("Failed to fetch agents", error);
         } finally {
             setLoading(false);
         }
     };
 
     const auditSharePointForAgent = async (agent: any) => {
-        // Try searching for the user based on the UPN
-        setLoadingSPDetails(true);
-        setSpError(null);
-        setSelectedSPUser({ displayName: agent.userDisplayName, userPrincipalName: agent.userPrincipalName });
-        setRecycleBinItems([]);
-
-        try {
-            // First, find the user's ID
-            const userRes = await fetch(`/api/users?search=${encodeURIComponent(agent.userPrincipalName)}`);
-            const userData = await userRes.json();
-            const foundUser = userData.users?.find((u: any) => 
-                u.userPrincipalName.toLowerCase() === agent.userPrincipalName.toLowerCase() ||
-                u.displayName.toLowerCase() === agent.userDisplayName.toLowerCase()
-            );
-
-            if (foundUser) {
-                setSelectedSPUser(foundUser);
-                const res = await fetch(`/api/sharepoint/deleted?userId=${foundUser.id}`);
-                const data = await res.json();
-                if (data.error) throw new Error(data.error);
-                setRecycleBinItems(data.data || []);
-                
-                // Scroll to the audit section
-                document.getElementById('sp-audit-section')?.scrollIntoView({ behavior: 'smooth' });
-            } else {
-                throw new Error(`Could not find a SharePoint user matching ${agent.userDisplayName}`);
-            }
-        } catch (err: any) {
-            setSpError(err.message);
-        } finally {
-            setLoadingSPDetails(false);
-        }
+        const simulatedUser = { 
+            id: agent.id, // Fallback ID
+            displayName: agent.userDisplayName, 
+            userPrincipalName: agent.userPrincipalName 
+        };
+        auditSharePointForUser(simulatedUser);
     };
 
     useEffect(() => {
@@ -97,6 +121,61 @@ function OffboardingContent() {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
+            {/* Unified User Search Header */}
+            <div className="bg-slate-950/50 backdrop-blur-2xl p-10 rounded-[2.5rem] border border-slate-800 shadow-2xl relative overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent pointer-events-none" />
+                <div className="relative z-10 flex flex-col items-center text-center space-y-8">
+                    <div>
+                        <h1 className="text-4xl font-black text-white tracking-tight mb-3">
+                            Offboarding <span className="text-blue-500">Monitor</span>
+                        </h1>
+                        <p className="text-slate-400 max-w-lg mx-auto">Search and add employees to the watchlist to monitor data activity and file deletions.</p>
+                    </div>
+
+                    <div className="w-full max-w-2xl relative">
+                        <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+                        <div className="relative flex items-center bg-slate-900 border border-slate-800 rounded-2xl p-2 shadow-2xl">
+                            <Search className="ml-4 text-slate-500" size={24} />
+                            <input 
+                                type="text" 
+                                placeholder="Search employee to monitor..." 
+                                className="w-full bg-transparent border-none focus:ring-0 text-white px-4 py-4 text-lg font-medium placeholder:text-slate-600"
+                                value={globalSearchQuery}
+                                onChange={(e) => setGlobalSearchQuery(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleGlobalSearch()}
+                            />
+                            <button 
+                                onClick={handleGlobalSearch}
+                                disabled={searchingGlobal}
+                                className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-xl transition-all font-bold text-sm uppercase tracking-widest disabled:opacity-50"
+                            >
+                                {searchingGlobal ? "Searching..." : "Search"}
+                            </button>
+                        </div>
+
+                        {globalSearchResults.length > 0 && (
+                            <div className="absolute top-full left-0 right-0 mt-4 bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-3xl z-50 grid grid-cols-1 md:grid-cols-2 gap-4 animate-in slide-in-from-top-4 duration-300">
+                                {globalSearchResults.map(u => (
+                                    <button 
+                                        key={u.id} 
+                                        onClick={() => addToWatchlist(u)}
+                                        className="flex items-center gap-4 p-4 bg-slate-800/50 border border-slate-700/50 hover:border-blue-500/50 hover:bg-blue-500/5 rounded-xl transition-all text-left"
+                                    >
+                                        <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400">
+                                            <User size={20} />
+                                        </div>
+                                        <div className="overflow-hidden">
+                                            <div className="font-bold text-slate-100 truncate">{u.displayName}</div>
+                                            <div className="text-[10px] text-slate-500 truncate">{u.userPrincipalName}</div>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
             {/* SharePoint Deletion Audit Section (MOVED TO TOP) */}
             <div id="sp-audit-section" className="bg-slate-900/40 rounded-3xl border border-slate-800/60 overflow-hidden backdrop-blur-md transition-all duration-500">
                 <div className="p-8 border-b border-slate-800/60 bg-blue-500/5">
@@ -125,86 +204,79 @@ function OffboardingContent() {
                 </div>
             </div>
 
-            <div className="flex justify-between items-center bg-rose-500/5 p-8 rounded-3xl border border-rose-500/20 backdrop-blur-xl">
-                <div className="flex items-center gap-5">
-                    <div className="p-4 bg-rose-500/20 text-rose-400 rounded-2xl shadow-lg shadow-rose-500/10">
-                        <UserMinus size={32} />
-                    </div>
-                    <div>
-                        <h1 className="text-3xl font-black text-white tracking-tight">Offboarding Monitor</h1>
-                        <p className="text-slate-400 font-medium">Tracking sensitive data movement for departing employees.</p>
-                    </div>
-                </div>
-                <div className="flex items-center gap-3">
-                    <div className="text-right mr-4">
-                        <span className="text-[10px] text-rose-500 uppercase font-black block mb-1 tracking-widest">Active Watchlist</span>
-                        <span className="text-2xl font-bold text-white">{agents.length} Devices</span>
-                    </div>
-                    <button 
-                        onClick={fetchOffboardingAgents}
-                        className="p-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl transition-all border border-slate-700"
-                    >
-                        <RefreshCw size={20} className={loading ? "animate-spin" : ""} />
-                    </button>
-                </div>
-            </div>
-
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Watchlist Table */}
                 <div className="lg:col-span-2 bg-slate-900/40 rounded-3xl border border-slate-800/60 overflow-hidden backdrop-blur-md">
-                    <div className="p-6 border-b border-slate-800/60 flex justify-between items-center">
+                    <div className="p-6 border-b border-slate-800/60 flex justify-between items-center bg-slate-950/30">
                         <h2 className="text-xl font-bold text-white flex items-center gap-2">
                             <ShieldAlert size={20} className="text-rose-500" />
-                            Employee Watchlist
+                            Employee Watchlist ({monitoredUsers.length})
                         </h2>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm text-slate-300">
                             <thead className="bg-slate-950/50 text-slate-400 uppercase font-black text-[10px] tracking-widest border-b border-slate-800/60">
                                 <tr>
-                                    <th className="px-6 py-4">Employee / Device</th>
-                                    <th className="px-6 py-4">Last Location (ISP)</th>
+                                    <th className="px-6 py-4">Employee</th>
+                                    <th className="px-6 py-4">Device Status</th>
                                     <th className="px-6 py-4">Data Activity</th>
-                                    <th className="px-6 py-4">Status</th>
+                                    <th className="px-6 py-4 text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-800/60">
-                                {loading ? (
-                                    <tr><td colSpan={4} className="px-6 py-10 text-center text-slate-500">Analyzing agent telemetry...</td></tr>
-                                ) : agents.length > 0 ? (
-                                    agents.map(a => (
-                                        <tr 
-                                            key={a.id} 
-                                            onClick={() => auditSharePointForAgent(a)}
-                                            className="hover:bg-rose-500/10 cursor-pointer transition-all group border-l-2 border-transparent hover:border-rose-500"
-                                        >
-                                            <td className="px-6 py-5">
-                                                <div className="font-bold text-slate-200 flex items-center gap-2">
-                                                    {a.deviceName}
-                                                    <ExternalLink size={10} className="text-slate-600 group-hover:text-rose-500 transition-colors" />
-                                                </div>
-                                                <div className="text-[10px] text-slate-500 font-mono uppercase">{a.serialNumber}</div>
-                                            </td>
-                                            <td className="px-6 py-5">
-                                                <div className="text-slate-300">{a.publicIp}</div>
-                                                <div className="text-[10px] text-slate-500 uppercase">{a.isp}</div>
-                                            </td>
-                                            <td className="px-6 py-5">
-                                                <div className="flex items-center gap-2 text-rose-400 font-bold">
-                                                    <Activity size={14} className="animate-pulse" />
-                                                    High Density
-                                                </div>
-                                                <div className="text-[10px] text-slate-500 uppercase">File Movement Detected</div>
-                                            </td>
-                                            <td className="px-6 py-5">
-                                                <span className="px-3 py-1 bg-rose-500/20 text-rose-400 text-[10px] font-black rounded-full uppercase tracking-widest border border-rose-500/30">
-                                                    Monitored
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    ))
+                                {monitoredUsers.length > 0 ? (
+                                    monitoredUsers.map(u => {
+                                        const agent = agents.find(a => 
+                                            a.userPrincipalName?.toLowerCase() === u.userPrincipalName?.toLowerCase() ||
+                                            a.userDisplayName?.toLowerCase() === u.displayName?.toLowerCase() ||
+                                            a.deviceName?.toLowerCase() === u.displayName?.toLowerCase()
+                                        );
+                                        return (
+                                            <tr 
+                                                key={u.id} 
+                                                className={`hover:bg-blue-500/5 cursor-pointer transition-all group ${selectedSPUser?.id === u.id ? 'bg-blue-500/10' : ''}`}
+                                                onClick={() => auditSharePointForUser(u)}
+                                            >
+                                                <td className="px-6 py-5">
+                                                    <div className="font-bold text-slate-200">{u.displayName}</div>
+                                                    <div className="text-[10px] text-slate-500 font-mono italic">{u.userPrincipalName}</div>
+                                                </td>
+                                                <td className="px-6 py-5">
+                                                    {agent ? (
+                                                        <>
+                                                            <div className="text-emerald-400 font-bold flex items-center gap-1.5">
+                                                                <Activity size={12} className="animate-pulse" />
+                                                                {agent.deviceName}
+                                                            </div>
+                                                            <div className="text-[10px] text-slate-500 uppercase">{agent.publicIp}</div>
+                                                        </>
+                                                    ) : (
+                                                        <span className="text-slate-600 italic">No Device Linked</span>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-5">
+                                                    <div className="flex items-center gap-2 text-rose-400 font-bold">
+                                                        <Activity size={14} className="animate-pulse" />
+                                                        High Density
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-5 text-right">
+                                                    <button 
+                                                        onClick={(e) => { e.stopPropagation(); removeFromWatchlist(u.id); }}
+                                                        className="text-slate-600 hover:text-rose-500 p-2 transition-colors"
+                                                        title="Remove from Watchlist"
+                                                    >
+                                                        <ArrowLeft size={16} />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
                                 ) : (
-                                    <tr><td colSpan={4} className="px-6 py-10 text-center text-slate-500">No employees currently in offboarding state.</td></tr>
+                                    <tr><td colSpan={4} className="px-6 py-20 text-center text-slate-500">
+                                        <UserMinus className="mx-auto mb-4 opacity-20" size={48} />
+                                        <p>No employees currently in watchlist. Search above to add.</p>
+                                    </td></tr>
                                 )}
                             </tbody>
                         </table>
