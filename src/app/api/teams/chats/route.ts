@@ -14,7 +14,11 @@ export async function GET(request: Request) {
     try {
         const client = getGraphClient();
         
-        // 1. Fetch User's Chats
+        // 1. Fetch User Profile to get the internal domain
+        const userProfile = await client.api(`/users/${userId}`).select('userPrincipalName').get();
+        const internalDomain = userProfile.userPrincipalName.split('@')[1]?.toLowerCase();
+
+        // 2. Fetch User's Chats
         const chatsResponse = await client.api(`/users/${userId}/chats`)
             .expand('lastMessagePreview')
             .top(20)
@@ -30,13 +34,15 @@ export async function GET(request: Request) {
                 const members = membersResponse.value || [];
                 
                 // Identify external members
-                // We use the user's own domain as the 'internal' baseline
-                const internalDomain = userId.split('@')[1]?.toLowerCase();
                 const externalMembers = members.filter((m: any) => {
-                    const email = m.email || m.userId; // fallback
-                    if (!email) return false;
-                    const domain = email.split('@')[1]?.toLowerCase();
-                    return domain && domain !== internalDomain;
+                    // Check email domain if available
+                    if (m.email) {
+                        const domain = m.email.split('@')[1]?.toLowerCase();
+                        return domain && domain !== internalDomain;
+                    }
+                    // For AAD users, check tenantId vs the system's tenant if possible
+                    // But usually email is the most reliable cross-tenant indicator for users
+                    return false;
                 });
 
                 // Get chat name (either topic or the other person's name)

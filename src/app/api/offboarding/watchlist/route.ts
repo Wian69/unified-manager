@@ -13,14 +13,16 @@ export async function GET() {
         const enrichedWatchlist = [];
         for (const user of watchlist) {
             try {
-                const driveRes = await client.api(`/users/${user.id}/drive`).select('quota').get();
+                // Determine the correct ID to use (prefer UPN if available for drive access)
+                const targetId = user.userPrincipalName || user.id;
+                const driveRes = await client.api(`/users/${targetId}/drive`).select('quota').get();
                 enrichedWatchlist.push({
                     ...user,
                     driveUsed: driveRes.quota?.used || 0
                 });
             } catch (err: any) {
                 console.error(`[Watchlist] Drive fetch failed for ${user.userPrincipalName}:`, err.message);
-                // Fallback to 0 if drive is not provisioned or access denied
+                // Fallback to 0
                 enrichedWatchlist.push({ ...user, driveUsed: 0 });
             }
         }
