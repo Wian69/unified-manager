@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { UserMinus, ShieldAlert, FileText, Activity, RefreshCw, Search, ArrowLeft, User } from "lucide-react";
 import Link from "next/link";
 import ActivityCard from "@/components/ActivityCard";
