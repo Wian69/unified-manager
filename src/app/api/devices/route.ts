@@ -11,7 +11,7 @@ export async function GET() {
 
         let allDevices: any[] = [];
         let response = await client.api('/deviceManagement/managedDevices')
-            .select('id,deviceName,operatingSystem,lastSyncDateTime,complianceState,serialNumber,userPrincipalName')
+            .select('id,deviceName,operatingSystem,lastSyncDateTime,complianceState,serialNumber')
             .top(999)
             .get();
         
