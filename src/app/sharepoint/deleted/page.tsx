@@ -66,6 +66,10 @@ export default function SharePointDeletionsPage() {
 
     // Fetch live recycle bin for selected user
     const fetchUserRecycleBin = async (user: UserResult) => {
+        setSelectedUser(user);
+        setLoadingDetails(true);
+        setError(null);
+        setIsNotProvisioned(false);
         setRecycleBinItems([]);
         setFileSearchQuery("");
         setStartDate("");
