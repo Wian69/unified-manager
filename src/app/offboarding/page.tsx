@@ -60,8 +60,9 @@ function OffboardingContent() {
         if (!monitoredUsers.find(u => u.id === user.id)) {
             setMonitoredUsers(prev => [...prev, user]);
         }
-        setGlobalSearchResults([]);
-        setGlobalSearchQuery(""); // Clear on add
+        // Keep items in view so user can see the 'Remove' button
+        // setGlobalSearchResults([]);
+        // setGlobalSearchQuery(""); 
     };
 
     const removeFromWatchlist = (userId: string) => {
@@ -129,26 +130,43 @@ function OffboardingContent() {
 
                         {globalSearchResults.length > 0 && (
                             <div className="absolute top-full left-0 right-0 mt-2 bg-slate-900 border border-slate-800 rounded-2xl p-2 shadow-3xl z-50 flex flex-col gap-1 animate-in slide-in-from-top-2 duration-200 divide-y divide-slate-800">
-                                {globalSearchResults.map(u => (
-                                    <button 
-                                        key={u.id} 
-                                        onClick={() => addToWatchlist(u)}
-                                        className="flex items-center justify-between p-4 hover:bg-blue-500/10 rounded-xl transition-all group"
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center text-slate-400 group-hover:text-blue-400 group-hover:bg-blue-500/20 transition-all font-bold">
-                                                {u.displayName.charAt(0)}
+                                {globalSearchResults.map(u => {
+                                    const isMonitored = monitoredUsers.some(m => m.id === u.id);
+                                    return (
+                                        <div 
+                                            key={u.id} 
+                                            className="flex items-center justify-between p-4 hover:bg-slate-800/50 rounded-xl transition-all group"
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center text-slate-400 font-bold group-hover:bg-blue-500/20 group-hover:text-blue-400 transition-all">
+                                                    {u.displayName.charAt(0)}
+                                                </div>
+                                                <div className="text-left">
+                                                    <div className="font-bold text-slate-100">{u.displayName}</div>
+                                                    <div className="text-[10px] text-slate-500 font-mono">{u.userPrincipalName}</div>
+                                                </div>
                                             </div>
-                                            <div className="text-left">
-                                                <div className="font-bold text-slate-100 group-hover:text-white">{u.displayName}</div>
-                                                <div className="text-[10px] text-slate-500 font-mono">{u.userPrincipalName}</div>
+                                            
+                                            <div className="flex items-center gap-2">
+                                                {!isMonitored ? (
+                                                    <button 
+                                                        onClick={() => addToWatchlist(u)}
+                                                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black uppercase tracking-widest rounded-lg transition-all shadow-lg shadow-blue-600/20"
+                                                    >
+                                                        Add to Watchlist
+                                                    </button>
+                                                ) : (
+                                                    <button 
+                                                        onClick={() => removeFromWatchlist(u.id)}
+                                                        className="px-4 py-2 bg-rose-600/10 hover:bg-rose-600/20 text-rose-500 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all border border-rose-500/20"
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
-                                        <div className="text-xs font-bold text-blue-500 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
-                                            Add to Watchlist
-                                        </div>
-                                    </button>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
                     </div>

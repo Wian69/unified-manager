@@ -58,14 +58,17 @@ export default function SharePointDeletionsModule({
             const matchesSearch = item.name.toLowerCase().includes(fileSearchQuery.toLowerCase());
             let matchesDate = true;
             if (startDate || endDate) {
-                const itemDate = new Date(item.deletedDateTime).getTime();
+                // Parse date as local YYYY-MM-DD
+                const itemDateObj = new Date(item.deletedDateTime);
+                const itemTime = itemDateObj.getTime();
+                
                 if (startDate) {
-                    const sDate = new Date(startDate).setHours(0, 0, 0, 0);
-                    if (itemDate < sDate) matchesDate = false;
+                    const sDate = new Date(startDate + "T00:00:00");
+                    if (itemTime < sDate.getTime()) matchesDate = false;
                 }
                 if (endDate) {
-                    const eDate = new Date(endDate).setHours(23, 59, 59, 999);
-                    if (itemDate > eDate) matchesDate = false;
+                    const eDate = new Date(endDate + "T23:59:59");
+                    if (itemTime > eDate.getTime()) matchesDate = false;
                 }
             }
             return matchesSearch && matchesDate;
@@ -115,15 +118,23 @@ export default function SharePointDeletionsModule({
                             type="date" 
                             value={startDate} 
                             onChange={(e) => setStartDate(e.target.value)}
-                            className="bg-transparent border-none focus:ring-0 text-[10px] text-white p-0 w-24"
+                            className="bg-transparent border-none focus:ring-0 text-[10px] text-white p-0 w-24 [color-scheme:dark]"
                         />
                         <span className="text-slate-600 text-xs">-</span>
                         <input 
                             type="date" 
                             value={endDate} 
                             onChange={(e) => setEndDate(e.target.value)}
-                            className="bg-transparent border-none focus:ring-0 text-[10px] text-white p-0 w-24"
+                            className="bg-transparent border-none focus:ring-0 text-[10px] text-white p-0 w-24 [color-scheme:dark]"
                         />
+                        {(startDate || endDate) && (
+                            <button 
+                                onClick={() => { setStartDate(""); setEndDate(""); }}
+                                className="ml-2 text-[9px] text-slate-500 hover:text-white uppercase font-black"
+                            >
+                                Clear
+                            </button>
+                        )}
                     </div>
                     <button 
                         onClick={downloadCSV}
