@@ -16,6 +16,7 @@ interface RecycleBinItem {
     deletedDateTime: string;
     deletedBy: string;
     siteUrl: string;
+    webUrl: string;
 }
 
 export default function SharePointDeletionsPage() {
@@ -28,6 +29,7 @@ export default function SharePointDeletionsPage() {
     const [selectedUser, setSelectedUser] = useState<UserResult | null>(null);
     const [recycleBinItems, setRecycleBinItems] = useState<RecycleBinItem[]>([]);
     const [loadingDetails, setLoadingDetails] = useState(false);
+    const [isNotProvisioned, setIsNotProvisioned] = useState(false);
     
     // Global State
     const [error, setError] = useState<string | null>(null);
@@ -60,6 +62,7 @@ export default function SharePointDeletionsPage() {
         setSelectedUser(user);
         setLoadingDetails(true);
         setError(null);
+        setIsNotProvisioned(false);
         setRecycleBinItems([]);
         
         try {
@@ -70,6 +73,9 @@ export default function SharePointDeletionsPage() {
                 setRecycleBinItems(result.data);
             } else if (result.error) {
                 setError(result.error);
+                if (result.isNotProvisioned) {
+                    setIsNotProvisioned(true);
+                }
             }
         } catch (err) {
             console.error("Recycle bin fetch failed", err);
@@ -200,116 +206,143 @@ export default function SharePointDeletionsPage() {
                         </div>
                     </div>
 
-                    {/* Stats Overview */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="bg-slate-900/40 rounded-3xl border border-slate-800/60 p-6 backdrop-blur-md relative overflow-hidden group">
-                            <div className="relative z-10 flex items-center gap-4">
-                                <div className="p-3 bg-rose-500/10 rounded-2xl text-rose-500">
-                                    <Trash2 size={28} />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Live Recycle Bin Items</p>
-                                    <h3 className="text-4xl font-black text-white mt-1">
-                                        {loadingDetails ? "..." : recycleBinItems.length}
-                                    </h3>
-                                </div>
+                    {isNotProvisioned ? (
+                        <div className="bg-slate-900/40 rounded-3xl border border-amber-500/20 p-12 backdrop-blur-md flex flex-col items-center text-center space-y-6 shadow-2xl relative overflow-hidden">
+                            <div className="absolute inset-0 bg-amber-500/5 pointer-events-none"></div>
+                            <div className="w-24 h-24 rounded-3xl bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20 animate-pulse">
+                                <TriangleAlert size={48} />
+                            </div>
+                            <div className="space-y-2 max-w-md relative z-10">
+                                <h3 className="text-2xl font-black text-white">OneDrive Not Provisioned</h3>
+                                <p className="text-slate-400">
+                                    The personal site for <span className="text-white font-bold">{selectedUser.displayName}</span> has not been created yet. 
+                                    This usually happens if the user has never logged into Microsoft 365 or OneDrive.
+                                </p>
+                            </div>
+                            <div className="flex gap-4 relative z-10">
+                                <a 
+                                    href={`https://xxeqncs-admin.sharepoint.com/_layouts/15/TenantProfileAdmin/ProfMngr.aspx?ConsoleView=Active&ProfileType=User&SearchString=${encodeURIComponent(selectedUser.userPrincipalName)}`}
+                                    target="_blank"
+                                    className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-bold transition-all shadow-lg shadow-blue-600/20 flex items-center gap-2"
+                                >
+                                    <Shield size={20} /> Inspect in Admin Center
+                                </a>
                             </div>
                         </div>
-                        <div className="bg-slate-900/40 rounded-3xl border border-slate-800/60 p-6 backdrop-blur-md relative overflow-hidden group">
-                                <div className="relative z-10 flex items-center gap-4">
-                                <div className="p-3 bg-amber-500/10 rounded-2xl text-amber-500">
-                                    <HardDrive size={28} />
+                    ) : (
+                        <>
+                            {/* Stats Overview */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="bg-slate-900/40 rounded-3xl border border-slate-800/60 p-6 backdrop-blur-md relative overflow-hidden group">
+                                    <div className="relative z-10 flex items-center gap-4">
+                                        <div className="p-3 bg-rose-500/10 rounded-2xl text-rose-500">
+                                            <Trash2 size={28} />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Live Recycle Bin Items</p>
+                                            <h3 className="text-4xl font-black text-white mt-1">
+                                                {loadingDetails ? "..." : recycleBinItems.length}
+                                            </h3>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Total Size Staged</p>
-                                    <h3 className="text-4xl font-black text-white mt-1">
-                                        {loadingDetails ? "..." : formatBytes(recycleBinItems.reduce((acc, curr) => acc + curr.size, 0))}
-                                    </h3>
+                                <div className="bg-slate-900/40 rounded-3xl border border-slate-800/60 p-6 backdrop-blur-md relative overflow-hidden group">
+                                        <div className="relative z-10 flex items-center gap-4">
+                                        <div className="p-3 bg-amber-500/10 rounded-2xl text-amber-500">
+                                            <HardDrive size={28} />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Total Size Staged</p>
+                                            <h3 className="text-4xl font-black text-white mt-1">
+                                                {loadingDetails ? "..." : formatBytes(recycleBinItems.reduce((acc, curr) => acc + curr.size, 0))}
+                                            </h3>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
 
-                    {/* Items Table */}
-                    <div className="bg-slate-900/40 rounded-3xl border border-slate-800/60 backdrop-blur-md overflow-hidden shadow-2xl">
-                        <div className="px-6 py-4 border-b border-slate-800/60 flex justify-between items-center bg-slate-950/30">
-                            <h2 className="font-bold text-slate-200 flex items-center gap-2">
-                                <FileText className="text-blue-500" size={18} />
-                                SharePoint / OneDrive Recycle Bin Content
-                            </h2>
-                            <span className="text-xs text-slate-500 font-mono uppercase tracking-widest">First 100 items</span>
-                        </div>
-                        
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left">
-                                <thead>
-                                    <tr className="bg-slate-900/60 border-b border-slate-800/60 text-slate-400 text-sm font-semibold">
-                                        <th className="px-6 py-4">Filename</th>
-                                        <th className="px-6 py-4 text-center">Size</th>
-                                        <th className="px-6 py-4 text-right">Deletion Date</th>
-                                        <th className="px-6 py-4 text-center">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-800/40">
-                                    {loadingDetails ? (
-                                        [1, 2, 3, 4, 5].map((i) => (
-                                            <tr key={i} className="animate-pulse">
-                                                <td colSpan={4} className="px-6 py-6 h-12 bg-slate-800/10"></td>
+                            {/* Items Table */}
+                            <div className="bg-slate-900/40 rounded-3xl border border-slate-800/60 backdrop-blur-md overflow-hidden shadow-2xl">
+                                <div className="px-6 py-4 border-b border-slate-800/60 flex justify-between items-center bg-slate-950/30">
+                                    <h2 className="font-bold text-slate-200 flex items-center gap-2">
+                                        <FileText className="text-blue-500" size={18} />
+                                        SharePoint / OneDrive Recycle Bin Content
+                                    </h2>
+                                    <span className="text-xs text-slate-500 font-mono uppercase tracking-widest">First 100 items</span>
+                                </div>
+                                
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left">
+                                        <thead>
+                                            <tr className="bg-slate-900/60 border-b border-slate-800/60 text-slate-400 text-sm font-semibold">
+                                                <th className="px-6 py-4">Filename</th>
+                                                <th className="px-6 py-4 text-center">Size</th>
+                                                <th className="px-6 py-4 text-right">Deletion Date</th>
+                                                <th className="px-6 py-4 text-center">Status</th>
                                             </tr>
-                                        ))
-                                    ) : recycleBinItems.length > 0 ? (
-                                        recycleBinItems.map((item) => (
-                                            <tr key={item.id} className="hover:bg-slate-800/20 transition-colors group">
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="p-2 bg-slate-800/50 rounded-lg text-slate-400 group-hover:text-white transition-colors">
-                                                            <FileText size={18} />
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-800/40">
+                                            {loadingDetails ? (
+                                                [1, 2, 3, 4, 5].map((i) => (
+                                                    <tr key={i} className="animate-pulse">
+                                                        <td colSpan={4} className="px-6 py-6 h-12 bg-slate-800/10"></td>
+                                                    </tr>
+                                                ))
+                                            ) : recycleBinItems.length > 0 ? (
+                                                recycleBinItems.map((item) => (
+                                                    <tr key={item.id} className="hover:bg-slate-800/20 transition-colors group">
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="p-2 bg-slate-800/50 rounded-lg text-slate-400 group-hover:text-white transition-colors">
+                                                                    <FileText size={18} />
+                                                                </div>
+                                                                <div className="flex flex-col">
+                                                                    <span className="font-bold text-slate-200 group-hover:text-blue-400 transition-colors">{item.name}</span>
+                                                                    <span className="text-xs text-slate-500 truncate max-w-xs">{item.siteUrl}</span>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-center font-mono text-sm text-slate-300">
+                                                            {formatBytes(item.size)}
+                                                        </td>
+                                                        <td className="px-6 py-4 text-right">
+                                                            <div className="flex flex-col items-end">
+                                                                <span className="text-sm font-bold text-slate-200">{new Date(item.deletedDateTime).toLocaleDateString()}</span>
+                                                                <span className="text-xs text-slate-500 flex items-center gap-1">
+                                                                    <Clock size={10} /> {new Date(item.deletedDateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                </span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-center">
+                                                            <span className="px-3 py-1 bg-rose-500/10 text-rose-500 text-[10px] font-black uppercase tracking-tighter rounded-full border border-rose-500/20 shadow-sm">
+                                                                Recycled
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            ) : (
+                                                <tr>
+                                                    <td colSpan={4} className="px-6 py-20 text-center">
+                                                        <div className="flex flex-col items-center gap-3">
+                                                            <div className="w-16 h-16 rounded-full bg-slate-800/40 flex items-center justify-center text-slate-600 border border-slate-800">
+                                                                <Trash2 size={32} />
+                                                            </div>
+                                                            <div>
+                                                                <p className="font-bold text-slate-300">No deleted files found</p>
+                                                                <p className="text-sm text-slate-500">The recycle bin for this user's personal site is currently empty.</p>
+                                                            </div>
                                                         </div>
-                                                        <div className="flex flex-col">
-                                                            <span className="font-bold text-slate-200 group-hover:text-blue-400 transition-colors">{item.name}</span>
-                                                            <span className="text-xs text-slate-500 truncate max-w-xs">{item.siteUrl}</span>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 text-center font-mono text-sm text-slate-300">
-                                                    {formatBytes(item.size)}
-                                                </td>
-                                                <td className="px-6 py-4 text-right">
-                                                    <div className="flex flex-col items-end">
-                                                        <span className="text-sm font-bold text-slate-200">{new Date(item.deletedDateTime).toLocaleDateString()}</span>
-                                                        <span className="text-xs text-slate-500 flex items-center gap-1">
-                                                            <Clock size={10} /> {new Date(item.deletedDateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                        </span>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <span className="px-3 py-1 bg-rose-500/10 text-rose-500 text-[10px] font-black uppercase tracking-tighter rounded-full border border-rose-500/20 shadow-sm">
-                                                        Recycled
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    ) : (
-                                        <tr>
-                                            <td colSpan={4} className="px-6 py-20 text-center">
-                                                <div className="flex flex-col items-center gap-3">
-                                                    <div className="w-16 h-16 rounded-full bg-slate-800/40 flex items-center justify-center text-slate-600 border border-slate-800">
-                                                        <Trash2 size={32} />
-                                                    </div>
-                                                    <div>
-                                                        <p className="font-bold text-slate-300">No deleted files found</p>
-                                                        <p className="text-sm text-slate-500">The recycle bin for this user's personal site is currently empty.</p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </>
+                    )}
 
-                    {error && (
+                    {error && !isNotProvisioned && (
                         <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl flex items-center gap-3 text-rose-500">
                             <TriangleAlert size={20} />
                             <p className="text-sm font-bold">{error}</p>
@@ -320,3 +353,4 @@ export default function SharePointDeletionsPage() {
         </div>
     );
 }
+
