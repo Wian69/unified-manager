@@ -12,8 +12,13 @@ export default function SharePointDeletionsModule({
     const [fileSearchQuery, setFileSearchQuery] = useState("");
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
+    const [appliedFilters, setAppliedFilters] = useState<{ start: string, end: string }>({ start: "", end: "" });
     const [sortKey, setSortKey] = useState<string>("deletedDateTime");
     const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+
+    const handleApplyFilters = () => {
+        setAppliedFilters({ start: startDate, end: endDate });
+    };
 
     const safeFormatDate = (dateStr: string) => {
         const d = new Date(dateStr);
@@ -57,17 +62,17 @@ export default function SharePointDeletionsModule({
         .filter((item: any) => {
             const matchesSearch = item.name.toLowerCase().includes(fileSearchQuery.toLowerCase());
             let matchesDate = true;
-            if (startDate || endDate) {
+            if (appliedFilters.start || appliedFilters.end) {
                 // Parse date as local YYYY-MM-DD
                 const itemDateObj = new Date(item.deletedDateTime);
                 const itemTime = itemDateObj.getTime();
                 
-                if (startDate) {
-                    const sDate = new Date(startDate + "T00:00:00");
+                if (appliedFilters.start) {
+                    const sDate = new Date(appliedFilters.start + "T00:00:00");
                     if (itemTime < sDate.getTime()) matchesDate = false;
                 }
-                if (endDate) {
-                    const eDate = new Date(endDate + "T23:59:59");
+                if (appliedFilters.end) {
+                    const eDate = new Date(appliedFilters.end + "T23:59:59");
                     if (itemTime > eDate.getTime()) matchesDate = false;
                 }
             }
@@ -127,9 +132,15 @@ export default function SharePointDeletionsModule({
                             onChange={(e) => setEndDate(e.target.value)}
                             className="bg-transparent border-none focus:ring-0 text-[10px] text-white p-0 w-24 [color-scheme:dark]"
                         />
+                        <button 
+                            onClick={handleApplyFilters}
+                            className="ml-2 px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white text-[9px] font-black uppercase tracking-widest rounded-lg transition-all"
+                        >
+                            Search
+                        </button>
                         {(startDate || endDate) && (
                             <button 
-                                onClick={() => { setStartDate(""); setEndDate(""); }}
+                                onClick={() => { setStartDate(""); setEndDate(""); setAppliedFilters({ start: "", end: "" }); }}
                                 className="ml-2 text-[9px] text-slate-500 hover:text-white uppercase font-black"
                             >
                                 Clear

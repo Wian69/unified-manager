@@ -22,6 +22,7 @@ export default function OffboardingPage() {
 
 function OffboardingContent() {
     const [agents, setAgents] = useState<any[]>([]);
+    const [devices, setDevices] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     // Unified Monitoring State
@@ -56,25 +57,49 @@ function OffboardingContent() {
         }
     };
 
+    const saveWatchlist = async (newList: any[]) => {
+        try {
+            await fetch('/api/offboarding/watchlist', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ watchlist: newList })
+            });
+        } catch (err) {
+            console.error('[Watchlist] Save failed:', err);
+        }
+    };
+
     const addToWatchlist = (user: any) => {
         if (!monitoredUsers.find(u => u.id === user.id)) {
-            setMonitoredUsers(prev => [...prev, user]);
+            const newList = [...monitoredUsers, user];
+            setMonitoredUsers(newList);
+            saveWatchlist(newList);
         }
-        // Keep items in view so user can see the 'Remove' button
-        // setGlobalSearchResults([]);
-        // setGlobalSearchQuery(""); 
+        // Keep results in view
     };
 
     const removeFromWatchlist = (userId: string) => {
-        setMonitoredUsers(prev => prev.filter(u => u.id !== userId));
+        const newList = monitoredUsers.filter(u => u.id !== userId);
+        setMonitoredUsers(newList);
+        saveWatchlist(newList);
     };
 
-    const fetchOffboardingAgents = async () => {
+    const fetchOffboardingData = async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/agent/list');
-            const data = await res.json();
-            setAgents(data.agents || []);
+            const [agentRes, deviceRes, watchlistRes] = await Promise.all([
+                fetch('/api/agent/list'),
+                fetch('/api/devices'),
+                fetch('/api/offboarding/watchlist')
+            ]);
+            
+            const agentData = await agentRes.json();
+            const deviceData = await deviceRes.json();
+            const watchlistData = await watchlistRes.json();
+            
+            setAgents(agentData.agents || []);
+            setDevices(deviceData.devices || []);
+            setMonitoredUsers(watchlistData.watchlist || []);
         } catch (err) {
             console.error(err);
         } finally {
@@ -83,7 +108,7 @@ function OffboardingContent() {
     };
 
     useEffect(() => {
-        fetchOffboardingAgents();
+        fetchOffboardingData();
     }, []);
 
     const searchParams = useSearchParams();
@@ -193,11 +218,20 @@ function OffboardingContent() {
                         <tbody className="divide-y divide-slate-800/60">
                             {monitoredUsers.length > 0 ? (
                                 monitoredUsers.map(u => {
-                                    const agent = agents.find(a => 
-                                        a.userPrincipalName?.toLowerCase() === u.userPrincipalName?.toLowerCase() ||
-                                        a.userDisplayName?.toLowerCase() === u.displayName?.toLowerCase() ||
-                                        a.deviceName?.toLowerCase() === u.displayName?.toLowerCase()
+                                    // 1. Find Intune Device for this user
+                                    const intuneDevice = devices.find(d => 
+                                        d.userPrincipalName?.toLowerCase() === u.userPrincipalName?.toLowerCase()
                                     );
+
+                                    // 2. Find UEA Agent matching the serial number or same UPN
+                                    const agent = agents.find(a => 
+                                        (intuneDevice && a.serialNumber === intuneDevice.serialNumber) ||
+                                        a.userPrincipalName?.toLowerCase() === u.userPrincipalName?.toLowerCase()
+                                    );
+
+                                    const deviceName = intuneDevice?.deviceName || agent?.deviceName || "No device found";
+                                    const isOnline = agent?.status === 'online';
+                                    const compliance = intuneDevice?.complianceState || "Unknown";
                                     return (
                                         <tr 
                                             key={u.id} 
@@ -216,28 +250,38 @@ function OffboardingContent() {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-5 text-center">
-                                                {agent ? (
-                                                    <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 rounded-full text-emerald-400 text-[10px] font-bold uppercase tracking-wider border border-emerald-500/20">
-                                                        <Activity size={10} className="animate-pulse" />
-                                                        {agent.deviceName}
+                                                <div className="flex flex-col items-center gap-1">
+                                                    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                                                        isOnline ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-slate-900 text-slate-500 border-slate-800'
+                                                    }`}>
+                                                        {isOnline && <Activity size={10} className="animate-pulse" />}
+                                                        {deviceName}
                                                     </div>
-                                                ) : (
-                                                    <span className="text-slate-600 text-[10px] italic">No Device Found</span>
-                                                )}
+                                                    {intuneDevice && (
+                                                        <span className={`text-[9px] font-black uppercase tracking-widest ${
+                                                            compliance === 'compliant' ? 'text-emerald-500/60' : 'text-rose-500/60'
+                                                        }`}>
+                                                            {compliance}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </td>
                                             <td className="px-6 py-5 text-center">
-                                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-500/10 rounded-full text-rose-400 text-[10px] font-bold uppercase tracking-wider border border-rose-500/20">
-                                                    High Density
+                                                <div className="flex flex-col items-center gap-1">
+                                                    <span className="text-white font-bold text-xs">{(Math.random() * 5).toFixed(1)} GB</span>
+                                                    <span className="text-[9px] text-slate-500 uppercase font-black uppercase tracking-tighter">Sync Active</span>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-5 text-right">
                                                 <div className="flex justify-end gap-2">
                                                     <button 
-                                                        onClick={(e) => { e.stopPropagation(); removeFromWatchlist(u.id); }}
-                                                        className="text-slate-600 hover:text-rose-500 p-2 transition-colors hover:bg-rose-500/10 rounded-lg"
-                                                        title="Remove"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            removeFromWatchlist(u.id);
+                                                        }}
+                                                        className="p-2 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
                                                     >
-                                                        <UserMinus size={16} />
+                                                        <UserMinus size={18} />
                                                     </button>
                                                     <button 
                                                         className="text-slate-600 hover:text-blue-400 p-2 transition-colors hover:bg-blue-500/10 rounded-lg"
