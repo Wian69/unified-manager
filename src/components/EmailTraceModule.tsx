@@ -1,0 +1,266 @@
+"use client";
+
+import React, { useState, useEffect } from 'react';
+import { Search, Calendar, Download, RefreshCw, ShieldAlert, Mail, Paperclip, ChevronDown, ChevronUp } from "lucide-react";
+
+export default function EmailTraceModule({ userId, userDisplayName }: { userId: string, userDisplayName: string }) {
+    const [emails, setEmails] = useState<any[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [expandedEmailId, setExpandedEmailId] = useState<string | null>(null);
+
+    const fetchEmails = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            let url = `/api/email/trace?userId=${userId}`;
+            if (startDate && endDate) {
+                // Convert to ISO for Graph API
+                const startISO = new Date(startDate + "T00:00:00").toISOString();
+                const endISO = new Date(endDate + "T23:59:59").toISOString();
+                url += `&startDate=${startISO}&endDate=${endISO}`;
+            }
+            
+            const res = await fetch(url);
+            const result = await res.json();
+            
+            if (result.error) throw new Error(result.details || result.error);
+            setEmails(result.data || []);
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (userId) fetchEmails();
+    }, [userId]);
+
+    const handleSearch = () => {
+        fetchEmails();
+    };
+
+    const formatDate = (dateStr: string) => {
+        const d = new Date(dateStr);
+        return isNaN(d.getTime()) ? 'N/A' : d.toLocaleDateString(undefined, {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
+    const filteredEmails = emails.filter(email => 
+        email.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        email.bodyPreview?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    const downloadCSV = () => {
+        const headers = ["Subject", "Date", "Attachments", "Preview"];
+        const rows = filteredEmails.map(email => [
+            `"${email.subject || 'No Subject'}"`,
+            `"${formatDate(email.sentDateTime)}"`,
+            email.attachments?.length || 0,
+            `"${(email.bodyPreview || '').replace(/"/g, '""')}"`
+        ]);
+        const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `Email_Trace_${userDisplayName.replace(/\s+/g, '_')}.csv`);
+        link.click();
+    };
+
+    return (
+        <div className="space-y-6 animate-in fade-in duration-500">
+            {/* Control Bar */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-950 p-6 rounded-3xl border border-slate-800">
+                <div className="flex items-center gap-3">
+                    <div className="p-3 bg-blue-500/10 rounded-2xl border border-blue-500/20">
+                        <Mail size={24} className="text-blue-500" />
+                    </div>
+                    <div>
+                        <h3 className="text-xl font-bold text-white uppercase tracking-tight">Email Sent Trace</h3>
+                        <p className="text-xs text-slate-500 font-mono tracking-widest uppercase mt-0.5">Auditing Outlook Sent Items</p>
+                    </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-4">
+                    <div className="flex items-center gap-2 bg-slate-900 p-2 rounded-xl border border-slate-800">
+                        <Calendar size={14} className="text-blue-400" />
+                        <input 
+                            type="date" 
+                            value={startDate} 
+                            onChange={(e) => setStartDate(e.target.value)}
+                            className="bg-transparent border-none focus:ring-0 text-[10px] text-white p-0 w-24 [color-scheme:dark]"
+                        />
+                        <span className="text-slate-600 text-xs">-</span>
+                        <input 
+                            type="date" 
+                            value={endDate} 
+                            onChange={(e) => setEndDate(e.target.value)}
+                            className="bg-transparent border-none focus:ring-0 text-[10px] text-white p-0 w-24 [color-scheme:dark]"
+                        />
+                        <button 
+                            onClick={handleSearch}
+                            className="ml-2 px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black uppercase tracking-widest rounded-lg transition-all shadow-lg shadow-blue-500/10 active:scale-95"
+                        >
+                            Search
+                        </button>
+                    </div>
+                    <button 
+                        onClick={downloadCSV}
+                        className="flex items-center gap-2 px-4 py-2 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-500 border border-emerald-500/20 rounded-xl transition-all text-[10px] font-black uppercase tracking-widest"
+                    >
+                        <Download size={14} /> Export CSV
+                    </button>
+                </div>
+            </div>
+
+            {loading ? (
+                <div className="flex flex-col items-center justify-center py-20 text-slate-500 gap-4">
+                    <RefreshCw size={40} className="animate-spin text-blue-500" />
+                    <p className="font-mono text-[10px] uppercase tracking-[0.2em]">Retracing Email Activity...</p>
+                </div>
+            ) : error ? (
+                <div className="bg-rose-500/5 border border-rose-500/10 p-12 rounded-[2rem] text-center">
+                    <ShieldAlert className="mx-auto text-rose-500 mb-6" size={48} />
+                    <h3 className="text-xl font-bold text-white mb-2 tracking-tight">Access or Fetch Error</h3>
+                    <p className="text-slate-400 max-w-md mx-auto text-sm leading-relaxed">{error}</p>
+                    <button 
+                        onClick={fetchEmails}
+                        className="mt-6 px-6 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all border border-slate-800"
+                    >
+                        Retry Audit
+                    </button>
+                </div>
+            ) : (
+                <div className="bg-slate-950 rounded-[2.5rem] border border-slate-800 overflow-hidden shadow-2xl shadow-black/50">
+                    <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/30 backdrop-blur-xl">
+                        <div className="flex items-center gap-4">
+                            <h4 className="font-bold text-slate-300 text-sm">Messages Discovered ({filteredEmails.length})</h4>
+                            <div className="h-4 w-[1px] bg-slate-800" />
+                            <p className="text-[10px] text-slate-500 font-mono uppercase tracking-widest">
+                                Sent Items History
+                            </p>
+                        </div>
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={14} />
+                            <input 
+                                type="text" 
+                                placeholder="Filter results..." 
+                                className="bg-slate-900/50 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white w-64 focus:ring-1 focus:ring-blue-500/50 transition-all"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
+                    </div>
+                    
+                    <div className="max-h-[600px] overflow-y-auto custom-scrollbar">
+                        <table className="w-full text-left text-sm border-separate border-spacing-0">
+                            <thead className="bg-slate-900/50 text-slate-500 uppercase text-[10px] font-black tracking-widest sticky top-0 z-20 backdrop-blur-md">
+                                <tr>
+                                    <th className="px-8 py-5 border-b border-slate-800">Email Title & Preview</th>
+                                    <th className="px-8 py-5 border-b border-slate-800 text-center">Attachments</th>
+                                    <th className="px-8 py-5 border-b border-slate-800 text-right">Sent Date</th>
+                                    <th className="w-12 border-b border-slate-800"></th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-800/40">
+                                {filteredEmails.map((email: any) => (
+                                    <React.Fragment key={email.id}>
+                                        <tr 
+                                            className="hover:bg-blue-500/5 cursor-pointer transition-colors group"
+                                            onClick={() => setExpandedEmailId(expandedEmailId === email.id ? null : email.id)}
+                                        >
+                                            <td className="px-8 py-6">
+                                                <div className="space-y-1">
+                                                    <div className="font-bold text-slate-200 group-hover:text-blue-400 transition-colors leading-tight">
+                                                        {email.subject || '(No Subject)'}
+                                                    </div>
+                                                    <div className="text-[11px] text-slate-500 line-clamp-1 italic font-light">
+                                                        {email.bodyPreview}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-6 text-center">
+                                                {email.hasAttachments ? (
+                                                    <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-500/10 text-blue-500 rounded-full text-[10px] font-black border border-blue-500/20">
+                                                        <Paperclip size={10} />
+                                                        {email.attachments?.length || 1}
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-slate-700 text-[10px]">None</span>
+                                                )}
+                                            </td>
+                                            <td className="px-8 py-6 text-right whitespace-nowrap">
+                                                <div className="text-xs font-bold text-slate-300">{formatDate(email.sentDateTime).split(',')[0]}</div>
+                                                <div className="text-[10px] text-slate-500 font-mono mt-0.5">{formatDate(email.sentDateTime).split(',')[1]}</div>
+                                            </td>
+                                            <td className="pr-6 text-slate-600 group-hover:text-slate-400 transition-colors">
+                                                {expandedEmailId === email.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                            </td>
+                                        </tr>
+                                        {expandedEmailId === email.id && (
+                                            <tr className="bg-blue-500/5">
+                                                <td colSpan={4} className="px-8 py-8 border-b border-slate-800/40 animate-in slide-in-from-top-2 duration-300">
+                                                    <div className="space-y-6">
+                                                        <div>
+                                                            <p className="text-[10px] text-blue-400 uppercase font-black tracking-widest mb-3">Message Preview</p>
+                                                            <div className="bg-slate-950 p-6 rounded-2xl border border-slate-800 text-slate-300 text-sm leading-relaxed whitespace-pre-wrap font-sans">
+                                                                {email.bodyPreview}...
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        {email.hasAttachments && email.attachments && (
+                                                            <div>
+                                                                <p className="text-[10px] text-emerald-400 uppercase font-black tracking-widest mb-3 flex items-center gap-2">
+                                                                    <Paperclip size={10} />
+                                                                    Attachments Detected
+                                                                </p>
+                                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                                    {email.attachments.map((att: any, idx: number) => (
+                                                                        <div key={idx} className="flex items-center justify-between p-4 bg-slate-900 rounded-xl border border-slate-800 hover:border-emerald-500/30 transition-all">
+                                                                            <div className="flex items-center gap-3">
+                                                                                <div className="p-2 bg-emerald-500/10 rounded-lg">
+                                                                                    <Paperclip size={14} className="text-emerald-500" />
+                                                                                </div>
+                                                                                <div>
+                                                                                    <p className="text-xs font-bold text-slate-200">{att.name}</p>
+                                                                                    <p className="text-[10px] text-slate-500 uppercase">{(att.size / 1024).toFixed(1)} KB • {att.contentType.split('/')[1]}</p>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </React.Fragment>
+                                ))}
+                                {filteredEmails.length === 0 && (
+                                    <tr>
+                                        <td colSpan={4} className="px-8 py-20 text-center">
+                                            <Mail size={32} className="mx-auto text-slate-800 mb-4 opacity-50" />
+                                            <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest">No sent items found for this range.</p>
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
