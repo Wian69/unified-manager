@@ -27,6 +27,8 @@ function OffboardingContent() {
     const [loading, setLoading] = useState(true);
     const [sendingReport, setSendingReport] = useState(false);
     const [reportSent, setReportSent] = useState(false);
+    const [reportError, setReportError] = useState<string | null>(null);
+    const [syncing, setSyncing] = useState(false);
 
     // Unified Monitoring State
     const [monitoredUsers, setMonitoredUsers] = useState<any[]>([]);
@@ -61,20 +63,24 @@ function OffboardingContent() {
     };
 
     const saveWatchlist = async (newList: any[]) => {
+        setSyncing(true);
         // Save to LocalStorage immediately for instant persistence
         if (typeof window !== 'undefined') {
             localStorage.setItem('employeeWatchlist', JSON.stringify(newList));
         }
         
         try {
-            await fetch('/api/offboarding/watchlist', {
+            const res = await fetch('/api/offboarding/watchlist', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ watchlist: newList }),
                 cache: 'no-store'
             });
+            if (!res.ok) throw new Error("Sync failed");
         } catch (err) {
             console.error('[Watchlist] API Save failed:', err);
+        } finally {
+            setSyncing(false);
         }
     };
 
@@ -162,14 +168,20 @@ function OffboardingContent() {
     const triggerReport = async () => {
         setSendingReport(true);
         setReportSent(false);
+        setReportError(null);
         try {
             const res = await fetch('/api/reports/daily', { method: 'POST' });
+            const data = await res.json();
+            
             if (res.ok) {
                 setReportSent(true);
                 setTimeout(() => setReportSent(false), 5000);
+            } else {
+                setReportError(data.message || data.error || "Report failed to send.");
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('[Report] Trigger failed:', err);
+            setReportError(err.message);
         } finally {
             setSendingReport(false);
         }
@@ -273,6 +285,15 @@ function OffboardingContent() {
                         Employee Watchlist ({monitoredUsers.length})
                     </h2>
                     <div className="flex items-center gap-4">
+                        {reportError && (
+                            <span className="text-[10px] text-rose-500 font-bold bg-rose-500/10 px-3 py-1.5 rounded-lg border border-rose-500/20 animate-in fade-in slide-in-from-right-2">
+                                Error: {reportError}
+                            </span>
+                        )}
+                        <div className="flex items-center gap-2">
+                            <span className={`w-2 h-2 rounded-full ${syncing ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500 shadow-lg shadow-emerald-500/20'}`} />
+                            <span className="text-[9px] text-slate-500 font-mono uppercase tracking-widest">{syncing ? 'Syncing...' : 'Cloud Synced'}</span>
+                        </div>
                         <button 
                             onClick={triggerReport}
                             disabled={sendingReport || monitoredUsers.length === 0}
