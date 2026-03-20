@@ -33,7 +33,7 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
             if (spData.error) {
                 setSpError(spData.error);
             } else {
-                setRecycleBinItems(spData.items || []);
+                setRecycleBinItems(spData.data || []);
             }
         } catch (err: any) {
             setError(err.message);
