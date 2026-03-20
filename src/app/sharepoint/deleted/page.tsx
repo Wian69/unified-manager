@@ -1,59 +1,83 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Trash2, HardDrive, RefreshCw, TriangleAlert, ExternalLink, User, Search } from "lucide-react";
+import { Trash2, HardDrive, RefreshCw, TriangleAlert, ExternalLink, User, Search, ArrowLeft, FileText, Clock, Shield } from "lucide-react";
 
-interface DeletionItem {
+interface UserResult {
+    id: string;
+    displayName: string;
+    userPrincipalName: string;
+}
+
+interface RecycleBinItem {
+    id: string;
+    name: string;
+    size: number;
+    deletedDateTime: string;
+    deletedBy: string;
     siteUrl: string;
-    owner: string;
-    deletedFileCount: number;
-    deletedFileSize: number;
-    lastActivity: string;
-    isPersonal: boolean;
 }
 
 export default function SharePointDeletionsPage() {
-    const [data, setData] = useState<DeletionItem[]>([]);
-    const [filteredData, setFilteredData] = useState<DeletionItem[]>([]);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [totalCount, setTotalCount] = useState(0);
-    const [totalSize, setTotalSize] = useState(0);
-    const [loading, setLoading] = useState(true);
+    // Search State
+    const [searchQuery, setSearchQuery] = useState("");
+    const [userResults, setUserResults] = useState<UserResult[]>([]);
+    const [searching, setSearching] = useState(false);
+    
+    // Selection State
+    const [selectedUser, setSelectedUser] = useState<UserResult | null>(null);
+    const [recycleBinItems, setRecycleBinItems] = useState<RecycleBinItem[]>([]);
+    const [loadingDetails, setLoadingDetails] = useState(false);
+    
+    // Global State
     const [error, setError] = useState<string | null>(null);
 
-    const fetchData = async () => {
-        setLoading(true);
+    // Search for users
+    useEffect(() => {
+        const delayDebounceFn = setTimeout(async () => {
+            if (searchQuery.length < 3) {
+                setUserResults([]);
+                return;
+            }
+            
+            setSearching(true);
+            try {
+                const res = await fetch(`/api/users?search=${encodeURIComponent(searchQuery)}`);
+                const data = await res.json();
+                setUserResults(data.users || []);
+            } catch (err) {
+                console.error("User search failed", err);
+            } finally {
+                setSearching(false);
+            }
+        }, 500);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchQuery]);
+
+    // Fetch live recycle bin for selected user
+    const fetchUserRecycleBin = async (user: UserResult) => {
+        setSelectedUser(user);
+        setLoadingDetails(true);
         setError(null);
+        setRecycleBinItems([]);
+        
         try {
-            const res = await fetch('/api/sharepoint/deleted');
+            const res = await fetch(`/api/sharepoint/deleted?userId=${user.id}`);
             const result = await res.json();
+            
             if (result.data) {
-                setData(result.data);
-                setFilteredData(result.data);
-                setTotalCount(result.totalDeletedCount || 0);
-                setTotalSize(result.totalDeletedSize || 0);
+                setRecycleBinItems(result.data);
             } else if (result.error) {
                 setError(result.error);
             }
-        } catch (error) {
-            console.error("Failed to fetch SharePoint deletions", error);
-            setError("Failed to connect to API");
+        } catch (err) {
+            console.error("Recycle bin fetch failed", err);
+            setError("Failed to fetch live recycle bin data");
         } finally {
-            setLoading(false);
+            setLoadingDetails(false);
         }
     };
-
-    useEffect(() => {
-        fetchData();
-    }, []);
-
-    useEffect(() => {
-        const filtered = data.filter(item => 
-            (item.owner || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (item.siteUrl || "").toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        setFilteredData(filtered);
-    }, [searchTerm, data]);
 
     const formatBytes = (bytes: number) => {
         if (bytes === 0) return '0 Bytes';
@@ -64,146 +88,221 @@ export default function SharePointDeletionsPage() {
     };
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-700">
-            <div className="flex justify-between items-center bg-slate-900/40 p-8 rounded-3xl border border-slate-800/60 backdrop-blur-xl">
-                <div className="flex items-center gap-5">
-                    <div className="p-4 bg-rose-500/20 text-rose-400 rounded-2xl shadow-lg shadow-rose-500/10">
-                        <Trash2 size={32} />
+        <div className="p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700">
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <div className="flex items-center gap-2 mb-1">
+                        <Shield className="text-blue-500" size={20} />
+                        <span className="text-xs font-bold text-blue-500 uppercase tracking-widest">Administrator Portal</span>
                     </div>
-                    <div>
-                        <h1 className="text-3xl font-bold text-white tracking-tight">SharePoint Deletions</h1>
-                        <p className="text-slate-400 font-medium">Tracking data removal across personal sites (last 30 days).</p>
-                    </div>
+                    <h1 className="text-4xl font-black text-white tracking-tight">
+                        User Deletion <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-indigo-500">Manager</span>
+                    </h1>
+                    <p className="text-slate-400 mt-2 max-w-2xl">
+                        Search for a user to manage their live SharePoint and OneDrive recycle bins, mirroring the official Tenant Profile Admin experience.
+                    </p>
                 </div>
-                <button 
-                    onClick={fetchData}
-                    disabled={loading}
-                    className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 px-5 py-2.5 rounded-xl transition-all border border-slate-700 hover:border-slate-600 disabled:opacity-50"
-                >
-                    <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
-                    {loading ? "Syncing..." : "Sync Report"}
-                </button>
+                {selectedUser && (
+                    <button 
+                        onClick={() => setSelectedUser(null)}
+                        className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-white transition-all border border-slate-700 font-medium"
+                    >
+                        <ArrowLeft size={18} /> Back to Search
+                    </button>
+                )}
             </div>
 
-            {error && (
-                <div className="bg-rose-500/10 border border-rose-500/20 p-4 rounded-xl flex items-center gap-3 text-rose-400">
-                    <TriangleAlert size={20} />
-                    <p className="font-medium">{error}</p>
+            {!selectedUser ? (
+                /* Search View */
+                <div className="space-y-6">
+                    <div className="bg-slate-900/40 rounded-3xl border border-slate-800/60 p-8 backdrop-blur-md relative overflow-hidden group shadow-2xl">
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent pointer-events-none"></div>
+                        <div className="relative z-10 space-y-4">
+                            <label className="text-sm font-bold text-slate-300 uppercase tracking-wider ml-1">Search User Profiles</label>
+                            <div className="relative">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={24} />
+                                <input 
+                                    type="text" 
+                                    placeholder="Enter Name or User Principal Name (UPN)..." 
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl py-5 pl-14 pr-4 text-xl text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-medium"
+                                />
+                                {searching && (
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                                        <RefreshCw className="animate-spin text-blue-500" size={20} />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {userResults.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {userResults.map((user) => (
+                                <button 
+                                    key={user.id}
+                                    onClick={() => fetchUserRecycleBin(user)}
+                                    className="flex items-center gap-4 p-5 bg-slate-900/40 border border-slate-800/60 rounded-2xl hover:border-blue-500/40 hover:bg-slate-800/40 transition-all text-left group"
+                                >
+                                    <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:bg-blue-500/20 transition-all">
+                                        <User className="text-blue-500" size={24} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className="font-bold text-white truncate">{user.displayName}</h3>
+                                        <p className="text-xs text-slate-500 truncate">{user.userPrincipalName}</p>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    ) : searchQuery.length >= 3 && !searching ? (
+                        <div className="text-center py-12 bg-slate-900/20 rounded-3xl border border-dashed border-slate-800">
+                            <User className="mx-auto text-slate-700 mb-4" size={48} />
+                            <p className="text-slate-500">No user profiles found matching "{searchQuery}"</p>
+                        </div>
+                    ) : null}
+                </div>
+            ) : (
+                /* Detail View (Recycle Bin) */
+                <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
+                    {/* User Info Card */}
+                    <div className="bg-slate-900/40 rounded-3xl border border-slate-800/60 p-6 backdrop-blur-md flex flex-col md:flex-row items-center gap-6">
+                        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+                            <User size={40} />
+                        </div>
+                        <div className="flex-1 text-center md:text-left">
+                            <h2 className="text-2xl font-bold text-white">{selectedUser.displayName}</h2>
+                            <p className="text-slate-400 font-mono text-sm">{selectedUser.userPrincipalName}</p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                             <a 
+                                href={`https://xxeqncs-admin.sharepoint.com/_layouts/15/TenantProfileAdmin/ProfMngr.aspx?ConsoleView=Active&ProfileType=User&ApplicationID=00000000%2D0000%2D0000%2D0000%2D000000000000`} 
+                                target="_blank" 
+                                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all shadow-lg shadow-blue-600/20 font-bold text-sm"
+                            >
+                                <ExternalLink size={16} /> Admin Center Profile
+                            </a>
+                        </div>
+                    </div>
+
+                    {/* Stats Overview */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="bg-slate-900/40 rounded-3xl border border-slate-800/60 p-6 backdrop-blur-md relative overflow-hidden group">
+                            <div className="relative z-10 flex items-center gap-4">
+                                <div className="p-3 bg-rose-500/10 rounded-2xl text-rose-500">
+                                    <Trash2 size={28} />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Live Recycle Bin Items</p>
+                                    <h3 className="text-4xl font-black text-white mt-1">
+                                        {loadingDetails ? "..." : recycleBinItems.length}
+                                    </h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-slate-900/40 rounded-3xl border border-slate-800/60 p-6 backdrop-blur-md relative overflow-hidden group">
+                                <div className="relative z-10 flex items-center gap-4">
+                                <div className="p-3 bg-amber-500/10 rounded-2xl text-amber-500">
+                                    <HardDrive size={28} />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Total Size Staged</p>
+                                    <h3 className="text-4xl font-black text-white mt-1">
+                                        {loadingDetails ? "..." : formatBytes(recycleBinItems.reduce((acc, curr) => acc + curr.size, 0))}
+                                    </h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Items Table */}
+                    <div className="bg-slate-900/40 rounded-3xl border border-slate-800/60 backdrop-blur-md overflow-hidden shadow-2xl">
+                        <div className="px-6 py-4 border-b border-slate-800/60 flex justify-between items-center bg-slate-950/30">
+                            <h2 className="font-bold text-slate-200 flex items-center gap-2">
+                                <FileText className="text-blue-500" size={18} />
+                                SharePoint / OneDrive Recycle Bin Content
+                            </h2>
+                            <span className="text-xs text-slate-500 font-mono uppercase tracking-widest">First 100 items</span>
+                        </div>
+                        
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead>
+                                    <tr className="bg-slate-900/60 border-b border-slate-800/60 text-slate-400 text-sm font-semibold">
+                                        <th className="px-6 py-4">Filename</th>
+                                        <th className="px-6 py-4 text-center">Size</th>
+                                        <th className="px-6 py-4 text-right">Deletion Date</th>
+                                        <th className="px-6 py-4 text-center">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-800/40">
+                                    {loadingDetails ? (
+                                        [1, 2, 3, 4, 5].map((i) => (
+                                            <tr key={i} className="animate-pulse">
+                                                <td colSpan={4} className="px-6 py-6 h-12 bg-slate-800/10"></td>
+                                            </tr>
+                                        ))
+                                    ) : recycleBinItems.length > 0 ? (
+                                        recycleBinItems.map((item) => (
+                                            <tr key={item.id} className="hover:bg-slate-800/20 transition-colors group">
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="p-2 bg-slate-800/50 rounded-lg text-slate-400 group-hover:text-white transition-colors">
+                                                            <FileText size={18} />
+                                                        </div>
+                                                        <div className="flex flex-col">
+                                                            <span className="font-bold text-slate-200 group-hover:text-blue-400 transition-colors">{item.name}</span>
+                                                            <span className="text-xs text-slate-500 truncate max-w-xs">{item.siteUrl}</span>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 text-center font-mono text-sm text-slate-300">
+                                                    {formatBytes(item.size)}
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <div className="flex flex-col items-end">
+                                                        <span className="text-sm font-bold text-slate-200">{new Date(item.deletedDateTime).toLocaleDateString()}</span>
+                                                        <span className="text-xs text-slate-500 flex items-center gap-1">
+                                                            <Clock size={10} /> {new Date(item.deletedDateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 text-center">
+                                                    <span className="px-3 py-1 bg-rose-500/10 text-rose-500 text-[10px] font-black uppercase tracking-tighter rounded-full border border-rose-500/20 shadow-sm">
+                                                        Recycled
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={4} className="px-6 py-20 text-center">
+                                                <div className="flex flex-col items-center gap-3">
+                                                    <div className="w-16 h-16 rounded-full bg-slate-800/40 flex items-center justify-center text-slate-600 border border-slate-800">
+                                                        <Trash2 size={32} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-bold text-slate-300">No deleted files found</p>
+                                                        <p className="text-sm text-slate-500">The recycle bin for this user's personal site is currently empty.</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {error && (
+                        <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl flex items-center gap-3 text-rose-500">
+                            <TriangleAlert size={20} />
+                            <p className="text-sm font-bold">{error}</p>
+                        </div>
+                    )}
                 </div>
             )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-slate-900/40 rounded-3xl border border-slate-800/60 p-6 backdrop-blur-md flex items-center gap-4">
-                    <div className="p-3 bg-blue-500/10 text-blue-400 rounded-xl">
-                        <Trash2 size={24} />
-                    </div>
-                    <div>
-                        <p className="text-sm text-slate-400 font-medium">Total Files Deleted</p>
-                        <p className="text-2xl font-bold text-white">{totalCount.toLocaleString()}</p>
-                    </div>
-                </div>
-                <div className="bg-slate-900/40 rounded-3xl border border-slate-800/60 p-6 backdrop-blur-md flex items-center gap-4">
-                    <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl">
-                        <HardDrive size={24} />
-                    </div>
-                    <div>
-                        <p className="text-sm text-slate-400 font-medium">Total Data Deleted</p>
-                        <p className="text-2xl font-bold text-white">{formatBytes(totalSize)}</p>
-                    </div>
-                </div>
-            </div>
-
-            <div className="bg-slate-900/40 rounded-3xl border border-slate-800/60 p-6 backdrop-blur-md relative overflow-hidden group">
-                <div className="relative z-10 flex flex-col md:flex-row gap-4 items-center">
-                    <div className="relative w-full">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={20} />
-                        <input 
-                            type="text" 
-                            placeholder="Search for user or personal site..." 
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl py-3 pl-12 pr-4 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
-                        />
-                    </div>
-                </div>
-            </div>
-
-            <div className="bg-slate-900/40 rounded-3xl border border-slate-800/60 backdrop-blur-md overflow-hidden shadow-2xl">
-                <div className="px-6 py-4 border-b border-slate-800/60 flex justify-between items-center bg-slate-950/30">
-                    <h2 className="font-bold text-slate-200">Deletions by User (Personal Sites)</h2>
-                    <span className="text-xs text-slate-500 font-mono uppercase tracking-widest">{filteredData.length} matches found</span>
-                </div>
-                
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="bg-slate-900/60 border-b border-slate-800/60 text-slate-400 text-sm font-semibold">
-                                <th className="px-6 py-4">User / Site</th>
-                                <th className="px-6 py-4 text-center">Files Deleted</th>
-                                <th className="px-6 py-4 text-right">Data Deleted</th>
-                                <th className="px-6 py-4 text-center">Last Activity</th>
-                                <th className="px-6 py-4"></th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-800/40">
-                            {loading ? (
-                                [1, 2, 3, 4, 5].map((i) => (
-                                    <tr key={i} className="animate-pulse">
-                                        <td colSpan={5} className="px-6 py-6 h-12 bg-slate-800/10"></td>
-                                    </tr>
-                                ))
-                            ) : filteredData.length > 0 ? (
-                                filteredData.map((item, idx) => (
-                                    <tr key={idx} className="hover:bg-slate-800/20 transition-colors group">
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="bg-slate-800 p-2 rounded-lg text-slate-400 group-hover:text-blue-400 transition-colors">
-                                                    <User size={18} />
-                                                </div>
-                                                <div>
-                                                    <p className="font-semibold text-white group-hover:text-blue-300 transition-colors">
-                                                        {item.owner || "Unknown User"}
-                                                    </p>
-                                                    <p className="text-xs text-slate-500 font-mono truncate max-w-[200px]" title={item.siteUrl}>
-                                                        {item.siteUrl}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className="bg-rose-500/10 text-rose-400 px-2 py-1 rounded-md text-sm font-bold border border-rose-500/20">
-                                                {item.deletedFileCount.toLocaleString()}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-right text-slate-300 font-medium">
-                                            {formatBytes(item.deletedFileSize)}
-                                        </td>
-                                        <td className="px-6 py-4 text-center text-sm text-slate-500">
-                                            {item.lastActivity || "N/A"}
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <a 
-                                                href={item.siteUrl} 
-                                                target="_blank" 
-                                                rel="noopener noreferrer"
-                                                className="text-slate-500 hover:text-white p-2 inline-block transition-colors"
-                                            >
-                                                <ExternalLink size={18} />
-                                            </a>
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan={5} className="px-6 py-12 text-center text-slate-500 italic">
-                                        No deletion data available for the selected period.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
         </div>
     );
 }

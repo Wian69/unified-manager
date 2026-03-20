@@ -3,15 +3,57 @@ import { getGraphClient } from '@/lib/graph';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: Request) {
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+
     try {
         const client = getGraphClient();
-        
-        // Fetch SharePoint site usage report for the last 30 days
+
+        // SCENARIO 1: Fetch live recycle bin items for a specific user
+        if (userId) {
+            console.log(`[API] Fetching live recycle bin for user: ${userId}`);
+            
+            // 1. Get user's personal site ID from their drive
+            const driveResponse = await client.api(`/users/${userId}/drive`)
+                .select('id,sharepointIds,webUrl')
+                .get();
+            
+            const siteId = driveResponse.sharepointIds?.siteId;
+            if (!siteId) {
+                return NextResponse.json({ error: "Could not locate personal site for this user" }, { status: 404 });
+            }
+
+            // 2. Fetch live recycle bin items from the site
+            // Note: siteId for personal sites works with the sites API
+            const recycleBinResponse = await client.api(`/sites/${siteId}/recycleBin/items`)
+                .select('id,name,size,lastModifiedDateTime,deletedBy')
+                .top(100)
+                .get();
+
+            const items = (recycleBinResponse.value || []).map((item: any) => ({
+                id: item.id,
+                name: item.name,
+                size: item.size || 0,
+                deletedDateTime: item.lastModifiedDateTime,
+                deletedBy: item.deletedBy?.user?.displayName || "Unknown",
+                siteUrl: driveResponse.webUrl
+            }));
+
+            return NextResponse.json({
+                data: items,
+                totalCount: items.length,
+                totalSize: items.reduce((acc: number, curr: any) => acc + (curr.size || 0), 0),
+                isLive: true
+            });
+        }
+
+        // SCENARIO 2: Default to the 30-day usage report (existing logic)
         const response = await client.api('/reports/getSharePointSiteUsageDetail(period=\'D30\')')
             .get();
 
         let csvData = '';
+        // ... (rest of the stream reading and CSV parsing logic)
 
         // Handle ReadableStream (common for Graph Reports in Node.js)
         if (response && typeof response === 'object' && (response as any).getReader) {
