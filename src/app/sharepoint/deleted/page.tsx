@@ -167,21 +167,35 @@ export default function SharePointDeletionsPage() {
                 /* Detail View (Recycle Bin) */
                 <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
                     {/* User Info Card */}
-                    <div className="bg-slate-900/40 rounded-3xl border border-slate-800/60 p-6 backdrop-blur-md flex flex-col md:flex-row items-center gap-6">
-                        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+                    <div className="bg-slate-900/40 rounded-3xl border border-slate-800/60 p-6 backdrop-blur-md flex flex-col lg:flex-row items-center gap-6">
+                        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20 flex-shrink-0">
                             <User size={40} />
                         </div>
-                        <div className="flex-1 text-center md:text-left">
+                        <div className="flex-1 text-center lg:text-left">
                             <h2 className="text-2xl font-bold text-white">{selectedUser.displayName}</h2>
                             <p className="text-slate-400 font-mono text-sm">{selectedUser.userPrincipalName}</p>
                         </div>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap justify-center gap-3">
+                             <a 
+                                href={`${recycleBinItems[0]?.siteUrl || '#'}/_layouts/15/RecycleBin.aspx`} 
+                                target="_blank" 
+                                className="flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl transition-all border border-slate-700 font-bold text-xs uppercase tracking-wider"
+                            >
+                                <ExternalLink size={14} /> First-Stage Bin
+                            </a>
+                            <a 
+                                href={`${recycleBinItems[0]?.siteUrl || '#'}/_layouts/15/AdminRecycleBin.aspx?view=5`} 
+                                target="_blank" 
+                                className="flex items-center gap-2 px-4 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl transition-all shadow-lg shadow-rose-600/20 font-bold text-xs uppercase tracking-wider"
+                            >
+                                <Shield size={14} /> Second-Stage Bin (Admin)
+                            </a>
                              <a 
                                 href={`https://xxeqncs-admin.sharepoint.com/_layouts/15/TenantProfileAdmin/ProfMngr.aspx?ConsoleView=Active&ProfileType=User&ApplicationID=00000000%2D0000%2D0000%2D0000%2D000000000000`} 
                                 target="_blank" 
-                                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all shadow-lg shadow-blue-600/20 font-bold text-sm"
+                                className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all shadow-lg shadow-blue-600/20 font-bold text-xs uppercase tracking-wider"
                             >
-                                <ExternalLink size={16} /> Admin Center Profile
+                                <ExternalLink size={14} /> User Profile
                             </a>
                         </div>
                     </div>

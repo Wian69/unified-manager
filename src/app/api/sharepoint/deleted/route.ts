@@ -25,9 +25,8 @@ export async function GET(request: Request) {
             }
 
             // 2. Fetch live recycle bin items from the site
-            // Note: siteId for personal sites works with the sites API
             const recycleBinResponse = await client.api(`/sites/${siteId}/recycleBin/items`)
-                .select('id,name,size,lastModifiedDateTime,deletedBy')
+                .select('id,name,size,lastModifiedDateTime,deletedBy,webUrl')
                 .top(100)
                 .get();
 
@@ -37,7 +36,8 @@ export async function GET(request: Request) {
                 size: item.size || 0,
                 deletedDateTime: item.lastModifiedDateTime,
                 deletedBy: item.deletedBy?.user?.displayName || "Unknown",
-                siteUrl: driveResponse.webUrl
+                siteUrl: driveResponse.webUrl,
+                webUrl: item.webUrl
             }));
 
             return NextResponse.json({
