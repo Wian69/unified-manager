@@ -28,6 +28,7 @@ export default function SharePointDeletionsPage() {
     // Selection State
     const [selectedUser, setSelectedUser] = useState<UserResult | null>(null);
     const [recycleBinItems, setRecycleBinItems] = useState<RecycleBinItem[]>([]);
+    const [fileSearchQuery, setFileSearchQuery] = useState("");
     const [loadingDetails, setLoadingDetails] = useState(false);
     const [isNotProvisioned, setIsNotProvisioned] = useState(false);
     
@@ -64,6 +65,7 @@ export default function SharePointDeletionsPage() {
         setError(null);
         setIsNotProvisioned(false);
         setRecycleBinItems([]);
+        setFileSearchQuery("");
         
         try {
             const res = await fetch(`/api/sharepoint/deleted?userId=${user.id}`);
@@ -102,6 +104,10 @@ export default function SharePointDeletionsPage() {
         const d = new Date(dateStr);
         return isNaN(d.getTime()) ? '' : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
+
+    const filteredItems = recycleBinItems.filter(item => 
+        item.name.toLowerCase().includes(fileSearchQuery.toLowerCase())
+    );
 
     return (
         <div className="p-8 space-y-8 animate-in fade-in duration-700">
@@ -278,12 +284,21 @@ export default function SharePointDeletionsPage() {
 
                                     {/* Items Table */}
                                     <div className="bg-slate-900/40 rounded-3xl border border-slate-800/60 backdrop-blur-md overflow-hidden shadow-2xl">
-                                        <div className="px-6 py-4 border-b border-slate-800/60 flex justify-between items-center bg-slate-950/30">
+                                        <div className="px-6 py-4 border-b border-slate-800/60 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-950/30">
                                             <h2 className="font-bold text-slate-200 flex items-center gap-2">
                                                 <FileText className="text-blue-500" size={18} />
                                                 SharePoint / OneDrive Recycle Bin Content
                                             </h2>
-                                            <span className="text-xs text-slate-500 font-mono uppercase tracking-widest">First 100 items</span>
+                                            <div className="relative w-full md:w-64">
+                                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={14} />
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="Filter files..." 
+                                                    value={fileSearchQuery}
+                                                    onChange={(e) => setFileSearchQuery(e.target.value)}
+                                                    className="w-full bg-slate-900/60 border border-slate-800 rounded-xl py-2 pl-9 pr-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition-all font-medium"
+                                                />
+                                            </div>
                                         </div>
                                         
                                         <div className="overflow-x-auto">
@@ -297,8 +312,8 @@ export default function SharePointDeletionsPage() {
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-slate-800/40">
-                                                    {recycleBinItems.length > 0 ? (
-                                                        recycleBinItems.map((item) => (
+                                                    {filteredItems.length > 0 ? (
+                                                        filteredItems.map((item) => (
                                                             <tr key={item.id} className="hover:bg-slate-800/20 transition-colors group">
                                                                 <td className="px-6 py-4">
                                                                     <div className="flex items-center gap-3">
