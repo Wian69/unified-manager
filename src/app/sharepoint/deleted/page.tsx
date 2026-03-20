@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Trash2, HardDrive, RefreshCw, TriangleAlert, ExternalLink, User, Search, ArrowLeft, FileText, Clock, Shield, X } from "lucide-react";
+import { Trash2, HardDrive, RefreshCw, TriangleAlert, ExternalLink, User, Search, ArrowLeft, FileText, Clock, Shield, X, ArrowUpDown, ChevronUp, ChevronDown, Download, Calendar } from "lucide-react";
 
 interface UserResult {
     id: string;
@@ -25,10 +25,16 @@ export default function SharePointDeletionsPage() {
     const [userResults, setUserResults] = useState<UserResult[]>([]);
     const [searching, setSearching] = useState(false);
     
-    // Selection State
     const [selectedUser, setSelectedUser] = useState<UserResult | null>(null);
     const [recycleBinItems, setRecycleBinItems] = useState<RecycleBinItem[]>([]);
     const [fileSearchQuery, setFileSearchQuery] = useState("");
+    
+    // Filtering & Sorting State
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
+    const [sortKey, setSortKey] = useState<keyof RecycleBinItem>("deletedDateTime");
+    const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+    
     const [loadingDetails, setLoadingDetails] = useState(false);
     const [isNotProvisioned, setIsNotProvisioned] = useState(false);
     
@@ -60,12 +66,12 @@ export default function SharePointDeletionsPage() {
 
     // Fetch live recycle bin for selected user
     const fetchUserRecycleBin = async (user: UserResult) => {
-        setSelectedUser(user);
-        setLoadingDetails(true);
-        setError(null);
-        setIsNotProvisioned(false);
         setRecycleBinItems([]);
         setFileSearchQuery("");
+        setStartDate("");
+        setEndDate("");
+        setSortKey("deletedDateTime");
+        setSortDirection("desc");
         
         try {
             const res = await fetch(`/api/sharepoint/deleted?userId=${user.id}`);
@@ -105,9 +111,75 @@ export default function SharePointDeletionsPage() {
         return isNaN(d.getTime()) ? '' : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
 
-    const filteredItems = recycleBinItems.filter(item => 
-        item.name.toLowerCase().includes(fileSearchQuery.toLowerCase())
-    );
+    const handleSort = (key: keyof RecycleBinItem) => {
+        if (sortKey === key) {
+            setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+        } else {
+            setSortKey(key);
+            setSortDirection("desc");
+        }
+    };
+
+    const downloadCSV = () => {
+        if (!selectedUser) return;
+        
+        const headers = ["Name", "Size (Bytes)", "Deletion Date", "Deleted By", "URL"];
+        const rows = filteredItems.map(item => [
+            `"${item.name}"`,
+            item.size,
+            `"${safeFormatDate(item.deletedDateTime)} ${safeFormatTime(item.deletedDateTime)}"`,
+            `"${item.deletedBy}"`,
+            `"${item.webUrl}"`
+        ]);
+        
+        const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        
+        link.setAttribute("href", url);
+        link.setAttribute("download", `RecycleBin_${selectedUser.displayName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    const filteredItems = recycleBinItems
+        .filter(item => {
+            const matchesSearch = item.name.toLowerCase().includes(fileSearchQuery.toLowerCase());
+            
+            let matchesDate = true;
+            if (startDate || endDate) {
+                const itemDate = new Date(item.deletedDateTime).getTime();
+                if (startDate) {
+                    const sDate = new Date(startDate).setHours(0, 0, 0, 0);
+                    if (itemDate < sDate) matchesDate = false;
+                }
+                if (endDate) {
+                    const eDate = new Date(endDate).setHours(23, 59, 59, 999);
+                    if (itemDate > eDate) matchesDate = false;
+                }
+            }
+            
+            return matchesSearch && matchesDate;
+        })
+        .sort((a, b) => {
+            const valA = a[sortKey];
+            const valB = b[sortKey];
+            
+            if (typeof valA === 'string' && typeof valB === 'string') {
+                return sortDirection === "asc" 
+                    ? valA.localeCompare(valB) 
+                    : valB.localeCompare(valA);
+            }
+            
+            if (typeof valA === 'number' && typeof valB === 'number') {
+                return sortDirection === "asc" ? valA - valB : valB - valA;
+            }
+            
+            return 0;
+        });
 
     return (
         <div className="p-8 space-y-8 animate-in fade-in duration-700">
@@ -191,6 +263,43 @@ export default function SharePointDeletionsPage() {
                                     <p className="text-slate-400 font-mono text-sm leading-none">{selectedUser.userPrincipalName}</p>
                                 </div>
                             </div>
+
+                            {/* Filters Bar */}
+                            <div className="flex flex-wrap items-center gap-4 bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
+                                <div className="flex items-center gap-2">
+                                    <Calendar size={16} className="text-blue-500" />
+                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Date Range</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <input 
+                                        type="date" 
+                                        value={startDate}
+                                        onChange={(e) => setStartDate(e.target.value)}
+                                        className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:ring-1 focus:ring-blue-500"
+                                    />
+                                    <span className="text-slate-600 text-xs">to</span>
+                                    <input 
+                                        type="date" 
+                                        value={endDate}
+                                        onChange={(e) => setEndDate(e.target.value)}
+                                        className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:ring-1 focus:ring-blue-500"
+                                    />
+                                </div>
+                                <div className="h-6 w-px bg-slate-800 hidden md:block mx-2" />
+                                <button 
+                                    onClick={downloadCSV}
+                                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl transition-all font-bold text-xs uppercase tracking-wider shadow-lg shadow-emerald-600/20"
+                                >
+                                    <Download size={14} /> Download Report
+                                </button>
+                                <button 
+                                    onClick={() => { setStartDate(""); setEndDate(""); }}
+                                    className="text-[10px] text-slate-500 hover:text-white transition-colors underline"
+                                >
+                                    Clear Dates
+                                </button>
+                            </div>
+
                             <button onClick={() => setSelectedUser(null)} className="text-slate-400 hover:text-white transition-colors bg-slate-900/60 p-2 rounded-xl border border-slate-800">
                                 <X size={24} />
                             </button>
@@ -291,9 +400,24 @@ export default function SharePointDeletionsPage() {
                                             <table className="w-full text-left">
                                                 <thead>
                                                     <tr className="bg-slate-900/60 border-b border-slate-800/60 text-slate-400 text-sm font-semibold">
-                                                        <th className="px-6 py-4">Filename</th>
-                                                        <th className="px-6 py-4 text-center">Size</th>
-                                                        <th className="px-6 py-4 text-right">Deletion Date</th>
+                                                        <th className="px-6 py-4 cursor-pointer hover:text-white transition-colors group" onClick={() => handleSort("name")}>
+                                                            <div className="flex items-center gap-2">
+                                                                Filename
+                                                                {sortKey === "name" ? (sortDirection === "asc" ? <ChevronUp size={14} /> : <ChevronDown size={14} />) : <ArrowUpDown size={12} className="opacity-0 group-hover:opacity-100" />}
+                                                            </div>
+                                                        </th>
+                                                        <th className="px-6 py-4 text-center cursor-pointer hover:text-white transition-colors group" onClick={() => handleSort("size")}>
+                                                            <div className="flex items-center justify-center gap-2">
+                                                                Size
+                                                                {sortKey === "size" ? (sortDirection === "asc" ? <ChevronUp size={14} /> : <ChevronDown size={14} />) : <ArrowUpDown size={12} className="opacity-0 group-hover:opacity-100" />}
+                                                            </div>
+                                                        </th>
+                                                        <th className="px-6 py-4 text-right cursor-pointer hover:text-white transition-colors group" onClick={() => handleSort("deletedDateTime")}>
+                                                            <div className="flex items-center justify-end gap-2">
+                                                                Deletion Date
+                                                                {sortKey === "deletedDateTime" ? (sortDirection === "asc" ? <ChevronUp size={14} /> : <ChevronDown size={14} />) : <ArrowUpDown size={12} className="opacity-0 group-hover:opacity-100" />}
+                                                            </div>
+                                                        </th>
                                                         <th className="px-6 py-4 text-center">Status</th>
                                                     </tr>
                                                 </thead>
