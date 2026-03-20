@@ -4,6 +4,7 @@ import { useEffect, useState, use } from "react";
 import { ArrowLeft, RefreshCw, ShieldAlert, FileText, Activity, Trash2, User } from "lucide-react";
 import Link from "next/link";
 import SharePointDeletionsModule from "@/components/SharePointDeletionsModule";
+import EmailTraceModule from "@/components/EmailTraceModule";
 import ActivityCard from "@/components/ActivityCard";
 
 export default function UserOffboardingPage({ params }: { params: Promise<{ id: string }> }) {
