@@ -121,11 +121,7 @@ async function generateReport() {
             </div>
         `;
 
-        // 4. Fetch Recipient Email
-        const me = await client.api('/me').select('mail,userPrincipalName').get();
-        const recipient = me.mail || me.userPrincipalName;
-
-        // 5. Send Email via Graph
+        // 4. Send Email via Graph
         await client.api('/me/sendMail').post({
             message: {
                 subject: `Offboarding Intelligence Report: ${watchlist.length} Monitored Users`,
@@ -136,7 +132,7 @@ async function generateReport() {
                 toRecipients: [
                     {
                         emailAddress: {
-                            address: recipient
+                            address: 'itsupport@eqncs.com'
                         }
                     }
                 ]
