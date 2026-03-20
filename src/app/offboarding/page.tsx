@@ -377,8 +377,10 @@ function OffboardingContent() {
                                             </td>
                                             <td className="px-6 py-5 text-center">
                                                 <div className="flex flex-col items-center gap-1">
-                                                    <span className="text-white font-bold text-xs">{(Math.random() * 5).toFixed(1)} GB</span>
-                                                    <span className="text-[9px] text-slate-500 uppercase font-black uppercase tracking-tighter">Sync Active</span>
+                                                    <span className="text-white font-bold text-xs">
+                                                        {u.driveUsed ? (u.driveUsed / (1024 * 1024 * 1024)).toFixed(1) : "0.0"} GB
+                                                    </span>
+                                                    <span className="text-[9px] text-slate-500 uppercase font-black uppercase tracking-tighter">Usage Detected</span>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-5 text-right">
