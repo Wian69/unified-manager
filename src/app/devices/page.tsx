@@ -5,6 +5,7 @@ import { Laptop, RefreshCw, X } from "lucide-react";
 
 export default function DevicesPage() {
     const [devices, setDevices] = useState<any[]>([]);
+    const [agents, setAgents] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
@@ -14,15 +15,41 @@ export default function DevicesPage() {
     const fetchDevices = async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/devices');
-            const data = await res.json();
-            if (data.devices) {
-                setDevices(data.devices);
-            }
+            const [intuneRes, agentRes] = await Promise.all([
+                fetch('/api/devices'),
+                fetch('/api/agent/list')
+            ]);
+            
+            const intuneData = await intuneRes.json();
+            const agentData = await agentRes.json();
+
+            if (intuneData.devices) setDevices(intuneData.devices);
+            if (agentData.agents) setAgents(agentData.agents);
         } catch (error) {
             console.error("Failed to fetch devices", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const getAgentForDevice = (serial: string) => {
+        return agents.find(a => a.serialNumber === serial);
+    };
+
+    const sendCommand = async (agentId: string, type: string, payload: any = {}) => {
+        try {
+            const res = await fetch('/api/agent/command', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ agentId, type, payload })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(`Command ${type} queued successfully!`);
+            }
+        } catch (error) {
+            console.error("Failed to send command", error);
+            alert("Failed to queue command.");
         }
     };
 
@@ -80,40 +107,53 @@ export default function DevicesPage() {
                                 <th className="px-6 py-4">Device Name</th>
                                 <th className="px-6 py-4">OS</th>
                                 <th className="px-6 py-4">Serial Number</th>
-                                <th className="px-6 py-4">Last Sync</th>
+                                <th className="px-6 py-4">Enterprise Agent</th>
                                 <th className="px-6 py-4">Compliance status</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-800/60">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
+                                    <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
                                         Loading devices...
                                     </td>
                                 </tr>
                             ) : devices.length > 0 ? (
-                                devices.map((d: any) => (
-                                    <tr 
-                                        key={d.id} 
-                                        onClick={() => handleDeviceClick(d.id)}
-                                        className="hover:bg-slate-800/50 transition-colors cursor-pointer"
-                                    >
-                                        <td className="px-6 py-4 font-medium text-slate-200">{d.deviceName || 'Unknown'}</td>
-                                        <td className="px-6 py-4">{d.operatingSystem || 'N/A'}</td>
-                                        <td className="px-6 py-4 text-slate-400 font-mono">{d.serialNumber || 'N/A'}</td>
-                                        <td className="px-6 py-4 text-slate-500">
-                                            {d.lastSyncDateTime ? new Date(d.lastSyncDateTime).toLocaleString() : 'Never'}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${d.complianceState === 'compliant' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
-                                                {d.complianceState || 'unknown'}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))
+                                devices.map((d: any) => {
+                                    const agent = getAgentForDevice(d.serialNumber);
+                                    return (
+                                        <tr 
+                                            key={d.id} 
+                                            onClick={() => handleDeviceClick(d.id)}
+                                            className="hover:bg-slate-800/50 transition-colors cursor-pointer"
+                                        >
+                                            <td className="px-6 py-4 font-medium text-slate-200">{d.deviceName || 'Unknown'}</td>
+                                            <td className="px-6 py-4">{d.operatingSystem || 'N/A'}</td>
+                                            <td className="px-6 py-4 text-slate-400 font-mono">{d.serialNumber || 'N/A'}</td>
+                                            <td className="px-6 py-4">
+                                                {agent ? (
+                                                    <div className="flex flex-col">
+                                                        <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-[10px] uppercase tracking-wider mb-1">
+                                                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                                            Live Agent
+                                                        </div>
+                                                        <div className="text-[11px] text-slate-400">{agent.publicIp}</div>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-slate-600 text-[11px]">No Agent</span>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className={`px-2 py-1 text-xs font-semibold rounded-full ${d.complianceState === 'compliant' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
+                                                    {d.complianceState || 'unknown'}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
                             ) : (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
+                                    <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
                                         No devices found in Intune.
                                     </td>
                                 </tr>
@@ -141,7 +181,73 @@ export default function DevicesPage() {
                                     Parsing Intune Data & Policies...
                                 </div>
                             ) : selectedDeviceData?.device ? (
-                                <div className="space-y-8 pb-10">
+                                <div className="space-y-8 pb-10 max-w-5xl mx-auto">
+                                    {/* Agent Status Card (NEW) */}
+                                    {getAgentForDevice(selectedDeviceData.device.serialNumber) && (
+                                        <section className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-6 mb-8">
+                                            <div className="flex justify-between items-start mb-6">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
+                                                    <h3 className="text-xl font-bold text-emerald-400">Enterprise Agent Active</h3>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className="text-[10px] text-slate-500 uppercase font-black block mb-1">Agent Version</span>
+                                                    <span className="text-slate-300 font-mono text-xs">{getAgentForDevice(selectedDeviceData.device.serialNumber)?.version}</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                                                <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+                                                    <span className="text-[10px] text-slate-500 uppercase font-bold block mb-1">Public Network</span>
+                                                    <div className="text-slate-200 font-medium">{getAgentForDevice(selectedDeviceData.device.serialNumber)?.publicIp}</div>
+                                                    <div className="text-[10px] text-slate-500">{getAgentForDevice(selectedDeviceData.device.serialNumber)?.isp}</div>
+                                                </div>
+                                                <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+                                                    <span className="text-[10px] text-slate-500 uppercase font-bold block mb-1">Local Network</span>
+                                                    <div className="text-slate-200 font-medium">{getAgentForDevice(selectedDeviceData.device.serialNumber)?.localIp}</div>
+                                                </div>
+                                                <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+                                                    <span className="text-[10px] text-slate-500 uppercase font-bold block mb-1">Last Heartbeat</span>
+                                                    <div className="text-slate-200 font-medium">{new Date(getAgentForDevice(selectedDeviceData.device.serialNumber)?.lastSeen).toLocaleTimeString()}</div>
+                                                </div>
+                                            </div>
+
+                                            <div className="border-t border-slate-800/60 pt-6">
+                                                <h4 className="text-xs font-black text-slate-500 uppercase mb-4 tracking-widest">Remote Commands</h4>
+                                                <div className="flex flex-wrap gap-3">
+                                                    <button 
+                                                        onClick={() => {
+                                                            const msg = prompt("Enter message to send to device:");
+                                                            if (msg) sendCommand(getAgentForDevice(selectedDeviceData.device.serialNumber).id, 'Message', { text: msg });
+                                                        }}
+                                                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-bold transition-colors"
+                                                    >
+                                                        Send Message
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => {
+                                                            if (confirm("Are you sure you want to RESTART this device?")) {
+                                                                sendCommand(getAgentForDevice(selectedDeviceData.device.serialNumber).id, 'Restart');
+                                                            }
+                                                        }}
+                                                        className="px-4 py-2 bg-slate-800 hover:bg-rose-600 text-white rounded-lg text-sm font-bold transition-all"
+                                                    >
+                                                        Restart Device
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => {
+                                                            const newName = prompt("Enter new computer name:");
+                                                            if (newName) sendCommand(getAgentForDevice(selectedDeviceData.device.serialNumber).id, 'Rename', { newName });
+                                                        }}
+                                                        className="px-4 py-2 bg-slate-800 hover:bg-indigo-600 text-white rounded-lg text-sm font-bold transition-all"
+                                                    >
+                                                        Rename Device
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </section>
+                                    )}
+
                                     {/* Overview Section */}
                                     <section>
                                         <h3 className="text-lg font-bold text-slate-200 mb-4 border-b border-slate-800 pb-2">Overview</h3>

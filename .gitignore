@@ -39,3 +39,30 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Visual Studio
+.vs/
+*.sln.ids
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# C++ Build
+x64/
+x86/
+[Dd]ebug/
+[Rr]elease/
+*.log
+*.tlog
+*.lastbuildstate
+*.pdb
+*.idb
+*.obj
+*.iobj
+*.ipdb
+*.exe
+*.dll
+*.lib
+*.ilk
+*.exp

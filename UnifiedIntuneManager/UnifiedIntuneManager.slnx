@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="UnifiedIntuneManager/UnifiedIntuneManager.vcxproj" Id="037551ae-3d03-4a89-98b9-ddbb0145e52b" />
+</Solution>
