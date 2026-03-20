@@ -129,24 +129,22 @@ function OffboardingContent() {
                 }
             }
 
-            // Decision Matrix:
-            // 1. If we have remote data, use it (it's the source of truth)
-            // 2. If remote failed/empty but we have local, use local and try to push to remote
-            // 3. Otherwise, stick with empty
             let finalWatchlist = [];
-            if (remoteWatchlist && remoteWatchlist.length > 0) {
-                finalWatchlist = remoteWatchlist;
-            } else if (localData && localData.length > 0) {
-                finalWatchlist = localData;
-                // Attempt to re-sync to server if server was empty
-                if (watchlistRes.ok) {
-                    fetch('/api/offboarding/watchlist', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ watchlist: finalWatchlist })
-                    });
+            // Trust server data as primary source of truth if it was a successful request
+            if (remoteWatchlist !== null) {
+                if (remoteWatchlist.length === 0 && localData && localData.length > 0) {
+                    console.log('[Watchlist] Force syncing local data to server...');
+                    finalWatchlist = localData;
+                    saveWatchlist(localData); // This will trigger the POST to server
+                } else {
+                    finalWatchlist = remoteWatchlist;
                 }
+            } else if (localData) {
+                finalWatchlist = localData;
             }
+
+            setMonitoredUsers(finalWatchlist);
+            localStorage.setItem('employeeWatchlist', JSON.stringify(finalWatchlist));
 
             setMonitoredUsers(finalWatchlist);
             
