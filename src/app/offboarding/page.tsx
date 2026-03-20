@@ -107,29 +107,51 @@ function OffboardingContent() {
             setAgents(agentData.agents || []);
             setDevices(deviceData.devices || []);
 
-            // Handle Watchlist from API, fallback to localStorage
-            let finalWatchlist = watchlistData.watchlist || [];
-            if (finalWatchlist.length === 0 && typeof window !== 'undefined') {
-                const localData = localStorage.getItem('employeeWatchlist');
-                if (localData) {
-                    try {
-                        finalWatchlist = JSON.parse(localData);
-                        // Try to sync local back to server
-                        fetch('/api/offboarding/watchlist', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ watchlist: finalWatchlist })
-                        });
-                    } catch (e) {}
+            // Handle Watchlist with extreme care to prevent data loss
+            let remoteWatchlist = null;
+            if (watchlistRes.ok && watchlistData && Array.isArray(watchlistData.watchlist)) {
+                remoteWatchlist = watchlistData.watchlist;
+            }
+
+            let localData = null;
+            if (typeof window !== 'undefined') {
+                const stored = localStorage.getItem('employeeWatchlist');
+                if (stored) {
+                    try { localData = JSON.parse(stored); } catch (e) {}
                 }
             }
+
+            // Decision Matrix:
+            // 1. If we have remote data, use it (it's the source of truth)
+            // 2. If remote failed/empty but we have local, use local and try to push to remote
+            // 3. Otherwise, stick with empty
+            let finalWatchlist = [];
+            if (remoteWatchlist && remoteWatchlist.length > 0) {
+                finalWatchlist = remoteWatchlist;
+            } else if (localData && localData.length > 0) {
+                finalWatchlist = localData;
+                // Attempt to re-sync to server if server was empty
+                if (watchlistRes.ok) {
+                    fetch('/api/offboarding/watchlist', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ watchlist: finalWatchlist })
+                    });
+                }
+            }
+
             setMonitoredUsers(finalWatchlist);
             
-            if (typeof window !== 'undefined') {
+            if (typeof window !== 'undefined' && finalWatchlist.length > 0) {
                 localStorage.setItem('employeeWatchlist', JSON.stringify(finalWatchlist));
             }
         } catch (err) {
-            console.error(err);
+            console.error('[Watchlist] Critical Sync Error:', err);
+            // On total failure, try one last time to pull from local without overwriting
+            if (typeof window !== 'undefined') {
+                const stored = localStorage.getItem('employeeWatchlist');
+                if (stored) setMonitoredUsers(JSON.parse(stored));
+            }
         } finally {
             setLoading(false);
         }
