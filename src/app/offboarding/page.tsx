@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { UserMinus, ShieldAlert, FileText, Activity, RefreshCw, Search, ArrowLeft, User } from "lucide-react";
+import { UserMinus, ShieldAlert, FileText, Activity, RefreshCw, Search, ArrowLeft, User, Mail, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import ActivityCard from "@/components/ActivityCard";
 import SharePointDeletionsModule from "@/components/SharePointDeletionsModule";
@@ -25,6 +25,8 @@ function OffboardingContent() {
     const [agents, setAgents] = useState<any[]>([]);
     const [devices, setDevices] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [sendingReport, setSendingReport] = useState(false);
+    const [reportSent, setReportSent] = useState(false);
 
     // Unified Monitoring State
     const [monitoredUsers, setMonitoredUsers] = useState<any[]>([]);
@@ -157,6 +159,22 @@ function OffboardingContent() {
         }
     };
 
+    const triggerReport = async () => {
+        setSendingReport(true);
+        setReportSent(false);
+        try {
+            const res = await fetch('/api/reports/daily', { method: 'POST' });
+            if (res.ok) {
+                setReportSent(true);
+                setTimeout(() => setReportSent(false), 5000);
+            }
+        } catch (err) {
+            console.error('[Report] Trigger failed:', err);
+        } finally {
+            setSendingReport(false);
+        }
+    };
+
     useEffect(() => {
         fetchOffboardingData();
     }, []);
@@ -254,6 +272,26 @@ function OffboardingContent() {
                         <ShieldAlert size={20} className="text-rose-500" />
                         Employee Watchlist ({monitoredUsers.length})
                     </h2>
+                    <div className="flex items-center gap-4">
+                        <button 
+                            onClick={triggerReport}
+                            disabled={sendingReport || monitoredUsers.length === 0}
+                            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${
+                                reportSent 
+                                    ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' 
+                                    : 'bg-blue-600 hover:bg-blue-500 text-white border-blue-500/20 shadow-lg shadow-blue-600/20 active:scale-95 disabled:opacity-50 disabled:bg-slate-800 disabled:border-slate-800 disabled:text-slate-500 disabled:shadow-none'
+                            }`}
+                        >
+                            {sendingReport ? (
+                                <RefreshCw size={14} className="animate-spin" />
+                            ) : reportSent ? (
+                                <CheckCircle2 size={14} />
+                            ) : (
+                                <Mail size={14} />
+                            )}
+                            {reportSent ? 'Report Sent' : sendingReport ? 'Generating...' : 'Email Report'}
+                        </button>
+                    </div>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm text-slate-300">

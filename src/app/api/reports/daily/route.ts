@@ -146,7 +146,7 @@ async function generateReport() {
         return NextResponse.json({ 
             success: true, 
             message: `Daily report sent for ${watchlist.length} users.`,
-            monitoredUsers: watchlist.map(u => u.userPrincipalName)
+            monitoredUsers: watchlist.map((u: any) => u.userPrincipalName)
         });
     } catch (error: any) {
         console.error('[Report] Generation Failed:', error.message);
