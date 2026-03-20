@@ -170,7 +170,18 @@ export default function SharePointDeletionsModule({
             ) : (
                 <div className="bg-slate-950 rounded-3xl border border-slate-800 overflow-hidden">
                     <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
-                        <h4 className="font-bold text-slate-300">File Deletions Found ({filteredItems.length})</h4>
+                        <div className="flex flex-col gap-1">
+                            <h4 className="font-bold text-slate-300">File Deletions Found ({filteredItems.length})</h4>
+                            <p className="text-[10px] text-slate-500 font-mono uppercase tracking-widest">
+                                Total Data Volume: <span className="text-blue-400 font-bold">
+                                    {(() => {
+                                        const totalBytes = filteredItems.reduce((acc: number, curr: any) => acc + (curr.size || 0), 0);
+                                        if (totalBytes > 1024 * 1024 * 1024) return (totalBytes / (1024 * 1024 * 1024)).toFixed(2) + " GB";
+                                        return (totalBytes / (1024 * 1024)).toFixed(2) + " MB";
+                                    })()}
+                                </span>
+                            </p>
+                        </div>
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={14} />
                             <input 
