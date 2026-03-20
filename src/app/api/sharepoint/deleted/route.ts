@@ -67,7 +67,7 @@ export async function GET(request: Request) {
                     id: item.id,
                     name: item.name,
                     size: item.size || 0,
-                    deletedDateTime: item.lastModifiedDateTime,
+                    deletedDateTime: item.deletedDateTime || item.lastModifiedDateTime,
                     deletedBy: item.deletedBy?.user?.displayName || "Unknown",
                     siteUrl: driveResponse.webUrl,
                     webUrl: item.webUrl

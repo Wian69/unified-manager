@@ -181,7 +181,7 @@ export default function DevicesPage() {
                                     Parsing Intune Data & Policies...
                                 </div>
                             ) : selectedDeviceData?.device ? (
-                                <div className="space-y-8 pb-10 max-w-5xl mx-auto">
+                                <div className="space-y-8 pb-10 w-full px-4">
                                     {/* Agent Status Card (NEW) */}
                                     {getAgentForDevice(selectedDeviceData.device.serialNumber) && (
                                         <section className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-6 mb-8">
