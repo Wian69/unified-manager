@@ -36,7 +36,8 @@ export async function GET() {
 export async function POST(req: Request) {
     try {
         const { watchlist } = await req.json();
-        saveWatchlist(watchlist);
+        console.log(`[Watchlist API] Received ${watchlist?.length || 0} users for persistence.`);
+        saveWatchlist(watchlist || []);
         return NextResponse.json({ success: true });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
