@@ -230,20 +230,6 @@ export default function SharePointDeletionsPage() {
                                     {/* Action Header */}
                                     <div className="flex flex-wrap justify-center lg:justify-start gap-3">
                                         <a 
-                                            href={`${recycleBinItems[0]?.siteUrl || '#'}/_layouts/15/RecycleBin.aspx`} 
-                                            target="_blank" 
-                                            className="flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl transition-all border border-slate-700 font-bold text-xs uppercase tracking-wider"
-                                        >
-                                            <ExternalLink size={14} /> First-Stage Bin
-                                        </a>
-                                        <a 
-                                            href={`${recycleBinItems[0]?.siteUrl || '#'}/_layouts/15/AdminRecycleBin.aspx?view=5`} 
-                                            target="_blank" 
-                                            className="flex items-center gap-2 px-4 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl transition-all shadow-lg shadow-rose-600/20 font-bold text-xs uppercase tracking-wider"
-                                        >
-                                            <Shield size={14} /> Second-Stage Bin (Admin)
-                                        </a>
-                                        <a 
                                             href={`https://xxeqncs-admin.sharepoint.com/_layouts/15/TenantProfileAdmin/ProfMngr.aspx?ConsoleView=Active&ProfileType=User&ApplicationID=00000000%2D0000%2D0000%2D0000%2D000000000000`} 
                                             target="_blank" 
                                             className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all shadow-lg shadow-blue-600/20 font-bold text-xs uppercase tracking-wider"

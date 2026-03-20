@@ -46,7 +46,7 @@ export async function GET(request: Request) {
                 try {
                     // Try Beta endpoint first for Personal Sites as it's the most reliable for 'recycleBin' segment
                     const betaResponse = await client.api(`https://graph.microsoft.com/beta/sites/${siteGuid}/recycleBin/items`)
-                        .select('id,name,size,lastModifiedDateTime,deletedBy,webUrl')
+                        .select('id,name,size,lastModifiedDateTime,deletedDateTime,deletedBy,webUrl')
                         .top(100)
                         .get();
                     rawItems = betaResponse.value || [];
@@ -54,7 +54,7 @@ export async function GET(request: Request) {
                     // Fallback to v1.0 if Beta fails or is restricted
                     try {
                         const v1Response = await client.api(`/sites/${siteGuid}/recycleBin/items`)
-                            .select('id,name,size,lastModifiedDateTime,deletedBy,webUrl')
+                            .select('id,name,size,lastModifiedDateTime,deletedDateTime,deletedBy,webUrl')
                             .top(100)
                             .get();
                         rawItems = v1Response.value || [];

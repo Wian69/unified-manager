@@ -3,7 +3,9 @@ import { getGraphClient } from '@/lib/graph';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: Request) {
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get('search')?.toLowerCase() || "";
     try {
         const client = getGraphClient();
         
@@ -20,7 +22,14 @@ export async function GET() {
             allUsers = allUsers.concat(response.value || []);
         }
 
-        const users = allUsers;
+        let users = allUsers;
+
+        if (search) {
+            users = users.filter((u: any) => 
+                (u.displayName || '').toLowerCase().includes(search) || 
+                (u.userPrincipalName || '').toLowerCase().includes(search)
+            );
+        }
 
         // Sort alphabetically by displayName
         users.sort((a: any, b: any) => (a.displayName || '').localeCompare(b.displayName || ''));
