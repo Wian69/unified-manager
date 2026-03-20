@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getWatchlist, saveWatchlist } from '@/lib/db';
 import { getGraphClient } from '@/lib/graph';
+import fs from 'fs';
 
 export const dynamic = 'force-dynamic';
 
