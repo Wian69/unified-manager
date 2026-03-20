@@ -52,7 +52,7 @@ function OffboardingContent() {
             setMonitoredUsers(prev => [...prev, user]);
         }
         setGlobalSearchResults([]);
-        setGlobalSearchQuery("");
+        setGlobalSearchQuery(user.displayName);
         auditSharePointForUser(user);
     };
 
@@ -69,6 +69,8 @@ function OffboardingContent() {
         setSpError(null);
         setSelectedSPUser(user);
         setRecycleBinItems([]);
+        setGlobalSearchQuery(user.displayName);
+        setGlobalSearchResults([]);
 
         try {
             const res = await fetch(`/api/sharepoint/deleted?userId=${user.id}`);
