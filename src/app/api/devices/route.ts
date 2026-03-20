@@ -11,7 +11,6 @@ export async function GET() {
 
         let allDevices: any[] = [];
         let response = await client.api('/deviceManagement/managedDevices')
-            .select('id,deviceName')
             .get();
         
         const devices = response.value || [];
