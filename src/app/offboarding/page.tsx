@@ -21,6 +21,7 @@ export default function OffboardingPage() {
 }
 
 function OffboardingContent() {
+    const router = useRouter();
     const [agents, setAgents] = useState<any[]>([]);
     const [devices, setDevices] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -62,7 +63,8 @@ function OffboardingContent() {
             await fetch('/api/offboarding/watchlist', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ watchlist: newList })
+                body: JSON.stringify({ watchlist: newList }),
+                cache: 'no-store'
             });
         } catch (err) {
             console.error('[Watchlist] Save failed:', err);
@@ -88,9 +90,9 @@ function OffboardingContent() {
         setLoading(true);
         try {
             const [agentRes, deviceRes, watchlistRes] = await Promise.all([
-                fetch('/api/agent/list'),
-                fetch('/api/devices'),
-                fetch('/api/offboarding/watchlist')
+                fetch('/api/agent/list', { cache: 'no-store' }),
+                fetch('/api/devices', { cache: 'no-store' }),
+                fetch(`/api/offboarding/watchlist?t=${Date.now()}`, { cache: 'no-store' })
             ]);
             
             const agentData = await agentRes.json();
@@ -236,7 +238,7 @@ function OffboardingContent() {
                                         <tr 
                                             key={u.id} 
                                             className="hover:bg-blue-500/5 cursor-pointer transition-all group"
-                                            onClick={() => window.location.href = `/offboarding/${u.id}`}
+                                            onClick={() => router.push(`/offboarding/${u.id}`)}
                                         >
                                             <td className="px-6 py-5">
                                                 <div className="flex items-center gap-3">

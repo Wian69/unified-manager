@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
+export const dynamic = 'force-dynamic';
+
 const DB_DIR = path.join(process.cwd(), 'data');
 const WATCHLIST_FILE = path.join(DB_DIR, 'watchlist.json');
 
