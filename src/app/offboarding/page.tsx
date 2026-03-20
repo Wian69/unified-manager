@@ -59,6 +59,11 @@ function OffboardingContent() {
     };
 
     const saveWatchlist = async (newList: any[]) => {
+        // Save to LocalStorage immediately for instant persistence
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('employeeWatchlist', JSON.stringify(newList));
+        }
+        
         try {
             await fetch('/api/offboarding/watchlist', {
                 method: 'POST',
@@ -67,7 +72,7 @@ function OffboardingContent() {
                 cache: 'no-store'
             });
         } catch (err) {
-            console.error('[Watchlist] Save failed:', err);
+            console.error('[Watchlist] API Save failed:', err);
         }
     };
 
@@ -101,7 +106,28 @@ function OffboardingContent() {
             
             setAgents(agentData.agents || []);
             setDevices(deviceData.devices || []);
-            setMonitoredUsers(watchlistData.watchlist || []);
+
+            // Handle Watchlist from API, fallback to localStorage
+            let finalWatchlist = watchlistData.watchlist || [];
+            if (finalWatchlist.length === 0 && typeof window !== 'undefined') {
+                const localData = localStorage.getItem('employeeWatchlist');
+                if (localData) {
+                    try {
+                        finalWatchlist = JSON.parse(localData);
+                        // Try to sync local back to server
+                        fetch('/api/offboarding/watchlist', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ watchlist: finalWatchlist })
+                        });
+                    } catch (e) {}
+                }
+            }
+            setMonitoredUsers(finalWatchlist);
+            
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('employeeWatchlist', JSON.stringify(finalWatchlist));
+            }
         } catch (err) {
             console.error(err);
         } finally {
