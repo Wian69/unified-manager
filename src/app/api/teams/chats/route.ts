@@ -18,12 +18,27 @@ export async function GET(req: Request) {
         // SCENARIO 1: Fetch messages for a specific chat
         if (chatId) {
             const messagesResponse = await client.api(`/chats/${chatId}/messages`)
-                .top(20)
+                .select('id,messageType,eventDetail,createdDateTime,from,body,attachments')
+                .top(30)
                 .get();
             
+            const messages = (messagesResponse.value || []).map((msg: any) => {
+                if (msg.messageType === 'system' && !msg.body?.content && msg.eventDetail) {
+                    // Try to generate a readable message from eventDetail
+                    let content = 'System Event';
+                    const detail = msg.eventDetail;
+                    if (detail['@odata.type']) {
+                        const type = detail['@odata.type'].split('.').pop();
+                        content = type.replace('EventMessageDetail', '').replace(/([A-Z])/g, ' $1').trim();
+                    }
+                    return { ...msg, body: { content: `<i>${content}</i>` } };
+                }
+                return msg;
+            });
+
             return NextResponse.json({ 
                 success: true, 
-                data: messagesResponse.value || [] 
+                data: messages 
             });
         }
 

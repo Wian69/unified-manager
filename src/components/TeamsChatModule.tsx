@@ -240,31 +240,45 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate }: 
                                                             </div>
                                                         ) : (
                                                             <div className="space-y-4 max-h-96 overflow-y-auto pr-4 custom-scrollbar">
-                                                                {messages[chat.id]?.slice().reverse().map((msg: any) => (
-                                                                    <div key={msg.id} className={`flex flex-col ${msg.from?.user?.id === userId ? 'items-end' : 'items-start'}`}>
-                                                                        <div className="flex items-center gap-2 mb-1 px-1">
-                                                                            <span className="text-[9px] font-bold text-slate-400">{msg.from?.user?.displayName || 'System'}</span>
-                                                                            <span className="text-[8px] text-slate-600">{new Date(msg.createdDateTime).toLocaleString()}</span>
-                                                                        </div>
-                                                                        <div className={`p-4 rounded-2xl max-w-[80%] text-sm shadow-xl ${
-                                                                            msg.from?.user?.id === userId 
-                                                                                ? 'bg-indigo-600 text-white rounded-tr-none' 
-                                                                                : 'bg-slate-800 text-slate-200 rounded-tl-none border border-slate-700'
-                                                                        }`}>
-                                                                            <div dangerouslySetInnerHTML={{ __html: msg.body?.content }} />
-                                                                            {msg.attachments?.length > 0 && (
-                                                                                <div className="mt-3 pt-3 border-t border-white/10 space-y-2">
-                                                                                    {msg.attachments.map((at: any) => (
-                                                                                        <div key={at.id} className="flex items-center gap-2 text-[10px] bg-black/20 p-2 rounded-lg">
-                                                                                            <Paperclip size={12} className="shrink-0" />
-                                                                                            <span className="truncate">{at.name}</span>
-                                                                                        </div>
-                                                                                    ))}
+                                                                {messages[chat.id]?.slice().reverse().map((msg: any) => {
+                                                                    const isSystem = msg.messageType === 'system';
+                                                                    if (isSystem) {
+                                                                        return (
+                                                                            <div key={msg.id} className="flex flex-col items-center py-2">
+                                                                                <div className="px-4 py-1.5 bg-slate-900/50 border border-slate-800 rounded-full text-[10px] text-slate-500 font-mono uppercase tracking-widest flex items-center gap-2">
+                                                                                    <Activity size={10} className="text-indigo-500/50" />
+                                                                                    <span dangerouslySetInnerHTML={{ __html: msg.body?.content || 'System Event' }} />
+                                                                                    <span>• {new Date(msg.createdDateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                                                                 </div>
-                                                                            )}
+                                                                            </div>
+                                                                        );
+                                                                    }
+                                                                    return (
+                                                                        <div key={msg.id} className={`flex flex-col ${msg.from?.user?.id === userId ? 'items-end' : 'items-start'}`}>
+                                                                            <div className="flex items-center gap-2 mb-1 px-1">
+                                                                                <span className="text-[9px] font-bold text-slate-400">{msg.from?.user?.displayName || 'Unknown'}</span>
+                                                                                <span className="text-[8px] text-slate-600">{new Date(msg.createdDateTime).toLocaleString()}</span>
+                                                                            </div>
+                                                                            <div className={`p-4 rounded-2xl max-w-[80%] text-sm shadow-xl ${
+                                                                                msg.from?.user?.id === userId 
+                                                                                    ? 'bg-indigo-600 text-white rounded-tr-none' 
+                                                                                    : 'bg-slate-800 text-slate-200 rounded-tl-none border border-slate-700'
+                                                                            }`}>
+                                                                                <div dangerouslySetInnerHTML={{ __html: msg.body?.content }} />
+                                                                                {msg.attachments?.length > 0 && (
+                                                                                    <div className="mt-3 pt-3 border-t border-white/10 space-y-2">
+                                                                                        {msg.attachments.map((at: any) => (
+                                                                                            <div key={at.id} className="flex items-center gap-2 text-[10px] bg-black/20 p-2 rounded-lg">
+                                                                                                <Paperclip size={12} className="shrink-0" />
+                                                                                                <span className="truncate">{at.name}</span>
+                                                                                            </div>
+                                                                                        ))}
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
                                                                         </div>
-                                                                    </div>
-                                                                ))}
+                                                                    );
+                                                                })}
                                                                 {(!messages[chat.id] || messages[chat.id].length === 0) && (
                                                                     <div className="text-center py-12">
                                                                         <MessageSquare size={24} className="mx-auto text-slate-800 mb-2 opacity-30" />
