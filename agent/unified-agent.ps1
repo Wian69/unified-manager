@@ -19,7 +19,7 @@ if (-not ($principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administr
 try {
     $AgentId = (Get-CimInstance Win32_ComputerSystemProduct).UUID
     $SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
-    $Version = "1.0.3"
+    $Version = "1.0.4"
 
     $InstallDir = "$env:ProgramData\UnifiedAgent"
     $ScriptPath = "$InstallDir\unified-agent.ps1"
@@ -146,13 +146,13 @@ function Invoke-AgentCommand {
 
 # Initial Setup (Install to ProgramData if not already there)
 $CurrentPath = $PSCommandPath
-if ($null -ne $CurrentPath -and $CurrentPath -ne $ScriptPath) {
+if (-not [string]::IsNullOrWhiteSpace($CurrentPath) -and $CurrentPath -ne $ScriptPath) {
     Write-Log "Installing agent to $ScriptPath..."
     Copy-Item -Path $CurrentPath -Destination $ScriptPath -Force
     Install-Persistence
-} elseif ($null -eq $CurrentPath) {
+} elseif ([string]::IsNullOrWhiteSpace($CurrentPath)) {
     # If running as a string/pipe, we can't copy ourselves easily, but we can ensure persistence if we are already there
-    Write-Log "Warning: Running without file context. Skipping Copy-Item."
+    Write-Log "Warning: Running without file context (Empty Path). Skipping Copy-Item."
 }
 
 Write-Log "Agent v$Version Started. ID: $AgentId"
