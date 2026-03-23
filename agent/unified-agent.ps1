@@ -19,7 +19,7 @@ if (-not ($principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administr
 try {
     $AgentId = (Get-CimInstance Win32_ComputerSystemProduct).UUID
     $SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
-    $Version = "1.0.7"
+    $Version = "1.0.8"
 
     $InstallDir = "$env:ProgramData\UnifiedAgent"
     $ScriptPath = "$InstallDir\unified-agent.ps1"
@@ -193,6 +193,7 @@ while ($true) {
             version = $Version
         }
 
+        Write-Log "Attempting heartbeat to $ServerUrl..."
         $Response = Invoke-RestMethod -Method Post -Uri "$ServerUrl/api/agent/heartbeat" -Body ($Payload | ConvertTo-Json) -ContentType "application/json"
         
         Write-Log "Heartbeat sent to $ServerUrl. Success: $($Response.success)"
