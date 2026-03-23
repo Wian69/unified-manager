@@ -3,7 +3,7 @@ param(
 )
 
 # Unified Enterprise Agent (UEA)
-# Version: 1.3.1
+# Version: 1.3.2
 # Description: Lightweight persistence and telemetry agent for Unified Manager.
 
 $ErrorActionPreference = "Stop"
@@ -29,7 +29,7 @@ function Log-Message {
 try {
     $AgentId = (Get-CimInstance Win32_ComputerSystemProduct).UUID
     $SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
-    $Version = "1.3.1"
+    $Version = "1.3.2"
     $HeartbeatCount = 0
 
     $InstallDir = "$env:ProgramData\UnifiedAgent"
@@ -193,6 +193,11 @@ try {
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles()
+
+# Context for Acknowledgment
+`$AgentId = '$AgentId'
+`$ServerUrl = '$ServerUrl'
+
 `$Form = New-Object Windows.Forms.Form
 `$Form.Text = 'Equinox IT Support'
 `$Form.Size = New-Object Drawing.Size(500,220)
@@ -226,7 +231,13 @@ try { `$Web = New-Object System.Net.WebClient; `$ImgBytes = `$Web.DownloadData('
 `$Button.BackColor = [System.Drawing.Color]::FromArgb(0, 120, 215)
 `$Button.ForeColor = [System.Drawing.Color]::White
 `$Button.FlatStyle = 'Flat'
-`$Button.Add_Click({ `$Form.Close() })
+`$Button.Add_Click({ 
+    try {
+        `$Ts = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
+        Invoke-RestMethod -Method Post -Uri "`$ServerUrl/api/agent/result" -Body (@{ agentId = `$AgentId; type = 'Message-Ack'; data = "Acknowledged at `$Ts" } | ConvertTo-Json) -ContentType 'application/json'
+    } catch { }
+    `$Form.Close() 
+})
 
 `$Form.Controls.Add(`$Label)
 `$Form.Controls.Add(`$IconBox)
@@ -243,6 +254,12 @@ try { `$Web = New-Object System.Net.WebClient; `$ImgBytes = `$Web.DownloadData('
                                     Start-ScheduledTask -TaskName "UnifiedAgentPopup" | Out-Null
                                     Start-Sleep -Seconds 2
                                     Unregister-ScheduledTask -TaskName "UnifiedAgentPopup" -Confirm:$false | Out-Null
+                                    # Send initial "Sent" result
+                                    Invoke-RestMethod -Method Post -Uri "$ServerUrl/api/agent/result" -Body (@{
+                                        agentId = $AgentId
+                                        type = "Message-Ack"
+                                        data = "SENT: Awaiting User Acknowledgment..."
+                                    } | ConvertTo-Json) -ContentType "application/json"
                                     $Result = "Professional UI Message Triggered on Active Desktop session: $ActiveUser"
                                 } else {
                                     $Result = "Skipped UI Message: No active user logged in."

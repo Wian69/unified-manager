@@ -588,6 +588,26 @@ export default function LiveDataDashboard() {
                     </div>
                 </div>
             )}
+            
+            {results['Message-Ack'] && (
+                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-lg font-black text-white flex items-center gap-2">
+                            <MessageSquare className="text-blue-500" size={20} />
+                            IT Support Message Status
+                        </h2>
+                        <span className="text-slate-400 text-xs font-mono">{results['Message-Ack'].timestamp}</span>
+                    </div>
+                    <div className="bg-black/50 border border-slate-800 rounded-xl p-6">
+                        <div className="flex items-center gap-4">
+                            <div className={`w-3 h-3 rounded-full animate-pulse ${results['Message-Ack'].data.includes('Acknowledged') ? 'bg-emerald-500' : 'bg-blue-500'}`} />
+                            <p className={`font-mono text-sm ${results['Message-Ack'].data.includes('Acknowledged') ? 'text-emerald-400' : 'text-blue-400 italic'}`}>
+                                {results['Message-Ack'].data}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
