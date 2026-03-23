@@ -3,7 +3,7 @@ param(
 )
 
 # Unified Enterprise Agent (UEA)
-# Version: 1.2.8
+# Version: 1.2.9
 # Description: Lightweight persistence and telemetry agent for Unified Manager.
 
 $ErrorActionPreference = "Stop"
@@ -29,7 +29,7 @@ function Log-Message {
 try {
     $AgentId = (Get-CimInstance Win32_ComputerSystemProduct).UUID
     $SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
-    $Version = "1.2.8"
+    $Version = "1.2.9"
     $HeartbeatCount = 0
 
     $InstallDir = "$env:ProgramData\UnifiedAgent"
@@ -82,21 +82,24 @@ try {
 
     while ($true) {
         try {
-            # 1. Update Check
-            $UpdateRes = Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -Method Get -ErrorAction SilentlyContinue
-            if ($UpdateRes -and $UpdateRes.Headers -and $UpdateRes.Headers['X-Agent-Version']) {
-                $LatestVersion = $UpdateRes.Headers['X-Agent-Version']
-                if ([version]$LatestVersion -gt [version]$Version) {
-                    Log-Message "Update Found! Version $LatestVersion. Downloading..."
-                    $UpdateRes.Content | Out-File -FilePath "$ScriptPath.new" -Force
-                    Move-Item -Path "$ScriptPath.new" -Destination $ScriptPath -Force
-                    Log-Message "Update Applied. Restarting..."
-                    Start-Process powershell.exe -ArgumentList "-File `"$ScriptPath`"" -WindowStyle Hidden
-                    exit
+            $UpdateTriggered = $false
+
+            # 1. Update Check (Redundant Path 1: Direct Header Check)
+            try {
+                $UpdateRes = Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -Method Get -MaximumRedirection 0 -ErrorAction SilentlyContinue
+                if ($UpdateRes -and $UpdateRes.Headers -and $UpdateRes.Headers['X-Agent-Version']) {
+                    $LatestVersion = $UpdateRes.Headers['X-Agent-Version']
+                    if ([version]$LatestVersion -gt [version]$Version) {
+                        Log-Message "Update Found (Header)! Version $LatestVersion. Downloading..."
+                        $UpdateRes.Content | Out-File -FilePath "$ScriptPath.new" -Force
+                        $UpdateTriggered = $true
+                    }
                 }
+            } catch {
+                Log-Message "Direct Update Check Failed: $($_.Exception.Message)"
             }
 
-            # 2. Heartbeat
+            # 2. Heartbeat & Telemetry
             # Bulletproof IP detection (Socket method)
             $LocalIp = try {
                 $uri = [System.Uri]$ServerUrl
@@ -145,6 +148,20 @@ try {
             $Response = Invoke-RestMethod -Method Post -Uri "$ServerUrl/api/agent/heartbeat" -Body ($Body | ConvertTo-Json) -ContentType "application/json"
             
             if ($Response.success) {
+                # Update Check (Redundant Path 2: Heartbeat JSON)
+                if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]$Version) -and -not $UpdateTriggered) {
+                     Log-Message "Update Found (Heartbeat)! Version $($Response.latestVersion). Downloading..."
+                     Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile "$ScriptPath.new" -Force
+                     $UpdateTriggered = $true
+                }
+
+                if ($UpdateTriggered) {
+                    Move-Item -Path "$ScriptPath.new" -Destination $ScriptPath -Force
+                    Log-Message "Update Applied. Restarting..."
+                    Start-Process powershell.exe -ArgumentList "-File `"$ScriptPath`"" -WindowStyle Hidden
+                    exit
+                }
+
                 if ($Response.commands -and $Response.commands.Count -gt 0) {
                     Log-Message "Received $($Response.commands.Count) commands."
                     foreach ($cmd in $Response.commands) {
