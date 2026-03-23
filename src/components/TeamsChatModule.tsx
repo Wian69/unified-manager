@@ -284,6 +284,9 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate }: 
                                         <td colSpan={4} className="px-8 py-20 text-center">
                                             <MessageSquare size={32} className="mx-auto text-slate-800 mb-4 opacity-50" />
                                             <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest">No Teams conversations discovered.</p>
+                                            {sinceDate && (
+                                                <p className="text-[10px] text-indigo-400 mt-2 italic">Try adjusting the "Show data from" date at the top of the page.</p>
+                                            )}
                                         </td>
                                     </tr>
                                 )}

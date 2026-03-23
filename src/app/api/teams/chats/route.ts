@@ -32,25 +32,36 @@ export async function GET(req: Request) {
         const sinceDate = filterParams.get('sinceDate');
 
         // 1. Fetch User Profile to get the internal domain
-        const userProfile = await client.api(`/users/${userId}`).select('userPrincipalName').get();
-        const internalDomain = userProfile.userPrincipalName.split('@')[1]?.toLowerCase();
+        let internalDomain = '';
+        try {
+            const userProfile = await client.api(`/users/${userId}`).select('userPrincipalName').get();
+            internalDomain = userProfile.userPrincipalName.split('@')[1]?.toLowerCase();
+        } catch (profileErr) {
+            console.warn(`[Teams API] Failed to fetch profile for ${userId}, domain check may be less accurate.`);
+        }
 
         // 2. Fetch User's Chats
+        console.log(`[Teams API] Fetching chats for ${userId}, sinceDate: ${sinceDate}`);
         let chatsQuery = client.api(`/users/${userId}/chats`)
             .expand('lastMessagePreview')
-            .top(20);
+            .top(50); // Increased top to find more potential matches
         
         const chatsResponse = await chatsQuery.get();
-
         const chats = chatsResponse.value || [];
+        console.log(`[Teams API] Found ${chats.length} total chats in Graph`);
+
         const enrichedChats = [];
 
         for (const chat of chats) {
             try {
                 // If sinceDate is provided, check lastMessage date
                 if (sinceDate && chat.lastMessagePreview?.createdDateTime) {
-                    if (new Date(chat.lastMessagePreview.createdDateTime) < new Date(sinceDate)) {
-                        continue; // Skip chats with no activity since filter date
+                    const messageDate = new Date(chat.lastMessagePreview.createdDateTime);
+                    const filterDate = new Date(sinceDate);
+                    
+                    if (messageDate < filterDate) {
+                        // console.log(`[Teams API] Skipping old chat: ${chat.id} (${messageDate.toISOString()} < ${filterDate.toISOString()})`);
+                        continue; 
                     }
                 }
 
