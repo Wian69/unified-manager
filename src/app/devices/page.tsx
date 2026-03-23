@@ -16,8 +16,8 @@ export default function DevicesPage() {
     const [selectedDeviceData, setSelectedDeviceData] = useState<any>(null);
     const [loadingDetails, setLoadingDetails] = useState(false);
 
-    const fetchDevices = async () => {
-        setLoading(true);
+    const fetchDevices = async (isInitial = false) => {
+        if (isInitial) setLoading(true);
         try {
             const [intuneRes, agentRes] = await Promise.all([
                 fetch('/api/devices'),
@@ -71,8 +71,8 @@ export default function DevicesPage() {
     };
 
     useEffect(() => {
-        fetchDevices();
-        const interval = setInterval(fetchDevices, 10000);
+        fetchDevices(true);
+        const interval = setInterval(() => fetchDevices(false), 10000);
         return () => clearInterval(interval);
     }, []);
 
@@ -109,7 +109,7 @@ export default function DevicesPage() {
                     </div>
                 </div>
                 <button 
-                    onClick={fetchDevices}
+                    onClick={() => fetchDevices(true)}
                     disabled={loading}
                     className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-lg transition-colors border border-slate-700"
                 >
