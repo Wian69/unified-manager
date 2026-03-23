@@ -3,7 +3,7 @@ param(
 )
 
 # Unified Enterprise Agent (UEA)
-# Version: 1.3.5
+# Version: 1.3.6
 # Description: Lightweight persistence and telemetry agent for Unified Manager.
 
 $ErrorActionPreference = "Stop"
@@ -36,7 +36,7 @@ function Log-Message {
 try {
     $AgentId = (Get-CimInstance Win32_ComputerSystemProduct).UUID
     $SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
-    $Version = "1.3.5"
+    $Version = "1.3.6"
     $HeartbeatCount = 0
 
     $InstallDir = "$env:ProgramData\UnifiedAgent"
@@ -70,7 +70,7 @@ try {
                 if ($CurrentPath -ne "") {
                     Copy-Item -Path $CurrentPath -Destination $ScriptPath -Force
                 } else {
-                    Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile "$ScriptPath"
+                    Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile "$ScriptPath" -UseBasicParsing
                 }
                 
                 # Initial Config
@@ -110,7 +110,7 @@ try {
 
             # 1. Update Check (Redundant Path 1: Direct Header Check)
             try {
-                $UpdateRes = Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -Method Get -MaximumRedirection 0 -ErrorAction SilentlyContinue
+                $UpdateRes = Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -Method Get -MaximumRedirection 0 -ErrorAction SilentlyContinue -UseBasicParsing
                 if ($UpdateRes -and $UpdateRes.Headers -and $UpdateRes.Headers['X-Agent-Version']) {
                     $LatestVersion = $UpdateRes.Headers['X-Agent-Version']
                     if ([version]$LatestVersion -gt [version]$Version) {
