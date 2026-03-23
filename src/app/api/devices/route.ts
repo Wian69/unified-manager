@@ -8,7 +8,7 @@ export async function GET() {
     try {
         const client = getGraphClient();
         const response = await client.api('/deviceManagement/managedDevices')
-            .select('id,deviceName,operatingSystem,lastSyncDateTime,complianceState,serialNumber,userPrincipalName')
+            .select('id,userId,deviceName,operatingSystem,lastSyncDateTime,complianceState,serialNumber,userPrincipalName')
             .top(999)
             .get();
         

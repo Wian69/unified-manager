@@ -117,6 +117,7 @@ export default function DevicesPage() {
                                 <th className="px-6 py-4">Serial Number</th>
                                 <th className="px-6 py-4">Enterprise Agent</th>
                                 <th className="px-6 py-4">Compliance status</th>
+                                <th className="px-6 py-4 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-800/60">
@@ -167,6 +168,17 @@ export default function DevicesPage() {
                                                 <span className={`px-2 py-1 text-xs font-semibold rounded-full ${d.complianceState === 'compliant' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
                                                     {d.complianceState || 'unknown'}
                                                 </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                {d.userId && (
+                                                    <Link 
+                                                        href={`/offboarding/${d.userId}/livedata`}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        className="px-3 py-1.5 bg-emerald-600/10 hover:bg-emerald-600 text-emerald-400 hover:text-white rounded-lg text-[10px] font-black uppercase tracking-widest border border-emerald-600/20 transition-all active:scale-95"
+                                                    >
+                                                        Live Data
+                                                    </Link>
+                                                )}
                                             </td>
                                         </tr>
                                     );
@@ -263,6 +275,14 @@ export default function DevicesPage() {
                                                     >
                                                         Rename Device
                                                     </button>
+                                                    {selectedDeviceData.device.userId && (
+                                                        <Link 
+                                                            href={`/offboarding/${selectedDeviceData.device.userId}/livedata`}
+                                                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-bold transition-all shadow-lg shadow-emerald-600/20"
+                                                        >
+                                                            Open Live Data
+                                                        </Link>
+                                                    )}
                                                 </div>
                                             </div>
                                         </section>
