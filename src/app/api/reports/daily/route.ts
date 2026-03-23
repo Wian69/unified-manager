@@ -15,7 +15,7 @@ export async function POST() {
 async function generateReport() {
     console.log('[Report] Triggered Daily Intelligence Report');
     try {
-        const watchlist = getWatchlist();
+        const watchlist: any[] = await getWatchlist();
         console.log(`[Report] Watchlist size: ${watchlist?.length || 0}`);
         
         if (!watchlist || watchlist.length === 0) {
@@ -76,7 +76,7 @@ async function generateReport() {
                     <div style="padding: 40px;">
                         ${userReports.map(report => `
                             <div style="margin-bottom: 40px; padding-bottom: 40px; border-bottom: 1px solid #1e293b;">
-                                <div style="display: flex; align-items: center; justify-between: space-between; margin-bottom: 24px;">
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
                                     <div>
                                         <h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #3b82f6;">${report.user.displayName}</h2>
                                         <p style="margin: 4px 0 0; font-size: 14px; color: #64748b;">${report.user.userPrincipalName}</p>
