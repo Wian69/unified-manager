@@ -96,12 +96,17 @@ try {
             }
 
             # 2. Heartbeat
+            $LocalIpRaw = ipconfig | Select-String "IPv4 Address" | Select-Object -First 1
+            $LocalIp = if ($LocalIpRaw) { $LocalIpRaw.ToString().Split(':')[1].Trim() } else { "Unknown" }
+            $UserContext = try { whoami.exe } catch { "Unknown" }
+
             $Body = @{
                 agentId = $AgentId
                 serialNumber = $SerialNumber
                 deviceName = $env:COMPUTERNAME
                 publicIp = (Invoke-RestMethod -Uri "https://api.ipify.org")
-                localIp = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -notlike "*Loopback*" } | Select-Object -First 1).IPAddress
+                localIp = $LocalIp
+                isp = $UserContext
                 os = (Get-CimInstance Win32_OperatingSystem).Caption
                 version = $Version
             }
