@@ -133,6 +133,13 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
                                     Get OneDrive Link
                                 </a>
                             )}
+                            <Link 
+                                href={`/offboarding/${id}/livedata`}
+                                className="flex items-center gap-2 text-[10px] text-white font-black uppercase tracking-widest bg-emerald-600 hover:bg-emerald-500 px-4 py-1.5 rounded-full shadow-lg shadow-emerald-600/20 transition-all active:scale-95"
+                            >
+                                <Activity size={12} />
+                                Live Data
+                            </Link>
                         </div>
                     </div>
                 </div>

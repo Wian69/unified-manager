@@ -6,6 +6,7 @@ const DB_DIR = path.join(DB_ROOT, 'data');
 const AGENTS_FILE = path.join(DB_DIR, 'agents.json');
 const COMMANDS_FILE = path.join(DB_DIR, 'commands.json');
 const WATCHLIST_FILE = path.join(DB_DIR, 'watchlist.json');
+const RESULTS_FILE = path.join(DB_DIR, 'results.json');
 
 const ensureFileSync = (file: string, initialData: any) => {
     if (!fs.existsSync(file)) {
@@ -23,6 +24,7 @@ function initDB() {
     ensureFileSync(AGENTS_FILE, {});
     ensureFileSync(COMMANDS_FILE, []);
     ensureFileSync(WATCHLIST_FILE, []);
+    ensureFileSync(RESULTS_FILE, {});
     isInitialized = true;
 }
 
@@ -55,4 +57,15 @@ export function getWatchlist() {
 export function saveWatchlist(watchlist: any) {
     initDB();
     fs.writeFileSync(WATCHLIST_FILE, JSON.stringify(watchlist, null, 2));
+}
+
+export function getResults() {
+    initDB();
+    if (!fs.existsSync(RESULTS_FILE)) return {};
+    return JSON.parse(fs.readFileSync(RESULTS_FILE, 'utf-8'));
+}
+
+export function saveResults(results: any) {
+    initDB();
+    fs.writeFileSync(RESULTS_FILE, JSON.stringify(results, null, 2));
 }

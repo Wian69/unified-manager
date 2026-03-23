@@ -1,16 +1,32 @@
 # Unified Enterprise Agent (UEA) v1.0.0
 # Provides real-time telemetry, remote management, and persistence.
 
+param(
+    [string]$ServerUrl = ""
+)
+
 $AgentId = (Get-CimInstance Win32_ComputerSystemProduct).UUID
 $SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
-$ServerUrl = "http://localhost:3000" # Change to your production URL
 $Version = "1.0.0"
 
 $InstallDir = "$env:ProgramData\UnifiedAgent"
 $ScriptPath = "$InstallDir\unified-agent.ps1"
 $LogPath = "$InstallDir\agent.log"
+$ConfigPath = "$InstallDir\config.json"
 
 if (-not (Test-Path $InstallDir)) { New-Item -ItemType Directory -Path $InstallDir -Force }
+
+if ($ServerUrl -ne "") {
+    $Config = @{ ServerUrl = $ServerUrl }
+    $Config | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
+} elseif (Test-Path $ConfigPath) {
+    $Config = Get-Content -Path $ConfigPath | ConvertFrom-Json
+    $ServerUrl = $Config.ServerUrl
+} else {
+    $ServerUrl = "https://unified-manager.eqncs.com" # Fallback production URL
+    $Config = @{ ServerUrl = $ServerUrl }
+    $Config | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
+}
 
 function Write-Log {
     param($Message)
@@ -32,7 +48,7 @@ function Install-Persistence {
     }
 }
 
-function Check-ForUpdates {
+function Invoke-AgentUpdate {
     try {
         $Response = Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -Method Get -ErrorAction SilentlyContinue
         $NewVersion = $Response.Headers["X-Agent-Version"]
@@ -42,11 +58,9 @@ function Check-ForUpdates {
             $NewContent = $Response.Content
             $NewContent | Out-File -FilePath "$ScriptPath.new" -Force
             
-            # Simple self-replace on next run or via a small helper
-            # For v1.0, we just place it there; the next run will pick it up if we logic it.
             Move-Item -Path "$ScriptPath.new" -Destination $ScriptPath -Force
             Write-Log "Update Applied. Restarting..."
-            Restart-Service "UnifiedEnterpriseAgent" -ErrorAction SilentlyContinue # If it was a service
+            Restart-Service "UnifiedEnterpriseAgent" -ErrorAction SilentlyContinue
             exit
         }
     } catch {
@@ -67,11 +81,30 @@ function Get-NetworkInfo {
     }
 }
 
-function Execute-Command {
+function Send-Result {
+    param([string]$Type, $Data)
+    try {
+        $Payload = @{ agentId = $AgentId; type = $Type; data = $Data }
+        Invoke-RestMethod -Method Post -Uri "$ServerUrl/api/agent/result" -Body ($Payload | ConvertTo-Json -Depth 5) -ContentType "application/json" -ErrorAction SilentlyContinue
+    } catch {
+        Write-Log "Failed to send result for $Type"
+    }
+}
+
+function Invoke-AgentCommand {
     param($Cmd)
     Write-Log "Received Command: $($Cmd.type)"
     
     switch ($Cmd.type) {
+        "Run-Script" {
+            try {
+                $scriptBlock = [scriptblock]::Create($Cmd.payload.script)
+                $output = Invoke-Command -ScriptBlock $scriptBlock *>&1 | Out-String
+                Send-Result -Type $Cmd.payload.returnType -Data $output
+            } catch {
+                Send-Result -Type $Cmd.payload.returnType -Data "Error: $($_.Exception.Message)"
+            }
+        }
         "Message" {
             $msg = $Cmd.payload.text
             Add-Type -AssemblyName PresentationFramework
@@ -81,13 +114,11 @@ function Execute-Command {
             Write-Log "Restarting System..."
             Restart-Computer -Force
         }
-        "Rename" {
-            $newName = $Cmd.payload.newName
-            Write-Log "Renaming System to $newName..."
-            Rename-Computer -NewName $newName -Force
-        }
         "SelfUpdate" {
-            Check-ForUpdates
+            Invoke-AgentUpdate # Assuming Check-ForUpdates was renamed for verb compliance
+        }
+        default {
+            Write-Log "Unknown command type: $($Cmd.type)"
         }
     }
 }
@@ -119,12 +150,12 @@ while ($true) {
         
         if ($Response.commands -and $Response.commands.Count -gt 0) {
             foreach ($cmd in $Response.commands) {
-                Execute-Command -Cmd $cmd
+                Invoke-AgentCommand -Cmd $cmd
             }
         }
         
         # Periodic version check
-        Check-ForUpdates
+        Invoke-AgentUpdate
     } catch {
         Write-Log "Heartbeat Error: $($_.Exception.Message)"
     }
