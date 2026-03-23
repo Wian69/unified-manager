@@ -48,7 +48,7 @@ export async function GET(req: Request) {
         
         const chatsResponse = await chatsQuery.get();
         const chats = chatsResponse.value || [];
-        console.log(`[Teams API] Found ${chats.length} total chats in Graph`);
+        console.log(`[Teams API] Found ${chats.length} total chats in Graph.`);
 
         const enrichedChats = [];
 
@@ -60,7 +60,6 @@ export async function GET(req: Request) {
                     const filterDate = new Date(sinceDate);
                     
                     if (messageDate < filterDate) {
-                        // console.log(`[Teams API] Skipping old chat: ${chat.id} (${messageDate.toISOString()} < ${filterDate.toISOString()})`);
                         continue; 
                     }
                 }
@@ -68,16 +67,21 @@ export async function GET(req: Request) {
                 const membersResponse = await client.api(`/chats/${chat.id}/members`).get();
                 const members = membersResponse.value || [];
                 
-                // Identify external members using both email and UPN
+                // Identify external members
                 const externalMembers = members.filter((m: any) => {
-                    const email = m.email || m.userId; // userId in members might be the UPN for external users
+                    const email = m.email || m.userId;
                     if (email) {
                         const domain = email.split('@')[1]?.toLowerCase();
-                        // If domain exists and doesn't match internal domain or common tenant variations
                         return domain && domain !== internalDomain && !domain.includes('onmicrosoft.com');
                     }
                     return false;
                 });
+
+                // Ensure lastMessage has a consistent structure for the frontend
+                const lastMessage = chat.lastMessagePreview || {};
+                if (!lastMessage.body) {
+                    lastMessage.body = { content: 'System message or no preview available' };
+                }
 
                 // Get chat name
                 let topic = chat.topic;
@@ -92,10 +96,15 @@ export async function GET(req: Request) {
                     isExternal: externalMembers.length > 0,
                     externalParticipants: externalMembers.map((m: any) => m.email || m.displayName),
                     membersCount: members.length,
-                    lastMessage: chat.lastMessagePreview
+                    lastMessage: lastMessage
                 });
             } catch (err) {
-                enrichedChats.push({ ...chat, topic: 'Protected Chat', isExternal: false });
+                enrichedChats.push({ 
+                    ...chat, 
+                    topic: 'Protected Chat', 
+                    isExternal: false,
+                    lastMessage: { body: { content: 'Access restricted' } }
+                });
             }
         }
 
