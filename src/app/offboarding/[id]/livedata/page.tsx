@@ -398,7 +398,22 @@ export default function LiveDataDashboard() {
                 </div>
             </div>
 
-            {/* Network Diagnostics Section (NEW) */}
+            {/* Remote Agent Log Section (NEW) */}
+            {currentAgent?.lastLog && (
+                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl mb-8">
+                    <h2 className="text-lg font-black text-white flex items-center gap-2 mb-6">
+                        <Terminal className="text-emerald-500" size={20} />
+                        Remote Agent Log (Live)
+                    </h2>
+                    <div className="bg-black/50 border border-slate-800 rounded-xl p-6 overflow-x-auto custom-scrollbar">
+                        <pre className="text-xs font-mono text-emerald-400/90 leading-relaxed whitespace-pre">
+                            {currentAgent.lastLog}
+                        </pre>
+                    </div>
+                </div>
+            )}
+
+            {/* Network Diagnostics Section */}
             {currentAgent?.netInfo && (
                 <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl">
                     <div className="flex items-center justify-between mb-6">

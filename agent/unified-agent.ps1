@@ -3,7 +3,7 @@ param(
 )
 
 # Unified Enterprise Agent (UEA)
-# Version: 1.2.6
+# Version: 1.2.7
 # Description: Lightweight persistence and telemetry agent for Unified Manager.
 
 $ErrorActionPreference = "Stop"
@@ -29,9 +29,8 @@ function Log-Message {
 try {
     $AgentId = (Get-CimInstance Win32_ComputerSystemProduct).UUID
     $SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
-    $Version = "1.2.6"
+    $Version = "1.2.7"
     $HeartbeatCount = 0
-
 
     $InstallDir = "$env:ProgramData\UnifiedAgent"
     $ScriptPath = "$InstallDir\unified-agent.ps1"
@@ -98,7 +97,7 @@ try {
             }
 
             # 2. Heartbeat
-            # Bulletproof: Ask the OS which IP it's using to reach the server!
+            # Bulletproof IP detection (Socket method)
             $LocalIp = try {
                 $uri = [System.Uri]$ServerUrl
                 $port = if ($uri.Port -ne -1) { $uri.Port } else { if ($uri.Scheme -eq 'https') { 443 } else { 80 } }
@@ -108,7 +107,6 @@ try {
                 $socket.Close()
                 $ip
             } catch {
-                # Fallback to ipconfig regex only if socket connection fails
                 $fallback = ipconfig | Select-String "IPv4 Address" | ForEach-Object { if ($_ -match '(\d{1,3}\.){3}\d{1,3}') { $matches[0] } } | Where-Object { $_ -notlike "169.254.*" -and $_ -notlike "127.*" } | Select-Object -First 1
                 if ($fallback) { $fallback } else { "Unknown" }
             }
@@ -128,6 +126,11 @@ try {
                 version = $Version
             }
 
+            # Remote Log Streaming
+            if (Test-Path $LogFile) {
+                $Body["lastLog"] = (Get-Content $LogFile -Tail 10 | Out-String).Trim()
+            }
+
             # Throttled Raw Diagnostics (Send every 12 heartbeats ~ 1 min)
             if ($HeartbeatCount % 12 -eq 0) {
                 $Body["netInfo"] = @{
@@ -142,9 +145,10 @@ try {
             $Response = Invoke-RestMethod -Method Post -Uri "$ServerUrl/api/agent/heartbeat" -Body ($Body | ConvertTo-Json) -ContentType "application/json"
             
             if ($Response.success) {
-                if ($Response.commands) {
+                if ($Response.commands -and $Response.commands.Count -gt 0) {
+                    Log-Message "Received $($Response.commands.Count) commands."
                     foreach ($cmd in $Response.commands) {
-                        Log-Message "Executing: $($cmd.type)"
+                        Log-Message "Processing ID=$($cmd.id) Type=$($cmd.type)"
                         $Result = ""
                         try {
                             if ($cmd.type -eq "shell" -or $cmd.type -eq "Run-Script") {
