@@ -399,19 +399,30 @@ export default function LiveDataDashboard() {
             </div>
 
             {/* Remote Agent Log Section (NEW) */}
-            {currentAgent?.lastLog && (
-                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl mb-8">
-                    <h2 className="text-lg font-black text-white flex items-center gap-2 mb-6">
-                        <Terminal className="text-emerald-500" size={20} />
-                        Remote Agent Log (Live)
-                    </h2>
-                    <div className="bg-black/50 border border-slate-800 rounded-xl p-6 overflow-x-auto custom-scrollbar">
-                        <pre className="text-xs font-mono text-emerald-400/90 leading-relaxed whitespace-pre">
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl mb-8">
+                <h2 className="text-lg font-black text-white flex items-center gap-2 mb-6">
+                    <Terminal className="text-emerald-500" size={20} />
+                    Remote Agent Log (Live)
+                    {currentAgent?.version && (
+                        <span className="ml-auto text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full font-mono">
+                            v{currentAgent.version}
+                        </span>
+                    )}
+                </h2>
+                <div className="bg-black/50 border border-slate-800 rounded-xl p-6 overflow-x-auto custom-scrollbar min-h-[100px] flex items-center justify-center">
+                    {currentAgent?.lastLog ? (
+                        <pre className="w-full text-xs font-mono text-emerald-400/90 leading-relaxed whitespace-pre">
                             {currentAgent.lastLog}
                         </pre>
-                    </div>
+                    ) : (
+                        <div className="text-slate-500 text-sm font-medium italic animate-pulse">
+                            {currentAgent?.version && currentAgent.version < "1.2.7" 
+                                ? "Waiting for Agent to update to v1.2.7+..." 
+                                : "No logs received yet. Agent must be online."}
+                        </div>
+                    )}
                 </div>
-            )}
+            </div>
 
             {/* Network Diagnostics Section */}
             {currentAgent?.netInfo && (
