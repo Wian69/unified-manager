@@ -16,30 +16,48 @@ export async function GET(req: Request) {
         const client = getGraphClient();
 
         // SCENARIO 1: Fetch messages for a specific chat
+        // SCENARIO 1: Fetch messages for a specific chat
         if (chatId) {
-            const messagesResponse = await client.api(`/chats/${chatId}/messages`)
-                .select('id,messageType,eventDetail,createdDateTime,from,body,attachments')
-                .top(30)
-                .get();
-            
-            const messages = (messagesResponse.value || []).map((msg: any) => {
-                if (msg.messageType === 'system' && !msg.body?.content && msg.eventDetail) {
-                    // Try to generate a readable message from eventDetail
-                    let content = 'System Event';
-                    const detail = msg.eventDetail;
-                    if (detail['@odata.type']) {
-                        const type = detail['@odata.type'].split('.').pop();
-                        content = type.replace('EventMessageDetail', '').replace(/([A-Z])/g, ' $1').trim();
-                    }
-                    return { ...msg, body: { content: `<i>${content}</i>` } };
-                }
-                return msg;
-            });
+            // userId is needed for the user-relative endpoint which is more reliable for App permissions
+            if (!userId) {
+                return NextResponse.json({ error: 'userId required for message history' }, { status: 400 });
+            }
 
-            return NextResponse.json({ 
-                success: true, 
-                data: messages 
-            });
+            console.log(`[Teams API] Fetching messages for user ${userId} in chat ${chatId}`);
+            try {
+                // Using the user-relative endpoint often works better with App-only tokens
+                const messagesResponse = await client.api(`/users/${userId}/chats/${chatId}/messages`)
+                    .select('id,messageType,eventDetail,createdDateTime,from,body,attachments')
+                    .top(50)
+                    .get();
+                
+                console.log(`[Teams API] Received ${messagesResponse.value?.length || 0} messages for ${chatId}`);
+                
+                const messages = (messagesResponse.value || []).map((msg: any) => {
+                    if (msg.messageType === 'system' && !msg.body?.content && msg.eventDetail) {
+                        let content = 'System Event';
+                        const detail = msg.eventDetail;
+                        if (detail['@odata.type']) {
+                            const type = detail['@odata.type'].split('.').pop();
+                            content = type.replace('EventMessageDetail', '').replace(/([A-Z])/g, ' $1').trim();
+                        }
+                        return { ...msg, body: { content: `<i>${content}</i>` } };
+                    }
+                    return msg;
+                });
+
+                return NextResponse.json({ 
+                    success: true, 
+                    data: messages 
+                });
+            } catch (err: any) {
+                console.error(`[Teams API] Failed to fetch messages for ${chatId}:`, err.message);
+                return NextResponse.json({ 
+                    error: 'Failed to fetch messages', 
+                    details: err.message,
+                    code: err.code
+                }, { status: 500 });
+            }
         }
 
         // SCENARIO 2: Fetch list of chats for a user (with external detection)

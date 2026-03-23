@@ -37,7 +37,7 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate }: 
         
         setLoadingMessages(chatId);
         try {
-            const res = await fetch(`/api/teams/chats?chatId=${chatId}`);
+            const res = await fetch(`/api/teams/chats?chatId=${chatId}&userId=${userId}`);
             const result = await res.json();
             if (result.success) {
                 setMessages(prev => ({ ...prev, [chatId]: result.data }));
