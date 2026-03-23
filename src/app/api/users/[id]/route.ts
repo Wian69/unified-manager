@@ -17,7 +17,14 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
             .select(selectFields)
             .get();
 
-        return NextResponse.json(userResponse);
+        // Fetch OneDrive link
+        let oneDriveUrl = null;
+        try {
+            const driveRes = await client.api(`/users/${id}/drive`).select('webUrl').get();
+            oneDriveUrl = driveRes.webUrl;
+        } catch (e) {}
+
+        return NextResponse.json({ ...userResponse, oneDriveUrl });
     } catch (error: any) {
         console.error('[API] Graph API Error (Get User):', error.message);
         return NextResponse.json(

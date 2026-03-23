@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { UserMinus, ShieldAlert, FileText, Activity, RefreshCw, Search, ArrowLeft, User, Mail, CheckCircle2 } from "lucide-react";
+import { UserMinus, ShieldAlert, FileText, Activity, RefreshCw, Search, ArrowLeft, User, Mail, CheckCircle2, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import ActivityCard from "@/components/ActivityCard";
 import SharePointDeletionsModule from "@/components/SharePointDeletionsModule";
@@ -388,6 +388,18 @@ function OffboardingContent() {
                                             </td>
                                             <td className="px-6 py-5 text-right">
                                                 <div className="flex justify-end gap-2">
+                                                    {u.oneDriveUrl && (
+                                                        <a 
+                                                            href={u.oneDriveUrl} 
+                                                            target="_blank" 
+                                                            rel="noopener noreferrer"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            className="p-2 text-slate-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-xl transition-all"
+                                                            title="Open OneDrive"
+                                                        >
+                                                            <ExternalLink size={18} />
+                                                        </a>
+                                                    )}
                                                     <button 
                                                         onClick={(e) => {
                                                             e.stopPropagation();

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
-import { ArrowLeft, RefreshCw, ShieldAlert, FileText, Activity, Trash2, User } from "lucide-react";
+import { ArrowLeft, RefreshCw, ShieldAlert, FileText, Activity, Trash2, User, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import SharePointDeletionsModule from "@/components/SharePointDeletionsModule";
 import EmailTraceModule from "@/components/EmailTraceModule";
@@ -122,6 +122,17 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
                                 <Activity size={12} className="text-emerald-500" />
                                 {user.department || "General"}
                             </div>
+                            {user.oneDriveUrl && (
+                                <a 
+                                    href={user.oneDriveUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 text-[10px] text-white font-black uppercase tracking-widest bg-blue-600 hover:bg-blue-500 px-4 py-1.5 rounded-full shadow-lg shadow-blue-600/20 transition-all active:scale-95"
+                                >
+                                    <ExternalLink size={12} />
+                                    Get OneDrive Link
+                                </a>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -133,17 +144,29 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
                 <div className="lg:col-span-2 space-y-12">
                     <section>
                         <div className="flex items-center justify-between mb-8">
-                            <h2 className="text-2xl font-black text-white uppercase tracking-tight flex items-center gap-3">
+                            <h2 className="text-2xl font-black text-white uppercase tracking-tight flex items-center gap-3 text-left">
                                 <Trash2 size={24} className="text-blue-500" />
                                 SharePoint Data Recovery
                             </h2>
+                            {user.oneDriveUrl && (
+                                <a 
+                                    href={user.oneDriveUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 text-[10px] text-blue-400 font-black uppercase tracking-widest bg-blue-500/10 hover:bg-blue-500/20 px-4 py-2 rounded-xl border border-blue-500/20 transition-all"
+                                >
+                                    <ExternalLink size={12} />
+                                    OneDrive Link
+                                </a>
+                            )}
                         </div>
-                        <div className="bg-slate-900/40 rounded-[2rem] border border-slate-800/60 p-2 backdrop-blur-md">
+                        <div className="bg-slate-900/40 rounded-[2rem] border border-slate-800/60 p-2 backdrop-blur-md text-left">
                             <SharePointDeletionsModule 
                                 selectedUser={user} 
                                 recycleBinItems={recycleBinItems}
                                 loadingDetails={loadingSP}
                                 error={spError}
+                                oneDriveUrl={user.oneDriveUrl}
                             />
                         </div>
                     </section>
@@ -153,6 +176,7 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
                             userId={id}
                             userDisplayName={user.displayName}
                             sinceDate={sinceDate}
+                            oneDriveUrl={user.oneDriveUrl}
                         />
                     </section>
 
@@ -161,6 +185,7 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
                             userId={id}
                             userDisplayName={user.displayName}
                             sinceDate={sinceDate}
+                            oneDriveUrl={user.oneDriveUrl}
                         />
                     </section>
 

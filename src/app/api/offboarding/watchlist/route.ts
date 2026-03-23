@@ -20,17 +20,18 @@ export async function GET() {
             try {
                 // Determine the correct ID to use (prefer UPN if available for drive access)
                 const targetId = user.userPrincipalName || user.id;
-                const driveRes = await client.api(`/users/${targetId}/drive`).select('quota').get();
+                const driveRes = await client.api(`/users/${targetId}/drive`).select('quota,webUrl').get();
                 
                 const driveUsed = driveRes.quota?.used || 0;
                 enrichedWatchlist.push({
                     ...user,
-                    driveUsed: driveUsed
+                    driveUsed: driveUsed,
+                    oneDriveUrl: driveRes.webUrl
                 });
             } catch (err: any) {
                 console.error(`[Watchlist] Drive fetch failed for ${user.userPrincipalName}:`, err.message);
                 // Fallback to 0 but log it
-                enrichedWatchlist.push({ ...user, driveUsed: 0 });
+                enrichedWatchlist.push({ ...user, driveUsed: 0, oneDriveUrl: null });
             }
         }
 
