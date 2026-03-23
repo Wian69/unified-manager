@@ -14,14 +14,11 @@ Follow these steps to deploy the `unified-agent.ps1` silently across your global
 ## 1. Prepare the Script
 Ensure your agent script points to your production server or use the parameter-driven approach.
 
-**Command to run:**
-```powershell
-# URL is now the default, so you can just run:
-powershell.exe -ExecutionPolicy Bypass -File "unified-agent.ps1"
-
-# Or override if needed:
-powershell.exe -ExecutionPolicy Bypass -File "unified-agent.ps1" -ServerUrl "https://custom-domain.com"
-```
+1. Check the `param($ServerUrl = "https://unified-manager.vercel.app")` at the top of the script.
+2. If you want to use a different server, you can pass it at runtime:
+   ```powershell
+   .\unified-agent.ps1 -ServerUrl "https://your-server.com"
+   ```
 
 ## 2. Intune Configuration
 1. Log in to the [Microsoft Intune Admin Center](https://intune.microsoft.com/).

@@ -2,7 +2,7 @@
 # Provides real-time telemetry, remote management, and persistence.
 
 param(
-    [string]$ServerUrl = "https://unified-manager.eqncs.com"
+    [string]$ServerUrl = "https://unified-manager.vercel.app"
 )
 
 # Check for Administrator or SYSTEM privileges (Required for scheduling tasks)
@@ -19,7 +19,7 @@ if (-not ($principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administr
 try {
     $AgentId = (Get-CimInstance Win32_ComputerSystemProduct).UUID
     $SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
-    $Version = "1.0.5"
+    $Version = "1.0.6"
 
     $InstallDir = "$env:ProgramData\UnifiedAgent"
     $ScriptPath = "$InstallDir\unified-agent.ps1"
@@ -44,7 +44,7 @@ if ($ServerUrl -ne "") {
     $Config = Get-Content -Path $ConfigPath | ConvertFrom-Json
     $ServerUrl = $Config.ServerUrl
 } else {
-    $ServerUrl = "https://unified-manager.eqncs.com" # Fallback production URL
+    $ServerUrl = "https://unified-manager.vercel.app" # Fallback production URL
     $Config = @{ ServerUrl = $ServerUrl }
     $Config | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
 }
