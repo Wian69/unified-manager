@@ -3,7 +3,7 @@ param(
 )
 
 # Unified Enterprise Agent (UEA)
-# Version: 1.2.5
+# Version: 1.2.6
 # Description: Lightweight persistence and telemetry agent for Unified Manager.
 
 $ErrorActionPreference = "Stop"
@@ -29,7 +29,7 @@ function Log-Message {
 try {
     $AgentId = (Get-CimInstance Win32_ComputerSystemProduct).UUID
     $SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
-    $Version = "1.2.5"
+    $Version = "1.2.6"
     $HeartbeatCount = 0
 
 
@@ -154,9 +154,8 @@ try {
                                 $Result = Get-Package | Select-Object Name, Version, ProviderName | ConvertTo-Json
                             } elseif ($cmd.type -eq "Message") {
                                 $msg = $cmd.payload.text
-                                Add-Type -AssemblyName PresentationFramework
-                                [System.Windows.MessageBox]::Show($msg, "IT Administrator")
-                                $Result = "Message Displayed"
+                                msg.exe * "$msg"
+                                $Result = "Message Sent to All Sessions"
                             } elseif ($cmd.type -eq "Restart") {
                                 Log-Message "Restart initiated by Admin."
                                 Restart-Computer -Force
