@@ -109,7 +109,7 @@ export default function LiveDataDashboard() {
     const queueScript = async (script: string, returnType: string) => {
         if (!selectedAgentId) return alert("Select an online agent first.");
         try {
-            await fetch('/api/agent/command', {
+            const res = await fetch('/api/agent/command', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -118,10 +118,14 @@ export default function LiveDataDashboard() {
                     payload: { script, returnType }
                 })
             });
+            if (!res.ok) {
+                const err = await res.text();
+                throw new Error(err);
+            }
             alert(`Command queued to agent. Awaiting result...`);
-        } catch (e) {
+        } catch (e: any) {
             console.error(e);
-            alert("Failed to queue command.");
+            alert(`Failed to queue command. Server responded with: ${e.message}`);
         }
     };
 
@@ -444,16 +448,22 @@ export default function LiveDataDashboard() {
                             </div>
                             {currentAgent?.version && currentAgent.version < "1.2.7" && (
                                 <button 
-                                    onClick={() => {
-                                        fetch('/api/agent/command', {
-                                            method: 'POST',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({
-                                                agentId: currentAgent.agentId,
-                                                type: 'shell',
-                                                payload: { command: `Invoke-WebRequest -Uri "https://${window.location.host}/api/agent/update" -OutFile "$env:ProgramData\\UnifiedAgent\\unified-agent.ps1.new" -Force; Move-Item -Path "$env:ProgramData\\UnifiedAgent\\unified-agent.ps1.new" -Destination "$env:ProgramData\\UnifiedAgent\\unified-agent.ps1" -Force; Start-Process powershell.exe -ArgumentList "-WindowStyle Hidden -File \`"$env:ProgramData\\UnifiedAgent\\unified-agent.ps1\`""; Stop-Process -Id $PID` }
-                                            })
-                                        }).then(() => alert('Recovery Update Triggered! Agent should download the core system directly and restart within 10 seconds.'));
+                                    onClick={async () => {
+                                        try {
+                                            const res = await fetch('/api/agent/command', {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({
+                                                    agentId: currentAgent.agentId,
+                                                    type: 'shell',
+                                                    payload: { command: `Invoke-WebRequest -Uri "https://${window.location.host}/api/agent/update" -OutFile "$env:ProgramData\\UnifiedAgent\\unified-agent.ps1.new" -Force; Move-Item -Path "$env:ProgramData\\UnifiedAgent\\unified-agent.ps1.new" -Destination "$env:ProgramData\\UnifiedAgent\\unified-agent.ps1" -Force; Start-Process powershell.exe -ArgumentList "-WindowStyle Hidden -File \`"$env:ProgramData\\UnifiedAgent\\unified-agent.ps1\`""; Stop-Process -Id $PID` }
+                                                })
+                                            });
+                                            if (!res.ok) throw new Error(await res.text());
+                                            alert('Recovery Update Triggered! Agent should download the core system directly and restart within 10 seconds.');
+                                        } catch (e: any) {
+                                            alert(`Recovery Command Failed: ${e.message}`);
+                                        }
                                     }}
                                     className="px-6 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl shadow-lg shadow-rose-600/20 text-xs transition-all flex items-center gap-2 mt-2 pointer-events-auto"
                                 >

