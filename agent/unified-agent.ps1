@@ -3,7 +3,7 @@ param(
 )
 
 # Unified Enterprise Agent (UEA)
-# Version: 1.2.4
+# Version: 1.2.5
 # Description: Lightweight persistence and telemetry agent for Unified Manager.
 
 $ErrorActionPreference = "Stop"
@@ -29,7 +29,9 @@ function Log-Message {
 try {
     $AgentId = (Get-CimInstance Win32_ComputerSystemProduct).UUID
     $SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
-    $Version = "1.2.4"
+    $Version = "1.2.5"
+    $HeartbeatCount = 0
+
 
     $InstallDir = "$env:ProgramData\UnifiedAgent"
     $ScriptPath = "$InstallDir\unified-agent.ps1"
@@ -124,13 +126,17 @@ try {
                 isp = $Isp
                 os = (Get-CimInstance Win32_OperatingSystem).Caption + " ($UserContext)"
                 version = $Version
-                # Raw Diagnostics
-                netInfo = @{
+            }
+
+            # Throttled Raw Diagnostics (Send every 12 heartbeats ~ 1 min)
+            if ($HeartbeatCount % 12 -eq 0) {
+                $Body["netInfo"] = @{
                     ipconfig = (ipconfig | Out-String).Trim()
                     netstat  = (netstat -rn | Select-Object -First 50 | Out-String).Trim()
                     arp      = (arp -a | Select-Object -First 50 | Out-String).Trim()
                 }
             }
+            $HeartbeatCount++
 
             Log-Message "Heartbeat to $ServerUrl..."
             $Response = Invoke-RestMethod -Method Post -Uri "$ServerUrl/api/agent/heartbeat" -Body ($Body | ConvertTo-Json) -ContentType "application/json"
@@ -176,7 +182,7 @@ try {
         } catch {
             Log-Message "Heartbeat Error: $($_.Exception.Message)"
         }
-        Start-Sleep -Seconds 20
+        Start-Sleep -Seconds 5
     }
 } catch {
     Log-Message "CRITICAL ERROR: $_"
