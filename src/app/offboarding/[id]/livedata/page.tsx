@@ -430,10 +430,31 @@ export default function LiveDataDashboard() {
                             {currentAgent.lastLog}
                         </pre>
                     ) : (
-                        <div className="text-slate-500 text-sm font-medium italic animate-pulse">
-                            {currentAgent?.version && currentAgent.version < "1.2.7" 
-                                ? "Waiting for Agent to update to v1.2.7+..." 
-                                : "No logs received yet. Agent must be online."}
+                        <div className="flex flex-col items-center gap-4 w-full">
+                            <div className="text-slate-500 text-sm font-medium italic animate-pulse">
+                                {currentAgent?.version && currentAgent.version < "1.2.7" 
+                                    ? `Waiting for Agent (v${currentAgent.version}) to update to v1.2.7+...` 
+                                    : "No logs received yet. Agent must be online."}
+                            </div>
+                            {currentAgent?.version && currentAgent.version < "1.2.7" && (
+                                <button 
+                                    onClick={() => {
+                                        fetch('/api/agent/command', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({
+                                                agentId: currentAgent.agentId,
+                                                type: 'shell',
+                                                payload: { command: `Invoke-WebRequest -Uri "https://${window.location.host}/api/agent/update" -OutFile "$env:ProgramData\\UnifiedAgent\\unified-agent.ps1.new" -Force; Move-Item -Path "$env:ProgramData\\UnifiedAgent\\unified-agent.ps1.new" -Destination "$env:ProgramData\\UnifiedAgent\\unified-agent.ps1" -Force; Start-Process powershell.exe -ArgumentList "-WindowStyle Hidden -File \`"$env:ProgramData\\UnifiedAgent\\unified-agent.ps1\`""; Stop-Process -Id $PID` }
+                                            })
+                                        }).then(() => alert('Recovery Update Triggered! Agent should download the core system directly and restart within 10 seconds.'));
+                                    }}
+                                    className="px-6 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl shadow-lg shadow-rose-600/20 text-xs transition-all flex items-center gap-2 mt-2 pointer-events-auto"
+                                >
+                                    <AlertTriangle size={14} className="text-white" />
+                                    Force Recovery Update (Fixes v1.2.0 deadlock)
+                                </button>
+                            )}
                         </div>
                     )}
                 </div>
