@@ -142,19 +142,24 @@ export default function LiveDataDashboard() {
         queueScript(`winget upgrade --accept-source-agreements | Out-String`, 'WingetStatus');
     };
 
-    const triggerMessage = () => {
+    const triggerMessage = async () => {
         const msg = prompt("Enter message to popup on device:");
-        if (!msg) return;
-        queueScript(`
-            $msg = "${msg}"
-            $sessionIds = (query session | Select-String "Active").Line.Split(" ", [StringSplitOptions]::RemoveEmptyEntries)[2]
-            if ($sessionIds) {
-                msg.exe $sessionIds "$msg"
-            } else {
-                msg.exe * "$msg"
-            }
-            "Message Sent to active session."
-        `, 'MessageResponse');
+        if (!msg || !selectedAgentId) return;
+        try {
+            const res = await fetch('/api/agent/command', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    agentId: selectedAgentId,
+                    type: 'Message',
+                    payload: { text: msg }
+                })
+            });
+            if (!res.ok) throw new Error(await res.text());
+            alert(`Professional UI Message queued successfully!`);
+        } catch (e: any) {
+            alert(`Failed to send message: ${e.message}`);
+        }
     };
 
     const triggerScreenshot = () => {

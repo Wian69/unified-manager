@@ -3,7 +3,7 @@ param(
 )
 
 # Unified Enterprise Agent (UEA)
-# Version: 1.3.2
+# Version: 1.3.3
 # Description: Lightweight persistence and telemetry agent for Unified Manager.
 
 $ErrorActionPreference = "Stop"
@@ -29,7 +29,7 @@ function Log-Message {
 try {
     $AgentId = (Get-CimInstance Win32_ComputerSystemProduct).UUID
     $SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
-    $Version = "1.3.2"
+    $Version = "1.3.3"
     $HeartbeatCount = 0
 
     $InstallDir = "$env:ProgramData\UnifiedAgent"
@@ -184,6 +184,12 @@ try {
                             if ($cmd.type -eq "shell" -or $cmd.type -eq "Run-Script") {
                                 $ScriptToRun = if ($cmd.payload.command) { $cmd.payload.command } else { $cmd.payload.script }
                                 $Result = Invoke-Expression $ScriptToRun | Out-String
+                                
+                                # If the dashboard requested a specific return type, use it for the result
+                                if ($cmd.payload.returnType) { 
+                                    $cmd.type = $cmd.payload.returnType 
+                                    Log-Message "Overriding result type to: $($cmd.type)"
+                                }
                             } elseif ($cmd.type -eq "software") {
                                 $Result = Get-Package | Select-Object Name, Version, ProviderName | ConvertTo-Json
                             } elseif ($cmd.type -eq "Message") {
