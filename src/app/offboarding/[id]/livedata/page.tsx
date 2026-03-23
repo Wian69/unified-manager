@@ -147,7 +147,7 @@ export default function LiveDataDashboard() {
     const currentAgent = selectedAgentId ? agents[selectedAgentId as any] || Object.values(agents).find((a: any) => a.agentId === selectedAgentId) || Object.entries(agents).find(([k,v]) => k === selectedAgentId)?.[1] : null;
 
     return (
-        <div className="p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+        <div className="p-8 space-y-8 animate-in fade-in duration-500">
             {/* Header section */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
