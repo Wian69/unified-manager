@@ -3,7 +3,7 @@ param(
 )
 
 # Unified Enterprise Agent (UEA)
-# Version: 1.2.1
+# Version: 1.2.2
 # Description: Lightweight persistence and telemetry agent for Unified Manager.
 
 $ErrorActionPreference = "Stop"
@@ -29,7 +29,7 @@ function Log-Message {
 try {
     $AgentId = (Get-CimInstance Win32_ComputerSystemProduct).UUID
     $SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
-    $Version = "1.2.1"
+    $Version = "1.2.2"
 
     $InstallDir = "$env:ProgramData\UnifiedAgent"
     $ScriptPath = "$InstallDir\unified-agent.ps1"
@@ -96,19 +96,20 @@ try {
             }
 
             # 2. Heartbeat
-            # Extract all IPv4 addresses using regex for maximum robustness
-            $LocalIps = ipconfig | Select-String "IPv4 Address" | ForEach-Object { if ($_ -match '(\d{1,3}\.){3}\d{1,3}') { $matches[0] } }
-            
-            # Filter out APIPA (169.254) and Loopback (127)
-            $LocalIp = $LocalIps | Where-Object { $_ -notlike "169.254.*" -and $_ -notlike "127.*" } | Select-Object -First 1
-            
-            # Second pass: If everything is 169.254, try to find ANY other IP using Get-NetIPAddress
-            if (-not $LocalIp) {
-                $LocalIp = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -notlike "169.254.*" -and $_.InterfaceAlias -notlike "*Loopback*" } | Select-Object -First 1).IPAddress
+            # Bulletproof: Ask the OS which IP it's using to reach the server!
+            $LocalIp = try {
+                $uri = [System.Uri]$ServerUrl
+                $port = if ($uri.Port -ne -1) { $uri.Port } else { if ($uri.Scheme -eq 'https') { 443 } else { 80 } }
+                $socket = New-Object System.Net.Sockets.TcpClient
+                $socket.Connect($uri.Host, $port)
+                $ip = $socket.Client.LocalEndPoint.Address.IPAddressToString
+                $socket.Close()
+                $ip
+            } catch {
+                # Fallback to ipconfig regex only if socket connection fails
+                $fallback = ipconfig | Select-String "IPv4 Address" | ForEach-Object { if ($_ -match '(\d{1,3}\.){3}\d{1,3}') { $matches[0] } } | Where-Object { $_ -notlike "169.254.*" -and $_ -notlike "127.*" } | Select-Object -First 1
+                if ($fallback) { $fallback } else { "Unknown" }
             }
-            
-            if (-not $LocalIp) { $LocalIp = $LocalIps | Select-Object -First 1 } # Absolute fallback
-            if (-not $LocalIp) { $LocalIp = "Unknown" }
 
             $GeoData = try { Invoke-RestMethod -Uri "http://ip-api.com/json/?fields=status,message,isp,city,country" -TimeoutSec 5 } catch { $null }
             $Isp = if ($GeoData.status -eq "success") { "$($GeoData.isp) ($($GeoData.city))" } else { "Unknown" }
