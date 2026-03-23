@@ -4,7 +4,8 @@ import { getAgents } from '@/lib/db';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-    const isProd = (process.env.STORAGE_URL !== undefined) || (process.env.KV_URL !== undefined);
+    const rawUrl = process.env.STORAGE_URL || process.env.KV_URL || "";
+    const isProd = rawUrl.startsWith('https://') && !!(process.env.STORAGE_REST_API_TOKEN || process.env.KV_REST_API_TOKEN);
     const isVercel = process.env.VERCEL === '1';
     let agents: any = null;
     let error: string | null = null;

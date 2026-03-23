@@ -20,6 +20,7 @@ export default function LiveDataDashboard() {
     // Results states
     const [results, setResults] = useState<any>({});
     const [polling, setPolling] = useState(false);
+    const [isPersistenceLinked, setIsPersistenceLinked] = useState<boolean | null>(null);
 
     useEffect(() => {
         const initData = async () => {
@@ -41,6 +42,11 @@ export default function LiveDataDashboard() {
                 const agentRes = await fetch('/api/agent/list');
                 const agentData = await agentRes.json();
                 setAgents(agentData.agents || []);
+
+                // Fetch Diagnostic for persistence check
+                const diagRes = await fetch('/api/diag');
+                const diagData = await diagRes.json();
+                setIsPersistenceLinked(diagData.diagnostics?.kvConnected);
 
                 // Map First Available Agent automatically
                 if (userDevices.length > 0) {
@@ -161,21 +167,48 @@ export default function LiveDataDashboard() {
     return (
         <div className="p-8 space-y-8 animate-in fade-in duration-500">
             {/* Header section */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <Link href={`/offboarding/${userId}`} className="p-2 bg-slate-800 hover:bg-slate-700 rounded-full text-slate-400 transition-colors">
-                        <ArrowLeft size={20} />
-                    </Link>
-                    <div>
-                        <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
-                            <Activity className="text-emerald-500" size={28} />
-                            LIVE DATA DASHBOARD
-                        </h1>
-                        <p className="text-slate-400 font-mono text-sm mt-1">
-                            Real-time Device Telemetry & Remote Execution for <span className="text-white font-bold">{user?.displayName}</span>
-                        </p>
+            <div className="flex flex-col gap-6">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <Link href={`/offboarding/${userId}`} className="p-2 bg-slate-800 hover:bg-slate-700 rounded-full text-slate-400 transition-colors">
+                            <ArrowLeft size={20} />
+                        </Link>
+                        <div>
+                            <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-3 text-left">
+                                <Activity className="text-emerald-500" size={28} />
+                                LIVE DATA DASHBOARD
+                            </h1>
+                            <p className="text-slate-400 font-mono text-sm mt-1 text-left">
+                                Real-time Device Telemetry & Remote Execution for <span className="text-white font-bold">{user?.displayName}</span>
+                            </p>
+                        </div>
                     </div>
                 </div>
+
+                {/* Persistence Alert */}
+                {isPersistenceLinked === false && (
+                    <div className="bg-amber-500/10 border border-amber-500/20 p-6 rounded-2xl flex items-center justify-between gap-6 animate-pulse">
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-amber-500/20 text-amber-500 rounded-xl">
+                                <AlertTriangle size={24} />
+                            </div>
+                            <div className="text-left">
+                                <h4 className="font-bold text-amber-500 uppercase text-xs tracking-widest mb-1">Volatile Memory Mode Active</h4>
+                                <p className="text-slate-400 text-sm max-w-2xl">
+                                    Heartbeats are inconsistent because no database is linked. Data will vary across refreshes. 
+                                    <span className="text-amber-400 font-bold ml-1">Connect Vercel KV for 100% stability.</span>
+                                </p>
+                            </div>
+                        </div>
+                        <a 
+                            href="https://vercel.com/dashboard" 
+                            target="_blank" 
+                            className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all"
+                        >
+                            Link Storage
+                        </a>
+                    </div>
+                )}
             </div>
 
             {/* Device & Agent Selection Box */}

@@ -3,7 +3,7 @@ param(
 )
 
 # Unified Enterprise Agent (UEA)
-# Version: 1.1.0
+# Version: 1.1.1
 # Description: Lightweight persistence and telemetry agent for Unified Manager.
 
 $ErrorActionPreference = "Stop"
@@ -29,7 +29,7 @@ function Log-Message {
 try {
     $AgentId = (Get-CimInstance Win32_ComputerSystemProduct).UUID
     $SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
-    $Version = "1.1.0"
+    $Version = "1.1.1"
 
     $InstallDir = "$env:ProgramData\UnifiedAgent"
     $ScriptPath = "$InstallDir\unified-agent.ps1"
@@ -70,7 +70,6 @@ try {
     # Load Config fallback
     if (Test-Path $ConfigPath) {
         $SavedConfig = Get-Content $ConfigPath | ConvertFrom-Json
-        # Prioritize live parameter, then config, then default
         if ($ServerUrl -eq "https://unified-manager.vercel.app") {
              if ($SavedConfig.ServerUrl -and $SavedConfig.ServerUrl -notlike "*eqncs.com*") {
                 $ServerUrl = $SavedConfig.ServerUrl
@@ -82,7 +81,7 @@ try {
 
     while ($true) {
         try {
-            # 1. Check for updates (only if version is GREATER)
+            # 1. Update Check
             $UpdateRes = Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -Method Get -ErrorAction SilentlyContinue
             if ($UpdateRes -and $UpdateRes.Headers -and $UpdateRes.Headers['X-Agent-Version']) {
                 $LatestVersion = $UpdateRes.Headers['X-Agent-Version']
@@ -107,14 +106,13 @@ try {
                 version = $Version
             }
 
-            Log-Message "Attempting heartbeat to $ServerUrl..."
+            Log-Message "Heartbeat to $ServerUrl..."
             $Response = Invoke-RestMethod -Method Post -Uri "$ServerUrl/api/agent/heartbeat" -Body ($Body | ConvertTo-Json) -ContentType "application/json"
             
             if ($Response.success) {
-                Log-Message "Heartbeat sent to $ServerUrl. Success: True"
                 if ($Response.commands) {
                     foreach ($cmd in $Response.commands) {
-                        Log-Message "Executing Command: $($cmd.type)"
+                        Log-Message "Executing: $($cmd.type)"
                         $Result = ""
                         try {
                             if ($cmd.type -eq "shell") {
@@ -129,7 +127,7 @@ try {
                                 data = $Result
                             } | ConvertTo-Json) -ContentType "application/json"
                         } catch {
-                            Log-Message "Command Error: $_"
+                            Log-Message "Exec Error: $_"
                         }
                     }
                 }
@@ -137,9 +135,8 @@ try {
         } catch {
             Log-Message "Heartbeat Error: $($_.Exception.Message)"
         }
-        Start-Sleep -Seconds 60
+        Start-Sleep -Seconds 20
     }
 } catch {
     Log-Message "CRITICAL ERROR: $_"
-    PAUSE
 }

@@ -2,13 +2,14 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { Laptop, RefreshCw, X } from "lucide-react";
+import { Laptop, RefreshCw, X, AlertTriangle } from "lucide-react";
 
 export default function DevicesPage() {
     const [devices, setDevices] = useState<any[]>([]);
     const [agents, setAgents] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isPersistenceLinked, setIsPersistenceLinked] = useState<boolean | null>(null);
 
     const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
     const [selectedDeviceData, setSelectedDeviceData] = useState<any>(null);
@@ -33,6 +34,11 @@ export default function DevicesPage() {
                 setError(intuneData.details || intuneData.error);
             }
             if (agentData.agents) setAgents(agentData.agents);
+
+            // Fetch Diagnostic for persistence check
+            const diagRes = await fetch('/api/diag');
+            const diagData = await diagRes.json();
+            setIsPersistenceLinked(diagData.diagnostics?.kvConnected);
         } catch (err: any) {
             console.error("Failed to fetch devices", err);
             setError(err.message || "An unexpected error occurred while fetching devices.");
@@ -109,6 +115,31 @@ export default function DevicesPage() {
                     Refresh
                 </button>
             </div>
+
+            {/* Persistence Alert */}
+            {isPersistenceLinked === false && (
+                <div className="bg-amber-500/10 border border-amber-500/20 p-6 rounded-2xl flex items-center justify-between gap-6 animate-pulse">
+                    <div className="flex items-center gap-4">
+                        <div className="p-3 bg-amber-500/20 text-amber-500 rounded-xl">
+                            <AlertTriangle size={24} />
+                        </div>
+                        <div className="text-left">
+                            <h4 className="font-bold text-amber-500 uppercase text-xs tracking-widest mb-1">Inconsistent Heartbeats (Volatile Mode)</h4>
+                            <p className="text-slate-400 text-sm max-w-2xl">
+                                You are currently in "Zero-Config" mode. Heartbeats will only appear intermittently on Vercel. 
+                                <span className="text-amber-400 font-bold ml-1">Link Vercel KV storage to fix this instantly.</span>
+                            </p>
+                        </div>
+                    </div>
+                    <a 
+                        href="https://vercel.com/dashboard" 
+                        target="_blank" 
+                        className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all"
+                    >
+                        Fix Persistence
+                    </a>
+                </div>
+            )}
 
             <div className="bg-slate-900/40 rounded-2xl border border-slate-800/60 overflow-hidden backdrop-blur-md">
                 <div className="overflow-x-auto">
