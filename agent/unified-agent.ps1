@@ -3,7 +3,7 @@ param(
 )
 
 # Unified Enterprise Agent (UEA)
-# Version: 1.3.3
+# Version: 1.3.4
 # Description: Lightweight persistence and telemetry agent for Unified Manager.
 
 $ErrorActionPreference = "Stop"
@@ -29,7 +29,7 @@ function Log-Message {
 try {
     $AgentId = (Get-CimInstance Win32_ComputerSystemProduct).UUID
     $SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
-    $Version = "1.3.3"
+    $Version = "1.3.4"
     $HeartbeatCount = 0
 
     $InstallDir = "$env:ProgramData\UnifiedAgent"
@@ -45,40 +45,44 @@ try {
     $NeedsInstall = ($CurrentPath -ne $ScriptPath) -or (-not $TaskExists)
 
     if ($NeedsInstall) {
-        Log-Message "Installing/Repairing agent persistence to $ScriptPath..."
-        if (-not (Test-Path $InstallDir)) { New-Item -ItemType Directory -Path $InstallDir -Force }
+        $IsAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
         
-        # Kill existing agent processes to release file lock
-        $ExistingProcs = Get-Process | Where-Object { $_.Path -eq $ScriptPath -and $_.Id -ne $PID }
-        if ($ExistingProcs) {
-            Log-Message "Stopping existing agent processes for upgrade..."
-            $ExistingProcs | Stop-Process -Force
-            Start-Sleep -Seconds 2
-        }
+        if ($IsAdmin) {
+            Log-Message "Installing/Repairing agent persistence to $ScriptPath..."
+            try {
+                if (-not (Test-Path $InstallDir)) { New-Item -ItemType Directory -Path $InstallDir -Force }
+                
+                # Kill existing agent processes to release file lock
+                $ExistingProcs = Get-Process | Where-Object { $_.Path -eq $ScriptPath -and $_.Id -ne $PID }
+                if ($ExistingProcs) {
+                    Log-Message "Stopping existing agent processes for upgrade..."
+                    $ExistingProcs | Stop-Process -Force
+                    Start-Sleep -Seconds 2
+                }
 
-        if ($CurrentPath -ne "") {
-            Copy-Item -Path $CurrentPath -Destination $ScriptPath -Force
+                if ($CurrentPath -ne "") {
+                    Copy-Item -Path $CurrentPath -Destination $ScriptPath -Force
+                } else {
+                    Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile "$ScriptPath"
+                }
+                
+                # Initial Config
+                $Config = @{ ServerUrl = $ServerUrl; Version = $Version }
+                $Config | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
+                
+                # Persistence
+                $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$ScriptPath`""
+                $Trigger1 = New-ScheduledTaskTrigger -AtStartup
+                $Trigger2 = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 5)
+                $Principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
+                Register-ScheduledTask -TaskName "UnifiedEnterpriseAgent" -Action $Action -Trigger @($Trigger1, $Trigger2) -Principal $Principal -Force
+                Log-Message "Persistence Installed successfully."
+            } catch {
+                Log-Message "Warning: Persistence installation failed (likely permission denied). Continuing in User-Mode."
+            }
         } else {
-            # Executed from memory (iex), we must download ourselves to disk
-            Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile "$ScriptPath"
+            Log-Message "User-Mode: Skipping persistence installation (Administrator rights required)."
         }
-        
-        # Initial Config
-        $Config = @{ ServerUrl = $ServerUrl; Version = $Version }
-        $Config | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
-        
-        # Persistence (Aggressive overwrite to fix execution policies and add immortality)
-        $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$ScriptPath`""
-        
-        # Trigger 1: Boot
-        $Trigger1 = New-ScheduledTaskTrigger -AtStartup
-        
-        # Trigger 2: Every 5 minutes (Auto-Resuscitation)
-        $Trigger2 = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 5)
-        
-        $Principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
-        Register-ScheduledTask -TaskName "UnifiedEnterpriseAgent" -Action $Action -Trigger @($Trigger1, $Trigger2) -Principal $Principal -Force
-        Log-Message "Persistence Installed (Scheduled Task: UnifiedEnterpriseAgent - Auto-Resuscitation Enabled)"
     }
 
     # Load Config fallback
