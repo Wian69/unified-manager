@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
         return new NextResponse(content, {
             headers: {
                 'Content-Type': 'text/plain',
-                'X-Agent-Version': '1.0.0' // This would be dynamic in production
+                'X-Agent-Version': '1.1.0'
             }
         });
     } catch (error: any) {
