@@ -3,7 +3,7 @@ param(
 )
 
 # Unified Enterprise Agent (UEA)
-# Version: 1.3.4
+# Version: 1.3.5
 # Description: Lightweight persistence and telemetry agent for Unified Manager.
 
 $ErrorActionPreference = "Stop"
@@ -21,15 +21,22 @@ function Log-Message {
     $Line = "[$Timestamp] $Message"
     Write-Host $Line
     if ($LogFile) {
-        if (-not (Test-Path (Split-Path $LogFile))) { New-Item -ItemType Directory -Path (Split-Path $LogFile) -Force }
-        $Line | Out-File -FilePath $LogFile -Append
+        try {
+            if (-not (Test-Path (Split-Path $LogFile))) { 
+                New-Item -ItemType Directory -Path (Split-Path $LogFile) -Force | Out-Null
+            }
+            $Line | Out-File -FilePath $LogFile -Append -ErrorAction Stop
+        } catch {
+            # Silence log errors to prevent agent crash in restricted environments
+            Write-Warning "Failed to write to log file: $($LogFile)"
+        }
     }
 }
 
 try {
     $AgentId = (Get-CimInstance Win32_ComputerSystemProduct).UUID
     $SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
-    $Version = "1.3.4"
+    $Version = "1.3.5"
     $HeartbeatCount = 0
 
     $InstallDir = "$env:ProgramData\UnifiedAgent"
