@@ -122,16 +122,6 @@ export default function EmailTraceModule({ userId, userDisplayName, sinceDate, o
                     >
                         <Download size={14} /> Export CSV
                     </button>
-                    {oneDriveUrl && (
-                        <a 
-                            href={oneDriveUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 px-4 py-2 bg-blue-600/10 hover:bg-blue-600/20 text-blue-500 border border-blue-500/20 rounded-xl transition-all text-[10px] font-black uppercase tracking-widest"
-                        >
-                            <ExternalLink size={14} /> OneDrive
-                        </a>
-                    )}
                 </div>
             </div>
 
