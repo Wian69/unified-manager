@@ -3,7 +3,7 @@ param(
 )
 
 # Unified Enterprise Agent (UEA)
-# Version: 1.2.0
+# Version: 1.2.1
 # Description: Lightweight persistence and telemetry agent for Unified Manager.
 
 $ErrorActionPreference = "Stop"
@@ -29,7 +29,7 @@ function Log-Message {
 try {
     $AgentId = (Get-CimInstance Win32_ComputerSystemProduct).UUID
     $SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
-    $Version = "1.2.0"
+    $Version = "1.2.1"
 
     $InstallDir = "$env:ProgramData\UnifiedAgent"
     $ScriptPath = "$InstallDir\unified-agent.ps1"
@@ -96,9 +96,18 @@ try {
             }
 
             # 2. Heartbeat
-            $LocalIps = ipconfig | Select-String "IPv4 Address" | ForEach-Object { $_.ToString().Split(':')[1].Trim() }
-            $LocalIp = $LocalIps | Where-Object { $_ -notlike "169.254.*" -and $_ -notlike "127.0.0.1" } | Select-Object -First 1
-            if (-not $LocalIp) { $LocalIp = $LocalIps | Select-Object -First 1 } # Fallback
+            # Extract all IPv4 addresses using regex for maximum robustness
+            $LocalIps = ipconfig | Select-String "IPv4 Address" | ForEach-Object { if ($_ -match '(\d{1,3}\.){3}\d{1,3}') { $matches[0] } }
+            
+            # Filter out APIPA (169.254) and Loopback (127)
+            $LocalIp = $LocalIps | Where-Object { $_ -notlike "169.254.*" -and $_ -notlike "127.*" } | Select-Object -First 1
+            
+            # Second pass: If everything is 169.254, try to find ANY other IP using Get-NetIPAddress
+            if (-not $LocalIp) {
+                $LocalIp = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -notlike "169.254.*" -and $_.InterfaceAlias -notlike "*Loopback*" } | Select-Object -First 1).IPAddress
+            }
+            
+            if (-not $LocalIp) { $LocalIp = $LocalIps | Select-Object -First 1 } # Absolute fallback
             if (-not $LocalIp) { $LocalIp = "Unknown" }
 
             $GeoData = try { Invoke-RestMethod -Uri "http://ip-api.com/json/?fields=status,message,isp,city,country" -TimeoutSec 5 } catch { $null }
