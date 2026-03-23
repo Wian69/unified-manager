@@ -28,29 +28,42 @@ export async function GET(req: Request) {
         }
 
         // SCENARIO 2: Fetch list of chats for a user (with external detection)
+        const { searchParams: filterParams } = new URL(req.url);
+        const sinceDate = filterParams.get('sinceDate');
+
         // 1. Fetch User Profile to get the internal domain
         const userProfile = await client.api(`/users/${userId}`).select('userPrincipalName').get();
         const internalDomain = userProfile.userPrincipalName.split('@')[1]?.toLowerCase();
 
         // 2. Fetch User's Chats
-        const chatsResponse = await client.api(`/users/${userId}/chats`)
+        let chatsQuery = client.api(`/users/${userId}/chats`)
             .expand('lastMessagePreview')
-            .top(20)
-            .get();
+            .top(20);
+        
+        const chatsResponse = await chatsQuery.get();
 
         const chats = chatsResponse.value || [];
         const enrichedChats = [];
 
         for (const chat of chats) {
             try {
+                // If sinceDate is provided, check lastMessage date
+                if (sinceDate && chat.lastMessagePreview?.createdDateTime) {
+                    if (new Date(chat.lastMessagePreview.createdDateTime) < new Date(sinceDate)) {
+                        continue; // Skip chats with no activity since filter date
+                    }
+                }
+
                 const membersResponse = await client.api(`/chats/${chat.id}/members`).get();
                 const members = membersResponse.value || [];
                 
-                // Identify external members
+                // Identify external members using both email and UPN
                 const externalMembers = members.filter((m: any) => {
-                    if (m.email) {
-                        const domain = m.email.split('@')[1]?.toLowerCase();
-                        return domain && domain !== internalDomain;
+                    const email = m.email || m.userId; // userId in members might be the UPN for external users
+                    if (email) {
+                        const domain = email.split('@')[1]?.toLowerCase();
+                        // If domain exists and doesn't match internal domain or common tenant variations
+                        return domain && domain !== internalDomain && !domain.includes('onmicrosoft.com');
                     }
                     return false;
                 });
@@ -66,7 +79,7 @@ export async function GET(req: Request) {
                     ...chat,
                     topic,
                     isExternal: externalMembers.length > 0,
-                    externalParticipants: externalMembers.map((m: any) => m.email),
+                    externalParticipants: externalMembers.map((m: any) => m.email || m.displayName),
                     membersCount: members.length,
                     lastMessage: chat.lastMessagePreview
                 });

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, MessageSquare, Download, RefreshCw, ShieldAlert, Users, Globe, ChevronDown, ChevronUp, AlertTriangle, User, Paperclip, Activity } from "lucide-react";
 
-export default function TeamsChatModule({ userId, userDisplayName }: { userId: string, userDisplayName: string }) {
+export default function TeamsChatModule({ userId, userDisplayName, sinceDate }: { userId: string, userDisplayName: string, sinceDate?: string }) {
     const [chats, setChats] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -16,7 +16,11 @@ export default function TeamsChatModule({ userId, userDisplayName }: { userId: s
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch(`/api/teams/chats?userId=${userId}`);
+            let url = `/api/teams/chats?userId=${userId}`;
+            if (sinceDate) {
+                url += `&sinceDate=${sinceDate}`;
+            }
+            const res = await fetch(url);
             const result = await res.json();
             
             if (result.error) throw new Error(result.details || result.error);
@@ -47,7 +51,7 @@ export default function TeamsChatModule({ userId, userDisplayName }: { userId: s
 
     useEffect(() => {
         if (userId) fetchChats();
-    }, [userId]);
+    }, [userId, sinceDate]);
 
     const handleExpand = (chatId: string) => {
         if (expandedChatId === chatId) {

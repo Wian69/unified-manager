@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Calendar, Download, RefreshCw, ShieldAlert, Mail, Paperclip, ChevronDown, ChevronUp } from "lucide-react";
 
-export default function EmailTraceModule({ userId, userDisplayName }: { userId: string, userDisplayName: string }) {
+export default function EmailTraceModule({ userId, userDisplayName, sinceDate }: { userId: string, userDisplayName: string, sinceDate?: string }) {
     const [emails, setEmails] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -18,10 +18,11 @@ export default function EmailTraceModule({ userId, userDisplayName }: { userId: 
         setError(null);
         try {
             let url = `/api/email/trace?userId=${userId}`;
-            if (startDate && endDate) {
-                // Convert to ISO for Graph API
-                const startISO = new Date(startDate + "T00:00:00").toISOString();
-                const endISO = new Date(endDate + "T23:59:59").toISOString();
+            
+            const effectiveSince = sinceDate || startDate;
+            if (effectiveSince) {
+                const startISO = new Date(effectiveSince + "T00:00:00").toISOString();
+                const endISO = endDate ? new Date(endDate + "T23:59:59").toISOString() : new Date().toISOString();
                 url += `&startDate=${startISO}&endDate=${endISO}`;
             }
             
@@ -39,7 +40,7 @@ export default function EmailTraceModule({ userId, userDisplayName }: { userId: 
 
     useEffect(() => {
         if (userId) fetchEmails();
-    }, [userId]);
+    }, [userId, sinceDate]);
 
     const handleSearch = () => {
         fetchEmails();

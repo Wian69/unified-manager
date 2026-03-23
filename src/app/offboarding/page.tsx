@@ -62,9 +62,9 @@ function OffboardingContent() {
         }
     };
 
-    const saveWatchlist = async (newList: any[]) => {
+    const saveWatchlist = async (newList: any[], shouldRefresh = false) => {
         setSyncing(true);
-        // Save to LocalStorage immediately for instant persistence
+        // Save to LocalStorage immediately
         if (typeof window !== 'undefined') {
             localStorage.setItem('employeeWatchlist', JSON.stringify(newList));
         }
@@ -77,6 +77,11 @@ function OffboardingContent() {
                 cache: 'no-store'
             });
             if (!res.ok) throw new Error("Sync failed");
+
+            // If we just pushed local data to an empty server, re-fetch to get enriched metrics
+            if (shouldRefresh) {
+                setTimeout(fetchOffboardingData, 1000);
+            }
         } catch (err) {
             console.error('[Watchlist] API Save failed:', err);
         } finally {
@@ -88,7 +93,7 @@ function OffboardingContent() {
         if (!monitoredUsers.find(u => u.id === user.id)) {
             const newList = [...monitoredUsers, user];
             setMonitoredUsers(newList);
-            saveWatchlist(newList);
+            saveWatchlist(newList, true); // Refresh to get metrics for the new user
         }
         // Keep results in view
     };
@@ -135,7 +140,7 @@ function OffboardingContent() {
                 if (remoteWatchlist.length === 0 && localData && localData.length > 0) {
                     console.log('[Watchlist] Force syncing local data to server...');
                     finalWatchlist = localData;
-                    saveWatchlist(localData); // This will trigger the POST to server
+                    saveWatchlist(localData, true); // This will trigger the POST to server and a re-fetch
                 } else {
                     finalWatchlist = remoteWatchlist;
                 }

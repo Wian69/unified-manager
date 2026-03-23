@@ -124,11 +124,11 @@ async function generateReport() {
             </div>
         `;
 
-        const targetEmail = 'itsupport@eqncs.com';
-        console.log(`[Report] Dispatching email to: ${targetEmail}`);
+        const senderEmail = 'itsupport@eqncs.com';
+        console.log(`[Report] Dispatching email via sender: ${senderEmail}`);
 
-        // 4. Send Email via Graph
-        await client.api('/me/sendMail').post({
+        // 4. Send Email via Graph (using specific user as sender for Client Credentials)
+        await client.api(`/users/${senderEmail}/sendMail`).post({
             message: {
                 subject: `Offboarding Intelligence Report: ${userReports.length} Active Audits`,
                 body: {
@@ -136,7 +136,7 @@ async function generateReport() {
                     content: htmlBody
                 },
                 toRecipients: [
-                    { emailAddress: { address: targetEmail } }
+                    { emailAddress: { address: senderEmail } }
                 ]
             }
         });
@@ -144,7 +144,7 @@ async function generateReport() {
         console.log('[Report] Successfully dispatched.');
         return NextResponse.json({ 
             success: true, 
-            message: `Daily report sent to ${targetEmail} for ${userReports.length} users.`,
+            message: `Daily report sent to ${senderEmail} for ${userReports.length} users.`,
             details: userReports.map(r => ({ user: r.user.displayName, deletions: r.deletions }))
         });
     } catch (error: any) {

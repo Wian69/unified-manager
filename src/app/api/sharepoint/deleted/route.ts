@@ -79,6 +79,9 @@ export async function GET(request: Request) {
                     }
                 }
 
+                const { searchParams: filterParams } = new URL(request.url);
+                const sinceDate = filterParams.get('sinceDate');
+
                 const items = rawItems.map((item: any) => ({
                     id: item.id,
                     name: item.name,
@@ -87,7 +90,10 @@ export async function GET(request: Request) {
                     deletedBy: item.deletedBy?.user?.displayName || "Unknown",
                     siteUrl: driveResponse.webUrl,
                     webUrl: item.webUrl
-                }));
+                })).filter((item: any) => {
+                    if (!sinceDate) return true;
+                    return new Date(item.deletedDateTime) >= new Date(sinceDate);
+                });
 
                 return NextResponse.json({
                     data: items,

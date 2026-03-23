@@ -13,6 +13,12 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [sinceDate, setSinceDate] = useState<string>(() => {
+        // Default to 7 days ago
+        const d = new Date();
+        d.setDate(d.getDate() - 7);
+        return d.toISOString().split('T')[0];
+    });
 
     // SharePoint Audit State
     const [recycleBinItems, setRecycleBinItems] = useState<any[]>([]);
@@ -30,7 +36,7 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
 
             // Fetch SharePoint Deletions
             setLoadingSP(true);
-            const spRes = await fetch(`/api/sharepoint/deleted?userId=${id}`);
+            const spRes = await fetch(`/api/sharepoint/deleted?userId=${id}&sinceDate=${sinceDate}`);
             const spData = await spRes.json();
             if (spData.error) {
                 setSpError(spData.error);
@@ -47,7 +53,7 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
 
     useEffect(() => {
         fetchData();
-    }, [id]);
+    }, [id, sinceDate]);
 
     if (loading) {
         return (
@@ -82,6 +88,15 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
                     <span className="font-bold text-sm uppercase tracking-widest">Offboarding Monitor</span>
                 </Link>
                 <div className="flex items-center gap-4">
+                     <div className="flex items-center gap-3 bg-slate-900 px-5 py-2.5 rounded-2xl border border-slate-800 shadow-xl group/date hover:border-blue-500/30 transition-all">
+                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest group-hover/date:text-blue-400 transition-colors">Show data from:</span>
+                        <input 
+                            type="date" 
+                            className="bg-transparent border-none focus:ring-0 text-xs font-bold text-white p-0 [color-scheme:dark]"
+                            value={sinceDate}
+                            onChange={(e) => setSinceDate(e.target.value)}
+                        />
+                     </div>
                      <span className="px-3 py-1 bg-rose-500/10 text-rose-500 rounded-full text-[10px] font-black uppercase tracking-widest border border-rose-500/20">
                         Offboarding in Progress
                      </span>
@@ -137,6 +152,7 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
                         <EmailTraceModule 
                             userId={id}
                             userDisplayName={user.displayName}
+                            sinceDate={sinceDate}
                         />
                     </section>
 
@@ -144,6 +160,7 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
                         <TeamsChatModule 
                             userId={id}
                             userDisplayName={user.displayName}
+                            sinceDate={sinceDate}
                         />
                     </section>
 
