@@ -77,7 +77,7 @@ export async function GET(req: Request) {
         console.log(`[Teams API] Fetching chats for ${userId}, sinceDate: ${sinceDate}`);
         let chatsQuery = client.api(`/users/${userId}/chats`)
             .expand('lastMessagePreview')
-            .top(50); // Increased top to find more potential matches
+            .top(100); // Increased top to ensure we find matches even with filters
         
         const chatsResponse = await chatsQuery.get();
         const chats = chatsResponse.value || [];

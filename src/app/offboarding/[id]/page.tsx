@@ -14,9 +14,9 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [sinceDate, setSinceDate] = useState<string>(() => {
-        // Default to 7 days ago
+        // Default to 30 days ago to show more context by default
         const d = new Date();
-        d.setDate(d.getDate() - 7);
+        d.setDate(d.getDate() - 30);
         return d.toISOString().split('T')[0];
     });
 
