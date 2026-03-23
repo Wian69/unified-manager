@@ -60,8 +60,8 @@ export default function LiveDataDashboard() {
                 // Map First Available Agent automatically
                 if (userDevices.length > 0) {
                     const firstSerial = userDevices[0].serialNumber || userDevices[0].hardwareInformation?.serialNumber;
-                    const match = Object.values(agentData.agents || {}).find((a: any) => a.serialNumber === firstSerial) as any;
-                    if (match) setSelectedAgentId(match.agentId || Object.keys(agentData.agents).find(k => agentData.agents[k].serialNumber === firstSerial));
+                    const match = agentData.agents.find((a: any) => a.serialNumber === firstSerial);
+                    if (match) setSelectedAgentId(match.id);
                 }
 
             } catch (err: any) {
@@ -186,7 +186,7 @@ export default function LiveDataDashboard() {
     if (loading) return <div className="p-20 text-center text-white">Loading Live Data Engine...</div>;
     if (error) return <div className="p-20 text-center text-rose-500">Error: {error}</div>;
 
-    const currentAgent = selectedAgentId ? agents[selectedAgentId as any] || Object.values(agents).find((a: any) => a.agentId === selectedAgentId) || Object.entries(agents).find(([k,v]) => k === selectedAgentId)?.[1] : null;
+    const currentAgent = agents.find((a: any) => a.id === selectedAgentId) || null;
 
     return (
         <div className="p-8 space-y-8 animate-in fade-in duration-500">
@@ -255,13 +255,19 @@ export default function LiveDataDashboard() {
                         >
                             <option value="">Select an Agent / Device...</option>
                             {devices.map(d => {
-                                const matchedAgentEntries = Object.entries(agents).filter(([k, v]: [string, any]) => v.serialNumber === (d.serialNumber || d.hardwareInformation?.serialNumber));
-                                const agentId = matchedAgentEntries.length > 0 ? matchedAgentEntries[0][0] : null;
-                                return (
-                                    <option key={d.id} value={agentId || ""}>
-                                        {d.deviceName} ({d.hardwareInformation?.serialNumber || 'No Serial'}) {agentId ? ' - ONLINE' : ' - NO AGENT'}
+                                const matchedAgents = agents.filter((a: any) => a.serialNumber === (d.serialNumber || d.hardwareInformation?.serialNumber));
+                                if (matchedAgents.length === 0) {
+                                    return (
+                                        <option key={d.id} value="" disabled>
+                                            {d.deviceName} ({d.serialNumber || d.hardwareInformation?.serialNumber}) - NO AGENT FOUND
+                                        </option>
+                                    );
+                                }
+                                return matchedAgents.map((a: any) => (
+                                    <option key={`${d.id}-${a.id}`} value={a.id}>
+                                        {d.deviceName} ({a.id.substring(0,8)}...) {a.status === 'online' ? '🟢 ONLINE' : '🔴 OFFLINE'}
                                     </option>
-                                );
+                                ));
                             })}
                         </select>
                         <button className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl transition-all">
