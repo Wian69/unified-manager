@@ -26,7 +26,8 @@ export default function DevicesPage() {
             const agentData = await agentRes.json();
 
             if (intuneData.devices) {
-                setDevices(intuneData.devices);
+                const sorted = (intuneData.devices || []).sort((a: any, b: any) => (a.deviceName || "").localeCompare(b.deviceName || ""));
+                setDevices(sorted);
                 setError(null);
             } else if (intuneData.error) {
                 setError(intuneData.details || intuneData.error);

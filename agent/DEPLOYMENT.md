@@ -6,6 +6,11 @@ description: Steps to deploy the Unified Enterprise Agent (UEA) via Microsoft In
 
 Follow these steps to deploy the `unified-agent.ps1` silently across your global fleet.
 
+## Prerequisites
+- **Administrative Privileges**: The script MUST be run as an Administrator (or as SYSTEM via Intune) to register the persistent scheduled task.
+- **PowerShell 5.1+**: Standard on Windows 10/11.
+- **Internet Access**: Required to communicate with the Unified Manager backend.
+
 ## 1. Prepare the Script
 Ensure your agent script points to your production server or use the parameter-driven approach.
 

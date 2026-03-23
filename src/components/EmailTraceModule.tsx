@@ -57,10 +57,12 @@ export default function EmailTraceModule({ userId, userDisplayName, sinceDate, o
         });
     };
 
-    const filteredEmails = emails.filter(email => 
-        email.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        email.bodyPreview?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredEmails = emails
+        .filter(email => 
+            email.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            email.bodyPreview?.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        .sort((a: any, b: any) => (a.subject || "").localeCompare(b.subject || ""));
 
     const downloadCSV = () => {
         const headers = ["Subject", "Date", "Attachments", "Preview"];

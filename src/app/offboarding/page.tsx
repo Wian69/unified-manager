@@ -54,7 +54,8 @@ function OffboardingContent() {
         try {
             const res = await fetch(`/api/users?search=${encodeURIComponent(globalSearchQuery)}`);
             const data = await res.json();
-            setGlobalSearchResults(data.users || []);
+            const sorted = (data.users || []).sort((a: any, b: any) => (a.displayName || "").localeCompare(b.displayName || ""));
+            setGlobalSearchResults(sorted);
         } catch (err) {
             console.error(err);
         } finally {
@@ -148,11 +149,12 @@ function OffboardingContent() {
                 finalWatchlist = localData;
             }
 
+            // Alphabetical Sort
+            finalWatchlist.sort((a: any, b: any) => (a.displayName || "").localeCompare(b.displayName || ""));
+
             setMonitoredUsers(finalWatchlist);
             localStorage.setItem('employeeWatchlist', JSON.stringify(finalWatchlist));
 
-            setMonitoredUsers(finalWatchlist);
-            
             if (typeof window !== 'undefined' && finalWatchlist.length > 0) {
                 localStorage.setItem('employeeWatchlist', JSON.stringify(finalWatchlist));
             }
@@ -161,7 +163,11 @@ function OffboardingContent() {
             // On total failure, try one last time to pull from local without overwriting
             if (typeof window !== 'undefined') {
                 const stored = localStorage.getItem('employeeWatchlist');
-                if (stored) setMonitoredUsers(JSON.parse(stored));
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    parsed.sort((a: any, b: any) => (a.displayName || "").localeCompare(b.displayName || ""));
+                    setMonitoredUsers(parsed);
+                }
             }
         } finally {
             setLoading(false);

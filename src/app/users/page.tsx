@@ -156,6 +156,7 @@ export default function UsersPage() {
             acc[location] = [];
         }
         acc[location].push(user);
+        acc[location].sort((a: any, b: any) => (a.displayName || "").localeCompare(b.displayName || ""));
         return acc;
     }, {});
 

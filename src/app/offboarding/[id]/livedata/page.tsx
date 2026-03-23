@@ -369,7 +369,7 @@ export default function LiveDataDashboard() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-800/50">
-                                {results['Programs'].data.map((p: any, i: number) => (
+                                {(results['Programs'].data || []).sort((a: any, b: any) => (a.DisplayName || "").localeCompare(b.DisplayName || "")).map((p: any, i: number) => (
                                     <tr key={i} className="hover:bg-slate-800/30 transition-colors">
                                         <td className="px-6 py-3 text-slate-200">{p.DisplayName}</td>
                                         <td className="px-6 py-3 text-emerald-400 font-mono text-xs">{p.DisplayVersion || '-'}</td>

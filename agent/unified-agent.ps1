@@ -5,6 +5,16 @@ param(
     [string]$ServerUrl = "https://unified-manager.eqncs.com"
 )
 
+# Check for Administrator privileges (Required for scheduling tasks)
+$currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+if (-not $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    Write-Host "`n[ERROR] CRITICAL: This script must be run with Administrator privileges.`n" -ForegroundColor Red
+    Write-Host "Please right-click PowerShell and 'Run as Administrator'.`n"
+    Write-Host "Press Enter to exit..."
+    Read-Host
+    exit 1
+}
+
 $AgentId = (Get-CimInstance Win32_ComputerSystemProduct).UUID
 $SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
 $Version = "1.0.0"
