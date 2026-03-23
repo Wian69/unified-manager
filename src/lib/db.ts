@@ -22,9 +22,17 @@ const kv = createClient({
     token: KV_REST_API_TOKEN!,
 });
 
+// Zero-Config Volatile Memory (for when no DB is linked)
+const memoryStore: Record<string, any> = {
+    agents: {},
+    commands: [],
+    watchlist: [],
+    results: {}
+};
+
 async function ensureFileSync(file: string, initialData: any) {
     if (IS_VERCEL && !IS_PROD) {
-        console.warn(`[DB] Warning: Running on Vercel without KV_URL. Filesystem is read-only.`);
+        // Use memoryStore if we are on Vercel without KV
         return;
     }
     if (!fs.existsSync(file)) {
@@ -53,8 +61,7 @@ async function getData<T>(key: string, filePath: string, defaultValue: T): Promi
         }
     }
     if (IS_VERCEL) {
-        console.warn(`[DB] Warning: No KV_URL on Vercel. Returning default for ${key}`);
-        return defaultValue;
+        return (memoryStore as any)[key] || defaultValue;
     }
     await initDB();
     await ensureFileSync(filePath, defaultValue);
@@ -72,7 +79,7 @@ async function saveData<T>(key: string, filePath: string, data: T): Promise<void
         }
     }
     if (IS_VERCEL) {
-        console.error(`[DB] ERROR: Cannot save ${key} - No Vercel KV connected and FS is read-only.`);
+        (memoryStore as any)[key] = data;
         return;
     }
     await initDB();
