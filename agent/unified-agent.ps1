@@ -60,7 +60,7 @@ try {
             Copy-Item -Path $CurrentPath -Destination $ScriptPath -Force
         } else {
             # Executed from memory (iex), we must download ourselves to disk
-            Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile "$ScriptPath" -Force
+            Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile "$ScriptPath"
         }
         
         # Initial Config
@@ -164,7 +164,7 @@ try {
                 # Update Check (Redundant Path 2: Heartbeat JSON)
                 if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]$Version) -and -not $UpdateTriggered) {
                      Log-Message "Update Found (Heartbeat)! Version $($Response.latestVersion). Downloading..."
-                     Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile "$ScriptPath.new" -Force
+                     Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile "$ScriptPath.new"
                      $UpdateTriggered = $true
                 }
 
