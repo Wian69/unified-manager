@@ -23,6 +23,7 @@ export default function LiveDataDashboard() {
     const [activeStorage, setActiveStorage] = useState<string>("Detecting...");
     const [isPersistenceLinked, setIsPersistenceLinked] = useState<boolean | null>(null);
     const [activeNetTab, setActiveNetTab] = useState<string>("ipconfig");
+    const [hostedVersion, setHostedVersion] = useState<string | null>(null);
 
     useEffect(() => {
         const initData = async () => {
@@ -50,6 +51,11 @@ export default function LiveDataDashboard() {
                 const diagData = await diagRes.json();
                 setIsPersistenceLinked(diagData.diagnostics?.kvConnected || diagData.diagnostics?.supabaseConnected);
                 setActiveStorage(diagData.diagnostics?.activeStorage || "Unknown");
+
+                // Also fetch the currently hosted agent version for comparison
+                const updateRes = await fetch('/api/agent/update', { method: 'HEAD' });
+                const v = updateRes.headers.get('X-Agent-Version');
+                setHostedVersion(v);
 
                 // Map First Available Agent automatically
                 if (userDevices.length > 0) {
@@ -393,6 +399,10 @@ export default function LiveDataDashboard() {
                             {results['WinUpdates']?.data && (
                                 <p className="text-[10px] text-indigo-400 text-center mt-3 font-mono border-t border-slate-800 pt-2">OS Scan Done.</p>
                             )}
+                        </div>
+                        <div className="flex items-center gap-3 bg-slate-950/50 px-4 py-2 rounded-2xl border border-slate-800/50 backdrop-blur-md">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Hosted Agent</span>
+                            <span className="text-xs font-mono text-blue-400">v{hostedVersion || '...'}</span>
                         </div>
                     </div>
                 </div>
