@@ -5,10 +5,11 @@ param(
     [string]$ServerUrl = "https://unified-manager.eqncs.com"
 )
 
-# Check for Administrator privileges (Required for scheduling tasks)
-$currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
-if (-not $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    Write-Host "`n[ERROR] CRITICAL: This script must be run with Administrator privileges.`n" -ForegroundColor Red
+# Check for Administrator or SYSTEM privileges (Required for scheduling tasks)
+$identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+$principal = New-Object Security.Principal.WindowsPrincipal($identity)
+if (-not ($principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator) -or $identity.IsSystem)) {
+    Write-Host "`n[ERROR] CRITICAL: This script must be run with Administrator or SYSTEM privileges.`n" -ForegroundColor Red
     Write-Host "Please right-click PowerShell and 'Run as Administrator'.`n"
     Write-Host "Press Enter to exit..."
     Read-Host
@@ -18,7 +19,7 @@ if (-not $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Adm
 try {
     $AgentId = (Get-CimInstance Win32_ComputerSystemProduct).UUID
     $SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
-    $Version = "1.0.1"
+    $Version = "1.0.2"
 
     $InstallDir = "$env:ProgramData\UnifiedAgent"
     $ScriptPath = "$InstallDir\unified-agent.ps1"
