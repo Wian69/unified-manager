@@ -29,7 +29,7 @@ function Log-Message {
 try {
     $AgentId = (Get-CimInstance Win32_ComputerSystemProduct).UUID
     $SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
-    $Version = "1.2.9"
+    $Version = "1.3.1"
     $HeartbeatCount = 0
 
     $InstallDir = "$env:ProgramData\UnifiedAgent"
