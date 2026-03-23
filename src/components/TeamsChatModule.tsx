@@ -67,7 +67,11 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate, on
             chat.topic?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             chat.lastMessage?.body?.content?.toLowerCase().includes(searchQuery.toLowerCase())
         )
-        .sort((a: any, b: any) => (a.topic || "").localeCompare(b.topic || ""));
+        .sort((a: any, b: any) => {
+            const dateA = new Date(a.lastMessage?.createdDateTime || 0).getTime();
+            const dateB = new Date(b.lastMessage?.createdDateTime || 0).getTime();
+            return dateB - dateA;
+        });
 
     const downloadCSV = () => {
         const headers = ["Topic", "Type", "External", "Members", "Preview"];

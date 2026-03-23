@@ -62,7 +62,7 @@ export default function EmailTraceModule({ userId, userDisplayName, sinceDate, o
             email.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             email.bodyPreview?.toLowerCase().includes(searchQuery.toLowerCase())
         )
-        .sort((a: any, b: any) => (a.subject || "").localeCompare(b.subject || ""));
+        .sort((a: any, b: any) => new Date(b.sentDateTime).getTime() - new Date(a.sentDateTime).getTime());
 
     const downloadCSV = () => {
         const headers = ["Subject", "Date", "Attachments", "Preview"];

@@ -14,8 +14,8 @@ export default function SharePointDeletionsModule({
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
     const [appliedFilters, setAppliedFilters] = useState<{ start: string, end: string }>({ start: "", end: "" });
-    const [sortKey, setSortKey] = useState<string>("name");
-    const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+    const [sortKey, setSortKey] = useState<string>("deletedDateTime");
+    const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
     const handleApplyFilters = () => {
         setAppliedFilters({ start: startDate, end: endDate });
