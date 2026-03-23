@@ -11,7 +11,7 @@ const WATCHLIST_FILE = path.join(DB_DIR, 'watchlist.json');
 const RESULTS_FILE = path.join(DB_DIR, 'results.json');
 
 // 1. Vercel KV Config
-const rawUrl = process.env.STORAGE_URL || process.env.KV_URL || "";
+const rawUrl = process.env.STORAGE_URL || process.env.KV_REST_API_URL || process.env.KV_URL || "";
 const KV_URL = rawUrl.startsWith('https://') ? rawUrl : undefined;
 const KV_REST_API_TOKEN = process.env.STORAGE_REST_API_TOKEN || process.env.KV_REST_API_TOKEN;
 const IS_KV = KV_URL !== undefined && KV_REST_API_TOKEN !== undefined;

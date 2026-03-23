@@ -93,7 +93,7 @@ export default function LiveDataDashboard() {
             const fetchResults = async () => {
                 try {
                     setPolling(true);
-                    const res = await fetch(`/api/agent/result?agentId=${selectedAgentId}`);
+                    const res = await fetch(`/api/agent/result?agentId=${selectedAgentId}&t=${Date.now()}`);
                     const data = await res.json();
                     if (data.results) setResults(data.results);
                 } finally {
