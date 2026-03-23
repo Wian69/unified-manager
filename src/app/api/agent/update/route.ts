@@ -1,20 +1,23 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
     try {
         const agentPath = path.join(process.cwd(), 'agent', 'unified-agent.ps1');
         const content = fs.readFileSync(agentPath, 'utf-8');
         
         // Extract version from file header or use a hardcoded fallback
-        // The script header looks like: # Version: 1.2.0
         const versionMatch = content.match(/# Version: ([\d.]+)/);
-        const version = versionMatch ? versionMatch[1] : '1.1.2';
+        const version = versionMatch ? versionMatch[1] : '1.2.0';
 
-        return new Response(content, {
+        // Dynamically inject the correct Server URL from the request host!
+        const host = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : `https://${req.headers.get('host') || 'unified-manager.vercel.app'}`;
+        const finalContent = content.replace(/\$ServerUrl = ".*"/, `$ServerUrl = "${host}"`);
+
+        return new Response(finalContent, {
             headers: {
-                'Content-Type': 'text/plain',
+                'Content-Type': 'text/plain; charset=utf-8',
                 'X-Agent-Version': version,
             },
         });
