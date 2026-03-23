@@ -17,7 +17,8 @@ const KV_REST_API_TOKEN = process.env.STORAGE_REST_API_TOKEN || process.env.KV_R
 const IS_KV = KV_URL !== undefined && KV_REST_API_TOKEN !== undefined;
 
 // 2. Supabase Config
-const SUPABASE_URL = process.env.SUPABASE_URL;
+const rawSupabaseUrl = process.env.SUPABASE_URL || "";
+const SUPABASE_URL = rawSupabaseUrl.startsWith('https://') ? rawSupabaseUrl : undefined;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 const IS_SUPABASE = !!SUPABASE_URL && !!SUPABASE_ANON_KEY;
 
