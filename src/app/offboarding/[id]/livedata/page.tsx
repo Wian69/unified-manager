@@ -20,6 +20,7 @@ export default function LiveDataDashboard() {
     // Results states
     const [results, setResults] = useState<any>({});
     const [polling, setPolling] = useState(false);
+    const [activeStorage, setActiveStorage] = useState<string>("Detecting...");
     const [isPersistenceLinked, setIsPersistenceLinked] = useState<boolean | null>(null);
 
     useEffect(() => {
@@ -46,7 +47,8 @@ export default function LiveDataDashboard() {
                 // Fetch Diagnostic for persistence check
                 const diagRes = await fetch('/api/diag');
                 const diagData = await diagRes.json();
-                setIsPersistenceLinked(diagData.diagnostics?.kvConnected);
+                setIsPersistenceLinked(diagData.diagnostics?.kvConnected || diagData.diagnostics?.supabaseConnected);
+                setActiveStorage(diagData.diagnostics?.activeStorage || "Unknown");
 
                 // Map First Available Agent automatically
                 if (userDevices.length > 0) {
@@ -180,6 +182,7 @@ export default function LiveDataDashboard() {
                             </h1>
                             <p className="text-slate-400 font-mono text-sm mt-1 text-left">
                                 Real-time Device Telemetry & Remote Execution for <span className="text-white font-bold">{user?.displayName}</span>
+                                <span className="text-[10px] font-mono text-slate-500 bg-slate-800/50 px-2 py-0.5 rounded ml-2">Storage: {activeStorage}</span>
                             </p>
                         </div>
                     </div>

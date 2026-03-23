@@ -9,6 +9,7 @@ export default function DevicesPage() {
     const [agents, setAgents] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [activeStorage, setActiveStorage] = useState<string>("Detecting...");
     const [isPersistenceLinked, setIsPersistenceLinked] = useState<boolean | null>(null);
 
     const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
@@ -38,7 +39,8 @@ export default function DevicesPage() {
             // Fetch Diagnostic for persistence check
             const diagRes = await fetch('/api/diag');
             const diagData = await diagRes.json();
-            setIsPersistenceLinked(diagData.diagnostics?.kvConnected);
+            setIsPersistenceLinked(diagData.diagnostics?.kvConnected || diagData.diagnostics?.supabaseConnected);
+            setActiveStorage(diagData.diagnostics?.activeStorage || "Unknown");
         } catch (err: any) {
             console.error("Failed to fetch devices", err);
             setError(err.message || "An unexpected error occurred while fetching devices.");
@@ -103,7 +105,7 @@ export default function DevicesPage() {
                     </div>
                     <div>
                         <h1 className="text-2xl font-bold text-white">Device Management</h1>
-                        <p className="text-slate-400">View and manage all Intune enrolled devices.</p>
+                        <p className="text-slate-400">View and manage all Intune enrolled devices. <span className="text-[10px] font-mono text-slate-500 bg-slate-800/50 px-2 py-0.5 rounded ml-2">Storage: {activeStorage}</span></p>
                     </div>
                 </div>
                 <button 

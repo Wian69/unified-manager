@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { createClient } from '@vercel/kv';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
 const DB_ROOT = process.cwd();
 const DB_DIR = path.join(DB_ROOT, 'data');
@@ -9,24 +10,32 @@ const COMMANDS_FILE = path.join(DB_DIR, 'commands.json');
 const WATCHLIST_FILE = path.join(DB_DIR, 'watchlist.json');
 const RESULTS_FILE = path.join(DB_DIR, 'results.json');
 
-// Support both default KV_URL and custom STORAGE_URL
+// 1. Vercel KV Config
 const rawUrl = process.env.STORAGE_URL || process.env.KV_URL || "";
 const KV_URL = rawUrl.startsWith('https://') ? rawUrl : undefined;
 const KV_REST_API_TOKEN = process.env.STORAGE_REST_API_TOKEN || process.env.KV_REST_API_TOKEN;
+const IS_KV = KV_URL !== undefined && KV_REST_API_TOKEN !== undefined;
 
-const IS_PROD = KV_URL !== undefined && KV_REST_API_TOKEN !== undefined;
+// 2. Supabase Config
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+const IS_SUPABASE = !!SUPABASE_URL && !!SUPABASE_ANON_KEY;
+
+const IS_PROD = IS_KV || IS_SUPABASE;
 const IS_VERCEL = process.env.VERCEL === '1';
 
 let kv: ReturnType<typeof createClient> | null = null;
-if (IS_PROD) {
+if (IS_KV) {
     try {
-        kv = createClient({
-            url: KV_URL!,
-            token: KV_REST_API_TOKEN!,
-        });
-    } catch (err: any) {
-        console.error(`[DB] Failed to initialize KV client: ${err.message}`);
-    }
+        kv = createClient({ url: KV_URL!, token: KV_REST_API_TOKEN! });
+    } catch (err: any) { console.error(`[DB] KV Init Error: ${err.message}`); }
+}
+
+let supabase: any = null;
+if (IS_SUPABASE) {
+    try {
+        supabase = createSupabaseClient(SUPABASE_URL!, SUPABASE_ANON_KEY!);
+    } catch (err: any) { console.error(`[DB] Supabase Init Error: ${err.message}`); }
 }
 
 // Zero-Config Volatile Memory (for when no DB is linked)
@@ -58,13 +67,22 @@ async function initDB() {
 
 // Internal generic helpers
 async function getData<T>(key: string, filePath: string, defaultValue: T): Promise<T> {
-    if (IS_PROD && kv) {
+    if (IS_SUPABASE && supabase) {
+        try {
+            const { data, error } = await supabase.from('kv').select('value').eq('key', key).maybeSingle();
+            if (error) throw error;
+            return data?.value || defaultValue;
+        } catch (err: any) {
+            console.error(`[DB] Supabase Get Error (${key}):`, err.message);
+            // Fallback to KV or logic below if Supabase is misconfigured or table missing
+        }
+    }
+    if (IS_KV && kv) {
         try {
             const data = await kv.get<T>(key);
             return data || defaultValue;
         } catch (err: any) {
             console.error(`[DB] Vercel KV Get Error (${key}):`, err.message);
-            throw new Error(`Cloud Database Error: Please ensure Vercel KV is connected and KV_URL is set. Original: ${err.message}`);
         }
     }
     if (IS_VERCEL) {
@@ -76,13 +94,21 @@ async function getData<T>(key: string, filePath: string, defaultValue: T): Promi
 }
 
 async function saveData<T>(key: string, filePath: string, data: T): Promise<void> {
-    if (IS_PROD && kv) {
+    if (IS_SUPABASE && supabase) {
+        try {
+            const { error } = await supabase.from('kv').upsert({ key, value: data }, { onConflict: 'key' });
+            if (error) throw error;
+            return;
+        } catch (err: any) {
+            console.error(`[DB] Supabase Save Error (${key}):`, err.message);
+        }
+    }
+    if (IS_KV && kv) {
         try {
             await kv.set(key, data);
             return;
         } catch (err: any) {
             console.error(`[DB] Vercel KV Save Error (${key}):`, err.message);
-            throw new Error(`Cloud Database Error: Please ensure Vercel KV is connected and KV_URL is set. Original: ${err.message}`);
         }
     }
     if (IS_VERCEL) {
