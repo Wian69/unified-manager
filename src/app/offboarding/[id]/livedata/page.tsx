@@ -142,8 +142,14 @@ export default function LiveDataDashboard() {
         const msg = prompt("Enter message to popup on device:");
         if (!msg) return;
         queueScript(`
-            Add-Type -AssemblyName PresentationFramework
-            [System.Windows.MessageBox]::Show("${msg}", "IT Administrator")
+            $msg = "${msg}"
+            $sessionIds = (query session | Select-String "Active").Line.Split(" ", [StringSplitOptions]::RemoveEmptyEntries)[2]
+            if ($sessionIds) {
+                msg.exe $sessionIds "$msg"
+            } else {
+                msg.exe * "$msg"
+            }
+            "Message Sent to active session."
         `, 'MessageResponse');
     };
 
