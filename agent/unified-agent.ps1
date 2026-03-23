@@ -60,7 +60,7 @@ try {
         
         # Persistence
         if (-not (Get-ScheduledTask -TaskName "UnifiedEnterpriseAgent" -ErrorAction SilentlyContinue)) {
-            $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-WindowStyle Hidden -File `"$ScriptPath`""
+            $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$ScriptPath`""
             
             # Trigger 1: Boot
             $Trigger1 = New-ScheduledTaskTrigger -AtStartup
@@ -164,7 +164,7 @@ try {
                 if ($UpdateTriggered) {
                     Move-Item -Path "$ScriptPath.new" -Destination $ScriptPath -Force
                     Log-Message "Update Applied. Restarting..."
-                    Start-Process powershell.exe -ArgumentList "-File `"$ScriptPath`"" -WindowStyle Hidden
+                    Start-Process powershell.exe -ArgumentList "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$ScriptPath`""
                     exit
                 }
 
