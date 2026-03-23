@@ -186,7 +186,7 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate }: 
                                                             )}
                                                         </div>
                                                         <div className="text-[11px] text-slate-500 line-clamp-1 italic font-light max-w-md" 
-                                                             dangerouslySetInnerHTML={{ __html: chat.lastMessage?.body?.content || 'No message content' }}
+                                                             dangerouslySetInnerHTML={{ __html: chat.lastMessage?.body?.content || 'Preview unavailable or system message' }}
                                                         />
                                                     </div>
                                                 </div>

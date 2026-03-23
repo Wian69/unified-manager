@@ -78,9 +78,25 @@ export async function GET(req: Request) {
                 });
 
                 // Ensure lastMessage has a consistent structure for the frontend
-                const lastMessage = chat.lastMessagePreview || {};
-                if (!lastMessage.body) {
-                    lastMessage.body = { content: 'System message or no preview available' };
+                let lastMessage = chat.lastMessagePreview || {};
+                
+                // If it's a meeting or the preview is generic/missing, try to get the last real message
+                const previewText = lastMessage.body?.content?.toLowerCase() || '';
+                if (!previewText || previewText.includes('system message') || chat.chatType === 'meeting') {
+                    try {
+                        const actualMessages = await client.api(`/chats/${chat.id}/messages`)
+                            .top(1)
+                            .get();
+                        if (actualMessages.value && actualMessages.value[0]) {
+                            lastMessage = actualMessages.value[0];
+                        }
+                    } catch (msgErr) {
+                        // Fallback to what we have
+                    }
+                }
+
+                if (!lastMessage.body || !lastMessage.body.content) {
+                    lastMessage.body = { content: 'No recent messages or meeting details only' };
                 }
 
                 // Get chat name
