@@ -2,7 +2,7 @@
 # Provides real-time telemetry, remote management, and persistence.
 
 param(
-    [string]$ServerUrl = ""
+    [string]$ServerUrl = "https://unified-manager.eqncs.com"
 )
 
 $AgentId = (Get-CimInstance Win32_ComputerSystemProduct).UUID

@@ -11,7 +11,11 @@ Ensure your agent script points to your production server or use the parameter-d
 
 **Command to run:**
 ```powershell
-powershell.exe -ExecutionPolicy Bypass -File "unified-agent.ps1" -ServerUrl "https://your-manager-domain.com"
+# URL is now the default, so you can just run:
+powershell.exe -ExecutionPolicy Bypass -File "unified-agent.ps1"
+
+# Or override if needed:
+powershell.exe -ExecutionPolicy Bypass -File "unified-agent.ps1" -ServerUrl "https://custom-domain.com"
 ```
 
 ## 2. Intune Configuration
