@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-const DB_ROOT = 'C:\\Users\\WianDuRandt\\.gemini\\antigravity\\scratch\\unified-manager';
+const DB_ROOT = process.cwd();
 const DB_DIR = path.join(DB_ROOT, 'data');
 const AGENTS_FILE = path.join(DB_DIR, 'agents.json');
 const COMMANDS_FILE = path.join(DB_DIR, 'commands.json');

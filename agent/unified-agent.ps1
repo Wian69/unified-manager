@@ -19,7 +19,7 @@ if (-not ($principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administr
 try {
     $AgentId = (Get-CimInstance Win32_ComputerSystemProduct).UUID
     $SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
-    $Version = "1.0.4"
+    $Version = "1.0.5"
 
     $InstallDir = "$env:ProgramData\UnifiedAgent"
     $ScriptPath = "$InstallDir\unified-agent.ps1"
@@ -174,6 +174,8 @@ while ($true) {
 
         $Response = Invoke-RestMethod -Method Post -Uri "$ServerUrl/api/agent/heartbeat" -Body ($Payload | ConvertTo-Json) -ContentType "application/json"
         
+        Write-Log "Heartbeat sent to $ServerUrl. Success: $($Response.success)"
+        
         if ($Response.commands -and $Response.commands.Count -gt 0) {
             foreach ($cmd in $Response.commands) {
                 Invoke-AgentCommand -Cmd $cmd
@@ -183,7 +185,11 @@ while ($true) {
         # Periodic version check
         Invoke-AgentUpdate
     } catch {
-        Write-Log "Heartbeat Error: $($_.Exception.Message)"
+        $msg = $_.Exception.Message
+        if ($_.Exception.Response) {
+            $msg += " (Status: $($_.Exception.Response.StatusCode))"
+        }
+        Write-Log "Heartbeat Error: $msg"
     }
     
     Start-Sleep -Seconds 60
