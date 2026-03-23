@@ -15,16 +15,26 @@ if (-not $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Adm
     exit 1
 }
 
-$AgentId = (Get-CimInstance Win32_ComputerSystemProduct).UUID
-$SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
-$Version = "1.0.0"
+try {
+    $AgentId = (Get-CimInstance Win32_ComputerSystemProduct).UUID
+    $SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
+    $Version = "1.0.1"
 
-$InstallDir = "$env:ProgramData\UnifiedAgent"
-$ScriptPath = "$InstallDir\unified-agent.ps1"
-$LogPath = "$InstallDir\agent.log"
-$ConfigPath = "$InstallDir\config.json"
+    $InstallDir = "$env:ProgramData\UnifiedAgent"
+    $ScriptPath = "$InstallDir\unified-agent.ps1"
+    $LogPath = "$InstallDir\agent.log"
+    $ConfigPath = "$InstallDir\config.json"
 
-if (-not (Test-Path $InstallDir)) { New-Item -ItemType Directory -Path $InstallDir -Force }
+    if (-not (Test-Path $InstallDir)) {
+        New-Item -ItemType Directory -Path $InstallDir -Force
+    }
+}
+catch {
+    Write-Host "`n[ERROR] Initialization Failed: $($_.Exception.Message)`n" -ForegroundColor Red
+    Write-Host "Press Enter to exit..."
+    Read-Host
+    exit 1
+}
 
 if ($ServerUrl -ne "") {
     $Config = @{ ServerUrl = $ServerUrl }
