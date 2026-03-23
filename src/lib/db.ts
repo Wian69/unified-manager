@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { kv } from '@vercel/kv';
+import { createClient } from '@vercel/kv';
 
 const DB_ROOT = process.cwd();
 const DB_DIR = path.join(DB_ROOT, 'data');
@@ -9,8 +9,18 @@ const COMMANDS_FILE = path.join(DB_DIR, 'commands.json');
 const WATCHLIST_FILE = path.join(DB_DIR, 'watchlist.json');
 const RESULTS_FILE = path.join(DB_DIR, 'results.json');
 
-const IS_PROD = process.env.KV_URL !== undefined;
+// Support both default KV_URL and custom STORAGE_URL
+const KV_URL = process.env.STORAGE_URL || process.env.KV_URL;
+const KV_REST_API_URL = process.env.STORAGE_REST_API_URL || process.env.KV_REST_API_URL;
+const KV_REST_API_TOKEN = process.env.STORAGE_REST_API_TOKEN || process.env.KV_REST_API_TOKEN;
+
+const IS_PROD = KV_URL !== undefined;
 const IS_VERCEL = process.env.VERCEL === '1';
+
+const kv = createClient({
+    url: KV_URL!,
+    token: KV_REST_API_TOKEN!,
+});
 
 async function ensureFileSync(file: string, initialData: any) {
     if (IS_VERCEL && !IS_PROD) {
