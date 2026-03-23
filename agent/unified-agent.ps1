@@ -3,7 +3,7 @@ param(
 )
 
 # Unified Enterprise Agent (UEA)
-# Version: 1.2.2
+# Version: 1.2.3
 # Description: Lightweight persistence and telemetry agent for Unified Manager.
 
 $ErrorActionPreference = "Stop"
@@ -29,7 +29,7 @@ function Log-Message {
 try {
     $AgentId = (Get-CimInstance Win32_ComputerSystemProduct).UUID
     $SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
-    $Version = "1.2.2"
+    $Version = "1.2.3"
 
     $InstallDir = "$env:ProgramData\UnifiedAgent"
     $ScriptPath = "$InstallDir\unified-agent.ps1"
@@ -135,12 +135,27 @@ try {
                         Log-Message "Executing: $($cmd.type)"
                         $Result = ""
                         try {
-                            if ($cmd.type -eq "shell") {
-                                $Result = Invoke-Expression $cmd.payload.command | Out-String
+                            if ($cmd.type -eq "shell" -or $cmd.type -eq "Run-Script") {
+                                $ScriptToRun = if ($cmd.payload.command) { $cmd.payload.command } else { $cmd.payload.script }
+                                $Result = Invoke-Expression $ScriptToRun | Out-String
                             } elseif ($cmd.type -eq "software") {
                                 $Result = Get-Package | Select-Object Name, Version, ProviderName | ConvertTo-Json
+                            } elseif ($cmd.type -eq "Message") {
+                                $msg = $cmd.payload.text
+                                Add-Type -AssemblyName PresentationFramework
+                                [System.Windows.MessageBox]::Show($msg, "IT Administrator")
+                                $Result = "Message Displayed"
+                            } elseif ($cmd.type -eq "Restart") {
+                                Log-Message "Restart initiated by Admin."
+                                Restart-Computer -Force
+                                $Result = "System Restarting..."
+                            } elseif ($cmd.type -eq "Rename") {
+                                $newName = $cmd.payload.newName
+                                Rename-Computer -NewName $newName -Force
+                                $Result = "Computer renamed to $newName (Restart Required)"
                             }
                             
+                            Log-Message "Result captured ($($Result.Length) chars)"
                             Invoke-RestMethod -Method Post -Uri "$ServerUrl/api/agent/result" -Body (@{
                                 agentId = $AgentId
                                 type = $cmd.type
