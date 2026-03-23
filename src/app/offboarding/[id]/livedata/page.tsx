@@ -56,7 +56,19 @@ export default function LiveDataDashboard() {
             }
         };
 
-        if (userId) initData();
+        const fetchAgentsOnly = async () => {
+            try {
+                const agentRes = await fetch('/api/agent/list');
+                const agentData = await agentRes.json();
+                setAgents(agentData.agents || []);
+            } catch (e) { console.error("Polling error", e); }
+        };
+
+        if (userId) {
+            initData();
+            const interval = setInterval(fetchAgentsOnly, 10000);
+            return () => clearInterval(interval);
+        }
     }, [userId]);
 
     // Poll for results if an agent is selected
