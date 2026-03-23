@@ -279,8 +279,13 @@ export default function LiveDataDashboard() {
                 <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden flex flex-col justify-center items-center text-center">
                     <div className={`w-4 h-4 rounded-full ${currentAgent ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)] animate-pulse' : 'bg-slate-700'} mb-3`} />
                     <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">Heartbeat Status</p>
-                    <p className={`text-sm font-bold ${currentAgent ? 'text-emerald-400' : 'text-slate-500'}`}>
-                        {currentAgent ? 'ONLINE, ACTIVE' : 'OFFLINE'}
+                    <p className={`text-sm font-bold flex flex-col items-center ${currentAgent ? 'text-emerald-400' : 'text-slate-500'}`}>
+                        <span>{currentAgent ? 'ONLINE, ACTIVE' : 'OFFLINE'}</span>
+                        {currentAgent?.lastSeen && (
+                            <span className="text-[10px] text-emerald-400/80 font-mono mt-1 px-2 py-0.5 bg-emerald-500/10 rounded-full border border-emerald-500/20">
+                                Last Seen: {Math.max(0, Math.floor((new Date().getTime() - new Date(currentAgent.lastSeen).getTime()) / 1000))}s ago
+                            </span>
+                        )}
                     </p>
                 </div>
             </div>
