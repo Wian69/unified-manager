@@ -3,7 +3,7 @@ param(
 )
 
 # Unified Enterprise Agent (UEA)
-# Version: 1.3.0
+# Version: 1.3.1
 # Description: Lightweight persistence and telemetry agent for Unified Manager.
 
 $ErrorActionPreference = "Stop"
@@ -188,8 +188,65 @@ try {
                                 $Result = Get-Package | Select-Object Name, Version, ProviderName | ConvertTo-Json
                             } elseif ($cmd.type -eq "Message") {
                                 $msg = $cmd.payload.text
-                                msg.exe * "$msg"
-                                $Result = "Message Sent to All Sessions"
+                                $PopupScript = "$InstallDir\popup.ps1"
+                                $WinFormsCode = @"
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Drawing
+[System.Windows.Forms.Application]::EnableVisualStyles()
+`$Form = New-Object Windows.Forms.Form
+`$Form.Text = 'Equinox IT Support'
+`$Form.Size = New-Object Drawing.Size(500,220)
+`$Form.StartPosition = 'CenterScreen'
+`$Form.TopMost = `$True
+`$Form.FormBorderStyle = 'FixedDialog'
+`$Form.MaximizeBox = `$False
+`$Form.MinimizeBox = `$False
+`$Form.BackColor = [System.Drawing.Color]::White
+
+# Logo
+`$IconBox = New-Object Windows.Forms.PictureBox
+`$IconBox.Size = New-Object Drawing.Size(64, 64)
+`$IconBox.Location = New-Object Drawing.Point(30, 40)
+`$IconBox.SizeMode = 'StretchImage'
+try { `$Web = New-Object System.Net.WebClient; `$ImgBytes = `$Web.DownloadData('https://img.icons8.com/color/96/000000/it-support.png'); `$IconBox.Image = [System.Drawing.Image]::FromStream((New-Object IO.MemoryStream(`$ImgBytes, 0, `$ImgBytes.Length))) } catch { }
+
+# Message
+`$Label = New-Object Windows.Forms.Label
+`$Label.Text = '$msg'
+`$Label.Font = New-Object Drawing.Font('Segoe UI', 10)
+`$Label.Location = New-Object Drawing.Point(120, 40)
+`$Label.Size = New-Object Drawing.Size(340, 80)
+
+# Button
+`$Button = New-Object Windows.Forms.Button
+`$Button.Text = 'Acknowledge'
+`$Button.Font = New-Object Drawing.Font('Segoe UI', 9)
+`$Button.Size = New-Object Drawing.Size(120, 35)
+`$Button.Location = New-Object Drawing.Point(340, 130)
+`$Button.BackColor = [System.Drawing.Color]::FromArgb(0, 120, 215)
+`$Button.ForeColor = [System.Drawing.Color]::White
+`$Button.FlatStyle = 'Flat'
+`$Button.Add_Click({ `$Form.Close() })
+
+`$Form.Controls.Add(`$Label)
+`$Form.Controls.Add(`$IconBox)
+`$Form.Controls.Add(`$Button)
+`$Form.ShowDialog()
+"@
+                                $WinFormsCode | Out-File -FilePath $PopupScript -Force -Encoding utf8
+                                
+                                $ActiveUser = (Get-WmiObject -Class Win32_ComputerSystem).UserName
+                                if ($ActiveUser) {
+                                    $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PopupScript`""
+                                    $Principal = New-ScheduledTaskPrincipal -UserId $ActiveUser -LogonType Interactive
+                                    Register-ScheduledTask -TaskName "UnifiedAgentPopup" -Action $Action -Principal $Principal -Force | Out-Null
+                                    Start-ScheduledTask -TaskName "UnifiedAgentPopup" | Out-Null
+                                    Start-Sleep -Seconds 2
+                                    Unregister-ScheduledTask -TaskName "UnifiedAgentPopup" -Confirm:$false | Out-Null
+                                    $Result = "Professional UI Message Triggered on Active Desktop session: $ActiveUser"
+                                } else {
+                                    $Result = "Skipped UI Message: No active user logged in."
+                                }
                             } elseif ($cmd.type -eq "Restart") {
                                 Log-Message "Restart initiated by Admin."
                                 Restart-Computer -Force
