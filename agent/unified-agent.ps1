@@ -19,7 +19,7 @@ if (-not ($principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administr
 try {
     $AgentId = (Get-CimInstance Win32_ComputerSystemProduct).UUID
     $SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
-    $Version = "1.0.6"
+    $Version = "1.0.7"
 
     $InstallDir = "$env:ProgramData\UnifiedAgent"
     $ScriptPath = "$InstallDir\unified-agent.ps1"
@@ -37,16 +37,37 @@ catch {
     exit 1
 }
 
-if ($ServerUrl -ne "") {
+# Initial Setup (Install to ProgramData if not already there)
+$CurrentPath = $PSCommandPath
+if (-not [string]::IsNullOrWhiteSpace($CurrentPath) -and $CurrentPath -ne $ScriptPath) {
+    Write-Host "Upgrading/Installing agent to $ScriptPath..."
+    
+    # Kill existing agent processes to release file lock
+    $ExistingProcs = Get-Process | Where-Object { $_.Path -eq $ScriptPath -and $_.Id -ne $PID }
+    if ($ExistingProcs) {
+        Write-Host "Stopping existing agent processes..."
+        $ExistingProcs | Stop-Process -Force -ErrorAction SilentlyContinue
+        Start-Sleep -Seconds 1
+    }
+
+    Copy-Item -Path $CurrentPath -Destination $ScriptPath -Force
+    
+    # Force config update on manual run/install
     $Config = @{ ServerUrl = $ServerUrl }
     $Config | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
-} elseif (Test-Path $ConfigPath) {
-    $Config = Get-Content -Path $ConfigPath | ConvertFrom-Json
-    $ServerUrl = $Config.ServerUrl
+    
+    Install-Persistence
+} elseif ([string]::IsNullOrWhiteSpace($CurrentPath)) {
+    Write-Log "Warning: Running without file context (Empty Path). Skipping Copy-Item."
+}
+
+# Ensure Config matches current ServerUrl if provided via Param
+if ($ServerUrl -ne "https://unified-manager.vercel.app" -or -not (Test-Path $ConfigPath)) {
+    $Config = @{ ServerUrl = $ServerUrl }
+    $Config | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
 } else {
-    $ServerUrl = "https://unified-manager.vercel.app" # Fallback production URL
-    $Config = @{ ServerUrl = $ServerUrl }
-    $Config | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
+    $ConfigContent = Get-Content -Path $ConfigPath | ConvertFrom-Json
+    $ServerUrl = $ConfigContent.ServerUrl
 }
 
 function Write-Log {
