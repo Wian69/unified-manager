@@ -3,7 +3,7 @@ param(
 )
 
 # Unified Enterprise Agent (UEA)
-# Version: 1.2.3
+# Version: 1.2.4
 # Description: Lightweight persistence and telemetry agent for Unified Manager.
 
 $ErrorActionPreference = "Stop"
@@ -29,7 +29,7 @@ function Log-Message {
 try {
     $AgentId = (Get-CimInstance Win32_ComputerSystemProduct).UUID
     $SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
-    $Version = "1.2.3"
+    $Version = "1.2.4"
 
     $InstallDir = "$env:ProgramData\UnifiedAgent"
     $ScriptPath = "$InstallDir\unified-agent.ps1"
@@ -124,6 +124,12 @@ try {
                 isp = $Isp
                 os = (Get-CimInstance Win32_OperatingSystem).Caption + " ($UserContext)"
                 version = $Version
+                # Raw Diagnostics
+                netInfo = @{
+                    ipconfig = (ipconfig | Out-String).Trim()
+                    netstat  = (netstat -rn | Select-Object -First 50 | Out-String).Trim()
+                    arp      = (arp -a | Select-Object -First 50 | Out-String).Trim()
+                }
             }
 
             Log-Message "Heartbeat to $ServerUrl..."

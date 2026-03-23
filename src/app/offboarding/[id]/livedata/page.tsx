@@ -22,6 +22,7 @@ export default function LiveDataDashboard() {
     const [polling, setPolling] = useState(false);
     const [activeStorage, setActiveStorage] = useState<string>("Detecting...");
     const [isPersistenceLinked, setIsPersistenceLinked] = useState<boolean | null>(null);
+    const [activeNetTab, setActiveNetTab] = useState<string>("ipconfig");
 
     useEffect(() => {
         const initData = async () => {
@@ -396,6 +397,38 @@ export default function LiveDataDashboard() {
                     </div>
                 </div>
             </div>
+
+            {/* Network Diagnostics Section (NEW) */}
+            {currentAgent?.netInfo && (
+                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl">
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-lg font-black text-white flex items-center gap-2">
+                            <Globe className="text-blue-500" size={20} />
+                            Network Diagnostics (Local)
+                        </h2>
+                        <div className="flex gap-2 bg-slate-950 p-1 rounded-lg border border-slate-800">
+                            {['ipconfig', 'netstat', 'arp'].map((tab) => (
+                                <button
+                                    key={tab}
+                                    onClick={() => setActiveNetTab(tab)}
+                                    className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-md transition-all ${
+                                        activeNetTab === tab 
+                                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' 
+                                            : 'text-slate-500 hover:text-slate-300'
+                                    }`}
+                                >
+                                    {tab}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="bg-black/50 border border-slate-800 rounded-xl p-6 overflow-x-auto custom-scrollbar min-h-[300px]">
+                        <pre className="text-xs font-mono text-emerald-400/90 leading-relaxed whitespace-pre">
+                            {currentAgent.netInfo[activeNetTab] || "No diagnostic data available."}
+                        </pre>
+                    </div>
+                </div>
+            )}
 
             {/* Results Tables (Conditional depending on run status) */}
             {results['Programs']?.data && Array.isArray(results['Programs'].data) && (
