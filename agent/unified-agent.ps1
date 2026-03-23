@@ -19,7 +19,7 @@ if (-not ($principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administr
 try {
     $AgentId = (Get-CimInstance Win32_ComputerSystemProduct).UUID
     $SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
-    $Version = "1.0.8"
+    $Version = "1.0.9"
 
     $InstallDir = "$env:ProgramData\UnifiedAgent"
     $ScriptPath = "$InstallDir\unified-agent.ps1"
@@ -61,13 +61,30 @@ if (-not [string]::IsNullOrWhiteSpace($CurrentPath) -and $CurrentPath -ne $Scrip
     Write-Log "Warning: Running without file context (Empty Path). Skipping Copy-Item."
 }
 
-# Ensure Config matches current ServerUrl if provided via Param
-if ($ServerUrl -ne "https://unified-manager.vercel.app" -or -not (Test-Path $ConfigPath)) {
+# Ensure Config matches current ServerUrl (and wipe legacy placeholders)
+$LegacyPlaceholder = "https://unified-manager.eqncs.com"
+if (Test-Path $ConfigPath) {
+    $ConfigContent = Get-Content -Path $ConfigPath | ConvertFrom-Json
+    $StoredUrl = $ConfigContent.ServerUrl
+    
+    # If stored URL is the old placeholder, force update to the new default
+    if ($StoredUrl -eq $LegacyPlaceholder -and $ServerUrl -ne $LegacyPlaceholder) {
+        Write-Log "Legacy placeholder detected. Updating to $ServerUrl."
+        $Config = @{ ServerUrl = $ServerUrl }
+        $Config | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
+    } elseif ($PSBoundParameters.ContainsKey('ServerUrl')) {
+        # If user explicitly passed a new URL, update the config
+        Write-Log "New ServerUrl provided via parameter. Updating config."
+        $Config = @{ ServerUrl = $ServerUrl }
+        $Config | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
+    } else {
+        # Otherwise use what's in the config
+        $ServerUrl = $StoredUrl
+    }
+} else {
+    # No config exists, create it
     $Config = @{ ServerUrl = $ServerUrl }
     $Config | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
-} else {
-    $ConfigContent = Get-Content -Path $ConfigPath | ConvertFrom-Json
-    $ServerUrl = $ConfigContent.ServerUrl
 }
 
 function Write-Log {
