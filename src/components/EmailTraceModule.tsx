@@ -82,7 +82,7 @@ export default function EmailTraceModule({ userId, userDisplayName, sinceDate, o
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             {/* Control Bar */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-950 p-6 rounded-3xl border border-slate-800">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-950 p-6 rounded-2xl border border-slate-800">
                 <div className="flex items-center gap-3">
                     <div className="p-3 bg-blue-500/10 rounded-2xl border border-blue-500/20">
                         <Mail size={24} className="text-blue-500" />
@@ -153,7 +153,7 @@ export default function EmailTraceModule({ userId, userDisplayName, sinceDate, o
                     </button>
                 </div>
             ) : (
-                <div className="bg-slate-950 rounded-[2.5rem] border border-slate-800 overflow-hidden shadow-2xl shadow-black/50">
+                <div className="bg-slate-950 rounded-3xl border border-slate-800 overflow-hidden shadow-2xl shadow-black/50">
                     <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/30 backdrop-blur-xl">
                         <div className="flex items-center gap-4">
                             <h4 className="font-bold text-slate-300 text-sm">Messages Discovered ({filteredEmails.length})</h4>

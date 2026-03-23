@@ -88,10 +88,10 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate, on
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             {/* Control Bar */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-950 p-6 rounded-3xl border border-slate-800">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-950 p-6 rounded-2xl border border-slate-800">
                 <div className="flex items-center gap-3">
-                    <div className="p-3 bg-indigo-500/10 rounded-2xl border border-indigo-500/20">
-                        <MessageSquare size={24} className="text-indigo-500" />
+                    <div className="p-3 bg-blue-500/10 rounded-2xl border border-blue-500/20">
+                        <MessageSquare size={24} className="text-blue-500" />
                     </div>
                     <div>
                         <h3 className="text-xl font-bold text-white uppercase tracking-tight">Teams Communication</h3>
@@ -111,7 +111,7 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate, on
                             href={oneDriveUrl} 
                             target="_blank" 
                             rel="noopener noreferrer"
-                            className="flex items-center gap-2 px-4 py-2 bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-500 border border-indigo-500/20 rounded-xl transition-all text-[10px] font-black uppercase tracking-widest"
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-600/10 hover:bg-blue-600/20 text-blue-500 border border-blue-500/20 rounded-xl transition-all text-[10px] font-black uppercase tracking-widest"
                         >
                             <ExternalLink size={14} /> OneDrive
                         </a>
@@ -127,7 +127,7 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate, on
 
             {loading ? (
                 <div className="flex flex-col items-center justify-center py-20 text-slate-500 gap-4">
-                    <RefreshCw size={40} className="animate-spin text-indigo-500" />
+                    <RefreshCw size={40} className="animate-spin text-blue-500" />
                     <p className="font-mono text-[10px] uppercase tracking-[0.2em]">Intercepting Teams Activity...</p>
                 </div>
             ) : error ? (
@@ -143,7 +143,7 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate, on
                     </button>
                 </div>
             ) : (
-                <div className="bg-slate-950 rounded-[2.5rem] border border-slate-800 overflow-hidden shadow-2xl shadow-black/50">
+                <div className="bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl shadow-black/50">
                     <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/30 backdrop-blur-xl">
                         <div className="flex items-center gap-4">
                             <h4 className="font-bold text-slate-300 text-sm">Active Conversations ({filteredChats.length})</h4>
@@ -157,7 +157,7 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate, on
                             <input 
                                 type="text" 
                                 placeholder="Filter by person or content..." 
-                                className="bg-slate-900/50 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white w-64 focus:ring-1 focus:ring-indigo-500/50 transition-all"
+                                className="bg-slate-900/50 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white w-64 focus:ring-1 focus:ring-blue-500/50 transition-all"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
@@ -178,7 +178,7 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate, on
                                 {filteredChats.map((chat: any) => (
                                     <React.Fragment key={chat.id}>
                                         <tr 
-                                            className="hover:bg-indigo-500/5 cursor-pointer transition-colors group"
+                                            className="hover:bg-blue-500/5 cursor-pointer transition-colors group"
                                             onClick={() => handleExpand(chat.id)}
                                         >
                                             <td className="px-8 py-6">
@@ -187,7 +187,7 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate, on
                                                         {chat.topic ? chat.topic[0] : <Users size={16} />}
                                                     </div>
                                                     <div className="space-y-1">
-                                                        <div className="font-bold text-slate-200 group-hover:text-indigo-400 transition-colors leading-tight flex items-center gap-2">
+                                                        <div className="font-bold text-slate-200 group-hover:text-blue-400 transition-colors leading-tight flex items-center gap-2">
                                                             {chat.topic || 'Unnamed Chat'}
                                                             {chat.isExternal && (
                                                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded text-[9px] font-black uppercase">
@@ -256,7 +256,7 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate, on
                                                                         return (
                                                                             <div key={msg.id} className="flex flex-col items-center py-2">
                                                                                 <div className="px-4 py-1.5 bg-slate-900/50 border border-slate-800 rounded-full text-[10px] text-slate-500 font-mono uppercase tracking-widest flex items-center gap-2">
-                                                                                    <Activity size={10} className="text-indigo-500/50" />
+                                                                                    <Activity size={10} className="text-blue-500/50" />
                                                                                     <span dangerouslySetInnerHTML={{ __html: msg.body?.content || 'System Event' }} />
                                                                                     <span>• {new Date(msg.createdDateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                                                                 </div>
@@ -271,7 +271,7 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate, on
                                                                             </div>
                                                                             <div className={`p-4 rounded-2xl max-w-[80%] text-sm shadow-xl ${
                                                                                 msg.from?.user?.id === userId 
-                                                                                    ? 'bg-indigo-600 text-white rounded-tr-none' 
+                                                                                    ? 'bg-blue-600 text-white rounded-tr-none' 
                                                                                     : 'bg-slate-800 text-slate-200 rounded-tl-none border border-slate-700'
                                                                             }`}>
                                                                                 <div dangerouslySetInnerHTML={{ __html: msg.body?.content }} />

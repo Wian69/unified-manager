@@ -104,10 +104,10 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
             </div>
 
             {/* Profile Overview Card */}
-            <div className="bg-slate-950/50 backdrop-blur-2xl p-10 rounded-[2.5rem] border border-slate-800 shadow-2xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 blur-[100px] pointer-events-none" />
+            <div className="bg-slate-900/50 backdrop-blur-xl p-10 rounded-3xl border border-slate-800 shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/5 blur-[80px] pointer-events-none" />
                 <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
-                    <div className="w-32 h-32 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-[2.5rem] flex items-center justify-center text-4xl font-black text-white shadow-2xl">
+                    <div className="w-32 h-32 bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl flex items-center justify-center text-4xl font-black text-white shadow-2xl">
                         {user.displayName.charAt(0)}
                     </div>
                     <div className="text-center md:text-left space-y-2">
@@ -160,7 +160,7 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
                                 </a>
                             )}
                         </div>
-                        <div className="bg-slate-900/40 rounded-[2rem] border border-slate-800/60 p-2 backdrop-blur-md text-left">
+                        <div className="bg-slate-900/40 rounded-2xl border border-slate-800/60 p-2 backdrop-blur-md text-left">
                             <SharePointDeletionsModule 
                                 selectedUser={user} 
                                 recycleBinItems={recycleBinItems}
@@ -189,7 +189,7 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
                         />
                     </section>
 
-                    <section className="bg-slate-950/50 p-10 rounded-[2.5rem] border border-slate-800">
+                    <section className="bg-slate-900/50 p-10 rounded-3xl border border-slate-800">
                         <h3 className="text-xl font-bold text-white mb-8">Data Exfiltration Risk Context</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="bg-slate-900/50 p-8 rounded-3xl border border-slate-800 hover:border-blue-500/30 transition-all">
@@ -209,7 +209,7 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
 
                 {/* Sidebar Details */}
                 <div className="space-y-12">
-                    <section className="bg-slate-900/40 rounded-[2.5rem] border border-slate-800/60 p-8 backdrop-blur-md">
+                    <section className="bg-slate-900/40 rounded-3xl border border-slate-800/60 p-8 backdrop-blur-md">
                         <h3 className="text-lg font-black text-white mb-8 flex items-center gap-3 uppercase tracking-tighter">
                             <Activity size={20} className="text-blue-400" />
                             Live Telemetry Feed
@@ -236,7 +236,7 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
                         </div>
                     </section>
 
-                    <section className="bg-slate-950/50 rounded-[2.5rem] border border-slate-800 p-8">
+                    <section className="bg-slate-900/50 rounded-3xl border border-slate-800 p-8">
                          <h3 className="text-lg font-black text-white mb-6 uppercase tracking-tighter">System Notes</h3>
                          <div className="space-y-4">
                             <div className="text-sm text-slate-400 leading-relaxed italic border-l-2 border-blue-500 pl-4">

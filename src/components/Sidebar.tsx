@@ -26,8 +26,8 @@ export default function Sidebar() {
     return (
         <aside className="w-64 bg-slate-900/50 backdrop-blur-xl border-r border-slate-800 text-slate-300 flex flex-col h-screen fixed z-40">
             <div className="h-16 flex items-center px-6 border-b border-slate-800 bg-slate-950/50">
-                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">
-                    Unified Manager
+                <h1 className="text-xl font-bold text-white tracking-tight">
+                    <span className="text-blue-600">EQUINOX</span> <span className="text-slate-500 font-medium text-lg">MANAGER</span>
                 </h1>
             </div>
             <nav className="flex-1 py-6 flex flex-col gap-2 px-4">

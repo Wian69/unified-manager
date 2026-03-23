@@ -259,7 +259,7 @@ export default function DevicesPage() {
                                                             const newName = prompt("Enter new computer name:");
                                                             if (newName) sendCommand(getAgentForDevice(selectedDeviceData.device.serialNumber).id, 'Rename', { newName });
                                                         }}
-                                                        className="px-4 py-2 bg-slate-800 hover:bg-indigo-600 text-white rounded-lg text-sm font-bold transition-all"
+                                                        className="px-4 py-2 bg-slate-800 hover:bg-blue-600 text-white rounded-lg text-sm font-bold transition-all"
                                                     >
                                                         Rename Device
                                                     </button>

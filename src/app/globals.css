@@ -1,25 +1,49 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0b0f19;
+  --foreground: #e2e8f0;
+  --equinox-blue: #002F6C;
+  --equinox-grey: #808285;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-equinox-blue: var(--equinox-blue);
+  --color-equinox-grey: var(--equinox-grey);
+  
+  /* Overwrite default blue for unified branding */
+  --color-blue-50: #eef4ff;
+  --color-blue-100: #dce7ff;
+  --color-blue-200: #b9d1ff;
+  --color-blue-300: #82afff;
+  --color-blue-400: #4483ff;
+  --color-blue-500: #1a4a8c;
+  --color-blue-600: #002F6C;
+  --color-blue-700: #002452;
+  --color-blue-800: #001e45;
+  --color-blue-900: #00193b;
+  --color-blue-950: #000c22;
+
+  --font-sans: "Arial", "Helvetica", sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   :root {
-    --background: #0b0f19;
-    --foreground: #e2e8f0;
+    --background: #ffffff;
+    --foreground: #171717;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+h1, h2, h3, h4, h5, h6, .font-black, .font-bold {
+  font-weight: 700; /* Arial Bold */
 }
 
 /* Scrollbar styling */

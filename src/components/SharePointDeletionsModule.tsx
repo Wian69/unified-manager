@@ -104,7 +104,7 @@ export default function SharePointDeletionsModule({
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-950 p-6 rounded-3xl border border-slate-800">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-950 p-6 rounded-2xl border border-slate-800">
                 <div className="flex items-center gap-4">
                     {setSelectedUser && (
                         <button onClick={() => setSelectedUser(null)} className="p-2 hover:bg-slate-800 rounded-xl transition-colors">
@@ -179,7 +179,7 @@ export default function SharePointDeletionsModule({
                     <p className="text-slate-400 max-w-md mx-auto">{error}</p>
                 </div>
             ) : (
-                <div className="bg-slate-950 rounded-3xl border border-slate-800 overflow-hidden">
+                <div className="bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden">
                     <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
                         <div className="flex flex-col gap-1">
                             <h4 className="font-bold text-slate-300">File Deletions Found ({filteredItems.length})</h4>

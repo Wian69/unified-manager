@@ -30,7 +30,7 @@ export default function SharePointPage() {
         <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex justify-between items-center bg-slate-900/40 p-6 rounded-2xl border border-slate-800/60 backdrop-blur-md">
                 <div className="flex items-center gap-4">
-                    <div className="p-3 bg-emerald-500/20 text-emerald-400 rounded-xl">
+                    <div className="p-3 bg-blue-600/10 text-blue-600 rounded-xl">
                         <HardDrive size={28} />
                     </div>
                     <div>

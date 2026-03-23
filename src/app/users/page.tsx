@@ -11,7 +11,7 @@ const InputField = ({ label, field, value, onChange, readOnly = false }: { label
             value={value || ''} 
             onChange={(e) => onChange && onChange(e.target.value)}
             readOnly={readOnly}
-            className={`w-full bg-slate-900 border ${readOnly ? 'border-slate-800 text-slate-500 cursor-not-allowed' : 'border-slate-700 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500'} rounded-lg px-4 py-2.5 outline-none transition-all`}
+            className={`w-full bg-slate-900 border ${readOnly ? 'border-slate-800 text-slate-500 cursor-not-allowed' : 'border-slate-700 text-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600'} rounded-lg px-4 py-2.5 outline-none transition-all`}
         />
     </div>
 );
@@ -183,7 +183,7 @@ export default function UsersPage() {
         <div className="space-y-10 animate-in fade-in duration-500 relative">
             <div className="flex justify-between items-center bg-slate-900/40 p-6 rounded-2xl border border-slate-800/60 backdrop-blur-md">
                 <div className="flex items-center gap-4">
-                    <div className="p-3 bg-purple-500/20 text-purple-400 rounded-xl">
+                    <div className="p-3 bg-blue-600/10 text-blue-600 rounded-xl">
                         <Users size={28} />
                     </div>
                     <div>
@@ -211,7 +211,7 @@ export default function UsersPage() {
 
             {loading ? (
                 <div className="bg-slate-900/40 rounded-2xl border border-slate-800/60 p-12 text-center text-slate-500 backdrop-blur-md">
-                    <RefreshCw className="animate-spin text-purple-400 mx-auto mb-4" size={32} />
+                    <RefreshCw className="animate-spin text-blue-600 mx-auto mb-4" size={32} />
                     Loading all users and categorizing by location...
                 </div>
             ) : sortedLocations.length > 0 ? (
@@ -291,7 +291,7 @@ export default function UsersPage() {
                         <div className="p-6 flex-1 overflow-y-auto w-full">
                             {loadingDetails ? (
                                 <div className="flex flex-col items-center justify-center h-40 text-slate-500 gap-3">
-                                    <RefreshCw className="animate-spin text-purple-400" size={32} />
+                                    <RefreshCw className="animate-spin text-blue-600" size={32} />
                                     Loading advanced Entra ID details...
                                 </div>
                             ) : selectedUser ? (
@@ -350,7 +350,7 @@ export default function UsersPage() {
                             <button 
                                 onClick={handleSave}
                                 disabled={saving || loadingDetails}
-                                className="w-full md:w-auto flex justify-center items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-medium py-3 px-8 rounded-xl transition-colors shadow-lg shadow-purple-900/20 disabled:opacity-50"
+                                className="w-full md:w-auto flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-xl transition-colors shadow-lg shadow-blue-900/20 disabled:opacity-50"
                             >
                                 {saving ? <RefreshCw className="animate-spin" size={20} /> : <Save size={20} />}
                                 {saving ? "Syncing to Entra ID..." : "Save Changes"}

@@ -208,8 +208,8 @@ function OffboardingContent() {
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* Unified User Search Header */}
-            <div className="bg-slate-950/50 backdrop-blur-2xl p-10 rounded-[2.5rem] border border-slate-800 shadow-2xl relative group">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent pointer-events-none rounded-[2.5rem]" />
+            <div className="bg-slate-900/50 backdrop-blur-xl p-10 rounded-3xl border border-slate-800 shadow-xl relative group">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-600/5 to-transparent pointer-events-none rounded-3xl" />
                 <div className="relative z-10 flex flex-col items-start text-left space-y-8">
                     <div>
                         <h1 className="text-4xl font-black text-white tracking-tight mb-3">
@@ -220,7 +220,7 @@ function OffboardingContent() {
 
                     <div className="w-full relative">
                         <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-                        <div className="relative flex items-center bg-slate-900 border border-slate-800 rounded-2xl p-2 shadow-2xl">
+                        <div className="relative flex items-center bg-slate-950 border border-slate-800 rounded-2xl p-2 shadow-xl">
                             <Search className="ml-4 text-slate-500" size={24} />
                             <input 
                                 type="text" 
@@ -281,7 +281,7 @@ function OffboardingContent() {
                 </div>
             </div>
 
-            <div className="bg-slate-900/40 rounded-3xl border border-slate-800/60 overflow-hidden backdrop-blur-md">
+            <div className="bg-slate-900/40 rounded-2xl border border-slate-800/60 overflow-hidden backdrop-blur-md">
                 <div className="p-6 border-b border-slate-800/60 flex justify-between items-center bg-slate-950/30">
                     <h2 className="text-xl font-bold text-white flex items-center gap-2">
                         <ShieldAlert size={20} className="text-rose-500" />

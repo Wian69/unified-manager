@@ -10,7 +10,7 @@ export default function DashboardCard({
                     <p className="text-sm font-medium text-slate-400 mb-1">{title}</p>
                     <h3 className="text-3xl font-bold text-slate-100">{value}</h3>
                 </div>
-                <div className="p-3 bg-slate-800/50 rounded-xl text-blue-400">
+                <div className="p-3 bg-blue-600/10 rounded-xl text-blue-600">
                     {icon}
                 </div>
             </div>
