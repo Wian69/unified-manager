@@ -28,8 +28,13 @@ async function initDB() {
 // Internal generic helpers
 async function getData<T>(key: string, filePath: string, defaultValue: T): Promise<T> {
     if (IS_PROD) {
-        const data = await kv.get<T>(key);
-        return data || defaultValue;
+        try {
+            const data = await kv.get<T>(key);
+            return data || defaultValue;
+        } catch (err: any) {
+            console.error(`[DB] Vercel KV Get Error (${key}):`, err.message);
+            throw new Error(`Cloud Database Error: Please ensure Vercel KV is connected and KV_URL is set. Original: ${err.message}`);
+        }
     }
     await initDB();
     await ensureFileSync(filePath, defaultValue);
@@ -38,8 +43,13 @@ async function getData<T>(key: string, filePath: string, defaultValue: T): Promi
 
 async function saveData<T>(key: string, filePath: string, data: T): Promise<void> {
     if (IS_PROD) {
-        await kv.set(key, data);
-        return;
+        try {
+            await kv.set(key, data);
+            return;
+        } catch (err: any) {
+            console.error(`[DB] Vercel KV Save Error (${key}):`, err.message);
+            throw new Error(`Cloud Database Error: Please ensure Vercel KV is connected and KV_URL is set. Original: ${err.message}`);
+        }
     }
     await initDB();
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
