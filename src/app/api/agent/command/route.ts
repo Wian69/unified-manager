@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'agentId and type are required' }, { status: 400 });
         }
 
-        const commands = getCommands();
+        const commands: any[] = await getCommands();
         const newCommand = {
             id: crypto.randomUUID(),
             agentId,
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
         };
 
         commands.push(newCommand);
-        saveCommands(commands);
+        await saveCommands(commands);
 
         return NextResponse.json({ success: true, command: newCommand });
     } catch (error: any) {
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const agentId = searchParams.get('agentId');
 
-    const allCommands = getCommands();
+    const allCommands = await getCommands();
     const filtered = agentId 
         ? allCommands.filter((c: any) => c.agentId === agentId)
         : allCommands;

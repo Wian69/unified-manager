@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'agentId is required' }, { status: 400 });
         }
 
-        const agents = getAgents();
+        const agents: any = await getAgents();
         
         // Update or register agent
         agents[agentId] = {
@@ -26,10 +26,10 @@ export async function POST(req: NextRequest) {
             status: 'online'
         };
 
-        saveAgents(agents);
+        await saveAgents(agents);
 
         // Check for pending commands
-        const allCommands = getCommands();
+        const allCommands = await getCommands();
         const pendingCommands = allCommands.filter((c: any) => c.agentId === agentId && c.status === 'pending');
 
         // Mark commands as "delivered"
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
             }
             return c;
         });
-        saveCommands(updatedCommands);
+        await saveCommands(updatedCommands);
 
         return NextResponse.json({
             success: true,

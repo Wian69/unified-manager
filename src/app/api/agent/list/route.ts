@@ -3,7 +3,7 @@ import { getAgents } from '@/lib/db';
 
 export async function GET(req: NextRequest) {
     try {
-        const agents = getAgents();
+        const agents: any = await getAgents();
         const agentsList = Object.keys(agents).map(id => ({
             id,
             ...agents[id]

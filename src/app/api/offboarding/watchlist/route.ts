@@ -7,10 +7,8 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
     try {
-        const logFile = 'C:\\Users\\WianDuRandt\\.gemini\\antigravity\\scratch\\unified-manager\\debug_api.log';
-        const watchlist = getWatchlist();
-        
-        fs.appendFileSync(logFile, `[${new Date().toISOString()}] GET Watchlist: Found ${watchlist.length} users\n`);
+        const watchlist: any[] = await getWatchlist();
+        console.log(`[Watchlist] GET: Found ${watchlist.length} users`);
         
         const client = getGraphClient();
         
@@ -43,25 +41,23 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-    const logFile = 'C:\\Users\\WianDuRandt\\.gemini\\antigravity\\scratch\\unified-manager\\debug_api.log';
     try {
         const { watchlist } = await req.json();
         if (!Array.isArray(watchlist)) {
             throw new Error('Watchlist must be an array');
         }
         
-        fs.appendFileSync(logFile, `[${new Date().toISOString()}] POST Watchlist Received: ${watchlist.length} users\n`);
+        console.log(`[Watchlist] POST Received: ${watchlist.length} users`);
         
-        saveWatchlist(watchlist);
+        await saveWatchlist(watchlist);
         
         // Verify write
-        const verified = getWatchlist();
-        fs.appendFileSync(logFile, `[${new Date().toISOString()}] Verification: ${verified.length} users saved to disk\n`);
+        const verified = await getWatchlist();
+        console.log(`[Watchlist] Verification: ${verified.length} users saved`);
         
         return NextResponse.json({ success: true, count: verified.length });
     } catch (error: any) {
         console.error('[Watchlist POST Error]:', error);
-        fs.appendFileSync(logFile, `[${new Date().toISOString()}] FATAL POST Error: ${error.message}\n`);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

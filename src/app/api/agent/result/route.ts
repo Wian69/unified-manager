@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'agentId and type are required' }, { status: 400 });
         }
 
-        const results = getResults();
+        const results: any = await getResults();
         
         if (!results[agentId]) {
             results[agentId] = {};
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
             timestamp: new Date().toISOString()
         };
 
-        saveResults(results);
+        await saveResults(results);
 
         return NextResponse.json({ success: true });
     } catch (error: any) {
@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
     const agentId = searchParams.get('agentId');
     const type = searchParams.get('type');
 
-    const results = getResults();
+    const results: any = await getResults();
     
     if (agentId) {
         const agentResults = results[agentId] || {};
