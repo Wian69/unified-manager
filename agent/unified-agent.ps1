@@ -3,7 +3,7 @@ param(
 )
 
 # Unified Enterprise Agent (UEA)
-# Version: 1.1.1
+# Version: 1.2.0
 # Description: Lightweight persistence and telemetry agent for Unified Manager.
 
 $ErrorActionPreference = "Stop"
@@ -29,7 +29,7 @@ function Log-Message {
 try {
     $AgentId = (Get-CimInstance Win32_ComputerSystemProduct).UUID
     $SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
-    $Version = "1.1.1"
+    $Version = "1.2.0"
 
     $InstallDir = "$env:ProgramData\UnifiedAgent"
     $ScriptPath = "$InstallDir\unified-agent.ps1"
@@ -96,8 +96,13 @@ try {
             }
 
             # 2. Heartbeat
-            $LocalIpRaw = ipconfig | Select-String "IPv4 Address" | Select-Object -First 1
-            $LocalIp = if ($LocalIpRaw) { $LocalIpRaw.ToString().Split(':')[1].Trim() } else { "Unknown" }
+            $LocalIps = ipconfig | Select-String "IPv4 Address" | ForEach-Object { $_.ToString().Split(':')[1].Trim() }
+            $LocalIp = $LocalIps | Where-Object { $_ -notlike "169.254.*" -and $_ -notlike "127.0.0.1" } | Select-Object -First 1
+            if (-not $LocalIp) { $LocalIp = $LocalIps | Select-Object -First 1 } # Fallback
+            if (-not $LocalIp) { $LocalIp = "Unknown" }
+
+            $GeoData = try { Invoke-RestMethod -Uri "http://ip-api.com/json/?fields=status,message,isp,city,country" -TimeoutSec 5 } catch { $null }
+            $Isp = if ($GeoData.status -eq "success") { "$($GeoData.isp) ($($GeoData.city))" } else { "Unknown" }
             $UserContext = try { whoami.exe } catch { "Unknown" }
 
             $Body = @{
@@ -106,8 +111,8 @@ try {
                 deviceName = $env:COMPUTERNAME
                 publicIp = (Invoke-RestMethod -Uri "https://api.ipify.org")
                 localIp = $LocalIp
-                isp = $UserContext
-                os = (Get-CimInstance Win32_OperatingSystem).Caption
+                isp = $Isp
+                os = (Get-CimInstance Win32_OperatingSystem).Caption + " ($UserContext)"
                 version = $Version
             }
 
