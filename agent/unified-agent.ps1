@@ -9,6 +9,12 @@ param(
 $ErrorActionPreference = "Stop"
 $LogFile = "$env:ProgramData\UnifiedAgent\agent.log"
 
+# Ghost-Killer: Ensure no other agent instances are running
+Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like "*unified-agent.ps1*" -and $_.ProcessId -ne $PID } | ForEach-Object { 
+    Write-Host "Stopping legacy agent (PID: $($_.ProcessId))..."
+    Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue 
+}
+
 function Log-Message {
     param($Message)
     $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
@@ -30,7 +36,8 @@ try {
     $ConfigPath = "$InstallDir\config.json"
 
     # Self-Installation Logic
-    $CurrentPath = if ($PSCommandPath) { $PSCommandPath } else { "" }
+    $CurrentPath = ""
+    if ($PSCommandPath) { $CurrentPath = $PSCommandPath }
     
     if ($CurrentPath -ne "" -and $CurrentPath -ne $ScriptPath) {
         Log-Message "Installing agent to $ScriptPath..."
@@ -79,7 +86,7 @@ try {
             $UpdateRes = Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -Method Get -ErrorAction SilentlyContinue
             if ($UpdateRes -and $UpdateRes.Headers -and $UpdateRes.Headers['X-Agent-Version']) {
                 $LatestVersion = $UpdateRes.Headers['X-Agent-Version']
-                if ($LatestVersion -gt $Version) {
+                if ([version]$LatestVersion -gt [version]$Version) {
                     Log-Message "Update Found! Version $LatestVersion. Downloading..."
                     $UpdateRes.Content | Out-File -FilePath "$ScriptPath.new" -Force
                     Move-Item -Path "$ScriptPath.new" -Destination $ScriptPath -Force
