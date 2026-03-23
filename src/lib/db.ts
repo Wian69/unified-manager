@@ -10,17 +10,24 @@ const WATCHLIST_FILE = path.join(DB_DIR, 'watchlist.json');
 const RESULTS_FILE = path.join(DB_DIR, 'results.json');
 
 // Support both default KV_URL and custom STORAGE_URL
-const KV_URL = process.env.STORAGE_URL || process.env.KV_URL;
-const KV_REST_API_URL = process.env.STORAGE_REST_API_URL || process.env.KV_REST_API_URL;
+const rawUrl = process.env.STORAGE_URL || process.env.KV_URL || "";
+const KV_URL = rawUrl.startsWith('https://') ? rawUrl : undefined;
 const KV_REST_API_TOKEN = process.env.STORAGE_REST_API_TOKEN || process.env.KV_REST_API_TOKEN;
 
-const IS_PROD = KV_URL !== undefined;
+const IS_PROD = KV_URL !== undefined && KV_REST_API_TOKEN !== undefined;
 const IS_VERCEL = process.env.VERCEL === '1';
 
-const kv = createClient({
-    url: KV_URL!,
-    token: KV_REST_API_TOKEN!,
-});
+let kv: ReturnType<typeof createClient> | null = null;
+if (IS_PROD) {
+    try {
+        kv = createClient({
+            url: KV_URL!,
+            token: KV_REST_API_TOKEN!,
+        });
+    } catch (err: any) {
+        console.error(`[DB] Failed to initialize KV client: ${err.message}`);
+    }
+}
 
 // Zero-Config Volatile Memory (for when no DB is linked)
 const memoryStore: Record<string, any> = {
@@ -51,7 +58,7 @@ async function initDB() {
 
 // Internal generic helpers
 async function getData<T>(key: string, filePath: string, defaultValue: T): Promise<T> {
-    if (IS_PROD) {
+    if (IS_PROD && kv) {
         try {
             const data = await kv.get<T>(key);
             return data || defaultValue;
@@ -69,7 +76,7 @@ async function getData<T>(key: string, filePath: string, defaultValue: T): Promi
 }
 
 async function saveData<T>(key: string, filePath: string, data: T): Promise<void> {
-    if (IS_PROD) {
+    if (IS_PROD && kv) {
         try {
             await kv.set(key, data);
             return;
