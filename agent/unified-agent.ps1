@@ -3,7 +3,7 @@ param(
 )
 
 # Unified Enterprise Agent (UEA)
-# Version: 1.3.9
+# Version: 1.4.0
 # Description: Lightweight persistence and telemetry agent for Unified Manager.
 
 $ErrorActionPreference = "Stop"
@@ -33,13 +33,28 @@ function Log-Message {
     }
 }
 
+function Get-RobustId {
+    param($Type)
+    try {
+        if ($Type -eq "UUID") {
+            $val = (Get-CimInstance Win32_ComputerSystemProduct -ErrorAction SilentlyContinue).UUID
+            if ($val -and $val -ne "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF") { return $val }
+        } else {
+            $val = (Get-CimInstance Win32_Bios -ErrorAction SilentlyContinue).SerialNumber
+            if ($val -and $val -notmatch "To be filled|Default|None") { return $val }
+        }
+    } catch {}
+    # Fallback to ComputerName + Random (Better than crashing)
+    return "$($env:COMPUTERNAME)-$(Get-Random)"
+}
+
 try {
-    $AgentId = (Get-CimInstance Win32_ComputerSystemProduct).UUID
-    $SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
-    $Version = "1.3.9"
+    $AgentId = Get-RobustId "UUID"
+    $SerialNumber = Get-RobustId "Serial"
+    $Version = "1.4.0"
     
-    Log-Message "AGENT IDENTIFIED: ID=$AgentId, SERIAL=$SerialNumber"
-    Log-Message "Heartbeat interval: 3 seconds (Robust Mode)"
+    Log-Message "AGENT IDENTIFIED (ROBUST): ID=$AgentId, SERIAL=$SerialNumber"
+    Log-Message "Heartbeat interval: 3 seconds"
 
     $InstallDir = "$env:ProgramData\UnifiedAgent"
     $ScriptPath = "$InstallDir\unified-agent.ps1"
