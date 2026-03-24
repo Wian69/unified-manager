@@ -63,15 +63,15 @@ function PolicyContent() {
                 </div>
             </nav>
 
-            {/* Document Container - FULL WIDTH */}
-            <div className="w-full px-12 mt-16 print:mt-0 print:px-0 max-w-none">
+            {/* Document Container - PRINT CENTERED */}
+            <div className="w-full px-12 mt-16 print:mt-0 print:px-8 max-w-none print:max-w-[800px] print:mx-auto">
                 
                 {/* PROFESSIONAL POLICY HEADER with LOGO */}
                 <div className="border-b-2 border-slate-800 pb-12 mb-16 flex flex-col md:flex-row justify-between items-start md:items-center gap-12 print:border-black print:mb-8">
                     <div className="flex items-center gap-6">
                         {/* Final Company Logo */}
                         <div className="flex flex-col">
-                            <img src="/equinox-logo.png" alt="Equinox Outsourced Services" className="h-20 w-auto print:brightness-0" />
+                            <img src="/equinox-logo.png" alt="Equinox Outsourced Services" className="h-20 w-auto" />
                             <p className="text-[10px] font-black tracking-[0.5em] text-slate-500 mt-4 ml-1 print:text-black">INC. CORPORATE GOVERNANCE</p>
                         </div>
                     </div>

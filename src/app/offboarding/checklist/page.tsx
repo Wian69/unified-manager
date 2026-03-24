@@ -95,19 +95,19 @@ function ChecklistContent() {
     return (
         <div className="min-h-screen bg-[#0b0f19] text-slate-200 selection:bg-blue-500/30 pb-32">
             {/* Header Area - STRETCHED FULL WIDTH */}
-            <div className="bg-[#0b0f19]/80 border-b border-white/5 pb-12 pt-8 backdrop-blur-xl sticky top-0 z-40 px-12 print:hidden w-full max-w-none">
+            <div className="bg-[#0b0f19]/80 border-b border-white/5 pb-12 pt-8 backdrop-blur-xl sticky top-0 z-40 px-12 print:pb-4 print:pt-4 print:px-8 w-full max-w-none print:max-w-[800px] print:mx-auto">
                 <div className="w-full">
                     <button 
                         onClick={() => router.back()}
-                        className="mb-8 flex items-center gap-2 text-slate-500 hover:text-white transition-all text-xs font-black uppercase tracking-widest group"
+                        className="mb-8 flex items-center gap-2 text-slate-500 hover:text-white transition-all text-xs font-black uppercase tracking-widest group print:hidden"
                     >
                         <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
                         Back to Monitor
                     </button>
                     
-                    <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-12">
-                        <div className="flex items-center gap-6">
-                            <img src="/equinox-logo.png" alt="Equinox Outsourced Services" className="h-16 w-auto print:brightness-0" />
+                        <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-12 print:gap-4">
+                            <div className="flex items-center gap-6">
+                                <img src="/equinox-logo.png" alt="Equinox Outsourced Services" className="h-16 w-auto" />
                             <div className="h-12 w-px bg-white/10 mx-2 print:hidden" />
                             <div>
                                 <h1 className="text-4xl font-black text-white tracking-widest leading-none uppercase italic">IT EXIT <span className="text-blue-600 italic">INTERVIEW</span></h1>
@@ -130,7 +130,7 @@ function ChecklistContent() {
                              </div>
                              <button 
                                 onClick={() => window.print()}
-                                className="px-8 py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-white/10 transition-all flex items-center gap-2 whitespace-nowrap"
+                                className="px-8 py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-white/10 transition-all flex flex-row items-center justify-center gap-2 whitespace-nowrap print:hidden"
                              >
                                 <Printer size={16} />
                                 Print Protocol
@@ -141,7 +141,7 @@ function ChecklistContent() {
             </div>
 
             {/* User Profile Overview - FULL WIDTH GRID */}
-            <div className="w-full px-12 mt-16 print:mt-0 max-w-none">
+            <div className="w-full px-12 mt-16 print:mt-8 print:px-8 max-w-none print:max-w-[800px] print:mx-auto">
                 <div className="bg-[#0b0f19] border border-white/5 rounded-[2.5rem] p-12 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-12 relative overflow-hidden group shadow-2xl">
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.03] to-transparent pointer-events-none" />
                     
@@ -179,7 +179,7 @@ function ChecklistContent() {
             </div>
 
             {/* Task Management Grid - WIDER & DENSE */}
-            <div className="w-full px-12 pb-32 mt-20 max-w-none">
+            <div className="w-full px-12 pb-32 mt-20 max-w-none print:px-8 print:max-w-[800px] print:mx-auto print:mt-8">
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-20">
                     {categories.map((cat) => (
                         <div key={cat} className="space-y-10 group">
