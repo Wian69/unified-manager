@@ -147,7 +147,7 @@ function PolicyContent() {
                                     <div className="space-y-3">
                                         <h5 className="text-white font-black text-lg uppercase tracking-tight print:text-black">Uninstallation of Euphoria App and Office products</h5>
                                         <p className="text-slate-400 text-sm leading-relaxed font-medium print:text-black">
-                                            The Group IT Support Specialist will ensure that the <span className="text-white print:text-black font-bold">Euphoria app, Outlook, Teams & OneDrive</span> is uninstalled from all company and personal devices used by the departing employee.
+                                            The Equinox Group Holdings Inc. IT support will ensure that the <span className="text-white print:text-black font-bold">Euphoria app, Outlook, Teams & OneDrive</span> is uninstalled from all company and personal devices used by the departing employee.
                                         </p>
                                     </div>
                                 </div>
@@ -179,7 +179,7 @@ function PolicyContent() {
                                     <div className="space-y-3">
                                         <h5 className="text-white font-black text-lg uppercase tracking-tight print:text-black">Data Removal Protocol</h5>
                                         <p className="text-slate-400 text-sm leading-relaxed font-medium print:text-black">
-                                            The Group IT Support Specialist will take all necessary steps to remove company data from non-company property. This includes ensuring all files, emails, and applications are deleted and verifying no data remains on external storage devices.
+                                            The Equinox Group Holdings Inc. IT support will take all necessary steps to remove company data from non-company property. This includes ensuring all files, emails, and applications are deleted and verifying no data remains on external storage devices.
                                         </p>
                                     </div>
                                 </div>
@@ -191,13 +191,13 @@ function PolicyContent() {
                             <section className="space-y-4">
                                 <h4 className="text-blue-400 font-black text-xs uppercase tracking-widest">4. Email Forwarding</h4>
                                 <p className="text-slate-400 text-sm leading-relaxed print:text-black font-medium text-justify">
-                                    The Group IT Support Specialist will set up necessary email forwarding to ensure that any important communications are redirected to the appropriate personnel.
+                                    The Equinox Group Holdings Inc. IT support will set up necessary email forwarding to ensure that any important communications are redirected to the appropriate personnel.
                                 </p>
                             </section>
                             <section className="space-y-4">
                                 <h4 className="text-emerald-400 font-black text-xs uppercase tracking-widest">5. Final Checklist</h4>
                                 <p className="text-slate-400 text-sm leading-relaxed print:text-black font-medium text-justify">
-                                    A final verification of Euphoria uninstallation, property return, data removal validation, and email forwarding setup must be confirmed signed.
+                                    The Equinox Group Holdings Inc. IT support will provide the departing employee with a final checklist to ensure all steps are completed. This checklist will include:
                                 </p>
                             </section>
                         </div>
@@ -240,7 +240,7 @@ function PolicyContent() {
                             <div className="space-y-6">
                                 <div className="h-0.5 bg-slate-700 w-full mb-2 print:bg-black" />
                                 <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-500 print:text-black">
-                                    <span>Group IT Support Specialist</span>
+                                    <span>Equinox Group Holdings Inc. IT support</span>
                                     <span>Date</span>
                                 </div>
                             </div>
