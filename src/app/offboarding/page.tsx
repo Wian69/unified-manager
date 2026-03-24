@@ -409,7 +409,7 @@ function OffboardingContent() {
                                                             router.push(`/offboarding/policy?user=${u.id}`);
                                                         }}
                                                         className="p-2 text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-xl transition-all"
-                                                        title="Holding Policy"
+                                                        title="Equinox Group Holdings, Inc. Policy"
                                                     >
                                                         <FileText size={18} />
                                                     </button>

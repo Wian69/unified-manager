@@ -55,7 +55,7 @@ function PolicyContent() {
                             <FileText size={20} />
                         </div>
                         <div>
-                            <h1 className="text-sm font-black uppercase tracking-widest text-white">Holding Policy</h1>
+                            <h1 className="text-sm font-black uppercase tracking-widest text-white">Equinox Group Holdings, Inc. Policy</h1>
                             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Drafting Context: {userName}</p>
                         </div>
                     </div>
@@ -101,7 +101,7 @@ function PolicyContent() {
                         <h2 className="text-3xl font-black text-white tracking-tight">Executive Overview</h2>
                         <div className="prose prose-invert prose-slate max-w-none text-slate-400 leading-relaxed space-y-4 font-medium">
                             <p>
-                                This Holding Policy outlines the mandatory procedures for the cessation of employment for all personnel within the organization. 
+                                This Equinox Group Holdings, Inc. Policy outlines the mandatory procedures for the cessation of employment for all personnel within the organization. 
                                 The primary goal is to ensure a secure, respectful, and legally compliant transition for both the departing employee and the company.
                             </p>
                             <p>
