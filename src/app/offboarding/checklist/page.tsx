@@ -174,7 +174,7 @@ function ChecklistContent() {
                             <input type="checkbox" className={cbCls} />
                             <span>Other:</span>
                         </label>
-                        <input className={`${inputCls} flex-1`} value={otherAsset} onChange={e => setOtherAsset(e.target.value)} placeholder="______________________________" />
+                        <input className={`${inputCls} flex-1`} value={otherAsset} onChange={e => setOtherAsset(e.target.value)} />
                     </div>
                 </section>
 
