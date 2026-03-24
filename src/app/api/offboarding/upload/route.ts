@@ -21,9 +21,32 @@ export async function POST(request: Request) {
         // Force Win32 paths to avoid mixed slashes appearing in some environments
         const targetDir = path.win32.normalize(path.win32.join(baseDir, sanitizedUserName));
 
+        // Deep Path Check
+        const segments = targetDir.split(path.win32.sep);
+        let checkPath = '';
+        const pathDiagnostics: any[] = [];
+        for (const seg of segments) {
+            if (!seg && !checkPath) continue; // Skip initial empty on some splits
+            checkPath = checkPath ? path.win32.join(checkPath, seg) : seg;
+            try {
+                pathDiagnostics.push({
+                    segment: seg,
+                    fullPath: checkPath,
+                    exists: fs.existsSync(checkPath)
+                });
+            } catch (e) {
+                pathDiagnostics.push({
+                    segment: seg,
+                    fullPath: checkPath,
+                    error: (e as any).message
+                });
+            }
+        }
+
         diagnostic.platform = process.platform;
         diagnostic.targetDir = targetDir;
-        diagnostic.baseDirExists = fs.existsSync(baseDir);
+        diagnostic.pathSegments = pathDiagnostics;
+        diagnostic.cwd = process.cwd();
 
         // ACTION: CREATE FOLDER
         if (action === 'create-folder') {
