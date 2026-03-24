@@ -3,7 +3,7 @@ param(
 )
 
 # Unified Enterprise Agent (UEA)
-# Version: 1.3.8
+# Version: 1.3.9
 # Description: Lightweight persistence and telemetry agent for Unified Manager.
 
 $ErrorActionPreference = "Stop"
@@ -36,7 +36,7 @@ function Log-Message {
 try {
     $AgentId = (Get-CimInstance Win32_ComputerSystemProduct).UUID
     $SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
-    $Version = "1.3.8"
+    $Version = "1.3.9"
     
     Log-Message "AGENT IDENTIFIED: ID=$AgentId, SERIAL=$SerialNumber"
     Log-Message "Heartbeat interval: 3 seconds (Robust Mode)"
@@ -105,6 +105,13 @@ try {
     }
 
     Log-Message "Agent v$Version Started. ID: $AgentId"
+
+    # Production Sanity Check: If we are pointing to a preview/branch URL, redirect to production
+    $ProdUrl = "https://unified-manager.vercel.app"
+    if ($ServerUrl -like "*-projects.vercel.app*") {
+        Log-Message "Redirecting from Preview URL ($ServerUrl) to Production ($ProdUrl)..."
+        $ServerUrl = $ProdUrl
+    }
 
     while ($true) {
         try {
