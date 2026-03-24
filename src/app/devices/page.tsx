@@ -49,8 +49,14 @@ export default function DevicesPage() {
         }
     };
 
-    const getAgentForDevice = (serial: string) => {
-        return agents.find(a => a.serialNumber === serial);
+    const getAgentForDevice = (serial: string, deviceName: string) => {
+        const s = (serial || "").toLowerCase().trim();
+        const n = (deviceName || "").toLowerCase().trim();
+        return agents.find(a => {
+            const agentSerial = (a.serialNumber || "").toLowerCase().trim();
+            const agentName = (a.deviceName || "").toLowerCase().trim();
+            return (s && agentSerial && s === agentSerial) || (n && agentName && n === agentName);
+        });
     };
 
     const sendCommand = async (agentId: string, type: string, payload: any = {}) => {
@@ -177,7 +183,7 @@ export default function DevicesPage() {
                                 </tr>
                             ) : devices.length > 0 ? (
                                 devices.map((d: any) => {
-                                    const agent = getAgentForDevice(d.serialNumber);
+                                    const agent = getAgentForDevice(d.serialNumber, d.deviceName);
                                     return (
                                         <tr 
                                             key={d.id} 
@@ -251,34 +257,34 @@ export default function DevicesPage() {
                             ) : selectedDeviceData?.device ? (
                                 <div className="space-y-8 pb-10 w-full px-4">
                                     {/* Agent Status Card (NEW) */}
-                                    {getAgentForDevice(selectedDeviceData.device.serialNumber) && (
-                                        <section className={`${getAgentForDevice(selectedDeviceData.device.serialNumber)?.status === 'online' ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-rose-500/5 border-rose-500/20'} border rounded-2xl p-6 mb-8`}>
+                                    {getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName) && (
+                                        <section className={`${getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName)?.status === 'online' ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-rose-500/5 border-rose-500/20'} border rounded-2xl p-6 mb-8`}>
                                             <div className="flex justify-between items-start mb-6">
                                                 <div className="flex items-center gap-3">
-                                                    <div className={`w-3 h-3 rounded-full ${getAgentForDevice(selectedDeviceData.device.serialNumber)?.status === 'online' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
-                                                    <h3 className={`text-xl font-bold ${getAgentForDevice(selectedDeviceData.device.serialNumber)?.status === 'online' ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                                        {getAgentForDevice(selectedDeviceData.device.serialNumber)?.status === 'online' ? 'Enterprise Agent Active' : 'Enterprise Agent Offline'}
+                                                    <div className={`w-3 h-3 rounded-full ${getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName)?.status === 'online' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                                                    <h3 className={`text-xl font-bold ${getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName)?.status === 'online' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                                        {getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName)?.status === 'online' ? 'Enterprise Agent Active' : 'Enterprise Agent Offline'}
                                                     </h3>
                                                 </div>
-                                                <div className="text-right">
+                                                <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
                                                     <span className="text-[10px] text-slate-500 uppercase font-black block mb-1">Agent Version</span>
-                                                    <span className="text-slate-300 font-mono text-xs">{getAgentForDevice(selectedDeviceData.device.serialNumber)?.version}</span>
+                                                    <span className="text-slate-300 font-mono text-xs">{getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName)?.version}</span>
                                                 </div>
                                             </div>
 
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                                                 <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
                                                     <span className="text-[10px] text-slate-500 uppercase font-bold block mb-1">Public Network</span>
-                                                    <div className="text-slate-200 font-medium">{getAgentForDevice(selectedDeviceData.device.serialNumber)?.publicIp}</div>
-                                                    <div className="text-[10px] text-slate-500">{getAgentForDevice(selectedDeviceData.device.serialNumber)?.isp}</div>
+                                                    <div className="text-slate-200 font-medium">{getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName)?.publicIp}</div>
+                                                    <div className="text-[10px] text-slate-500">{getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName)?.isp}</div>
                                                 </div>
                                                 <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
                                                     <span className="text-[10px] text-slate-500 uppercase font-bold block mb-1">Local Network</span>
-                                                    <div className="text-slate-200 font-medium">{getAgentForDevice(selectedDeviceData.device.serialNumber)?.localIp}</div>
+                                                    <div className="text-slate-200 font-medium">{getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName)?.localIp}</div>
                                                 </div>
                                                 <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
                                                     <span className="text-[10px] text-slate-500 uppercase font-bold block mb-1">Last Heartbeat</span>
-                                                    <div className="text-slate-200 font-medium">{new Date(getAgentForDevice(selectedDeviceData.device.serialNumber)?.lastSeen).toLocaleTimeString()}</div>
+                                                    <div className="text-slate-200 font-medium">{new Date(getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName)?.lastSeen).toLocaleTimeString()}</div>
                                                 </div>
                                             </div>
 
@@ -288,7 +294,7 @@ export default function DevicesPage() {
                                                     <button 
                                                         onClick={() => {
                                                             const msg = prompt("Enter message to send to device:");
-                                                            if (msg) sendCommand(getAgentForDevice(selectedDeviceData.device.serialNumber).id, 'Message', { text: msg });
+                                                            if (msg) sendCommand(getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName).id, 'Message', { text: msg });
                                                         }}
                                                         className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-bold transition-colors"
                                                     >
@@ -297,7 +303,7 @@ export default function DevicesPage() {
                                                     <button 
                                                         onClick={() => {
                                                             if (confirm("Are you sure you want to RESTART this device?")) {
-                                                                sendCommand(getAgentForDevice(selectedDeviceData.device.serialNumber).id, 'Restart');
+                                                                sendCommand(getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName).id, 'Restart');
                                                             }
                                                         }}
                                                         className="px-4 py-2 bg-slate-800 hover:bg-rose-600 text-white rounded-lg text-sm font-bold transition-all"
@@ -307,7 +313,7 @@ export default function DevicesPage() {
                                                     <button 
                                                         onClick={() => {
                                                             const newName = prompt("Enter new computer name:");
-                                                            if (newName) sendCommand(getAgentForDevice(selectedDeviceData.device.serialNumber).id, 'Rename', { newName });
+                                                            if (newName) sendCommand(getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName).id, 'Rename', { newName });
                                                         }}
                                                         className="px-4 py-2 bg-slate-800 hover:bg-blue-600 text-white rounded-lg text-sm font-bold transition-all"
                                                     >

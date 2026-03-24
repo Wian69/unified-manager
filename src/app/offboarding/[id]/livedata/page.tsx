@@ -57,11 +57,20 @@ export default function LiveDataDashboard() {
                 const v = updateRes.headers.get('X-Agent-Version');
                 setHostedVersion(v);
 
-                // Map First Available Agent automatically
+                // Map First Available Agent automatically with fuzzy matching
                 if (userDevices.length > 0) {
-                    const firstSerial = userDevices[0].serialNumber || userDevices[0].hardwareInformation?.serialNumber;
-                    const match = agentData.agents.find((a: any) => a.serialNumber === firstSerial);
-                    if (match) setSelectedAgentId(match.id);
+                    const agentMatch = agentData.agents.find((a: any) => {
+                        const agentSerial = (a.serialNumber || "").trim().toLowerCase();
+                        const agentName = (a.deviceName || "").trim().toLowerCase();
+                        
+                        return userDevices.some((d: any) => {
+                            const deviceSerial = (d.serialNumber || d.hardwareInformation?.serialNumber || "").trim().toLowerCase();
+                            const deviceName = (d.deviceName || "").trim().toLowerCase();
+                            return (agentSerial && deviceSerial && agentSerial === deviceSerial) || 
+                                   (agentName && deviceName && agentName === deviceName);
+                        });
+                    });
+                    if (agentMatch) setSelectedAgentId(agentMatch.id);
                 }
 
             } catch (err: any) {

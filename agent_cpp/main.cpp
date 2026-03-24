@@ -121,7 +121,11 @@ GraphClient graph(auth);
 IntuneManager manager(graph);
 
 std::wstring GetMachineName() { wchar_t b[MAX_COMPUTERNAME_LENGTH + 1]; DWORD s = sizeof(b)/sizeof(b[0]); return GetComputerNameW(b, &s) ? std::wstring(b) : L"UNKNOWN"; }
-std::wstring GetSerialNumber() { return L"CPP-INTUNE-001"; }
+std::wstring GetSerialNumber() {
+    // In a real scenario, this would use WMI to get the BIOS serial
+    // For this version, we'll prefix it to distinguish from PowerShell
+    return L"CPP-" + GetMachineName(); 
+}
 
 std::string Heartbeat() {
     HINTERNET hSession = WinHttpOpen(L"UEA/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);

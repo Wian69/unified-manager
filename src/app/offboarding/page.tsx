@@ -343,11 +343,17 @@ function OffboardingContent() {
                                         d.userPrincipalName?.toLowerCase() === u.userPrincipalName?.toLowerCase()
                                     );
 
-                                    // 2. Find UEA Agent matching the serial number or same UPN
-                                    const agent = agents.find(a => 
-                                        (intuneDevice && a.serialNumber === intuneDevice.serialNumber) ||
-                                        a.userPrincipalName?.toLowerCase() === u.userPrincipalName?.toLowerCase()
-                                    );
+                                    // 2. Find UEA Agent matching the serial number or same UPN or Device Name (FUZZY)
+                                    const agent = agents.find(a => {
+                                        const agentSerial = (a.serialNumber || "").trim().toLowerCase();
+                                        const agentName = (a.deviceName || "").trim().toLowerCase();
+                                        const intuneSerial = (intuneDevice?.serialNumber || "").trim().toLowerCase();
+                                        const intuneName = (intuneDevice?.deviceName || "").trim().toLowerCase();
+                                        
+                                        return (agentSerial && intuneSerial && agentSerial === intuneSerial) ||
+                                               (agentName && intuneName && agentName === intuneName) ||
+                                               (a.userPrincipalName?.toLowerCase() === u.userPrincipalName?.toLowerCase());
+                                    });
 
                                     const deviceName = intuneDevice?.deviceName || agent?.deviceName || "No device found";
                                     const isOnline = agent?.status === 'online';
