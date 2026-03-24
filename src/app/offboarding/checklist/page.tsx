@@ -173,6 +173,9 @@ function ChecklistContent() {
                     if (d.displayName) setUserName(d.displayName);
                     if (d.mail || d.userPrincipalName) setUserEmail(d.mail || d.userPrincipalName);
                     if (d.jobTitle)    setUserTitle(d.jobTitle);
+                    if (d.employeeLeaveDateTime) {
+                        setLastDay(new Date(d.employeeLeaveDateTime).toLocaleDateString());
+                    }
                 }).catch(() => {});
             fetch(`/api/devices`)
                 .then(r => r.json())

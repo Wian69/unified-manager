@@ -28,6 +28,9 @@ function PolicyContent() {
                 .then(data => {
                     if (data.displayName) setUserName(data.displayName);
                     if (data.jobTitle) setUserTitle(data.jobTitle);
+                    if (data.employeeLeaveDateTime) {
+                        setLastDay(new Date(data.employeeLeaveDateTime).toLocaleDateString());
+                    }
                 })
                 .catch(() => {});
         }
@@ -52,17 +55,17 @@ function PolicyContent() {
                         <span className="font-bold text-gray-900">Policy Owner:</span>
                         <span>Group IT Support Specialist</span>
                     </div>
-                    <div className="grid grid-cols-[150px_1fr] gap-4 border-b border-gray-300 pb-3">
-                        <span className="font-bold text-gray-900">Effective Date:</span>
-                        <span>{lastDay}</span>
-                    </div>
-                    <div className="grid grid-cols-[150px_1fr] gap-4 border-b border-gray-300 pb-3">
+                    <div className="grid grid-cols-[150px_1fr] gap-4 border-b border-gray-300 pb-3 pt-3">
                         <span className="font-bold text-gray-900">Subject Personnel:</span>
                         <span className="font-semibold">{userName}</span>
                     </div>
-                    <div className="grid grid-cols-[150px_1fr] gap-4">
+                    <div className="grid grid-cols-[150px_1fr] gap-4 border-b border-gray-300 pb-3 pt-3">
                         <span className="font-bold text-gray-900">Job Title:</span>
                         <span>{userTitle}</span>
+                    </div>
+                    <div className="grid grid-cols-[150px_1fr] gap-4 border-b border-gray-300 pb-3 pt-3">
+                        <span className="font-bold text-gray-900">Last Working Day:</span>
+                        <span>{lastDay}</span>
                     </div>
                 </div>
 

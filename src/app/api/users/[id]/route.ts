@@ -9,6 +9,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         const selectFields = [
             'id','displayName','givenName','surname','userPrincipalName','userType','createdDateTime',
             'jobTitle','companyName','department','employeeId','employeeType','employeeHireDate',
+            'employeeLeaveDateTime',
             'officeLocation','streetAddress','city','state','postalCode','country',
             'businessPhones','mobilePhone','mail','mailNickname','accountEnabled'
         ].join(',');
