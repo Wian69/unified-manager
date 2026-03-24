@@ -439,58 +439,95 @@ function OffboardingContent() {
                                                             if (printWindow) {
                                                                 printWindow.document.write(`
                                                                     <html>
-                                                                    <head>
-                                                                        <title>Exit Interview - ${u.displayName}</title>
-                                                                        <style>
-                                                                            body { font-family: sans-serif; padding: 40px; color: #333; line-height: 1.6; }
-                                                                            .header { border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
-                                                                            .title { font-size: 24px; font-weight: bold; text-transform: uppercase; }
-                                                                            .section { margin-bottom: 30px; }
-                                                                            .section-title { font-weight: bold; text-transform: uppercase; font-size: 14px; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 15px; }
-                                                                            .field { margin-bottom: 10px; }
-                                                                            .label { font-size: 11px; color: #666; font-weight: bold; text-transform: uppercase; display: block; }
-                                                                            .value { font-size: 16px; font-weight: 500; }
-                                                                            .policy { padding: 10px; background: #f9f9f9; border: 1px solid #eee; margin-bottom: 10px; border-radius: 5px; }
-                                                                            .signatures { margin-top: 60px; display: grid; grid-template-cols: 1fr 1fr; gap: 40px; }
-                                                                            .sig-box { border-top: 1px solid #333; padding-top: 10px; text-align: center; font-size: 12px; font-weight: bold; }
-                                                                            @media print { .no-print { display: none; } }
-                                                                        </style>
-                                                                    </head>
-                                                                    <body>
-                                                                        <div className="header">
-                                                                            <div className="title">Exit Interview Form</div>
-                                                                            <div>Equinox Outsourced Services</div>
-                                                                        </div>
-                                                                        
-                                                                        <div className="section">
-                                                                            <div className="section-title">Employee Information</div>
-                                                                            <div className="field"><span className="label">Name</span><div className="value">${u.displayName}</div></div>
-                                                                            <div className="field"><span className="label">Principal Name</span><div className="value">${u.userPrincipalName}</div></div>
-                                                                            <div className="field"><span className="label">Last Day of Service</span><div className="value">${u.lastDay || "Not Set"}</div></div>
-                                                                        </div>
+                                                                        <head>
+                                                                            <title>Master Offboarding - ${u.displayName}</title>
+                                                                            <style>
+                                                                                body { font-family: 'Inter', sans-serif; padding: 40px; color: #1e293b; line-height: 1.5; font-size: 13px; }
+                                                                                .header { border-bottom: 3px solid #0f172a; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end; }
+                                                                                .title { font-size: 28px; font-weight: 800; text-transform: uppercase; letter-spacing: -0.025em; color: #0f172a; }
+                                                                                .subtitle { font-size: 14px; font-weight: 600; color: #64748b; text-transform: uppercase; }
+                                                                                .section { margin-bottom: 25px; page-break-inside: avoid; }
+                                                                                .section-header { background: #f1f5f9; padding: 8px 12px; border-left: 4px solid #3b82f6; font-weight: 800; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+                                                                                .grid { display: grid; grid-template-cols: 1fr 1fr; gap: 15px; }
+                                                                                .field { margin-bottom: 8px; }
+                                                                                .label { font-size: 10px; color: #94a3b8; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 2px; }
+                                                                                .value { font-size: 14px; font-weight: 500; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 2px; min-height: 20px; }
+                                                                                .checklist { list-style: none; padding: 0; margin: 0; }
+                                                                                .check-item { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+                                                                                .box { width: 14px; height: 14px; border: 2px solid #cbd5e1; border-radius: 3px; shrink-0; margin-top: 2px; }
+                                                                                .check-text { font-size: 12px; font-weight: 500; }
+                                                                                .check-sub { font-size: 10px; color: #64748b; display: block; margin-top: 1px; }
+                                                                                .signatures { margin-top: 50px; display: grid; grid-template-cols: 1fr 1fr; gap: 60px; }
+                                                                                .sig-box { border-top: 2px solid #0f172a; padding-top: 12px; text-align: center; }
+                                                                                .sig-label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: #0f172a; }
+                                                                                .watermark { position: fixed; bottom: 40px; right: 40px; font-size: 10px; font-weight: 900; color: #e2e8f0; text-transform: uppercase; letter-spacing: 0.2em; transform: rotate(-90deg); transform-origin: bottom right; }
+                                                                                @media print { .no-print { display: none; } }
+                                                                            </style>
+                                                                        </head>
+                                                                        <body>
+                                                                            <div class="watermark">Vanta Compliance Master v2.0</div>
+                                                                            <div class="header">
+                                                                                <div>
+                                                                                    <div class="subtitle">Equinox Outsourced Services</div>
+                                                                                    <div class="title">Master Offboarding</div>
+                                                                                </div>
+                                                                                <div style="text-align: right; font-size: 10px; font-weight: 700; color: #64748b;">
+                                                                                    CONFIDENTIAL<br/>SECURITY AUDIT RECORD
+                                                                                </div>
+                                                                            </div>
+                                                                            
+                                                                            <div class="section">
+                                                                                <div class="section-header">1. Employee & Transition Data</div>
+                                                                                <div class="grid">
+                                                                                    <div class="field"><span class="label">Legal Name</span><div class="value">${u.displayName}</div></div>
+                                                                                    <div class="field"><span class="label">Job Title</span><div class="value">${u.jobTitle || "Not Set"}</div></div>
+                                                                                    <div class="field"><span class="label">Principal Identity</span><div class="value">${u.userPrincipalName}</div></div>
+                                                                                    <div class="field"><span class="label">Last Day of Service</span><div class="value">${u.lastDay || "Not Set"}</div></div>
+                                                                                </div>
+                                                                            </div>
 
-                                                                        <div className="section">
-                                                                            <div className="section-title">Comments / Instructions</div>
-                                                                            <div className="value" style="white-space: pre-wrap;">${u.exitComments || "No special instructions provided."}</div>
-                                                                        </div>
+                                                                            <div class="section">
+                                                                                <div class="section-header">2. Access Revocation (Vanta-Compliant SOP)</div>
+                                                                                <div class="checklist">
+                                                                                    <div class="check-item"><div class="box"></div><div><span class="check-text">Entra ID / M365 Primary Identity Disabled</span><span class="check-sub">Immediate deprovisioning of cloud authentication.</span></div></div>
+                                                                                    <div class="check-item"><div class="box"></div><div><span class="check-text">Admin Role Cleanup</span><span class="check-sub">Removal from Global Admin, SharePoint, and Entra Roles.</span></div></div>
+                                                                                    <div class="check-item"><div class="box"></div><div><span class="check-text">Third-Party SaaS Audit & Revocation</span><span class="check-sub">Access removed from VPN, CRM, Slack, and AWS/Azure.</span></div></div>
+                                                                                    <div class="check-item"><div class="box"></div><div><span class="check-text">MFA Security Device Flush</span><span class="check-sub">All registered 2FA phones/tokens purged from security info.</span></div></div>
+                                                                                </div>
+                                                                            </div>
 
-                                                                        <div className="section">
-                                                                            <div className="section-title">Mandatory Policy Acknowledgment</div>
-                                                                            <div className="policy"><strong>1. Data & Email Summary</strong><br/><small>Review of data access and email archiving policies upon exit.</small></div>
-                                                                            <div className="policy"><strong>2. Exit Checklist</strong><br/><small>Confirmation of hardware return and access revocation.</small></div>
-                                                                            <div className="policy"><strong>3. Offboarding Confirmation Letter</strong><br/><small>Final employment status confirmation and post-exit obligations.</small></div>
-                                                                        </div>
+                                                                            <div class="section">
+                                                                                <div class="section-header">3. Asset Recovery & Physical Hardware</div>
+                                                                                <div class="checklist">
+                                                                                    <div class="check-item"><div class="box"></div><div><span class="check-text">Laptop / Primary Workstation Returned</span><span class="check-sub">Including power supply and peripherals.</span></div></div>
+                                                                                    <div class="check-item"><div class="box"></div><div><span class="check-text">Mobile Device Recovery</span><span class="check-sub">Unlocked and reset to default factory settings.</span></div></div>
+                                                                                    <div class="check-item"><div class="box"></div><div><span class="check-text">Physical Security Keys / Access FOBs</span><span class="check-sub">Office keys and security tokens received.</span></div></div>
+                                                                                </div>
+                                                                            </div>
 
-                                                                        <div className="signatures">
-                                                                            <div className="sig-box">Employee Signature</div>
-                                                                            <div className="sig-box">Management Signature</div>
-                                                                        </div>
+                                                                            <div class="section">
+                                                                                <div class="section-header">4. Offboarding Instructions / Comments</div>
+                                                                                <div class="value" style="white-space: pre-wrap; min-height: 100px; padding: 15px; background: #f8fafc; border-radius: 8px; border: none;">${u.exitComments || "No special instructions provided."}</div>
+                                                                            </div>
 
-                                                                        <div className="no-print" style="margin-top: 40px; text-align: center;">
-                                                                            <button onclick="window.print()" style="padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Print Document</button>
-                                                                        </div>
-                                                                    </body>
-                                                                    </html>
+                                                                            <div class="section">
+                                                                                <div class="section-header">5. Legal Acknowledgements (Data & IP)</div>
+                                                                                <div style="font-size: 11px; color: #475569; padding: 0 10px;">
+                                                                                    By signing below, the employee acknowledges that all company data remains the exclusive property of Equinox Outsourced Services and that all post-exit confidentiality obligations (NDA) and Intellectual Property policies remain in full effect.
+                                                                                </div>
+                                                                            </div>
+
+                                                                            <div class="signatures">
+                                                                                <div class="sig-box"><div class="sig-label">Employee Signature</div><div style="font-size: 9px; margin-top: 5px;">${u.displayName}</div></div>
+                                                                                <div class="sig-box"><div class="sig-label">Management Approval</div><div style="font-size: 9px; margin-top: 5px;">Date: ________________</div></div>
+                                                                            </div>
+
+                                                                            <div class="no-print" style="margin-top: 40px; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 40px;">
+                                                                                <button onclick="window.print()" style="padding: 12px 30px; background: #0f172a; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; transition: all 0.2s;">Print Compliance Report</button>
+                                                                                <p style="font-size: 11px; color: #64748b; margin-top: 15px;">Use "Save as PDF" for electronic archiving in Vanta.</p>
+                                                                            </div>
+                                                                        </body>
+                                                                        </html>
                                                                 `);
                                                                 printWindow.document.close();
                                                             }
