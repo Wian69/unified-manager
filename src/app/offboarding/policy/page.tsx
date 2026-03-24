@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { ArrowLeft, FileText, ShieldCheck, Lock, HardDrive, UserCheck, Scale, Mail, MessageSquare, Database, Smartphone, Laptop, Trash2 } from "lucide-react";
+import { ArrowLeft, FileText, ShieldCheck, Lock, HardDrive, UserCheck, Scale, Mail, MessageSquare, Database, Smartphone, Laptop, Trash2, User } from "lucide-react";
 import { Suspense, useEffect, useState } from "react";
 
 export default function PolicyPage() {
