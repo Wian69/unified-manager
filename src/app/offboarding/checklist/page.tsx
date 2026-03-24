@@ -5,58 +5,122 @@ import { Suspense, useEffect, useState } from "react";
 
 export default function ChecklistPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen bg-gray-400 flex items-center justify-center text-white text-sm">Loading Document...</div>}>
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-white text-sm" style={{background:"#c8c8c8"}}>Loading Document...</div>}>
             <ChecklistContent />
         </Suspense>
     );
 }
 
+/* ── tiny helpers ───────────────────────────────────────────── */
 const inputCls = "border-0 border-b border-gray-400 focus:border-black outline-none w-full bg-transparent px-1 text-gray-900 print:border-gray-400";
-const cbCls = "mr-2 w-4 h-4 accent-gray-800 cursor-pointer print:appearance-none print:border print:border-gray-800 print:w-3 print:h-3";
 
-function Row({ label, value }: { label: string; value?: string }) {
-    const [val, setVal] = useState(value || "");
-    useEffect(() => { if (value) setVal(value); }, [value]);
+interface CheckItem { id: number; label: string; checked: boolean; }
+interface Section   { id: number; title: string; items: CheckItem[]; }
+
+let nextId = 1000;
+
+function makeItem(label: string): CheckItem { return { id: nextId++, label, checked: false }; }
+
+const DEFAULT_SECTIONS: Section[] = [
+    {
+        id: 1, title: "To be completed with the User",
+        items: [
+            makeItem("Ensure the Euphoria app and Office products is uninstalled from all company and personal devices."),
+            makeItem("Return company-issued phone."),
+            makeItem("Return company-issued laptop."),
+            makeItem("Return any other equipment or materials provided by the company."),
+            makeItem("Remove all company-related files, emails, and applications from personal devices."),
+            makeItem("Verify no company data remains on any external storage devices used by the employee."),
+            makeItem("Confirm uninstallation of Euphoria app and Office products."),
+            makeItem("Confirm return of all company property."),
+            makeItem("Verify data removal from personal devices."),
+            makeItem("Confirm email forwarding setup."),
+        ],
+    },
+    {
+        id: 2, title: "Company Assets Returned",
+        items: [
+            makeItem("Laptop / Desktop"),
+            makeItem("Power supply"),
+            makeItem("External peripherals (mouse, keyboard, headset, adapters)"),
+            makeItem("Mobile phone / SIM"),
+            makeItem("Access cards / security tokens"),
+            makeItem("Laptop Bag"),
+            makeItem("Other: "),
+        ],
+    },
+];
+
+/* ── editable section ───────────────────────────────────────── */
+function EditableSection({ sec, onChange }: { sec: Section; onChange: (s: Section) => void }) {
+    const addItem = () => onChange({ ...sec, items: [...sec.items, makeItem("")] });
+    const removeItem = (id: number) => onChange({ ...sec, items: sec.items.filter(i => i.id !== id) });
+    const toggleItem = (id: number) => onChange({ ...sec, items: sec.items.map(i => i.id === id ? { ...i, checked: !i.checked } : i) });
+    const editLabel  = (id: number, label: string) => onChange({ ...sec, items: sec.items.map(i => i.id === id ? { ...i, label } : i) });
+    const editTitle  = (title: string) => onChange({ ...sec, title });
+
     return (
-        <tr className="border-b border-gray-100">
-            <td className="py-2 font-semibold whitespace-nowrap pr-4 align-bottom" style={{width:"180px"}}>{label}</td>
-            <td className="py-2 align-bottom"><input className={inputCls} value={val} onChange={e => setVal(e.target.value)} /></td>
-        </tr>
+        <section className="mb-8">
+            <div className="flex items-center gap-2 border-b border-black pb-1 mb-3">
+                <input
+                    className="font-bold text-base outline-none bg-transparent flex-1 text-gray-900"
+                    value={sec.title}
+                    onChange={e => editTitle(e.target.value)}
+                />
+            </div>
+            {sec.items.map(item => (
+                <div key={item.id} className={`flex items-start gap-2 py-1 group ${item.checked ? "line-through text-gray-400" : "text-gray-900"}`}>
+                    <input
+                        type="checkbox"
+                        className="mt-1 w-4 h-4 accent-gray-800 cursor-pointer flex-shrink-0"
+                        checked={item.checked}
+                        onChange={() => toggleItem(item.id)}
+                    />
+                    <input
+                        className={`flex-1 outline-none bg-transparent border-0 ${item.checked ? "line-through text-gray-400" : "text-gray-900"}`}
+                        value={item.label}
+                        onChange={e => editLabel(item.id, e.target.value)}
+                    />
+                    <button
+                        onClick={() => removeItem(item.id)}
+                        className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 text-xs px-1 transition-opacity print:hidden"
+                        title="Remove item"
+                    >✕</button>
+                </div>
+            ))}
+            <button
+                onClick={addItem}
+                className="mt-2 text-xs text-gray-400 hover:text-gray-800 border border-dashed border-gray-300 hover:border-gray-600 px-3 py-1 rounded transition-colors print:hidden"
+            >+ Add item</button>
+        </section>
     );
 }
 
+/* ── admin row ──────────────────────────────────────────────── */
 function AdminRow({ label }: { label: string }) {
     const [val, setVal] = useState("");
     return (
         <tr className="border-b border-gray-100">
             <td className="py-2 pr-4 align-bottom">{label}</td>
-            <td className="py-2 align-bottom" style={{width:"200px"}}><input className={inputCls} value={val} onChange={e => setVal(e.target.value)} /></td>
+            <td className="py-2 align-bottom" style={{width:"220px"}}><input className={inputCls} value={val} onChange={e => setVal(e.target.value)} /></td>
         </tr>
     );
 }
 
-function CheckItem({ label }: { label: string }) {
-    const [checked, setChecked] = useState(false);
-    return (
-        <label className={`flex items-start gap-2 py-1 cursor-pointer select-none ${checked ? "line-through text-gray-400" : "text-gray-900"}`}>
-            <input type="checkbox" className={cbCls} checked={checked} onChange={e => setChecked(e.target.checked)} />
-            <span>{label}</span>
-        </label>
-    );
-}
-
+/* ── main component ─────────────────────────────────────────── */
 function ChecklistContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const userId = searchParams.get('user');
-    const [userName, setUserName] = useState("");
+
+    const [userName,  setUserName]  = useState("");
     const [userEmail, setUserEmail] = useState("");
     const [userTitle, setUserTitle] = useState("");
-    const [deviceName, setDeviceName] = useState("");
-    const [dataRemoval, setDataRemoval] = useState<string | null>(null);
+    const [deviceName,setDeviceName]= useState("");
+    const [lastDay,   setLastDay]   = useState("");
     const [devicePin, setDevicePin] = useState("");
-    const [otherAsset, setOtherAsset] = useState("");
-    const [lastDay, setLastDay] = useState("");
+    const [dataRemoval, setDataRemoval] = useState<string|null>(null);
+    const [sections, setSections]   = useState<Section[]>(DEFAULT_SECTIONS);
 
     useEffect(() => {
         if (userId) {
@@ -65,21 +129,27 @@ function ChecklistContent() {
                 .then(d => {
                     if (d.displayName) setUserName(d.displayName);
                     if (d.mail || d.userPrincipalName) setUserEmail(d.mail || d.userPrincipalName);
-                    if (d.jobTitle) setUserTitle(d.jobTitle);
-                })
-                .catch(() => {});
+                    if (d.jobTitle)    setUserTitle(d.jobTitle);
+                }).catch(() => {});
             fetch(`/api/devices?userId=${userId}`)
                 .then(r => r.json())
-                .then(d => {
-                    if (d.devices?.length > 0) setDeviceName(d.devices[0].deviceName || d.devices[0].displayName || "");
-                })
+                .then(d => { if (d.devices?.length > 0) setDeviceName(d.devices[0].deviceName || d.devices[0].displayName || ""); })
                 .catch(() => {});
         }
     }, [userId]);
 
+    const updateSection = (updated: Section) =>
+        setSections(prev => prev.map(s => s.id === updated.id ? updated : s));
+
+    const addSection = () =>
+        setSections(prev => [...prev, { id: nextId++, title: "New Section", items: [makeItem("")] }]);
+
+    const removeSection = (id: number) =>
+        setSections(prev => prev.filter(s => s.id !== id));
+
     return (
         <div className="min-h-screen py-12 flex flex-col items-center print:py-0 print:bg-white" style={{background:"#c8c8c8", fontFamily:"'Calibri','Calibri Light',sans-serif", fontSize:"11pt", color:"#111111"}}>
-            <div className="w-full max-w-[210mm] bg-white shadow-2xl print:shadow-none print:p-8 ring-1 ring-gray-400 print:ring-0" style={{padding:"40px 48px 48px 48px", fontFamily:"inherit", fontSize:"inherit"}}>
+            <div className="w-full max-w-[210mm] bg-white shadow-2xl print:shadow-none ring-1 ring-gray-400 print:ring-0" style={{padding:"40px 48px 48px 48px", fontFamily:"inherit", fontSize:"inherit"}}>
 
                 {/* Header */}
                 <div className="flex justify-between items-start border-b-2 border-black pb-6 mb-8">
@@ -94,11 +164,18 @@ function ChecklistContent() {
                     <h2 className="font-bold border-b border-black pb-1 mb-3">User Information</h2>
                     <table className="w-full border-collapse">
                         <tbody>
-                            <Row label="Username:" value={userName} />
-                            <Row label="Job Title:" value={userTitle} />
-                            <Row label="Email:" value={userEmail} />
-                            <Row label="Device:" value={deviceName} />
-                            <Row label="Last Day:" value={lastDay} />
+                            {[
+                                ["Username:",  userName,  setUserName],
+                                ["Job Title:", userTitle, setUserTitle],
+                                ["Email:",     userEmail, setUserEmail],
+                                ["Device:",    deviceName,setDeviceName],
+                                ["Last Day:",  lastDay,   setLastDay],
+                            ].map(([lbl, val, setter]: any) => (
+                                <tr key={lbl} className="border-b border-gray-100">
+                                    <td className="py-2 font-semibold pr-4 align-bottom" style={{width:"160px"}}>{lbl}</td>
+                                    <td className="py-2 align-bottom"><input className={inputCls} value={val} onChange={e => setter(e.target.value)} /></td>
+                                </tr>
+                            ))}
                         </tbody>
                     </table>
                 </section>
@@ -114,10 +191,10 @@ function ChecklistContent() {
                             <AdminRow label="Remove from all groups on AD:" />
                             <tr className="border-b border-gray-100">
                                 <td className="py-2 pr-4 align-middle">Company data removal:</td>
-                                <td className="py-2 flex items-center gap-4">
+                                <td className="py-2 flex items-center gap-4 flex-wrap">
                                     {["Yes","No","Retrain till specified"].map(opt => (
                                         <label key={opt} className="flex items-center gap-1 cursor-pointer">
-                                            <input type="radio" name="dataRemoval" className="accent-gray-800 cursor-pointer" value={opt} checked={dataRemoval===opt} onChange={() => setDataRemoval(opt)} />
+                                            <input type="radio" name="dataRemoval" className="accent-gray-800" value={opt} checked={dataRemoval===opt} onChange={() => setDataRemoval(opt)} />
                                             <span>{opt}</span>
                                         </label>
                                     ))}
@@ -126,60 +203,36 @@ function ChecklistContent() {
                             <AdminRow label="Clear MFA Settings:" />
                         </tbody>
                     </table>
-                </section>
-
-                {/* To be completed with the User */}
-                <section className="mb-8">
-                    <h2 className="font-bold border-b border-black pb-1 mb-3">To be completed with the User</h2>
-                    <table className="w-full border-collapse mb-4">
+                    <table className="w-full border-collapse mt-4">
                         <tbody>
                             <tr className="border-b border-gray-100">
-                                <td className="py-2 font-semibold pr-4 align-bottom" style={{width:"180px"}}>Device Login Pin:</td>
+                                <td className="py-2 font-semibold pr-4 align-bottom" style={{width:"160px"}}>Device Login Pin:</td>
                                 <td className="py-2 align-bottom"><input className={inputCls} value={devicePin} onChange={e => setDevicePin(e.target.value)} /></td>
                             </tr>
                         </tbody>
                     </table>
-
-                    <p className="font-bold mb-2">Uninstallation of Euphoria App and Office products:</p>
-                    <CheckItem label="Ensure the Euphoria app and Office products is uninstalled from all company and personal devices." />
-
-                    <p className="font-bold mt-4 mb-2">Return of Company Property:</p>
-                    <CheckItem label="Return company-issued phone." />
-                    <CheckItem label="Return company-issued laptop." />
-                    <CheckItem label="Return any other equipment or materials provided by the company." />
-
-                    <p className="font-bold mt-4 mb-2">Data Removal:</p>
-                    <CheckItem label="Remove all company-related files, emails, and applications from personal devices." />
-                    <CheckItem label="Verify no company data remains on any external storage devices used by the employee." />
-
-                    <p className="font-bold mt-4 mb-2">Final Checklist:</p>
-                    <CheckItem label="Confirm uninstallation of Euphoria app and Office products." />
-                    <CheckItem label="Confirm return of all company property." />
-                    <CheckItem label="Verify data removal from personal devices." />
-                    <CheckItem label="Confirm email forwarding setup." />
                 </section>
 
-                {/* Company Assets Returned */}
-                <section className="mb-8">
-                    <h2 className="font-bold border-b border-black pb-1 mb-2">Company Assets Returned</h2>
-                    <p className="mb-3 text-gray-900">The following company issued IT assets have been returned by the employee:</p>
-                    <CheckItem label="Laptop / Desktop" />
-                    <CheckItem label="Power supply" />
-                    <CheckItem label="External peripherals (mouse, keyboard, headset, adapters)" />
-                    <CheckItem label="Mobile phone / SIM" />
-                    <CheckItem label="Access cards / security tokens" />
-                    <CheckItem label="Laptop Bag" />
-                    <div className="flex items-center gap-2 mt-1">
-                        <label className="flex items-center gap-2">
-                            <input type="checkbox" className={cbCls} />
-                            <span>Other:</span>
-                        </label>
-                        <input className={`${inputCls} flex-1`} value={otherAsset} onChange={e => setOtherAsset(e.target.value)} />
+                {/* Dynamic editable sections */}
+                {sections.map(sec => (
+                    <div key={sec.id} className="relative group/sec">
+                        <button
+                            onClick={() => removeSection(sec.id)}
+                            className="absolute -right-6 top-0 opacity-0 group-hover/sec:opacity-100 text-red-400 hover:text-red-600 text-xs transition-opacity print:hidden"
+                            title="Remove section"
+                        >✕</button>
+                        <EditableSection sec={sec} onChange={updateSection} />
                     </div>
-                </section>
+                ))}
+
+                {/* Add section */}
+                <button
+                    onClick={addSection}
+                    className="w-full mt-2 mb-8 text-xs text-gray-400 hover:text-gray-800 border border-dashed border-gray-300 hover:border-gray-600 py-2 rounded transition-colors print:hidden"
+                >+ Add Section</button>
 
                 {/* Signatures */}
-                <div className="mt-16">
+                <div className="mt-8">
                     <h2 className="font-bold mb-8">Formal Acknowledgment</h2>
                     <div className="grid grid-cols-2 gap-16">
                         <div>
