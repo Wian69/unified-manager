@@ -105,6 +105,24 @@ function OffboardingContent() {
         saveWatchlist(newList);
     };
 
+    const updateField = (userId: string, field: string, value: any) => {
+        const newList = monitoredUsers.map(u => u.id === userId ? { ...u, [field]: value } : u);
+        setMonitoredUsers(newList);
+        saveWatchlist(newList);
+    };
+
+    const toggleCheckitem = (userId: string, itemId: string) => {
+        const newList = monitoredUsers.map(u => {
+            if (u.id === userId) {
+                const checklist = u.checklist || {};
+                return { ...u, checklist: { ...checklist, [itemId]: !checklist[itemId] } };
+            }
+            return u;
+        });
+        setMonitoredUsers(newList);
+        saveWatchlist(newList);
+    };
+
     const fetchOffboardingData = async () => {
         setLoading(true);
         try {
@@ -360,13 +378,6 @@ function OffboardingContent() {
                                     const isOnline = agent?.status === 'online';
                                     const compliance = intuneDevice?.complianceState || "Unknown";
 
-                                    const updateField = (field: string, val: string) => {
-                                        const newList = monitoredUsers.map(m => m.id === u.id ? { ...m, [field]: val } : m);
-                                        setMonitoredUsers(newList);
-                                        // Use a debounced or separate save button? No, let's just save for now
-                                        saveWatchlist(newList);
-                                    };
-
                                     return (
                                         <tr 
                                             key={u.id} 
@@ -391,7 +402,7 @@ function OffboardingContent() {
                                                         <input 
                                                             type="date" 
                                                             value={u.lastDay || ""} 
-                                                            onChange={(e) => updateField('lastDay', e.target.value)}
+                                                            onChange={(e) => updateField(u.id, 'lastDay', e.target.value)}
                                                             className="bg-slate-950 border border-slate-800 rounded px-2 py-0.5 text-[10px] text-slate-200 outline-none focus:border-blue-500 transition-colors"
                                                         />
                                                     </div>
@@ -400,9 +411,32 @@ function OffboardingContent() {
                                                         <textarea 
                                                             placeholder="What to do..."
                                                             value={u.exitComments || ""}
-                                                            onChange={(e) => updateField('exitComments', e.target.value)}
+                                                            onChange={(e) => updateField(u.id, 'exitComments', e.target.value)}
                                                             className="w-full bg-slate-950/50 border border-slate-800/60 rounded-lg p-2 text-[10px] text-slate-300 outline-none focus:border-blue-500/50 placeholder:text-slate-700 resize-none h-12"
                                                         />
+                                                    </div>
+                                                    {/* IT Operational Checklist */}
+                                                    <div className="flex flex-wrap gap-1 mt-1">
+                                                        {[
+                                                            { id: 'shared', label: 'Shared' },
+                                                            { id: 'license', label: 'License' },
+                                                            { id: 'forward', label: 'Forward' },
+                                                            { id: 'groups', label: 'AD Groups' },
+                                                            { id: 'sp', label: 'SP/Teams' }
+                                                        ].map(item => (
+                                                            <button
+                                                                key={item.id}
+                                                                onClick={() => toggleCheckitem(u.id, item.id)}
+                                                                className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter border transition-all ${
+                                                                    u.checklist?.[item.id] 
+                                                                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
+                                                                    : 'bg-slate-950/50 border-slate-800/40 text-slate-600 hover:border-slate-700'
+                                                                }`}
+                                                                title={`Mark ${item.label} as Complete`}
+                                                            >
+                                                                {item.label}
+                                                            </button>
+                                                        ))}
                                                     </div>
                                                 </div>
                                             </td>
@@ -437,34 +471,31 @@ function OffboardingContent() {
                                                         onClick={() => {
                                                             const printWindow = window.open('', '_blank');
                                                             if (printWindow) {
+                                                                const lastDay = u.lastDay || "__________";
                                                                 printWindow.document.write(`
                                                                     <html>
                                                                         <head>
                                                                             <title>Master Offboarding - ${u.displayName}</title>
                                                                             <style>
                                                                                 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-                                                                                body { font-family: 'Inter', -apple-system, sans-serif; padding: 40px; color: #1e293b; line-height: 1.4; font-size: 12px; }
+                                                                                body { font-family: 'Inter', sans-serif; padding: 40px; color: #1e293b; line-height: 1.3; font-size: 10px; }
                                                                                 .header { border-bottom: 2px solid #0f172a; padding-bottom: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }
-                                                                                .title { font-size: 24px; font-weight: 800; text-transform: uppercase; letter-spacing: -0.025em; color: #0f172a; margin: 0; }
-                                                                                .subtitle { font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; margin-bottom: 2px; }
+                                                                                .title { font-size: 22px; font-weight: 800; text-transform: uppercase; letter-spacing: -0.025em; color: #0f172a; margin: 0; }
+                                                                                .subtitle { font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; margin-bottom: 2px; }
                                                                                 .section { margin-bottom: 15px; page-break-inside: avoid; }
-                                                                                .section-header { background: #f8fafc; padding: 6px 10px; border-left: 3px solid #3b82f6; font-weight: 800; text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+                                                                                .section-header { background: #f8fafc; padding: 6px 10px; border-left: 4px solid #3b82f6; font-weight: 800; text-transform: uppercase; font-size: 9px; letter-spacing: 0.05em; margin-bottom: 10px; }
                                                                                 .grid { display: grid; grid-template-cols: 1fr 1fr; gap: 10px 20px; }
-                                                                                .field { margin-bottom: 5px; }
-                                                                                .label { font-size: 9px; color: #94a3b8; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 1px; }
-                                                                                .value { font-size: 13px; font-weight: 500; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 1px; min-height: 18px; }
+                                                                                .label { font-size: 8px; color: #94a3b8; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 1px; }
+                                                                                .value { font-size: 12px; font-weight: 500; color: #1e293b; border-bottom: 1px solid #f1f5f9; min-height: 18px; }
                                                                                 .checklist { list-style: none; padding: 0; margin: 0; }
                                                                                 .check-item { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 5px; }
                                                                                 .box { width: 12px; height: 12px; border: 1.5px solid #cbd5e1; border-radius: 2px; shrink-0; margin-top: 2px; }
-                                                                                .check-text { font-size: 11px; font-weight: 500; color: #334155; }
-                                                                                .check-sub { font-size: 9px; color: #64748b; display: block; }
-                                                                                .pin-box { background: #f1f5f9; border: 1px dashed #cbd5e1; padding: 8px 12px; border-radius: 6px; margin-top: 5px; display: flex; align-items: center; gap: 10px; }
+                                                                                .check-text { font-size: 10px; font-weight: 500; }
+                                                                                .check-sub { font-size: 8px; color: #64748b; display: block; }
                                                                                 .signatures { margin-top: 30px; display: grid; grid-template-cols: 1fr 1fr; gap: 40px; }
                                                                                 .sig-box { border-top: 1px solid #0f172a; padding-top: 8px; }
-                                                                                .sig-label { font-size: 10px; font-weight: 800; text-transform: uppercase; color: #0f172a; margin-bottom: 10px; }
-                                                                                .sig-grid { display: grid; grid-template-cols: 60px 1fr; gap: 5px; font-size: 10px; }
-                                                                                .sig-field { color: #94a3b8; font-weight: 600; }
-                                                                                .footer { position: fixed; bottom: 30px; left: 40px; right: 40px; border-top: 1px solid #f1f5f9; padding-top: 10px; display: flex; justify-content: space-between; font-size: 9px; color: #94a3b8; font-weight: 600; }
+                                                                                .sig-label { font-size: 9px; font-weight: 800; text-transform: uppercase; color: #0f172a; margin-bottom: 10px; }
+                                                                                .footer { position: fixed; bottom: 30px; left: 40px; right: 40px; border-top: 1px solid #f1f5f9; padding-top: 10px; display: flex; justify-content: space-between; font-size: 8px; color: #94a3b8; font-weight: 600; }
                                                                                 @media print { .no-print { display: none; } }
                                                                             </style>
                                                                         </head>
@@ -472,112 +503,101 @@ function OffboardingContent() {
                                                                             <div class="header">
                                                                                 <div>
                                                                                     <div class="subtitle">Equinox Group Holdings, Inc.</div>
-                                                                                    <h1 class="title">Master Offboarding Record</h1>
+                                                                                    <h1 class="title">Master Offboarding Audit</h1>
                                                                                 </div>
                                                                                 <div style="text-align: right;">
-                                                                                    <div style="font-size: 10px; font-weight: 800; color: #ef4444; margin-bottom: 2px;">CONFIDENTIAL / AUDIT DATA</div>
-                                                                                    <div style="font-size: 9px; color: #64748b;">Effective: 07 MARCH 2025</div>
+                                                                                    <div style="font-size: 10px; font-weight: 800; color: #ef4444; margin-bottom: 2px;">CONFIDENTIAL / INTERNAL USE ONLY</div>
+                                                                                    <div style="font-size: 9px; color: #64748b;">Record v2.3 | March 2025</div>
                                                                                 </div>
                                                                             </div>
 
                                                                             <div class="section">
-                                                                                <div class="section-header">1. PERSONNEL & TRANSITION DATA</div>
+                                                                                <div class="section-header">1. PERSONNEL DATA</div>
                                                                                 <div class="grid">
-                                                                                    <div class="field"><span class="label">Full Legal Name</span><div class="value">${u.displayName}</div></div>
-                                                                                    <div class="field"><span class="label">Job Title</span><div class="value">${u.jobTitle || "Not Set"}</div></div>
-                                                                                    <div class="field"><span class="label">Principal Identity</span><div class="value">${u.userPrincipalName}</div></div>
-                                                                                    <div class="field"><span class="label">Last Day of Service</span><div class="value">${u.lastDay || "Not Set"}</div></div>
+                                                                                    <div class="field"><span class="label">Legal Name</span><div class="value">${u.displayName}</div></div>
+                                                                                    <div class="field"><span class="label">Job Title</span><div class="value">${u.jobTitle || "N/A"}</div></div>
+                                                                                    <div class="field"><span class="label">Principal ID</span><div class="value">${u.userPrincipalName}</div></div>
+                                                                                    <div class="field"><span class="label">Last Day</span><div class="value">${lastDay}</div></div>
                                                                                 </div>
                                                                             </div>
 
                                                                             <div class="section">
-                                                                                <div class="section-header">2. IT EXIT POLICY CHECKLIST (INTERNAL SOP)</div>
+                                                                                <div class="section-header">2. IT ASSET RECOVERY</div>
                                                                                 <div class="checklist">
-                                                                                    <div class="check-item"><div class="box"></div><div><span class="check-text">Application Removal (Euphoria, Outlook, Teams, OneDrive)</span><span class="check-sub">Uninstalled from all company and personal devices.</span></div></div>
-                                                                                    <div class="check-item"><div class="box"></div><div><span class="check-text">Hardware Recovery (Phone, Laptop, Peripherals)</span><span class="check-sub">All company-issued equipment received and inspected.</span></div></div>
-                                                                                    <div class="check-item"><div class="box"></div><div><span class="check-text">Data Sanitization & Personal Review</span><span class="check-sub">Personal devices verified clean of Equinox corporate data.</span></div></div>
-                                                                                    <div class="check-item"><div class="box"></div><div><span class="check-text">Email Management & Forwarding</span><span class="check-sub">Auto-replies set and critical comms redirected.</span></div></div>
-                                                                                </div>
-                                                                                <div class="pin-box">
-                                                                                    <span class="label" style="margin: 0; min-width: 140px;">LAPTOP PIN / PASSWORD:</span>
-                                                                                    <div class="value" style="flex: 1; border: none; font-family: monospace; font-size: 16px; letter-spacing: 2px;">____________________</div>
+                                                                                    <div class="check-item"><div class="box"></div><span class="check-text">Laptop/Desktop & Power Supply Returned (PIN: ____________)</span></div>
+                                                                                    <div class="check-item"><div class="box"></div><span class="check-text">Mobile Device & SIM Recovered</span></div>
+                                                                                    <div class="check-item"><div class="box"></div><span class="check-text">Peripherals (Mouse, Keyboard, Headset, Adapters)</span></div>
+                                                                                    <div style="margin-left: 20px; font-size: 8px; color: #64748b;">CONDITION: [ ] GOOD  [ ] FAIR  [ ] DAMAGED</div>
                                                                                 </div>
                                                                             </div>
 
                                                                             <div class="section">
-                                                                                <div class="section-header">3. ACCESS REVOCATION & SECURITY AUDIT (VANTA)</div>
+                                                                                <div class="section-header">3. IT OPERATIONAL CHECKLIST (DEPROVISIONING)</div>
                                                                                 <div class="checklist" style="display: grid; grid-template-cols: 1fr 1fr; gap: 5px 20px;">
-                                                                                    <div class="check-item"><div class="box"></div><span class="check-text">Entra ID Status: DISABLED</span></div>
-                                                                                    <div class="check-item"><div class="box"></div><span class="check-text">MFA/Security Device Purge</span></div>
-                                                                                    <div class="check-item"><div class="box"></div><span class="check-text">Admin Role Revocation</span></div>
-                                                                                    <div class="check-item"><div class="box"></div><span class="check-text">SaaS Access (VPN, CRM, Slack)</span></div>
-                                                                                    <div class="check-item"><div class="box"></div><span class="check-text">30-Day Audit Log Review</span></div>
-                                                                                    <div class="check-item"><div class="box"></div><span class="check-text">Distribution List Cleanup</span></div>
+                                                                                    <div class="check-item"><div class="${u.checklist?.shared ? 'box' : 'box'}"></div><div><span class="check-text">${u.checklist?.shared ? '✓' : ''} Shared Mailbox Conversion</span><span class="check-sub">Mailbox converted for continuity</span></div></div>
+                                                                                    <div class="check-item"><div class="box"></div><div><span class="check-text">${u.checklist?.license ? '✓' : ''} License Removal</span><span class="check-sub">M365 & specialized licenses revoked</span></div></div>
+                                                                                    <div class="check-item"><div class="box"></div><div><span class="check-text">${u.checklist?.forward ? '✓' : ''} Forwarding / Delegation</span><span class="check-sub">Access set for manager/successor</span></div></div>
+                                                                                    <div class="check-item"><div class="box"></div><div><span class="check-text">Entra ID Status: DISABLED</span><span class="check-sub">Login access revoked</span></div></div>
+                                                                                    <div class="check-item"><div class="box"></div><div><span class="check-text">${u.checklist?.groups ? '✓' : ''} AD Group Cleanup</span><span class="check-sub">Removed from all security/dist groups</span></div></div>
+                                                                                    <div class="check-item"><div class="box"></div><div><span class="check-text">${u.checklist?.sp ? '✓' : ''} SharePoint/Teams Removal</span><span class="check-sub">Access revoked from all sites/files</span></div></div>
+                                                                                    <div class="check-item"><div class="box"></div><div><span class="check-text">MFA Security Flush</span><span class="check-sub">All authentication methods purged</span></div></div>
+                                                                                    <div class="check-item"><div class="box"></div><div><span class="check-text">Remote App Wipe</span><span class="check-sub">Selective wipe of corporate data</span></div></div>
                                                                                 </div>
                                                                             </div>
 
                                                                             <div class="section">
-                                                                                <div class="section-header">4. EXIT COMMENTS & SPECIAL INSTRUCTIONS</div>
-                                                                                <div class="value" style="white-space: pre-wrap; min-height: 60px; padding: 10px; background: #f8fafc; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11px;">${u.exitComments || "N/A"}</div>
-                                                                            </div>
-
-                                                                            <div class="section">
-                                                                                <div class="section-header">5. LEGAL & INTELLECTUAL PROPERTY ACKNOWLEDGEMENT</div>
-                                                                                <p style="font-size: 10px; color: #64748b; margin: 0; text-align: justify;">
-                                                                                    The employee acknowledges that all files, emails, and data created during employment remain the exclusive Intellectual Property (IP) of Equinox Group Holdings, Inc. and that all post-exit confidentiality obligations (NDA) remain in full effect.
+                                                                                <div class="section-header">4. DATA RETENTION & IP ACKNOWLEDGEMENT</div>
+                                                                                <p style="text-align: justify; font-size: 9px; color: #64748b; margin: 0;">
+                                                                                    Mailbox retained for 12 months. OneDrive access granted to manager for 7 days. All intellectual property remains the property of Equinox Group Holdings, Inc. Post-exit confidentiality obligations (NDA) remain in effect.
                                                                                 </p>
                                                                             </div>
 
                                                                             <div class="signatures">
                                                                                 <div class="sig-box">
-                                                                                    <div class="sig-label">Departing Employee</div>
-                                                                                    <div class="sig-grid">
-                                                                                        <span class="sig-field">Name:</span><span>${u.displayName}</span>
-                                                                                        <span class="sig-field">Signature:</span><span>____________________</span>
-                                                                                        <span class="sig-field">Date:</span><span>____________________</span>
-                                                                                    </div>
+                                                                                    <div class="sig-label">Employee Acknowledgement</div>
+                                                                                    <div style="font-size: 10px;">Signature: ____________________ Date: ________</div>
                                                                                 </div>
                                                                                 <div class="sig-box">
-                                                                                    <div class="sig-label">Group IT Support Specialist</div>
-                                                                                    <div class="sig-grid">
-                                                                                        <span class="sig-field">Name:</span><span>____________________</span>
-                                                                                        <span class="sig-field">Signature:</span><span>____________________</span>
-                                                                                        <span class="sig-field">Date:</span><span>____________________</span>
-                                                                                    </div>
+                                                                                    <div class="sig-label">IT Auditor Verification</div>
+                                                                                    <div style="font-size: 10px;">Signature: ____________________ Date: ________</div>
                                                                                 </div>
                                                                             </div>
 
                                                                             <div class="footer">
                                                                                 <span>WWW.EQNCS.COM</span>
-                                                                                <span>ENQUIRIES@EQNCS.COM</span>
-                                                                                <span>VERSION 2.1 - COMPLIANCE AUDIT READY</span>
+                                                                                <span>VERSION 2.3 AUDIT READY</span>
                                                                             </div>
 
-                                                                            <div class="no-print" style="margin-top: 30px; text-align: center; border-top: 1px solid #f1f5f9; padding-top: 20px;">
-                                                                                <button onclick="window.print()" style="padding: 10px 30px; background: #0f172a; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;">Generate Official Form</button>
+                                                                            <div class="no-print" style="margin-top: 30px; text-align: center;">
+                                                                                <button onclick="window.print()" style="padding: 10px 25px; background: #0f172a; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 800;">Print Official Record</button>
                                                                             </div>
                                                                         </body>
-                                                                        </html>
+                                                                    </html>
                                                                 `);
                                                                 printWindow.document.close();
                                                             }
                                                         }}
                                                         className="p-2 text-slate-500 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-xl transition-all"
-                                                        title="Print Exit Interview"
+                                                        title="Print v2.3 Audit Form"
                                                     >
                                                         <FileText size={18} />
                                                     </button>
-                                                    {u.oneDriveUrl && (
-                                                        <a 
-                                                            href={u.oneDriveUrl} 
-                                                            target="_blank" 
-                                                            rel="noopener noreferrer"
-                                                            className="p-2 text-slate-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-xl transition-all"
-                                                            title="Open OneDrive"
-                                                        >
-                                                            <ExternalLink size={18} />
-                                                        </a>
-                                                    )}
+                                                    <button 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (confirm(`Trigger remote app wipe for ${u.displayName}?`)) {
+                                                                fetch('/api/intune/wipe', {
+                                                                    method: 'POST',
+                                                                    headers: { 'Content-Type': 'application/json' },
+                                                                    body: JSON.stringify({ userId: u.id })
+                                                                }).then(r => r.json()).then(d => alert(d.message)).catch(e => alert(e.message));
+                                                            }
+                                                        }}
+                                                        className="p-2 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all"
+                                                        title="Remote App Wipe"
+                                                    >
+                                                        <ShieldAlert size={18} />
+                                                    </button>
                                                     <button 
                                                         onClick={() => removeFromWatchlist(u.id)}
                                                         className="p-2 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
