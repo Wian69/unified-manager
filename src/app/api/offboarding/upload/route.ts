@@ -99,47 +99,6 @@ export async function POST(request: Request) {
 
     } catch (error: any) {
         console.error('[ARCHIVAL] Fatal Error:', error);
-        
-        // Deep Diagnostic on failure
-        let diag: any = { platform: 'cloud', error: error.message };
-        try {
-            const client = getGraphClient();
-            const SITE_ID = 'xxeqncs.sharepoint.com,5dea61bb-5414-4eb9-8924-4db325049cf1,2e3e1f50-85e9-4e47-a44e-476d92257865';
-            const DRIVE_ID = 'b!u2HqXRRUuU6JJE53zmMgmYbUu55OpG1HkiV4ZflxRZqZIVNCDxskQbXbEvQPTOVq';
-            const BASE_FOLDER_ID = '01KVNKAHXZXJ5IB2PRBJHZLOIEXBU5A4O3';
-            
-            try {
-                const drive = await client.api(`/drives/${DRIVE_ID}`).get();
-                diag.driveFound = true;
-                diag.driveName = drive.name;
-            } catch (e: any) {
-                diag.driveFound = false;
-                diag.driveError = e.message;
-            }
-
-            try {
-                const folder = await client.api(`/drives/${DRIVE_ID}/items/${BASE_FOLDER_ID}`).get();
-                diag.baseFolderFound = true;
-                diag.baseFolderId = folder.id;
-            } catch (e: any) {
-                diag.baseFolderFound = false;
-                diag.baseFolderError = e.message;
-            }
-
-            // List drives in site if drive not found
-            if (!diag.driveFound) {
-                const drives = await client.api(`/sites/${SITE_ID}/drives`).get();
-                diag.availableDrives = drives.value.map((d: any) => ({ name: d.name, id: d.id }));
-            }
-
-        } catch (diagErr: any) {
-            diag.diagMetaError = diagErr.message;
-        }
-
-        return NextResponse.json({ 
-            error: "Archival System Error", 
-            details: error.message,
-            diagnostic: diag
-        }, { status: 500 });
+        return NextResponse.json({ error: "Archival System Error", details: error.message }, { status: 500 });
     }
 }
