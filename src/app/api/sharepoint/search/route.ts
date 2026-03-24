@@ -18,16 +18,16 @@ export async function GET(req: NextRequest) {
         
         console.log(`[SEARCH] Querying Graph with term: ${query}`);
 
-        // Simplified query to ensure it doesn't fail on complex fields
+        // Global search for both Drive Items (Files) and List Items (SharePoint/OneDrive content)
         // NOTE: 'region' is required when using Application Permissions (Client Secret)
         const searchResponse = await client.api('/search/query').post({
             requests: [
                 {
-                    entityTypes: ['driveItem'],
+                    entityTypes: ['driveItem', 'listItem'],
                     query: {
                         queryString: query
                     },
-                    region: "ZAF" // Explicitly required for this tenant for Application Permissions
+                    region: "ZAF" 
                 }
             ]
         });
@@ -39,15 +39,20 @@ export async function GET(req: NextRequest) {
         // Transform the results into a cleaner format
         const results = hits.map((hit: any) => {
             const item = hit.resource;
-            // Handle potentially missing fields safely
+            const url = item.webUrl || hit.summary || "#";
+            
+            // Heuristic to identify OneDrive vs SharePoint
+            // OneDrive URLs contain "-my.sharepoint.com/personal/"
+            const isOneDrive = url.includes("-my.sharepoint.com") || (!item.parentReference?.siteId && !item.parentReference?.sharepointIds);
+
             return {
                 id: item.id || hit.hitId,
                 name: item.name || item.listItem?.fields?.FileLeafRef || "Unknown File",
-                webUrl: item.webUrl || hit.summary || "#",
+                webUrl: url,
                 size: item.size || 0,
                 lastModified: item.lastModifiedDateTime || new Date().toISOString(),
                 parentPath: item.parentReference?.path || 'Root',
-                siteName: item.parentReference?.siteId ? 'SharePoint' : 'OneDrive',
+                siteName: isOneDrive ? 'Personal OneDrive' : 'SharePoint Site',
                 type: item.file?.mimeType || 'Document'
             };
         });
