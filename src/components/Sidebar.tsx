@@ -9,7 +9,8 @@ import {
     HardDrive, 
     UserMinus,
     ShieldAlert,
-    Trash2
+    Trash2,
+    Settings
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -21,6 +22,7 @@ export default function Sidebar() {
         { name: 'Offboarding', icon: UserMinus, path: '/offboarding' },
         { name: 'Users', icon: Users, path: '/users' },
         { name: 'SharePoint', icon: HardDrive, path: '/sharepoint' },
+        { name: 'Settings', icon: Settings, path: '/settings' },
     ];
 
     return (

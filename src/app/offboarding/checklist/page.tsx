@@ -2,6 +2,7 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
+import { useCompanyLogo } from "@/hooks/useCompanyLogo";
 
 export default function ChecklistPage() {
     return (
@@ -140,6 +141,7 @@ const TEMPLATE_KEY = "eqn-checklist-template";
 /* ── main component ─────────────────────────────────────────── */
 function ChecklistContent() {
     const searchParams = useSearchParams();
+    const { logo } = useCompanyLogo();
     const router = useRouter();
     const userId = searchParams.get('user');
 
@@ -213,7 +215,7 @@ function ChecklistContent() {
 
                 {/* Header */}
                 <div className="flex justify-between items-start border-b-2 border-black pb-6 mb-8">
-                    <img src="/Equinox-Logo-Transparent.png" alt="Equinox Outsourced Services" className="h-20 w-auto" />
+                    <img src={logo} alt="Company Logo" className="h-20 w-auto" />
                     <div className="text-right mt-2">
                         <h1 className="text-xl font-bold text-gray-900">IT Exit Interview Checklist</h1>
                     </div>

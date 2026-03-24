@@ -2,6 +2,7 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
+import { useCompanyLogo } from "@/hooks/useCompanyLogo";
 
 export default function PolicyPage() {
     return (
@@ -13,6 +14,7 @@ export default function PolicyPage() {
 
 function PolicyContent() {
     const searchParams = useSearchParams();
+    const { logo } = useCompanyLogo();
     const router = useRouter();
     const userId = searchParams.get('user');
     const [userName, setUserName] = useState("________________________");
@@ -38,7 +40,7 @@ function PolicyContent() {
                 
                 {/* Header Section */}
                 <div className="flex justify-between items-start border-b-2 border-black pb-8 mb-8">
-                    <img src="/Equinox-Logo-Transparent.png" alt="Equinox Outsourced Services" className="h-24 w-auto drop-shadow-sm" />
+                    <img src={logo} alt="Company Logo" className="h-24 w-auto drop-shadow-sm" />
                     <div className="text-right flex flex-col justify-end mt-4">
                         <h1 className="text-2xl font-bold tracking-tight text-gray-900">IT Offboarding Policy</h1>
                     </div>
@@ -186,7 +188,7 @@ function PolicyContent() {
                             <div>
                                 <hr className="border-gray-400 mb-4" />
                                 <h3 className="font-bold mb-2">5. Applications & SaaS Platforms</h3>
-                                <p className="mb-1">For any third party systems (e.g., Jira, Freshservice, SAP, Slack):</p>
+                                <p className="mb-1">For any third party systems (e.g., MS365, Euphoria, Payspace, Fusion):</p>
                                 <ul className="list-disc pl-10 space-y-1">
                                     <li>Your access will be fully removed.</li>
                                     <li>Active tasks or projects may be reassigned to your department.</li>
