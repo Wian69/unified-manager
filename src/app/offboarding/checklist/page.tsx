@@ -61,13 +61,7 @@ function EditableSection({ sec, onChange }: { sec: Section; onChange: (s: Sectio
 
     return (
         <section className="mb-8">
-            <div className="flex items-center gap-2 border-b border-black pb-1 mb-3">
-                <input
-                    className="font-bold text-base outline-none bg-transparent flex-1 text-gray-900"
-                    value={sec.title}
-                    onChange={e => editTitle(e.target.value)}
-                />
-            </div>
+            <h2 className="font-bold border-b border-black pb-1 mb-3">{sec.title}</h2>
             {sec.items.map(item => (
                 <div key={item.id} className={`flex items-start gap-2 py-1 group ${item.checked ? "line-through text-gray-400" : "text-gray-900"}`}>
                     <input
@@ -104,6 +98,40 @@ function AdminRow({ label }: { label: string }) {
             <td className="py-2 pr-4 align-bottom">{label}</td>
             <td className="py-2 align-bottom" style={{width:"220px"}}><input className={inputCls} value={val} onChange={e => setVal(e.target.value)} /></td>
         </tr>
+    );
+}
+
+function ExtraAdminItems() {
+    const [items, setItems] = useState<{id:number; label:string; val:string}[]>([]);
+    const add = () => setItems(prev => [...prev, {id: nextId++, label:"", val:""}]);
+    const remove = (id:number) => setItems(prev => prev.filter(i => i.id !== id));
+    const setLabel = (id:number, label:string) => setItems(prev => prev.map(i => i.id===id ? {...i,label} : i));
+    const setVal   = (id:number, val:string)   => setItems(prev => prev.map(i => i.id===id ? {...i,val}   : i));
+    return (
+        <>
+            {items.length > 0 && (
+                <table className="w-full border-collapse mt-2">
+                    <tbody>
+                        {items.map(item => (
+                            <tr key={item.id} className="border-b border-gray-100 group">
+                                <td className="py-2 pr-4 align-bottom">
+                                    <input className={inputCls} value={item.label} onChange={e => setLabel(item.id, e.target.value)} placeholder="Label..." />
+                                </td>
+                                <td className="py-2 align-bottom" style={{width:"220px"}}>
+                                    <input className={inputCls} value={item.val} onChange={e => setVal(item.id, e.target.value)} />
+                                </td>
+                                <td className="py-2 pl-2 align-bottom">
+                                    <button onClick={() => remove(item.id)} className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 text-xs print:hidden transition-opacity">✕</button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            )}
+            <button onClick={add} className="mt-2 text-xs text-gray-400 hover:text-gray-800 border border-dashed border-gray-300 hover:border-gray-600 px-3 py-1 rounded transition-colors print:hidden">
+                + Add item
+            </button>
+        </>
     );
 }
 
@@ -211,6 +239,8 @@ function ChecklistContent() {
                             </tr>
                         </tbody>
                     </table>
+                    {/* Extra IT Admin items */}
+                    <ExtraAdminItems />
                 </section>
 
                 {/* Dynamic editable sections */}
