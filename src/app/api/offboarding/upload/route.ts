@@ -6,75 +6,82 @@ export async function POST(request: Request) {
     const diagnostic: any = {};
     try {
         const formData = await request.formData();
-        const file = formData.get('file') as File;
+        const action = formData.get('action') as string;
         const userName = formData.get('userName') as string;
 
-        if (!file || !userName) {
-            return NextResponse.json({ error: "Missing file or user name" }, { status: 400 });
+        if (!userName) {
+            return NextResponse.json({ error: "Missing user name" }, { status: 400 });
         }
 
         // Target Base Path
         const baseDir = `C:\\!Data\\Equinox Outsourced Services\\EQNCS Homepage - Information Technology\\Policies\\Exit interview policies`;
-        diagnostic.baseDir = baseDir;
-        diagnostic.baseDirExists = fs.existsSync(baseDir);
-
+        
         // Sanitize User Name for Folder
         const sanitizedUserName = userName.replace(/[^a-z0-9\s.-]/gi, '_').trim();
-        diagnostic.userName = userName;
-        diagnostic.sanitizedUserName = sanitizedUserName;
-
-        // Path Construction
         const targetDir = path.join(baseDir, sanitizedUserName);
-        diagnostic.targetDir = targetDir;
 
-        // Ensure directories exist
-        if (!fs.existsSync(targetDir)) {
-            console.log(`[UPLOAD] Attempting to create: ${targetDir}`);
-            // Manual check of parent
-            if (!fs.existsSync(baseDir)) {
-                console.error(`[UPLOAD] BASE DIRECTORY NOT FOUND BY NODE: ${baseDir}`);
-                // Try to find where it breaks
-                const parts = baseDir.split(path.sep);
-                let current = "";
-                for(const part of parts) {
-                    current = current ? path.join(current, part) : part;
-                    if (!fs.existsSync(current)) {
-                        diagnostic.breakPath = current;
-                        break;
-                    }
-                }
-                throw new Error(`Base directory path component missing: ${diagnostic.breakPath || baseDir}`);
+        // ACTION: CREATE FOLDER
+        if (action === 'create-folder') {
+            if (!fs.existsSync(targetDir)) {
+                fs.mkdirSync(targetDir, { recursive: true });
+                return NextResponse.json({ 
+                    success: true, 
+                    message: "Folder prepared successfully",
+                    path: targetDir 
+                });
+            } else {
+                return NextResponse.json({ 
+                    success: true, 
+                    message: "Folder already exists",
+                    path: targetDir 
+                });
             }
-            
-            fs.mkdirSync(targetDir, { recursive: true });
         }
 
-        // Generate custom file name
-        const dateStr = new Date().toISOString().split('T')[0];
-        const extension = path.extname(file.name) || ".pdf";
-        const customName = `EQN Exit IT [${dateStr}]${extension}`;
-        diagnostic.fileName = customName;
-        
-        const bytes = await file.arrayBuffer();
-        const buffer = Buffer.from(bytes);
+        // ACTION: UPLOAD FILES
+        if (action === 'upload') {
+            const policyFile = formData.get('policyFile') as File | null;
+            const checklistFile = formData.get('checklistFile') as File | null;
 
-        const filePath = path.join(targetDir, customName);
-        diagnostic.filePath = filePath;
+            if (!policyFile || !checklistFile) {
+                return NextResponse.json({ error: "Both Policy and Checklist files are required" }, { status: 400 });
+            }
 
-        fs.writeFileSync(filePath, buffer);
+            if (!fs.existsSync(targetDir)) {
+                return NextResponse.json({ error: "Target folder does not exist. Please prepare folder first." }, { status: 400 });
+            }
 
-        return NextResponse.json({ 
-            success: true, 
-            message: `Archived as: ${customName}`,
-            path: filePath
-        });
+            const dateStr = new Date().toISOString().split('T')[0];
+            
+            // Helper to save file
+            const saveFile = async (file: File, prefix: string) => {
+                const ext = path.extname(file.name) || ".pdf";
+                const customName = `${prefix} [${dateStr}]${ext}`;
+                const bytes = await file.arrayBuffer();
+                const buffer = Buffer.from(bytes);
+                const filePath = path.join(targetDir, customName);
+                fs.writeFileSync(filePath, buffer);
+                return customName;
+            };
+
+            const policyName = await saveFile(policyFile, "EQN IT Exit Policy");
+            const checklistName = await saveFile(checklistFile, "EQN IT Exit Checklist");
+
+            return NextResponse.json({ 
+                success: true, 
+                message: "Documents archived successfully",
+                files: [policyName, checklistName]
+            });
+        }
+
+        return NextResponse.json({ error: "Invalid action" }, { status: 400 });
 
     } catch (error: any) {
         console.error('[UPLOAD] Fatal Error:', error);
         return NextResponse.json(
             { 
                 error: "Archival System Error", 
-                details: error.message, 
+                details: error.message,
                 diagnostic 
             },
             { status: 500 }

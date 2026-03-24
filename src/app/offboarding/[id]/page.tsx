@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, use, useRef } from "react";
-import { ArrowLeft, RefreshCw, ShieldAlert, FileText, Activity, Trash2, User, ExternalLink, UploadCloud } from "lucide-react";
+import { ArrowLeft, RefreshCw, ShieldAlert, FileText, Activity, Trash2, User, ExternalLink, UploadCloud, ClipboardList } from "lucide-react";
 import Link from "next/link";
 import SharePointDeletionsModule from "@/components/SharePointDeletionsModule";
 import EmailTraceModule from "@/components/EmailTraceModule";
@@ -15,6 +15,10 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
     const [error, setError] = useState<string | null>(null);
     const [uploading, setUploading] = useState(false);
     const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+    const [showModal, setShowModal] = useState(false);
+    const [folderPrepared, setFolderPrepared] = useState(false);
+    const [policyFile, setPolicyFile] = useState<File | null>(null);
+    const [checklistFile, setChecklistFile] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [sinceDate, setSinceDate] = useState<string>(() => {
         // Default to 30 days ago to show more context by default
@@ -54,15 +58,13 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
         }
     };
 
-    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file || !user?.displayName) return;
-
+    const prepareFolder = async () => {
+        if (!user?.displayName) return;
         setUploading(true);
-        setUploadStatus(null);
+        setUploadStatus("Preparing folder...");
 
         const formData = new FormData();
-        formData.append('file', file);
+        formData.append('action', 'create-folder');
         formData.append('userName', user.displayName);
 
         try {
@@ -72,8 +74,9 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
             });
             const data = await res.json();
             if (data.success) {
-                setUploadStatus("✅ " + data.message);
-                setTimeout(() => setUploadStatus(null), 5000);
+                setFolderPrepared(true);
+                setUploadStatus("✅ Folder ready");
+                setTimeout(() => setUploadStatus(null), 3000);
             } else {
                 setUploadStatus("❌ " + (data.details || data.error));
             }
@@ -81,7 +84,39 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
             setUploadStatus("❌ Connection Error");
         } finally {
             setUploading(false);
-            if (fileInputRef.current) fileInputRef.current.value = "";
+        }
+    };
+
+    const handleFinalUpload = async () => {
+        if (!policyFile || !checklistFile || !user?.displayName) return;
+
+        setUploading(true);
+        setUploadStatus("Archiving documents...");
+
+        const formData = new FormData();
+        formData.append('action', 'upload');
+        formData.append('userName', user.displayName);
+        formData.append('policyFile', policyFile);
+        formData.append('checklistFile', checklistFile);
+
+        try {
+            const res = await fetch('/api/offboarding/upload', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            if (data.success) {
+                setUploadStatus("✅ " + data.message);
+                setShowModal(false);
+                setPolicyFile(null);
+                setChecklistFile(null);
+            } else {
+                setUploadStatus("❌ " + (data.details || data.error));
+            }
+        } catch (err) {
+            setUploadStatus("❌ Connection Error");
+        } finally {
+            setUploading(false);
         }
     };
 
@@ -113,6 +148,86 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
 
     return (
         <div className="p-8 space-y-12 animate-in fade-in duration-700">
+            {/* Archival Modal */}
+            {showModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+                    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-10 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
+                        <h3 className="text-2xl font-black text-white mb-6 flex items-center gap-3">
+                            <UploadCloud className="text-blue-500" />
+                            Archive Documents
+                        </h3>
+                        
+                        <div className="space-y-6">
+                            {/* Policy Upload */}
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">1. IT Exit Policy (Signed)</label>
+                                <div className="relative group/up">
+                                    <input 
+                                        type="file" 
+                                        onChange={(e) => setPolicyFile(e.target.files?.[0] || null)}
+                                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                        accept=".pdf,.jpg,.jpeg,.png,.docx"
+                                    />
+                                    <div className={`p-4 rounded-xl border-2 border-dashed transition-all flex items-center gap-3 ${
+                                        policyFile ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-slate-950/50 border-slate-800 group-hover/up:border-blue-500/30'
+                                    }`}>
+                                        <FileText size={20} className={policyFile ? 'text-emerald-500' : 'text-slate-600'} />
+                                        <span className={`text-[11px] truncate ${policyFile ? 'text-emerald-400 font-bold' : 'text-slate-500'}`}>
+                                            {policyFile ? policyFile.name : 'Click to select Policy...'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Checklist Upload */}
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">2. IT Exit Checklist (Signed)</label>
+                                <div className="relative group/up">
+                                    <input 
+                                        type="file" 
+                                        onChange={(e) => setChecklistFile(e.target.files?.[0] || null)}
+                                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                        accept=".pdf,.jpg,.jpeg,.png,.docx"
+                                    />
+                                    <div className={`p-4 rounded-xl border-2 border-dashed transition-all flex items-center gap-3 ${
+                                        checklistFile ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-slate-950/50 border-slate-800 group-hover/up:border-blue-500/30'
+                                    }`}>
+                                        <ClipboardList size={20} className={checklistFile ? 'text-emerald-500' : 'text-slate-600'} />
+                                        <span className={`text-[11px] truncate ${checklistFile ? 'text-emerald-400 font-bold' : 'text-slate-500'}`}>
+                                            {checklistFile ? checklistFile.name : 'Click to select Checklist...'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p className="text-[10px] text-slate-500 italic text-center">
+                                * Both documents are required to continue archival.
+                            </p>
+
+                            <div className="flex gap-4 pt-4">
+                                <button 
+                                    onClick={() => setShowModal(false)}
+                                    className="flex-1 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    onClick={handleFinalUpload}
+                                    disabled={!policyFile || !checklistFile || uploading}
+                                    className={`flex-1 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                                        !policyFile || !checklistFile || uploading
+                                        ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
+                                        : 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/20 active:scale-95'
+                                    }`}
+                                >
+                                    {uploading ? 'Archiving...' : 'Archive Signed Docs'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Header Navigation */}
             <div className="flex items-center justify-between">
                 <Link href="/offboarding" className="group flex items-center gap-3 text-slate-400 hover:text-white transition-all">
@@ -138,16 +253,16 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
             </div>
 
             {/* Profile Overview Card */}
-            <div className="bg-slate-900/50 backdrop-blur-xl p-10 rounded-3xl border border-slate-800 shadow-xl relative overflow-hidden">
+            <div className="bg-slate-900/50 backdrop-blur-xl p-10 rounded-3xl border border-slate-800 shadow-xl relative overflow-hidden text-left">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/5 blur-[80px] pointer-events-none" />
                 <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
                     <div className="w-32 h-32 bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl flex items-center justify-center text-4xl font-black text-white shadow-2xl">
                         {user.displayName.charAt(0)}
                     </div>
-                    <div className="text-center md:text-left space-y-2">
+                    <div className="text-center md:text-left space-y-2 flex-1">
                         <h1 className="text-4xl font-black text-white tracking-tight">{user.displayName}</h1>
                         <p className="text-lg text-slate-400 font-mono">{user.userPrincipalName}</p>
-                        <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-4">
+                        <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-4">
                             <div className="flex items-center gap-2 text-xs text-slate-500 font-bold uppercase tracking-widest bg-slate-900 px-3 py-1.5 rounded-full border border-slate-800">
                                 <User size={12} className="text-blue-500" />
                                 {user.jobTitle || "Employee"}
@@ -156,55 +271,49 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
                                 <Activity size={12} className="text-emerald-500" />
                                 {user.department || "General"}
                             </div>
-                            {user.oneDriveUrl && (
-                                <a 
-                                    href={user.oneDriveUrl} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-2 text-[10px] text-white font-black uppercase tracking-widest bg-blue-600 hover:bg-blue-500 px-4 py-1.5 rounded-full shadow-lg shadow-blue-600/20 transition-all active:scale-95"
-                                >
-                                    <ExternalLink size={12} />
-                                    Get OneDrive Link
-                                </a>
-                            )}
+                        </div>
+                    </div>
+                    
+                    {/* Action Panel */}
+                    <div className="flex flex-col items-center md:items-end gap-3 self-end">
+                        <div className="flex items-center gap-3">
                             <Link 
                                 href={`/offboarding/${id}/livedata`}
-                                className="flex items-center gap-2 text-[10px] text-white font-black uppercase tracking-widest bg-emerald-600 hover:bg-emerald-500 px-4 py-1.5 rounded-full shadow-lg shadow-emerald-600/20 transition-all active:scale-95"
+                                className="flex items-center gap-2 text-[10px] text-white font-black uppercase tracking-widest bg-emerald-600 hover:bg-emerald-500 px-5 py-2.5 rounded-xl shadow-lg shadow-emerald-600/20 transition-all active:scale-95 border border-emerald-500/20"
                             >
                                 <Activity size={12} />
                                 Live Data
                             </Link>
                             
-                            <div className="flex items-center gap-3">
-                                <input 
-                                    type="file" 
-                                    ref={fileInputRef}
-                                    onChange={handleUpload}
-                                    className="hidden" 
-                                    accept=".pdf,.jpg,.jpeg,.png,.docx"
-                                />
+                            {!folderPrepared ? (
                                 <button 
-                                    onClick={() => fileInputRef.current?.click()}
+                                    onClick={prepareFolder}
                                     disabled={uploading}
-                                    className={`flex items-center gap-2 text-[10px] text-white font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-lg transition-all active:scale-95 ${
-                                        uploading 
-                                        ? 'bg-slate-700 cursor-not-allowed' 
-                                        : 'bg-indigo-600 hover:bg-indigo-500 shadow-indigo-600/20'
-                                    }`}
+                                    className="flex items-center gap-2 text-[10px] text-white font-black uppercase tracking-widest bg-indigo-600 hover:bg-indigo-500 px-5 py-2.5 rounded-xl shadow-lg shadow-indigo-600/20 transition-all active:scale-95 border border-indigo-500/20"
                                 >
-                                    <UploadCloud size={12} className={uploading ? 'animate-bounce' : ''} />
-                                    {uploading ? 'Archiving...' : 'Archive Signed Docs'}
+                                    <Trash2 size={12} />
+                                    Prepare Archival Folder
                                 </button>
-                                
-                                {uploadStatus && (
-                                    <div className={`text-[10px] font-bold px-3 py-1 rounded-lg animate-in slide-in-from-left-2 ${
-                                        uploadStatus.includes('✅') ? 'text-emerald-400 bg-emerald-400/10' : 'text-rose-400 bg-rose-400/10'
-                                    }`}>
-                                        {uploadStatus}
-                                    </div>
-                                )}
-                            </div>
+                            ) : (
+                                <button 
+                                    onClick={() => setShowModal(true)}
+                                    className="flex items-center gap-2 text-[10px] text-white font-black uppercase tracking-widest bg-indigo-600 hover:bg-indigo-500 px-5 py-2.5 rounded-xl shadow-lg shadow-indigo-600/20 transition-all active:scale-95 border border-indigo-500/20"
+                                >
+                                    <UploadCloud size={12} />
+                                    Archive Signed Docs
+                                </button>
+                            )}
                         </div>
+                        
+                        {uploadStatus && (
+                            <div className={`text-[9px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-lg animate-in fade-in slide-in-from-right-2 border ${
+                                uploadStatus.includes('✅') 
+                                ? 'text-emerald-400 bg-emerald-400/10 border-emerald-500/20' 
+                                : 'text-blue-400 bg-blue-400/10 border-blue-500/20'
+                            }`}>
+                                {uploadStatus}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -260,7 +369,7 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
                         />
                     </section>
 
-                    <section className="bg-slate-900/50 p-10 rounded-3xl border border-slate-800">
+                    <section className="bg-slate-900/50 p-10 rounded-3xl border border-slate-800 text-left">
                         <h3 className="text-xl font-bold text-white mb-8">Data Exfiltration Risk Context</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="bg-slate-900/50 p-8 rounded-3xl border border-slate-800 hover:border-blue-500/30 transition-all">
