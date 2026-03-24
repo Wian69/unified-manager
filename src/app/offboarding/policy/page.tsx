@@ -23,7 +23,7 @@ function PolicyContent() {
             fetch(`/api/users/${userId}`)
                 .then(res => res.json())
                 .then(data => {
-                    if (data.user?.displayName) setUserName(data.user.displayName);
+                    if (data.displayName) setUserName(data.displayName);
                 })
                 .catch(() => {});
         }
