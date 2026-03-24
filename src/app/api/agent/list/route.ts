@@ -6,10 +6,20 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
     try {
         const agents: any = await getAgents();
-        const agentsList = Object.keys(agents).map(id => ({
-            id,
-            ...agents[id]
-        }));
+        const now = new Date().getTime();
+        const OFFLINE_THRESHOLD_MS = 30 * 1000; // 30 seconds
+
+        const agentsList = Object.keys(agents).map(id => {
+            const agent = agents[id];
+            const lastSeenTime = agent.lastSeen ? new Date(agent.lastSeen).getTime() : 0;
+            const isOnline = (now - lastSeenTime) < OFFLINE_THRESHOLD_MS;
+
+            return {
+                id,
+                ...agent,
+                status: isOnline ? 'online' : 'offline'
+            };
+        });
 
         return NextResponse.json({ agents: agentsList });
     } catch (error: any) {
