@@ -7,7 +7,12 @@ import SharePointDeletionsModule from "@/components/SharePointDeletionsModule";
 import EmailTraceModule from "@/components/EmailTraceModule";
 import TeamsChatModule from "@/components/TeamsChatModule";
 import ActivityCard from "@/components/ActivityCard";
-import DigitalOffboardingWizard from "@/components/DigitalOffboardingWizard";
+import dynamic from "next/dynamic";
+
+const DigitalOffboardingWizard = dynamic(
+    () => import("@/components/DigitalOffboardingWizard"),
+    { ssr: false }
+);
 
 export default function UserOffboardingPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);

@@ -48,7 +48,7 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
 
             setStatus("Generating documents...");
 
-            const generatePDF = async (ref: React.RefObject<HTMLDivElement>) => {
+            const generatePDF = async (ref: React.RefObject<HTMLDivElement | null>) => {
                 if (!ref.current) return null;
                 const canvas = await html2canvas(ref.current, { scale: 2, backgroundColor: "#ffffff" });
                 const imgData = canvas.toDataURL('image/png');
