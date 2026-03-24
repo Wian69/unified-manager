@@ -1,60 +1,71 @@
-# Master Offboarding & Exit Interview Policy
-**Equinox Outsourced Services**
+# Master Offboarding & Security Audit Record
+**Equinox Group Holdings, Inc.**
+*Effective Date: 7 March 2025*
 
 ---
 
-## 📅 1. Employee Information
-- **Employee Name**: __________________________
+## 📅 1. Employee & Transition Data
+- **Legal Name**: __________________________
 - **Job Title**: __________________________
 - **Department**: __________________________
 - **Last Day of Service**: __________________________
+- **Principal Identity (UPN)**: __________________________
 - **Forwarding Email**: __________________________
-- **Forwarding Phone**: __________________________
 
 ---
 
-## 🔐 2. Access Revocation (Vanta Compliance Check)
-*Standard operating procedure for security framework compliance.*
+## 🔐 2. IT Exit Policy Checklist (Internal SOP)
+*Mandatory deprovisioning steps per Equinox Group IT Policy.*
 
-- [ ] **Entra ID / M365 Account**: Account status set to 'Disabled'.
-- [ ] **MFA / 2FA Reset**: Remove registered devices from Entra ID security info.
-- [ ] **Admin Roles**: Revoke any Global Admin, SharePoint Admin, or specialized roles.
-- [ ] **Shared Mailboxes**: Remove user permissions from all shared distribution lists/mailboxes.
-- [ ] **Third-Party Access**: Revoke access to CRM, VPN, Slack, and any integrated Cloud SaaS platforms.
-- [ ] **Email Auto-Reply**: Set "No longer with the company" internal/external auto-reply.
+- [ ] **Application Removal**: Uninstall Euphoria App, Outlook, Teams, and OneDrive from **ALL** devices (Company & Personal).
+- [ ] **Hardware Return**: Return company-issued Phone, Laptop, and all peripherals (Power supply, etc.).
+- [ ] **Data Sanitization**: Verify removal of all company-related files, emails, and applications from personal devices and external storage.
+- [ ] **Email Management**: Set up necessary email forwarding and "No longer with company" auto-replies.
+- [ ] **Credentials**: Collect **Laptop PIN / Password**: __________________________
 
 ---
 
-## 💻 3. Asset Recovery & Physical Security
-- [ ] **Mobile Device**: Returned and wiped/reset.
-- [ ] **Workstation / Laptop**: Serial No. __________ (PIN/Password: __________)
-- [ ] **Office Keys / Access Tag**: Serial No. __________
-- [ ] **FOB / Security Token**: Returned.
-- [ ] **Company Credit Card**: Cancelled and returned.
+## 🛡️ 3. Access Revocation (Vanta Compliance)
+*Security framework alignment for SOC 2 / ISO 27001.*
+
+- [ ] **Entra ID Identity**: Primary account transitioned to 'Disabled' status in Azure AD.
+- [ ] **MFA / Security Info**: All registered 2FA authentication methods (Phones/FOBs) purged.
+- [ ] **Admin Role Cleanup**: Revoke any Global Admin, SharePoint Admin, or specialized privileged roles.
+- [ ] **Third-Party SaaS**: Access revoked for VPN, CRM (Salesforce/HubSpot), Slack, and AWS/Azure.
+- [ ] **Shared Access**: Individual removed from all shared mailboxes and distribution lists.
 
 ---
 
 ## 📄 4. Data Summary & IP Security
-- [ ] **Data Archive**: OneDrive/SharePoint files audited and ownership transferred.
-- [ ] **Personal Data Removal**: Confirmation that any personal files are removed from company assets.
-- [ ] **IP Acknowledgement**: Confirmation that the user understands all company data belongs to Equinox.
-- [ ] **Confidentiality / NDA**: Acknowledgement that post-exit confidentiality obligations remain in effect.
+- [ ] **Data Archive**: OneDrive/SharePoint files audited and ownership transferred to management.
+- [ ] **30-Day Log Review**: System logs reviewed for the final 30 days of service to ensure data integrity.
+- [ ] **Intellectual Property**: Acknowledgement that all content created remains the IP of Equinox Group Holdings, Inc.
+- [ ] **Confidentiality / NDA**: Ongoing post-exit confidentiality obligations remain in full effect.
 
 ---
 
-## 📬 5. Final Formalities (Offboarding Letter)
-- [ ] **Final Pay / Commissions**: Calculation confirmed and scheduled.
-- [ ] **Expenses**: All final expense claims submitted and approved.
-- [ ] **Benefits**: Information on medical aid / insurance transition provided.
-- [ ] **Exit Interview**: Completed with management feedback.
+## 📬 5. Final Formalities
+- [ ] **Final Pay / Expenses**: Calculation confirmed and final claims approved.
+- [ ] **Personal Data Review**: Employee offered a review of personal data before asset return.
+- [ ] **Exit Interview**: Completed with management/HR feedback.
 
 ---
 
-## ✍️ 6. Sign-off
-**Employee Acknowledgement**
-I confirm that the above items are accurate and that I have returned all company property as indicated.
-Signature: __________________________ Date: __________
+## ✍️ 6. Sign-off & Audit Verification
 
-**Management Approval**
-I confirm that all access has been revoked and all assets recovered per company and Vanta compliance standards.
-Signature: __________________________ Date: __________
+**Departing Employee**
+*I confirm that I have returned all company property and complied with all data removal procedures.*
+- **Name**: __________________________ 
+- **Surname**: __________________________
+- **Signature**: __________________________ 
+- **Date**: __________
+
+**Group IT Support Specialist**
+*I verify that all access has been revoked and all assets recovered per Equinox and Vanta standards.*
+- **Name**: __________________________ 
+- **Surname**: __________________________
+- **Signature**: __________________________ 
+- **Date**: __________
+
+---
+*www.eqncs.com | enquiries@eqncs.com*
