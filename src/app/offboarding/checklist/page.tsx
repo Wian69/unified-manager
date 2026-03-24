@@ -172,9 +172,17 @@ function ChecklistContent() {
                     if (d.mail || d.userPrincipalName) setUserEmail(d.mail || d.userPrincipalName);
                     if (d.jobTitle)    setUserTitle(d.jobTitle);
                 }).catch(() => {});
-            fetch(`/api/devices?userId=${userId}`)
+            fetch(`/api/devices`)
                 .then(r => r.json())
-                .then(d => { if (d.devices?.length > 0) setDeviceName(d.devices[0].deviceName || d.devices[0].displayName || ""); })
+                .then(d => {
+                    if (d.devices?.length > 0) {
+                        // Filter to devices belonging to this user, then pick the most recently synced
+                        const userDevices = d.devices.filter((dev: any) => dev.userId === userId);
+                        const sorted = (userDevices.length > 0 ? userDevices : d.devices)
+                            .sort((a: any, b: any) => new Date(b.lastSyncDateTime || 0).getTime() - new Date(a.lastSyncDateTime || 0).getTime());
+                        setDeviceName(sorted[0].deviceName || sorted[0].displayName || "");
+                    }
+                })
                 .catch(() => {});
         }
     }, [userId]);
