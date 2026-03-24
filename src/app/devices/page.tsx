@@ -72,7 +72,7 @@ export default function DevicesPage() {
 
     useEffect(() => {
         fetchDevices(true);
-        const interval = setInterval(() => fetchDevices(false), 10000);
+        const interval = setInterval(() => fetchDevices(false), 3000);
         return () => clearInterval(interval);
     }, []);
 
@@ -187,12 +187,12 @@ export default function DevicesPage() {
                                             <td className="px-6 py-4 font-medium text-slate-200">{d.deviceName || 'Unknown'}</td>
                                             <td className="px-6 py-4">{d.operatingSystem || 'N/A'}</td>
                                             <td className="px-6 py-4 text-slate-400 font-mono">{d.serialNumber || 'N/A'}</td>
-                                            <td className="px-6 py-4">
+                                             <td className="px-6 py-4">
                                                 {agent ? (
                                                     <div className="flex flex-col">
-                                                        <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-[10px] uppercase tracking-wider mb-1">
-                                                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                                                            Live Agent
+                                                        <div className={`flex items-center gap-1.5 font-bold text-[10px] uppercase tracking-wider mb-1 ${agent.status === 'online' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                                            <div className={`w-2 h-2 rounded-full ${agent.status === 'online' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                                                            {agent.status === 'online' ? 'Live Agent' : 'Agent Offline'}
                                                         </div>
                                                         <div className="text-[11px] text-slate-400">{agent.publicIp}</div>
                                                     </div>
@@ -252,11 +252,13 @@ export default function DevicesPage() {
                                 <div className="space-y-8 pb-10 w-full px-4">
                                     {/* Agent Status Card (NEW) */}
                                     {getAgentForDevice(selectedDeviceData.device.serialNumber) && (
-                                        <section className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-6 mb-8">
+                                        <section className={`${getAgentForDevice(selectedDeviceData.device.serialNumber)?.status === 'online' ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-rose-500/5 border-rose-500/20'} border rounded-2xl p-6 mb-8`}>
                                             <div className="flex justify-between items-start mb-6">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
-                                                    <h3 className="text-xl font-bold text-emerald-400">Enterprise Agent Active</h3>
+                                                    <div className={`w-3 h-3 rounded-full ${getAgentForDevice(selectedDeviceData.device.serialNumber)?.status === 'online' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                                                    <h3 className={`text-xl font-bold ${getAgentForDevice(selectedDeviceData.device.serialNumber)?.status === 'online' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                                        {getAgentForDevice(selectedDeviceData.device.serialNumber)?.status === 'online' ? 'Enterprise Agent Active' : 'Enterprise Agent Offline'}
+                                                    </h3>
                                                 </div>
                                                 <div className="text-right">
                                                     <span className="text-[10px] text-slate-500 uppercase font-black block mb-1">Agent Version</span>

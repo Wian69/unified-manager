@@ -81,7 +81,7 @@ export default function LiveDataDashboard() {
 
         if (userId) {
             initData();
-            const interval = setInterval(fetchAgentsOnly, 10000);
+            const interval = setInterval(fetchAgentsOnly, 3000);
             return () => clearInterval(interval);
         }
     }, [userId]);
