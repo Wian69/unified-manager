@@ -69,17 +69,10 @@ function PolicyContent() {
                 {/* PROFESSIONAL POLICY HEADER with LOGO */}
                 <div className="border-b-2 border-slate-800 pb-12 mb-16 flex flex-col md:flex-row justify-between items-start md:items-center gap-12 print:border-black print:mb-8">
                     <div className="flex items-center gap-6">
-                        {/* CSS-ONLY Corporate Logo for Equinox */}
+                        {/* Final Company Logo */}
                         <div className="flex flex-col">
-                            <div className="flex items-center gap-2">
-                                <span className="text-5xl font-black tracking-tighter text-blue-600 print:text-black italic">EQUINOX</span>
-                                <div className="h-10 w-1 bg-slate-700 print:bg-black mr-2" />
-                                <div className="flex flex-col">
-                                    <span className="text-2xl font-black text-white print:text-black tracking-tight leading-none uppercase">Group Holdings</span>
-                                    <span className="text-lg font-bold text-slate-500 print:text-black leading-none uppercase tracking-widest">Global Protocol</span>
-                                </div>
-                            </div>
-                            <p className="text-[10px] font-black tracking-[0.5em] text-slate-500 mt-2 ml-1 print:text-black">INC. CORPORATE GOVERNANCE</p>
+                            <img src="/equinox-logo.png" alt="Equinox Outsourced Services" className="h-20 w-auto print:brightness-0" />
+                            <p className="text-[10px] font-black tracking-[0.5em] text-slate-500 mt-4 ml-1 print:text-black">INC. CORPORATE GOVERNANCE</p>
                         </div>
                     </div>
 

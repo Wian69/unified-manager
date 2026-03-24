@@ -107,12 +107,11 @@ function ChecklistContent() {
                     
                     <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-12">
                         <div className="flex items-center gap-6">
-                            <div className="p-6 bg-blue-600/20 text-blue-400 rounded-3xl shadow-2xl shadow-blue-500/5 border border-blue-500/10">
-                                <CheckCircle2 size={40} />
-                            </div>
+                            <img src="/equinox-logo.png" alt="Equinox Outsourced Services" className="h-16 w-auto print:brightness-0" />
+                            <div className="h-12 w-px bg-white/10 mx-2 print:hidden" />
                             <div>
-                                <h1 className="text-5xl font-black text-white tracking-widest leading-none uppercase italic">IT EXIT <span className="text-blue-600 italic">INTERVIEW</span></h1>
-                                <p className="text-slate-400 font-black uppercase tracking-[0.4em] text-[10px] mt-4 opacity-60">Equinox Group Holdings, Inc. Protocol</p>
+                                <h1 className="text-4xl font-black text-white tracking-widest leading-none uppercase italic">IT EXIT <span className="text-blue-600 italic">INTERVIEW</span></h1>
+                                <p className="text-slate-400 font-black uppercase tracking-[0.4em] text-[10px] mt-2 opacity-60">Compliance & Asset Protocol</p>
                             </div>
                         </div>
 
