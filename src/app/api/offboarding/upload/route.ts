@@ -14,29 +14,29 @@ export async function POST(request: Request) {
         const client = getGraphClient();
         
         // SharePoint Target IDs (EQNCS Homepage -> Policies -> Exit interview policies)
-        const SITE_ID = 'xxeqncs.sharepoint.com,9bf3a6b7-bf2e-4dd7-8ebe-4cf901e27fd5,9ebbd62d-0361-4cc1-9f2b-7f6511ccfec8';
-        const DRIVE_ID = 'b!t6azsS6_102Ovkz5AeJ_1X_WuzpHe6pMhLpYt1qS88eY6L_WcR8ST7l_HskvS3bM';
-        const BASE_FOLDER_PATH = '/Exit interview policies'; // Path relative to "Policies" drive root
+        const SITE_ID = 'xxeqncs.sharepoint.com,5dea61bb-5414-4eb9-8924-4db325049cf1,2e3e1f50-85e9-4e47-a44e-476d92257865';
+        const DRIVE_ID = 'b!u2HqXRRUuU6JJE53zmMgmYbUu55OpG1HkiV4ZflxRZqZIVNCDxskQbXbEvQPTOVq';
+        const BASE_FOLDER_ID = '01KVNKAHXZXJ5IB2PRBJHZLOIEXBU5A4O3';
 
         // Sanitize User Name for Folder
         const sanitizedUserName = userName.replace(/[^a-z0-9\s.-]/gi, '_').trim();
-        const userFolderPath = `${BASE_FOLDER_PATH}/${sanitizedUserName}`;
+        const userFolderRequestPath = `/drives/${DRIVE_ID}/items/${BASE_FOLDER_ID}:/${sanitizedUserName}`;
 
         // ACTION: CREATE FOLDER
         if (action === 'create-folder') {
             try {
                 // Check if user folder exists
                 try {
-                    await client.api(`/drives/${DRIVE_ID}/root:${userFolderPath}`).get();
+                    await client.api(userFolderRequestPath).get();
                     return NextResponse.json({ 
                         success: true, 
                         message: "SharePoint folder already exists",
-                        path: userFolderPath 
+                        path: sanitizedUserName 
                     });
                 } catch (e: any) {
                     if (e.code === 'itemNotFound') {
                         // Create it
-                        await client.api(`/drives/${DRIVE_ID}/root:${BASE_FOLDER_PATH}/children`).post({
+                        await client.api(`/drives/${DRIVE_ID}/items/${BASE_FOLDER_ID}/children`).post({
                             name: sanitizedUserName,
                             folder: {},
                             "@microsoft.graph.conflictBehavior": "fail"
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
                         return NextResponse.json({ 
                             success: true, 
                             message: "SharePoint archival folder created",
-                            path: userFolderPath 
+                            path: sanitizedUserName 
                         });
                     }
                     throw e;
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
                 const buffer = Buffer.from(bytes);
 
                 // Use simple upload for files < 4MB (Standard for these docs)
-                await client.api(`/drives/${DRIVE_ID}/root:${userFolderPath}/${customName}:/content`)
+                await client.api(`${userFolderRequestPath}/${customName}:/content`)
                     .put(buffer);
                 
                 return customName;
@@ -99,6 +99,47 @@ export async function POST(request: Request) {
 
     } catch (error: any) {
         console.error('[ARCHIVAL] Fatal Error:', error);
-        return NextResponse.json({ error: "Archival System Error", details: error.message }, { status: 500 });
+        
+        // Deep Diagnostic on failure
+        let diag: any = { platform: 'cloud', error: error.message };
+        try {
+            const client = getGraphClient();
+            const SITE_ID = 'xxeqncs.sharepoint.com,5dea61bb-5414-4eb9-8924-4db325049cf1,2e3e1f50-85e9-4e47-a44e-476d92257865';
+            const DRIVE_ID = 'b!u2HqXRRUuU6JJE53zmMgmYbUu55OpG1HkiV4ZflxRZqZIVNCDxskQbXbEvQPTOVq';
+            const BASE_FOLDER_ID = '01KVNKAHXZXJ5IB2PRBJHZLOIEXBU5A4O3';
+            
+            try {
+                const drive = await client.api(`/drives/${DRIVE_ID}`).get();
+                diag.driveFound = true;
+                diag.driveName = drive.name;
+            } catch (e: any) {
+                diag.driveFound = false;
+                diag.driveError = e.message;
+            }
+
+            try {
+                const folder = await client.api(`/drives/${DRIVE_ID}/items/${BASE_FOLDER_ID}`).get();
+                diag.baseFolderFound = true;
+                diag.baseFolderId = folder.id;
+            } catch (e: any) {
+                diag.baseFolderFound = false;
+                diag.baseFolderError = e.message;
+            }
+
+            // List drives in site if drive not found
+            if (!diag.driveFound) {
+                const drives = await client.api(`/sites/${SITE_ID}/drives`).get();
+                diag.availableDrives = drives.value.map((d: any) => ({ name: d.name, id: d.id }));
+            }
+
+        } catch (diagErr: any) {
+            diag.diagMetaError = diagErr.message;
+        }
+
+        return NextResponse.json({ 
+            error: "Archival System Error", 
+            details: error.message,
+            diagnostic: diag
+        }, { status: 500 });
     }
 }
