@@ -37,7 +37,9 @@ try {
     $AgentId = (Get-CimInstance Win32_ComputerSystemProduct).UUID
     $SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
     $Version = "1.3.8"
-    $HeartbeatCount = 0
+    
+    Log-Message "AGENT IDENTIFIED: ID=$AgentId, SERIAL=$SerialNumber"
+    Log-Message "Heartbeat interval: 3 seconds (Robust Mode)"
 
     $InstallDir = "$env:ProgramData\UnifiedAgent"
     $ScriptPath = "$InstallDir\unified-agent.ps1"

@@ -7,6 +7,7 @@ export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
         const { agentId, serialNumber, deviceName, publicIp, localIp, isp, os, version } = body;
+        console.log(`[HB] Incoming: ID=${agentId}, Serial=${serialNumber}, Name=${deviceName}`);
 
         if (!agentId) {
             return NextResponse.json({ error: 'agentId is required' }, { status: 400 });

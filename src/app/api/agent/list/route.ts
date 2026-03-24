@@ -9,6 +9,8 @@ export async function GET(req: NextRequest) {
         const now = new Date().getTime();
         const OFFLINE_THRESHOLD_MS = 25 * 1000; // 25 seconds
 
+        console.log(`[HB_LIST] Processing ${Object.keys(agents).length} agents...`);
+
         const agentsList = Object.keys(agents).map(id => {
             const agent = agents[id];
             const lastSeenTime = agent.lastSeen ? new Date(agent.lastSeen).getTime() : 0;
