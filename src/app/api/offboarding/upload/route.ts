@@ -64,7 +64,7 @@ export async function POST(request: Request) {
         if (action === 'create-folder') {
             try {
                 if (!fs.existsSync(targetDir)) {
-                    // 1. If we are on Windows, try PowerShell (robust for synced volumes)
+                    // Try PowerShell (robust for synced volumes on Windows)
                     if (process.platform === 'win32') {
                         try {
                             const psCommand = `powershell -Command "New-Item -ItemType Directory -Path '${targetDir}' -Force"`;
@@ -76,13 +76,10 @@ export async function POST(request: Request) {
                             fs.mkdirSync(targetDir, { recursive: true });
                         }
                     } else {
-                        // 2. If we are NOT on Windows (Linux/Vercel/Docker), explain the issue
-                        return NextResponse.json({ 
-                            error: "Incompatible Environment", 
-                            details: `The server is running on ${process.platform} and cannot access your local C:\\ drive directly.`,
-                            solution: "Ensure you are running the project locally on your Windows PC (e.g. npm run dev in PowerShell) to access local storage archival.",
-                            diagnostic
-                        }, { status: 400 });
+                        // For Linux/WSL/Docker, just try standard mkdirSync
+                        // If it's WSL and the path starts with C:\, it SHOULD fail unless translated, 
+                        // but we'll let it try and see the real error.
+                        fs.mkdirSync(targetDir, { recursive: true });
                     }
 
                     return NextResponse.json({ 
