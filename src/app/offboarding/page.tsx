@@ -409,7 +409,7 @@ function OffboardingContent() {
                                                             router.push(`/offboarding/policy?user=${u.id}`);
                                                         }}
                                                         className="p-2 text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-xl transition-all"
-                                                        title="Offboarding Policy"
+                                                        title="Holding Policy"
                                                     >
                                                         <FileText size={18} />
                                                     </button>
