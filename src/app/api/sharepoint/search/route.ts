@@ -19,13 +19,15 @@ export async function GET(req: NextRequest) {
         console.log(`[SEARCH] Querying Graph with term: ${query}`);
 
         // Simplified query to ensure it doesn't fail on complex fields
+        // NOTE: 'region' is required when using Application Permissions (Client Secret)
         const searchResponse = await client.api('/search/query').post({
             requests: [
                 {
                     entityTypes: ['driveItem'],
                     query: {
                         queryString: query
-                    }
+                    },
+                    region: "NAM" // Default to North America, Graph will often correct or accept this for routing
                 }
             ]
         });
