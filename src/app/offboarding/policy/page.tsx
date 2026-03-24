@@ -127,6 +127,86 @@ function PolicyContent() {
                     </section>
                 </div>
 
+                {/* Data Retention Section */}
+                <div className="space-y-8 text-[11pt] leading-relaxed text-gray-900 mt-10 pt-10 border-t border-gray-300">
+                    <hr className="border-black mb-4" />
+                    <section>
+                        <h2 className="text-lg font-bold mb-4">Data & System Access After Offboarding</h2>
+                        
+                        <div className="space-y-8">
+                            <div>
+                                <hr className="border-gray-400 mb-4" />
+                                <h3 className="font-bold mb-2">1. Email (Outlook / Microsoft 365 Mailbox)</h3>
+                                <p className="font-bold mb-1">What happens:</p>
+                                <ul className="list-disc pl-10 space-y-1 mb-2">
+                                    <li>Your mailbox will be disabled on your last working day.</li>
+                                    <li>Your manager or designated successor will receive full access for business continuity.</li>
+                                    <li>Auto reply and forwarding (if applicable) will be configured according to company policy.</li>
+                                    <li>Your mailbox will be retained for 12 months according to Equinox Group Holdings, Inc.'s retention policies.</li>
+                                </ul>
+                                <p className="italic">You will no longer have access after offboarding is completed.</p>
+                            </div>
+
+                            <div>
+                                <hr className="border-gray-400 mb-4" />
+                                <h3 className="font-bold mb-2">2. OneDrive Files</h3>
+                                <p className="font-bold mb-1">What happens:</p>
+                                <ul className="list-disc pl-10 space-y-1 mb-2">
+                                    <li>Ownership of your OneDrive files will be transferred to your manager.</li>
+                                    <li>Your manager will have access for 7 days to review and relocate required business related files.</li>
+                                    <li>After the retention period, your OneDrive and its contents will be deleted following company policy.</li>
+                                </ul>
+                                <p className="italic">Personal files may be exported only after IT review and formal approval.</p>
+                            </div>
+
+                            <div>
+                                <hr className="border-gray-400 mb-4" />
+                                <h3 className="font-bold mb-2">3. Teams Chats & Teams Files</h3>
+                                <p className="font-bold mb-1">Teams Chats:</p>
+                                <ul className="list-disc pl-10 space-y-1 mb-2">
+                                    <li>Private Teams chats remain stored according to compliance and retention rules.</li>
+                                    <li>No one receives direct access to your private chat history unless legally required.</li>
+                                </ul>
+                                <p className="font-bold mb-1">Teams Files:</p>
+                                <ul className="list-disc pl-10 space-y-1">
+                                    <li>Files in Teams channels remain accessible to the team.</li>
+                                    <li>Files shared in private chats follow OneDrive transfer rules.</li>
+                                </ul>
+                            </div>
+
+                            <div>
+                                <hr className="border-gray-400 mb-4" />
+                                <h3 className="font-bold mb-2">4. SharePoint & Network Drives</h3>
+                                <ul className="list-disc pl-10 space-y-1">
+                                    <li>All SharePoint documents remain part of their respective sites.</li>
+                                    <li>Access permissions will be updated to remove you from shared folders, groups, and sites.</li>
+                                </ul>
+                            </div>
+
+                            <div>
+                                <hr className="border-gray-400 mb-4" />
+                                <h3 className="font-bold mb-2">5. Applications & SaaS Platforms</h3>
+                                <p className="mb-1">For any third party systems (e.g., Jira, Freshservice, SAP, Slack):</p>
+                                <ul className="list-disc pl-10 space-y-1">
+                                    <li>Your access will be fully removed.</li>
+                                    <li>Active tasks or projects may be reassigned to your department.</li>
+                                    <li>All content created remains the intellectual property of Equinox Group Holdings, Inc.</li>
+                                </ul>
+                            </div>
+
+                            <div>
+                                <hr className="border-gray-400 mb-4" />
+                                <h3 className="font-bold mb-2">6. Personal Data on Company Devices</h3>
+                                <p className="mb-1">If you stored personal files on company equipment:</p>
+                                <ul className="list-disc pl-10 space-y-1">
+                                    <li>You may request a Personal Data Review before your last day.</li>
+                                    <li>IT will help identify items that may be transferred, while ensuring no corporate data is removed.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
                 {/* Signatures Section */}
                 <div className="mt-20 pt-16">
                     <h2 className="text-xl font-bold mb-12">Formal Acknowledgment</h2>
