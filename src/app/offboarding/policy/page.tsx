@@ -16,6 +16,7 @@ function PolicyContent() {
     const router = useRouter();
     const userId = searchParams.get('user');
     const [userName, setUserName] = useState("________________________");
+    const [userTitle, setUserTitle] = useState("________________________");
     const [lastDay, setLastDay] = useState(new Date().toLocaleDateString());
 
     useEffect(() => {
@@ -24,6 +25,7 @@ function PolicyContent() {
                 .then(res => res.json())
                 .then(data => {
                     if (data.displayName) setUserName(data.displayName);
+                    if (data.jobTitle) setUserTitle(data.jobTitle);
                 })
                 .catch(() => {});
         }
@@ -52,9 +54,13 @@ function PolicyContent() {
                         <span className="font-bold text-gray-900">Effective Date:</span>
                         <span>{lastDay}</span>
                     </div>
-                    <div className="grid grid-cols-[150px_1fr] gap-4">
+                    <div className="grid grid-cols-[150px_1fr] gap-4 border-b border-gray-300 pb-3">
                         <span className="font-bold text-gray-900">Subject Personnel:</span>
                         <span className="font-semibold">{userName}</span>
+                    </div>
+                    <div className="grid grid-cols-[150px_1fr] gap-4">
+                        <span className="font-bold text-gray-900">Job Title:</span>
+                        <span>{userTitle}</span>
                     </div>
                 </div>
 
