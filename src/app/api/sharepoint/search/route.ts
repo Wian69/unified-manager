@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
                     query: {
                         queryString: query
                     },
-                    region: "NAM" // Default to North America, Graph will often correct or accept this for routing
+                    region: "ZAF" // Explicitly required for this tenant for Application Permissions
                 }
             ]
         });
