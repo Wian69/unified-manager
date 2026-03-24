@@ -21,27 +21,33 @@ export async function POST(request: Request) {
 
         // Ensure directories exist
         if (!fs.existsSync(targetDir)) {
+            console.log(`[UPLOAD] Creating directory: ${targetDir}`);
             fs.mkdirSync(targetDir, { recursive: true });
         }
 
+        // Generate custom file name: EQN Exit IT [date].pdf
+        const dateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+        const extension = path.extname(file.name) || ".pdf";
+        const customName = `EQN Exit IT [${dateStr}]${extension}`;
+        
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
 
-        const filePath = path.join(targetDir, file.name);
+        const filePath = path.join(targetDir, customName);
+        console.log(`[UPLOAD] Saving file to: ${filePath}`);
+        
         fs.writeFileSync(filePath, buffer);
-
-        console.log(`[UPLOAD] File saved to: ${filePath}`);
 
         return NextResponse.json({ 
             success: true, 
-            message: "File archived successfully",
+            message: `Archived as: ${customName}`,
             path: filePath
         });
 
     } catch (error: any) {
-        console.error('[UPLOAD] Error:', error.message);
+        console.error('[UPLOAD] Fatal Error:', error);
         return NextResponse.json(
-            { error: "Failed to archive document", details: error.message },
+            { error: "System Archival Error", details: error.message },
             { status: 500 }
         );
     }

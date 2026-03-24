@@ -233,9 +233,9 @@ function ChecklistContent() {
             });
             const data = await res.json();
             if (data.success) {
-                setUploadStatus("✅ Document archived successfully");
+                setUploadStatus("✅ " + data.message);
             } else {
-                setUploadStatus("❌ Upload failed: " + data.error);
+                setUploadStatus("❌ Archival failed: " + (data.details || data.error));
             }
         } catch (err) {
             setUploadStatus("❌ Error connecting to archival service");
