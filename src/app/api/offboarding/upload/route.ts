@@ -76,6 +76,25 @@ export async function POST(request: Request) {
         // ACTION: CREATE FOLDER
         if (action === 'create-folder') {
             try {
+                // If on Linux, check if /mnt/c is actually there
+                if (process.platform === 'linux') {
+                   try {
+                       diagnostic.mntContents = fs.readdirSync('/mnt');
+                       diagnostic.cDriveMounted = fs.existsSync('/mnt/c');
+                   } catch (e) {}
+                }
+
+                // Check which segment is missing
+                const missingSegment = pathDiagnostics.find(d => !d.exists);
+                if (missingSegment && missingSegment.segment !== sanitizedUserName) {
+                    return NextResponse.json({ 
+                        error: "Parent directory missing in your environment", 
+                        details: `The segment "${missingSegment.segment}" was not found at ${missingSegment.fullPath}.`,
+                        solution: "Ensure you have mounted the C:\\!Data folder or check that the path is exactly match (case sensitive).",
+                        diagnostic 
+                    }, { status: 404 });
+                }
+
                 if (!fs.existsSync(targetDir)) {
                     // Try PowerShell (robust for synced volumes on Windows)
                     if (process.platform === 'win32') {
@@ -90,8 +109,6 @@ export async function POST(request: Request) {
                         }
                     } else {
                         // For Linux/WSL/Docker, just try standard mkdirSync
-                        // If it's WSL and the path starts with C:\, it SHOULD fail unless translated, 
-                        // but we'll let it try and see the real error.
                         fs.mkdirSync(targetDir, { recursive: true });
                     }
 
