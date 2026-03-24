@@ -13,6 +13,11 @@ export default function SharePointPage() {
     const [isSearching, setIsSearching] = useState(false);
     const [hasSearched, setHasSearched] = useState(false);
 
+    // Local PC Search states
+    const [localResults, setLocalResults] = useState<any[]>([]);
+    const [isLocalScanning, setIsLocalScanning] = useState(false);
+    const [scanProgress, setScanProgress] = useState(0);
+
     const fetchDrives = async () => {
         setLoading(true);
         try {
@@ -45,16 +50,59 @@ export default function SharePointPage() {
         }
     };
 
-    useEffect(() => {
-        fetchDrives();
-    }, []);
-
     const formatSize = (bytes: number) => {
         if (!bytes) return "0 B";
         const k = 1024;
         const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    };
+
+    useEffect(() => {
+        fetchDrives();
+    }, []);
+
+    const handleLocalSearch = async () => {
+        if (!searchQuery.trim()) return;
+        
+        setIsLocalScanning(true);
+        setLocalResults([]);
+        setScanProgress(0);
+
+        try {
+            // 1. Trigger the scan across all agents
+            const triggerRes = await fetch(`/api/sharepoint/search/local?q=${encodeURIComponent(searchQuery)}`);
+            const triggerData = await triggerRes.json();
+            console.log("Local scan triggered", triggerData);
+
+            // 2. Poll for results 5 times over 15 seconds
+            let attempts = 0;
+            const pollInterval = setInterval(async () => {
+                attempts++;
+                setScanProgress(attempts * 20);
+                
+                const res = await fetch(`/api/sharepoint/search/local?q=${encodeURIComponent(searchQuery)}&poll=1`);
+                const data = await res.json();
+                
+                if (data.results && data.results.length > 0) {
+                    // Update local results (merge and unique)
+                    setLocalResults(prev => {
+                        const existingNames = new Set(prev.map(r => r.FullName));
+                        const newOnes = data.results.filter((r: any) => !existingNames.has(r.FullName));
+                        return [...prev, ...newOnes];
+                    });
+                }
+
+                if (attempts >= 6) {
+                    clearInterval(pollInterval);
+                    setIsLocalScanning(false);
+                }
+            }, 2500);
+
+        } catch (error) {
+            console.error("Local search failed", error);
+            setIsLocalScanning(false);
+        }
     };
 
     return (
@@ -82,15 +130,25 @@ export default function SharePointPage() {
 
             {/* Combined Global Search Section */}
             <div className="bg-slate-900/60 p-8 rounded-3xl border border-slate-800/60 backdrop-blur-xl shadow-2xl">
-                <h2 className="text-xl font-black text-white mb-6 flex items-center gap-3">
-                    <Search className="text-blue-500" size={24} />
-                    Global Document Search
-                </h2>
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-xl font-black text-white flex items-center gap-3">
+                        <Search className="text-blue-500" size={24} />
+                        Global Document Search
+                    </h2>
+                    {hasSearched && !isLocalScanning && (
+                        <button 
+                            onClick={handleLocalSearch}
+                            className="text-[10px] font-black uppercase tracking-widest px-4 py-2 bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 rounded-lg hover:bg-indigo-600 hover:text-white transition-all shadow-lg shadow-indigo-500/10"
+                        >
+                            Deep Scan Connected PCs
+                        </button>
+                    )}
+                </div>
                 
                 <form onSubmit={handleSearch} className="relative group">
                     <input 
                         type="text" 
-                        placeholder="Search all Sites and Personal OneDrives (e.g. 'Contract', 'Financial', 'HR')..."
+                        placeholder="Search all Sites and Personal OneDrives..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full bg-slate-950/80 border-2 border-slate-800/80 rounded-2xl py-5 pl-14 pr-32 text-white text-lg focus:outline-none focus:border-blue-500/50 transition-all font-medium placeholder:text-slate-600 shadow-inner"
@@ -103,7 +161,7 @@ export default function SharePointPage() {
                         disabled={isSearching || !searchQuery.trim()}
                         className="absolute right-3 top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all disabled:opacity-50 active:scale-95"
                     >
-                        {isSearching ? <RefreshCw className="animate-spin" size={16} /> : "Search All"}
+                        {isSearching ? <RefreshCw className="animate-spin" size={16} /> : "Cloud Search"}
                     </button>
                 </form>
 
@@ -112,15 +170,60 @@ export default function SharePointPage() {
                     <div className="mt-8 space-y-4">
                         <div className="flex items-center justify-between px-2">
                             <p className="text-xs font-black text-slate-500 uppercase tracking-widest">
-                                {isSearching ? "Searching Enterprise..." : `Found ${searchResults.length} Matches`}
+                                {isSearching ? "Searching Cloud..." : `Found ${searchResults.length + localResults.length} Total Matches`}
                             </p>
-                            {searchResults.length > 0 && (
-                                <button onClick={() => setHasSearched(false)} className="text-xs text-blue-500 hover:underline font-bold">Clear Results</button>
-                            )}
+                            <button onClick={() => { setHasSearched(false); setLocalResults([]); }} className="text-xs text-blue-500 hover:underline font-bold">Clear All</button>
                         </div>
 
-                        {searchResults.length > 0 ? (
+                        {/* Local Scanning Indicator */}
+                        {isLocalScanning && (
+                            <div className="p-6 bg-indigo-900/10 border border-indigo-500/20 rounded-2xl animate-pulse">
+                                <div className="flex items-center justify-between mb-3 text-indigo-400 font-bold text-xs">
+                                    <span className="flex items-center gap-2">
+                                        <Activity size={14} className="animate-bounce" />
+                                        Deep Scanning Connected PCs...
+                                    </span>
+                                    <span>{scanProgress}%</span>
+                                </div>
+                                <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                    <div className="h-full bg-indigo-500 transition-all duration-500" style={{ width: `${scanProgress}%` }} />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Combined Results List */}
+                        {(searchResults.length > 0 || localResults.length > 0) ? (
                             <div className="grid grid-cols-1 gap-3">
+                                {/* Local PC Results First */}
+                                {localResults.map((res: any, idx: number) => (
+                                    <div 
+                                        key={`local-${idx}`}
+                                        className="flex items-center justify-between p-5 bg-indigo-950/20 border border-indigo-500/20 rounded-2xl hover:bg-indigo-900/30 transition-all group"
+                                    >
+                                        <div className="flex items-center gap-5 min-w-0">
+                                            <div className="p-3 bg-indigo-900/40 text-indigo-400 rounded-xl">
+                                                <FileText size={20} />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <h4 className="font-bold text-white group-hover:text-indigo-300 transition-colors truncate">{res.Name}</h4>
+                                                <div className="flex items-center gap-4 text-[10px] text-indigo-400 font-black uppercase tracking-tighter mt-1">
+                                                    <span className="flex items-center gap-1 bg-indigo-500/20 px-2 py-0.5 rounded-full">
+                                                        LIVE FROM PC
+                                                    </span>
+                                                    <span className="truncate max-w-[200px] text-slate-500">{res.FullName}</span>
+                                                    <span className="flex items-center gap-1 border-l border-slate-800 pl-4 text-slate-500">
+                                                        {formatSize(res.Size)}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="px-3 py-1 bg-indigo-500/10 text-indigo-400 text-[10px] font-black rounded-lg border border-indigo-500/20">
+                                            LOCAL FILE
+                                        </div>
+                                    </div>
+                                ))}
+
+                                {/* Cloud Results */}
                                 {searchResults.map((res: any) => (
                                     <a 
                                         key={res.id} 
@@ -131,21 +234,19 @@ export default function SharePointPage() {
                                     >
                                         <div className="flex items-center gap-5 min-w-0">
                                             <div className="p-3 bg-slate-900 text-slate-400 group-hover:text-blue-400 rounded-xl transition-colors">
-                                                {res.type.includes('pdf') ? <FileText size={20} /> : <File size={20} />}
+                                                {res.type?.includes('pdf') ? <FileText size={20} /> : <File size={20} />}
                                             </div>
                                             <div className="min-w-0">
                                                 <h4 className="font-bold text-white group-hover:text-blue-400 transition-colors truncate">{res.name}</h4>
                                                 <div className="flex items-center gap-4 text-[10px] text-slate-500 font-bold uppercase tracking-tighter mt-1">
                                                     <span className="flex items-center gap-1">
-                                                        {res.siteName.includes('Site') ? <Globe size={10} className="text-emerald-500" /> : <User size={10} className="text-indigo-400" />}
+                                                        {res.siteName.includes('Personal') ? <User size={10} className="text-indigo-400" /> : <Globe size={10} className="text-emerald-500" />}
                                                         {res.siteName}
                                                     </span>
                                                     <span className="flex items-center gap-1 border-l border-slate-800 pl-4">
-                                                        <Hash size={10} />
                                                         {formatSize(res.size)}
                                                     </span>
                                                     <span className="flex items-center gap-1 border-l border-slate-800 pl-4">
-                                                        <Clock size={10} />
                                                         {new Date(res.lastModified).toLocaleDateString()}
                                                     </span>
                                                 </div>
@@ -155,11 +256,16 @@ export default function SharePointPage() {
                                     </a>
                                 ))}
                             </div>
-                        ) : !isSearching && (
+                        ) : !isSearching && !isLocalScanning && (
                             <div className="py-20 text-center bg-slate-950/20 rounded-3xl border border-dashed border-slate-800">
                                 <Activity className="mx-auto text-slate-700 mb-4" size={48} />
-                                <p className="text-slate-500 font-bold">No documents found matching "{searchQuery}"</p>
-                                <p className="text-slate-600 text-xs mt-1">Try a different keyword or check your spelling.</p>
+                                <p className="text-slate-500 font-bold">No cloud documents found matching "{searchQuery}"</p>
+                                <button 
+                                    onClick={handleLocalSearch}
+                                    className="mt-6 px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-500/20 transition-all active:scale-95"
+                                >
+                                    Deep Scan All Connected PCs
+                                </button>
                             </div>
                         )}
                     </div>
