@@ -19,27 +19,40 @@ export async function POST(request: Request) {
         
         // Sanitize User Name for Folder
         const sanitizedUserName = userName.replace(/[^a-z0-9\s.-]/gi, '_').trim();
-        // Force Win32 paths to avoid mixed slashes appearing in some environments
-        const targetDir = path.win32.normalize(path.win32.join(baseDir, sanitizedUserName));
+        
+        // Cross-platform path resolution (WSL support)
+        let targetDir = path.win32.normalize(path.win32.join(baseDir, sanitizedUserName));
+        if (process.platform !== 'win32') {
+            console.log('[ARCHIVAL] Linux platform detected. Translating C:\\ to /mnt/c/');
+            // WSL translation: C:\ -> /mnt/c/
+            targetDir = targetDir.replace(/^C:\\/i, '/mnt/c/').replace(/\\/g, '/');
+            diagnostic.isTranslated = true;
+        }
 
         // Deep Path Check
-        const segments = targetDir.split(path.win32.sep);
+        const isWin = process.platform === 'win32';
+        const sep = isWin ? path.win32.sep : path.sep;
+        const segments = targetDir.split(sep);
         let checkPath = '';
         const pathDiagnostics: any[] = [];
         for (const seg of segments) {
             if (!seg && !checkPath) {
-                if (targetDir.startsWith('\\\\')) { // UNC path start
-                   checkPath = '\\\\' + segments[2]; // Simplified UNC base
+                if (isWin && targetDir.startsWith('\\\\')) {
+                   checkPath = '\\\\' + segments[2];
+                   continue;
+                }
+                if (!isWin && targetDir.startsWith('/')) {
+                   checkPath = '/';
                    continue;
                 }
                 continue;
             }
-            if (!checkPath && seg.includes(':')) { // Drive letter start
-                checkPath = seg + path.win32.sep;
+            if (isWin && !checkPath && seg.includes(':')) {
+                checkPath = seg + sep;
                 pathDiagnostics.push({ segment: seg, fullPath: checkPath, exists: fs.existsSync(checkPath) });
                 continue;
             }
-            checkPath = path.win32.join(checkPath, seg);
+            checkPath = !checkPath || checkPath === '/' ? (checkPath + seg) : path.join(checkPath, seg);
             try {
                 pathDiagnostics.push({
                     segment: seg,
