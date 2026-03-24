@@ -65,6 +65,28 @@ export async function POST(request: Request) {
                 return NextResponse.json({ error: "Both Policy and Checklist files are required" }, { status: 400 });
             }
 
+            // --- AUTO-ENSURE FOLDER EXISTS ---
+            try {
+                try {
+                    await client.api(userFolderRequestPath).get();
+                } catch (e: any) {
+                    if (e.code === 'itemNotFound') {
+                        await client.api(`/drives/${DRIVE_ID}/items/${BASE_FOLDER_ID}/children`).post({
+                            name: sanitizedUserName,
+                            folder: {},
+                            "@microsoft.graph.conflictBehavior": "fail"
+                        });
+                        console.log(`[ARCHIVAL] Created missing folder for ${sanitizedUserName}`);
+                    } else {
+                        throw e;
+                    }
+                }
+            } catch (folderErr: any) {
+                console.error('[SHAREPOINT] Auto-Folder Error:', folderErr.message);
+                return NextResponse.json({ error: "Failed to ensure SharePoint folder exists", details: folderErr.message }, { status: 500 });
+            }
+            // ---------------------------------
+
             const dateStr = new Date().toISOString().split('T')[0];
             
             // Helper to upload to Graph
