@@ -49,7 +49,13 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
 
             const generatePDF = async (ref: React.RefObject<HTMLDivElement | null>) => {
                 if (!ref.current) return null;
-                const canvas = await html2canvas(ref.current, { scale: 2, backgroundColor: "#ffffff" });
+                // Use scale: 2 for high quality, use clone option to avoid potential style pollution
+                const canvas = await html2canvas(ref.current, { 
+                    scale: 2, 
+                    backgroundColor: "#ffffff",
+                    logging: false,
+                    useCORS: true
+                });
                 const imgData = canvas.toDataURL('image/png');
                 const pdf = new jsPDF('p', 'mm', 'a4');
                 const imgProps = pdf.getImageProperties(imgData);
@@ -98,61 +104,61 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
 
     return (
         <div className="fixed inset-0 z-[150] bg-slate-950 flex flex-col animate-in slide-in-from-bottom-5 duration-300">
-            {/* Hidden Source for PDFs (Required for html2canvas while unmounted in steps) */}
-            <div className="fixed top-0 left-[-9999px] w-[800px] bg-white text-slate-900 pointer-events-none">
-                <div ref={policyRef} className="p-16 space-y-8 bg-white">
-                    <h4 className="text-center font-bold text-2xl border-b-2 border-slate-200 pb-6">IT Offboarding Policy</h4>
-                    <div className="space-y-6 text-lg">
-                        <p><strong>Subject Personnel:</strong> {user.displayName}</p>
-                        <p><strong>Last Working Day:</strong> {user.lastWorkingDay || "Today"}</p>
-                        <div className="border-t border-slate-100 pt-6 space-y-4">
-                            <p className="font-bold">1. Purpose</p>
-                            <p>To ensure a smooth transition, safeguard company assets, and maintain data security.</p>
-                            <p className="font-bold">2. Procedure</p>
-                            <ul className="list-disc pl-8 space-y-3">
-                                <li>Uninstallation of Euphoria/Office from all devices.</li>
-                                <li>Return of company hardware (Phone, Laptop).</li>
-                                <li>Data removal from personal devices.</li>
-                                <li>Email forwarding setup.</li>
+            {/* Hidden Source for PDFs - Using explicit hex colors to avoid html2canvas "lab" parser errors */}
+            <div style={{ position: 'fixed', top: 0, left: '-9999px', width: '800px', backgroundColor: '#ffffff', color: '#0f172a', pointerEvents: 'none' }}>
+                <div ref={policyRef} style={{ padding: '64px', backgroundColor: '#ffffff' }}>
+                    <h4 style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '24px', borderBottom: '2px solid #e2e8f0', paddingBottom: '24px', marginBottom: '32px' }}>IT Offboarding Policy</h4>
+                    <div style={{ fontSize: '18px', lineHeight: '1.6' }}>
+                        <p style={{ marginBottom: '12px' }}><strong>Subject Personnel:</strong> {user.displayName}</p>
+                        <p style={{ marginBottom: '12px' }}><strong>Last Working Day:</strong> {user.lastWorkingDay || "Today"}</p>
+                        <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '24px', marginTop: '24px' }}>
+                            <p style={{ fontWeight: 'bold', marginBottom: '12px' }}>1. Purpose</p>
+                            <p style={{ marginBottom: '12px' }}>To ensure a smooth transition, safeguard company assets, and maintain data security.</p>
+                            <p style={{ fontWeight: 'bold', marginBottom: '12px' }}>2. Procedure</p>
+                            <ul style={{ paddingLeft: '32px', listStyleType: 'disc' }}>
+                                <li style={{ marginBottom: '8px' }}>Uninstallation of Euphoria/Office from all devices.</li>
+                                <li style={{ marginBottom: '8px' }}>Return of company hardware (Phone, Laptop).</li>
+                                <li style={{ marginBottom: '8px' }}>Data removal from personal devices.</li>
+                                <li style={{ marginBottom: '8px' }}>Email forwarding setup.</li>
                             </ul>
                         </div>
                     </div>
-                    <div className="mt-20 grid grid-cols-2 gap-12 pt-12 border-t border-slate-200">
-                        <div className="space-y-4">
-                            <p className="text-xs font-black text-slate-500 uppercase">Employee Signature</p>
-                            {policySignature && <img src={policySignature} alt="Employee Signature" className="h-20 border-b border-slate-300" />}
+                    <div style={{ marginTop: '80px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '48px', paddingTop: '48px', borderTop: '1px solid #e2e8f0' }}>
+                        <div>
+                            <p style={{ fontSize: '10px', fontWeight: '900', color: '#64748b', textTransform: 'uppercase', marginBottom: '16px' }}>Employee Signature</p>
+                            {policySignature && <img src={policySignature} alt="Employee Signature" style={{ height: '80px', borderBottom: '1px solid #cbd5e1' }} />}
                         </div>
-                        <div className="space-y-4">
-                            <p className="text-xs font-black text-slate-500 uppercase">IT Admin Signature</p>
-                            {adminSignature && <img src={adminSignature} alt="Admin Signature" className="h-20 border-b border-slate-300" />}
+                        <div>
+                            <p style={{ fontSize: '10px', fontWeight: '900', color: '#64748b', textTransform: 'uppercase', marginBottom: '16px' }}>IT Admin Signature</p>
+                            {adminSignature && <img src={adminSignature} alt="Admin Signature" style={{ height: '80px', borderBottom: '1px solid #cbd5e1' }} />}
                         </div>
                     </div>
                 </div>
 
-                <div ref={checklistRef} className="p-16 space-y-8 bg-white">
-                    <h4 className="text-center font-bold text-2xl border-b-2 border-slate-200 pb-6">Offboarding Verification Checklist</h4>
-                    <div className="space-y-6 text-lg">
-                         <p><strong>Employee:</strong> {user.displayName}</p>
-                         <p><strong>Date:</strong> {new Date().toLocaleDateString()}</p>
-                         <div className="border-t border-slate-100 pt-8 space-y-4">
+                <div ref={checklistRef} style={{ padding: '64px', backgroundColor: '#ffffff' }}>
+                    <h4 style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '24px', borderBottom: '2px solid #e2e8f0', paddingBottom: '24px', marginBottom: '32px' }}>Offboarding Verification Checklist</h4>
+                    <div style={{ fontSize: '18px', lineHeight: '1.6' }}>
+                         <p style={{ marginBottom: '12px' }}><strong>Employee:</strong> {user.displayName}</p>
+                         <p style={{ marginBottom: '12px' }}><strong>Date:</strong> {new Date().toLocaleDateString()}</p>
+                         <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '32px', marginTop: '32px' }}>
                             {checklist.map(item => (
-                                <div key={item.id} className="flex items-center gap-4">
-                                    <div className={`w-6 h-6 rounded border-2 flex items-center justify-center ${item.checked ? 'bg-black border-black' : 'border-slate-300'}`}>
-                                        {item.checked && <CheckCircle2 size={16} className="text-white" />}
+                                <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                                    <div style={{ width: '24px', height: '24px', borderRadius: '4px', border: '2px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: item.checked ? '#000000' : 'transparent', borderColor: item.checked ? '#000000' : '#cbd5e1' }}>
+                                        {item.checked && <CheckCircle2 size={16} color="#ffffff" />}
                                     </div>
-                                    <span>{item.label}</span>
+                                    <span style={{ color: item.checked ? '#0f172a' : '#475569' }}>{item.label}</span>
                                 </div>
                             ))}
                          </div>
                     </div>
-                    <div className="mt-20 grid grid-cols-2 gap-12 pt-12 border-t border-slate-200">
-                        <div className="space-y-4">
-                            <p className="text-xs font-black text-slate-500 uppercase">Employee Signature</p>
-                            {policySignature && <img src={policySignature} alt="Employee Signature" className="h-20 border-b border-slate-300" />}
+                    <div style={{ marginTop: '80px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '48px', paddingTop: '48px', borderTop: '1px solid #e2e8f0' }}>
+                        <div>
+                            <p style={{ fontSize: '10px', fontWeight: '900', color: '#64748b', textTransform: 'uppercase', marginBottom: '16px' }}>Employee Signature</p>
+                            {policySignature && <img src={policySignature} alt="Employee Signature" style={{ height: '80px', borderBottom: '1px solid #cbd5e1' }} />}
                         </div>
-                        <div className="space-y-4">
-                            <p className="text-xs font-black text-slate-500 uppercase">IT Admin Signature</p>
-                            {adminSignature && <img src={adminSignature} alt="Admin Signature" className="h-20 border-b border-slate-300" />}
+                        <div>
+                            <p style={{ fontSize: '10px', fontWeight: '900', color: '#64748b', textTransform: 'uppercase', marginBottom: '16px' }}>IT Admin Signature</p>
+                            {adminSignature && <img src={adminSignature} alt="Admin Signature" style={{ height: '80px', borderBottom: '1px solid #cbd5e1' }} />}
                         </div>
                     </div>
                 </div>
