@@ -39,18 +39,19 @@ export async function GET(req: NextRequest) {
         // Transform the results into a cleaner format
         const results = hits.map((hit: any) => {
             const item = hit.resource;
+            // Sometimes it's a driveItem (item.webUrl), sometimes it's a listItem (item.fields.LinkFilename)
             const url = item.webUrl || hit.summary || "#";
+            const name = item.name || item.listItem?.fields?.FileLeafRef || item.fields?.FileLeafRef || "Unknown File";
             
             // Heuristic to identify OneDrive vs SharePoint
-            // OneDrive URLs contain "-my.sharepoint.com/personal/"
             const isOneDrive = url.includes("-my.sharepoint.com") || (!item.parentReference?.siteId && !item.parentReference?.sharepointIds);
 
             return {
-                id: item.id || hit.hitId,
-                name: item.name || item.listItem?.fields?.FileLeafRef || "Unknown File",
+                id: item.id || hit.id || hit.hitId,
+                name: name,
                 webUrl: url,
                 size: item.size || 0,
-                lastModified: item.lastModifiedDateTime || new Date().toISOString(),
+                lastModified: item.lastModifiedDateTime || item.lastModified || new Date().toISOString(),
                 parentPath: item.parentReference?.path || 'Root',
                 siteName: isOneDrive ? 'Personal OneDrive' : 'SharePoint Site',
                 type: item.file?.mimeType || 'Document'
