@@ -196,6 +196,12 @@ function OffboardingContent() {
         }
     };
 
+    const updateWatchlistUser = (userId: string, updates: any) => {
+        const newList = monitoredUsers.map(u => u.id === userId ? { ...u, ...updates } : u);
+        setMonitoredUsers(newList);
+        saveWatchlist(newList);
+    };
+
     useEffect(() => {
         fetchOffboardingData();
         const interval = setInterval(fetchOffboardingData, 3000);
@@ -330,6 +336,8 @@ function OffboardingContent() {
                         <thead className="bg-slate-950/50 text-slate-400 uppercase font-black text-[10px] tracking-widest border-b border-slate-800/60">
                             <tr>
                                 <th className="px-6 py-4">Employee</th>
+                                <th className="px-6 py-4 text-center">Last Day</th>
+                                <th className="px-6 py-4 text-center">Status</th>
                                 <th className="px-6 py-4 text-center">Device Status</th>
                                 <th className="px-6 py-4 text-center">Data Activity</th>
                                 <th className="px-6 py-4 text-right">Actions</th>
@@ -358,6 +366,9 @@ function OffboardingContent() {
                                     const deviceName = intuneDevice?.deviceName || agent?.deviceName || "No device found";
                                     const isOnline = agent?.status === 'online';
                                     const compliance = intuneDevice?.complianceState || "Unknown";
+                                    const status = u.status || "Offboarding in Progress";
+                                    const isComplete = status === "Offboarding Complete";
+
                                     return (
                                         <tr 
                                             key={u.id} 
@@ -373,6 +384,24 @@ function OffboardingContent() {
                                                         <div className="font-bold text-slate-200 group-hover:text-white transition-colors">{u.displayName}</div>
                                                         <div className="text-[10px] text-slate-500 font-mono italic">{u.userPrincipalName}</div>
                                                     </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-5 text-center">
+                                                <input 
+                                                    type="date" 
+                                                    className="bg-slate-950/50 border border-slate-800 text-xs font-bold text-white px-3 py-1.5 rounded-xl [color-scheme:dark] focus:border-blue-500/50 outline-none transition-all"
+                                                    value={u.lastWorkingDay || ""}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    onChange={(e) => updateWatchlistUser(u.id, { lastWorkingDay: e.target.value })}
+                                                />
+                                            </td>
+                                            <td className="px-6 py-5 text-center">
+                                                <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${
+                                                    isComplete 
+                                                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                                                        : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                                                }`}>
+                                                    {status}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-5 text-center">
@@ -453,7 +482,7 @@ function OffboardingContent() {
                                     );
                                 })
                             ) : (
-                                <tr><td colSpan={4} className="px-6 py-20 text-center text-slate-500">
+                                <tr><td colSpan={6} className="px-6 py-20 text-center text-slate-500">
                                     <UserMinus className="mx-auto mb-4 opacity-20" size={48} />
                                     <p className="font-mono text-xs uppercase tracking-widest text-slate-600">No employees in watchlist. Use search to add.</p>
                                 </td></tr>

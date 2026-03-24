@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getGraphClient } from '@/lib/graph';
+import { getWatchlist, saveWatchlist } from '@/lib/db';
 
 export async function POST(request: Request) {
     try {
@@ -32,7 +33,7 @@ export async function POST(request: Request) {
                         success: true, 
                         message: "SharePoint folder already exists",
                         path: sanitizedUserName 
-                    });
+                     });
                 } catch (e: any) {
                     if (e.code === 'itemNotFound') {
                         // Create it
@@ -83,6 +84,22 @@ export async function POST(request: Request) {
             try {
                 const policyName = await uploadFile(policyFile, "EQN IT Exit Policy");
                 const checklistName = await uploadFile(checklistFile, "EQN IT Exit Checklist");
+
+                // Update Watchlist Status to "Offboarding Complete"
+                try {
+                    const watchlist = await getWatchlist();
+                    const updatedWatchlist = watchlist.map((u: any) => {
+                        if (u.displayName === userName) {
+                            return { ...u, status: "Offboarding Complete" };
+                        }
+                        return u;
+                    });
+                    await saveWatchlist(updatedWatchlist);
+                    console.log(`[ARCHIVAL] Updated status for ${userName} to 'Offboarding Complete'`);
+                } catch (dbErr) {
+                    console.error('[ARCHIVAL] Failed to update watchlist status:', dbErr);
+                    // Don't fail the whole request if only the DB update fails
+                }
 
                 return NextResponse.json({ 
                     success: true, 

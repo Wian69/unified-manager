@@ -167,6 +167,7 @@ function ChecklistContent() {
 
     useEffect(() => {
         if (userId) {
+            // Fetch User Details from Graph
             fetch(`/api/users/${userId}`)
                 .then(r => r.json())
                 .then(d => {
@@ -177,6 +178,19 @@ function ChecklistContent() {
                         setLastDay(new Date(d.employeeLeaveDateTime).toLocaleDateString());
                     }
                 }).catch(() => {});
+
+            // Override with Watchlist Data if available
+            fetch('/api/offboarding/watchlist')
+                .then(r => r.json())
+                .then(data => {
+                    const matched = (data.watchlist || []).find((u: any) => u.id === userId);
+                    if (matched && matched.lastWorkingDay) {
+                        setLastDay(new Date(matched.lastWorkingDay).toLocaleDateString());
+                    }
+                })
+                .catch(() => {});
+
+            // Fetch Device Details
             fetch(`/api/devices`)
                 .then(r => r.json())
                 .then(d => {

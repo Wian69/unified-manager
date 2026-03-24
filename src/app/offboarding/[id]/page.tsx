@@ -39,6 +39,18 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
             const userRes = await fetch(`/api/users/${id}`);
             const userData = await userRes.json();
             if (userData.error) throw new Error(userData.error);
+            
+            // Check Watchlist for Status/Date
+            try {
+                const wlRes = await fetch('/api/offboarding/watchlist');
+                const wlData = await wlRes.json();
+                const matched = (wlData.watchlist || []).find((u: any) => u.id === id);
+                if (matched) {
+                    userData.status = matched.status;
+                    userData.lastWorkingDay = matched.lastWorkingDay;
+                }
+            } catch (e) {}
+
             setUser(userData);
 
             // Fetch SharePoint Deletions
@@ -246,8 +258,12 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
                             onChange={(e) => setSinceDate(e.target.value)}
                         />
                      </div>
-                     <span className="px-3 py-1 bg-rose-500/10 text-rose-500 rounded-full text-[10px] font-black uppercase tracking-widest border border-rose-500/20">
-                        Offboarding in Progress
+                     <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+                        user.status === 'Offboarding Complete' 
+                            ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' 
+                            : 'bg-rose-500/10 text-rose-500 border-rose-500/20'
+                     }`}>
+                        {user.status || 'Offboarding in Progress'}
                      </span>
                 </div>
             </div>
