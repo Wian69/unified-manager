@@ -222,7 +222,7 @@ function ChecklistContent() {
                 </div>
 
                 {/* User Information */}
-                <section className="mb-8">
+                <section className="mb-8 break-inside-avoid">
                     <h2 className="font-bold border-b border-black pb-1 mb-3">User Information</h2>
                     <table className="w-full border-collapse">
                         <tbody>
@@ -243,7 +243,7 @@ function ChecklistContent() {
                 </section>
 
                 {/* IT Administrative */}
-                <section className="mb-8">
+                <section className="mb-8 break-inside-avoid">
                     <h2 className="font-bold border-b border-black pb-1 mb-3">IT Administrative</h2>
                     <table className="w-full border-collapse">
                         <tbody>
@@ -279,7 +279,7 @@ function ChecklistContent() {
 
                 {/* Dynamic editable sections */}
                 {sections.map(sec => (
-                    <div key={sec.id} className="relative group/sec">
+                    <div key={sec.id} className="relative group/sec break-inside-avoid">
                         <button
                             onClick={() => removeSection(sec.id)}
                             className="absolute -right-6 top-0 opacity-0 group-hover/sec:opacity-100 text-red-400 hover:text-red-600 text-xs transition-opacity print:hidden"

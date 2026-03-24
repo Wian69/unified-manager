@@ -130,14 +130,12 @@ function PolicyContent() {
                 </div>
 
                 {/* Data Retention Section */}
-                <div className="space-y-8 text-[11pt] leading-relaxed text-gray-900 mt-10 pt-10 border-t border-gray-300">
-                    <hr className="border-black mb-4" />
+                <div className="space-y-8 text-[11pt] leading-relaxed text-gray-900 mt-10 pt-10 border-t-2 border-black">
                     <section>
                         <h2 className="text-lg font-bold mb-4">Data & System Access After Offboarding</h2>
                         
                         <div className="space-y-8">
-                            <div>
-                                <hr className="border-gray-400 mb-4" />
+                            <div className="break-inside-avoid">
                                 <h3 className="font-bold mb-2">1. Email (Outlook / Microsoft 365 Mailbox)</h3>
                                 <p className="font-bold mb-1">What happens:</p>
                                 <ul className="list-disc pl-10 space-y-1 mb-2">
@@ -149,8 +147,7 @@ function PolicyContent() {
                                 <p className="italic">You will no longer have access after offboarding is completed.</p>
                             </div>
 
-                            <div>
-                                <hr className="border-gray-400 mb-4" />
+                            <div className="break-inside-avoid">
                                 <h3 className="font-bold mb-2">2. OneDrive Files</h3>
                                 <p className="font-bold mb-1">What happens:</p>
                                 <ul className="list-disc pl-10 space-y-1 mb-2">
@@ -161,8 +158,7 @@ function PolicyContent() {
                                 <p className="italic">Personal files may be exported only after IT review and formal approval.</p>
                             </div>
 
-                            <div>
-                                <hr className="border-gray-400 mb-4" />
+                            <div className="break-inside-avoid">
                                 <h3 className="font-bold mb-2">3. Teams Chats & Teams Files</h3>
                                 <p className="font-bold mb-1">Teams Chats:</p>
                                 <ul className="list-disc pl-10 space-y-1 mb-2">
@@ -176,8 +172,7 @@ function PolicyContent() {
                                 </ul>
                             </div>
 
-                            <div>
-                                <hr className="border-gray-400 mb-4" />
+                            <div className="break-inside-avoid">
                                 <h3 className="font-bold mb-2">4. SharePoint & Network Drives</h3>
                                 <ul className="list-disc pl-10 space-y-1">
                                     <li>All SharePoint documents remain part of their respective sites.</li>
@@ -185,8 +180,7 @@ function PolicyContent() {
                                 </ul>
                             </div>
 
-                            <div>
-                                <hr className="border-gray-400 mb-4" />
+                            <div className="break-inside-avoid">
                                 <h3 className="font-bold mb-2">5. Applications & SaaS Platforms</h3>
                                 <p className="mb-1">For any third party systems (e.g., MS365, Euphoria, Payspace, Fusion):</p>
                                 <ul className="list-disc pl-10 space-y-1">
@@ -196,8 +190,7 @@ function PolicyContent() {
                                 </ul>
                             </div>
 
-                            <div>
-                                <hr className="border-gray-400 mb-4" />
+                            <div className="break-inside-avoid">
                                 <h3 className="font-bold mb-2">6. Personal Data on Company Devices</h3>
                                 <p className="mb-1">If you stored personal files on company equipment:</p>
                                 <ul className="list-disc pl-10 space-y-1">
