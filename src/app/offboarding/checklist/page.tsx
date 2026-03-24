@@ -78,7 +78,7 @@ function ChecklistContent() {
     }, [userId]);
 
     return (
-        <div className="min-h-screen py-12 flex flex-col items-center print:py-0 print:bg-white" style={{background:"#c8c8c8", fontFamily:"'Calibri','Calibri Light',sans-serif", fontSize:"11pt"}}>
+        <div className="min-h-screen py-12 flex flex-col items-center print:py-0 print:bg-white" style={{background:"#c8c8c8", fontFamily:"'Calibri','Calibri Light',sans-serif", fontSize:"11pt", color:"#111111"}}>
             <div className="w-full max-w-[210mm] bg-white shadow-2xl print:shadow-none print:p-8 ring-1 ring-gray-400 print:ring-0" style={{padding:"40px 48px 48px 48px", fontFamily:"inherit", fontSize:"inherit"}}>
 
                 {/* Header */}
@@ -162,7 +162,7 @@ function ChecklistContent() {
                 {/* Company Assets Returned */}
                 <section className="mb-8">
                     <h2 className="font-bold border-b border-black pb-1 mb-2">Company Assets Returned</h2>
-                    <p className="mb-3 text-gray-600 text-sm">The following company issued IT assets have been returned by the employee:</p>
+                    <p className="mb-3 text-gray-900">The following company issued IT assets have been returned by the employee:</p>
                     <CheckItem label="Laptop / Desktop" />
                     <CheckItem label="Power supply" />
                     <CheckItem label="External peripherals (mouse, keyboard, headset, adapters)" />

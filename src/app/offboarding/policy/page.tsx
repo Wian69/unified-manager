@@ -32,7 +32,7 @@ function PolicyContent() {
     }, [userId]);
 
     return (
-        <div className="min-h-screen bg-gray-200 py-12 flex justify-center print:bg-white print:py-0" style={{fontFamily: "'Calibri', 'Calibri Light', sans-serif", fontSize: "11pt"}}>
+        <div className="min-h-screen bg-gray-400 py-12 flex justify-center print:bg-white print:py-0" style={{fontFamily: "'Calibri', 'Calibri Light', sans-serif", fontSize: "11pt", color: "#111111"}}>
             {/* Strict Document Container */}
             <div className="w-full max-w-[210mm] bg-white p-12 md:p-16 shadow-lg print:shadow-none print:p-8 min-h-[297mm] ring-1 ring-gray-300 print:ring-0" style={{fontFamily: "inherit", fontSize: "inherit"}}>
                 
@@ -45,7 +45,7 @@ function PolicyContent() {
                 </div>
 
                 {/* Cover Details */}
-                <div className="space-y-4 text-sm border border-black p-6 mb-12">
+                <div className="space-y-1 text-sm border border-black p-6 mb-12">
                     <div className="grid grid-cols-[150px_1fr] gap-4 border-b border-gray-300 pb-3">
                         <span className="font-bold text-gray-900">Policy Owner:</span>
                         <span>Group IT Support Specialist</span>
