@@ -1,3 +1,4 @@
+import { execSync } from 'child_process';
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
@@ -26,8 +27,19 @@ export async function POST(request: Request) {
         let checkPath = '';
         const pathDiagnostics: any[] = [];
         for (const seg of segments) {
-            if (!seg && !checkPath) continue; // Skip initial empty on some splits
-            checkPath = checkPath ? path.win32.join(checkPath, seg) : seg;
+            if (!seg && !checkPath) {
+                if (targetDir.startsWith('\\\\')) { // UNC path start
+                   checkPath = '\\\\' + segments[2]; // Simplified UNC base
+                   continue;
+                }
+                continue;
+            }
+            if (!checkPath && seg.includes(':')) { // Drive letter start
+                checkPath = seg + path.win32.sep;
+                pathDiagnostics.push({ segment: seg, fullPath: checkPath, exists: fs.existsSync(checkPath) });
+                continue;
+            }
+            checkPath = path.win32.join(checkPath, seg);
             try {
                 pathDiagnostics.push({
                     segment: seg,
@@ -52,11 +64,17 @@ export async function POST(request: Request) {
         if (action === 'create-folder') {
             try {
                 if (!fs.existsSync(targetDir)) {
-                    fs.mkdirSync(targetDir, { recursive: true });
+                    // Use PowerShell to create directory - more robust for synced SharePoint volumes
+                    const psCommand = `powershell -Command "New-Item -ItemType Directory -Path '${targetDir}' -Force"`;
+                    diagnostic.command = psCommand;
+                    const output = execSync(psCommand, { encoding: 'utf8' });
+                    diagnostic.psOutput = output;
+
                     return NextResponse.json({ 
                         success: true, 
-                        message: "Folder prepared successfully",
-                        path: targetDir 
+                        message: "Folder prepared successfully via shells",
+                        path: targetDir,
+                        diagnostic
                     });
                 } else {
                     return NextResponse.json({ 
@@ -66,9 +84,12 @@ export async function POST(request: Request) {
                     });
                 }
             } catch (mkdirErr: any) {
+                console.error('[MKDIR] Error:', mkdirErr);
                 return NextResponse.json({ 
                     error: "Failed to create directory", 
                     details: mkdirErr.message,
+                    stdout: mkdirErr.stdout,
+                    stderr: mkdirErr.stderr,
                     diagnostic 
                 }, { status: 500 });
             }
