@@ -3,8 +3,6 @@
 import React, { useState, useRef } from 'react';
 import { ShieldAlert, CheckCircle2, FileText, UploadCloud, X, ChevronRight, ChevronLeft, RefreshCw, Smartphone } from 'lucide-react';
 import SignaturePad from './SignaturePad';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
 interface DigitalOffboardingWizardProps {
     user: any;
@@ -34,18 +32,6 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
         setChecklist(prev => prev.map(item => item.id === id ? { ...item, checked: !item.checked } : item));
     };
 
-    const generatePDF = async (ref: React.RefObject<HTMLDivElement>, filename: string) => {
-        if (!ref.current) return null;
-        const canvas = await html2canvas(ref.current, { scale: 2, backgroundColor: "#ffffff" });
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const imgProps = pdf.getImageProperties(imgData);
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-        return pdf.output('blob');
-    };
-
     const handleSubmit = async () => {
         if (!policySignature || !adminSignature) {
             alert("Signatures are required");
@@ -53,11 +39,29 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
         }
 
         setUploading(true);
-        setStatus("Generating documents...");
+        setStatus("Loading modules...");
 
         try {
-            const policyBlob = await generatePDF(policyRef, "Policy.pdf");
-            const checklistBlob = await generatePDF(checklistRef, "Checklist.pdf");
+            // Dynamic imports to avoid Turbopack build issues with Node-only libs
+            const jsPDF = (await import('jspdf')).default;
+            const html2canvas = (await import('html2canvas')).default;
+
+            setStatus("Generating documents...");
+
+            const generatePDF = async (ref: React.RefObject<HTMLDivElement>) => {
+                if (!ref.current) return null;
+                const canvas = await html2canvas(ref.current, { scale: 2, backgroundColor: "#ffffff" });
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const imgProps = pdf.getImageProperties(imgData);
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                return pdf.output('blob');
+            };
+
+            const policyBlob = await generatePDF(policyRef);
+            const checklistBlob = await generatePDF(checklistRef);
 
             if (!policyBlob || !checklistBlob) throw new Error("Failed to generate PDFs");
 
