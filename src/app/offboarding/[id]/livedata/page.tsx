@@ -264,20 +264,36 @@ export default function LiveDataDashboard() {
                         >
                             <option value="">Select an Agent / Device...</option>
                             {devices.map(d => {
-                                const matchedAgents = agents.filter((a: any) => a.serialNumber === (d.serialNumber || d.hardwareInformation?.serialNumber));
+                                const matchedAgents = agents.filter((a: any) => {
+                                    const agentSerial = (a.serialNumber || "").trim().toLowerCase();
+                                    const agentName = (a.deviceName || "").trim().toLowerCase();
+                                    const deviceSerial = (d.serialNumber || d.hardwareInformation?.serialNumber || "").trim().toLowerCase();
+                                    const deviceName = (d.deviceName || "").trim().toLowerCase();
+                                    
+                                    return (agentSerial && deviceSerial && agentSerial === deviceSerial) || 
+                                           (agentName && deviceName && agentName === deviceName);
+                                });
+
                                 if (matchedAgents.length === 0) {
                                     return (
                                         <option key={d.id} value="" disabled>
-                                            {d.deviceName} ({d.serialNumber || d.hardwareInformation?.serialNumber}) - NO AGENT FOUND
+                                            Intune Reference: {d.deviceName} ({d.serialNumber || "No Serial"}) - NO REFINED MATCH
                                         </option>
                                     );
                                 }
                                 return matchedAgents.map((a: any) => (
                                     <option key={`${d.id}-${a.id}`} value={a.id}>
-                                        {d.deviceName} ({a.id.substring(0,8)}...) {a.status === 'online' ? '🟢 ONLINE' : '🔴 OFFLINE'}
+                                        Matched: {d.deviceName} ({a.publicIp}) {a.status === 'online' ? '🟢 ONLINE' : '🔴 OFFLINE'}
                                     </option>
                                 ));
                             })}
+                            
+                            <option disabled>────────── ACTIVE AGENTS (UNMATCHED) ──────────</option>
+                            {agents.filter(a => a.status === 'online').map(a => (
+                                <option key={`active-${a.id}`} value={a.id}>
+                                    Stray: {a.deviceName} ({a.serialNumber}) - {a.publicIp} [PROVISIONAL]
+                                </option>
+                            ))}
                         </select>
                         <button className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl transition-all">
                             Scan
