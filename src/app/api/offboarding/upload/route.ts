@@ -1,10 +1,7 @@
-import { execSync } from 'child_process';
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import { getGraphClient } from '@/lib/graph';
 
 export async function POST(request: Request) {
-    const diagnostic: any = {};
     try {
         const formData = await request.formData();
         const action = formData.get('action') as string;
@@ -14,124 +11,47 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Missing user name" }, { status: 400 });
         }
 
-        // Target Base Path
-        const baseDir = `C:\\!Data\\Equinox Outsourced Services\\EQNCS Homepage - Information Technology\\Policies\\Exit interview policies`;
+        const client = getGraphClient();
         
+        // SharePoint Target IDs (EQNCS Homepage -> Policies -> Exit interview policies)
+        const SITE_ID = 'xxeqncs.sharepoint.com,9bf3a6b7-bf2e-4dd7-8ebe-4cf901e27fd5,9ebbd62d-0361-4cc1-9f2b-7f6511ccfec8';
+        const DRIVE_ID = 'b!t6azsS6_102Ovkz5AeJ_1X_WuzpHe6pMhLpYt1qS88eY6L_WcR8ST7l_HskvS3bM';
+        const BASE_FOLDER_PATH = '/Exit interview policies'; // Path relative to "Policies" drive root
+
         // Sanitize User Name for Folder
         const sanitizedUserName = userName.replace(/[^a-z0-9\s.-]/gi, '_').trim();
-        
-        // Cross-platform path resolution (WSL support)
-        let targetDir = path.win32.normalize(path.win32.join(baseDir, sanitizedUserName));
-        if (process.platform !== 'win32') {
-            console.log('[ARCHIVAL] Linux platform detected. Translating C:\\ to /mnt/c/');
-            // WSL translation: C:\ -> /mnt/c/
-            targetDir = targetDir.replace(/^C:\\/i, '/mnt/c/').replace(/\\/g, '/');
-            diagnostic.isTranslated = true;
-        }
-
-        // Deep Path Check
-        const isWin = process.platform === 'win32';
-        const sep = isWin ? path.win32.sep : path.sep;
-        const segments = targetDir.split(sep);
-        let checkPath = '';
-        const pathDiagnostics: any[] = [];
-        for (const seg of segments) {
-            if (!seg && !checkPath) {
-                if (isWin && targetDir.startsWith('\\\\')) {
-                   checkPath = '\\\\' + segments[2];
-                   continue;
-                }
-                if (!isWin && targetDir.startsWith('/')) {
-                   checkPath = '/';
-                   continue;
-                }
-                continue;
-            }
-            if (isWin && !checkPath && seg.includes(':')) {
-                checkPath = seg + sep;
-                pathDiagnostics.push({ segment: seg, fullPath: checkPath, exists: fs.existsSync(checkPath) });
-                continue;
-            }
-            checkPath = !checkPath || checkPath === '/' ? (checkPath + seg) : path.join(checkPath, seg);
-            try {
-                pathDiagnostics.push({
-                    segment: seg,
-                    fullPath: checkPath,
-                    exists: fs.existsSync(checkPath)
-                });
-            } catch (e) {
-                pathDiagnostics.push({
-                    segment: seg,
-                    fullPath: checkPath,
-                    error: (e as any).message
-                });
-            }
-        }
-
-        diagnostic.platform = process.platform;
-        diagnostic.targetDir = targetDir;
-        diagnostic.pathSegments = pathDiagnostics;
-        diagnostic.cwd = process.cwd();
+        const userFolderPath = `${BASE_FOLDER_PATH}/${sanitizedUserName}`;
 
         // ACTION: CREATE FOLDER
         if (action === 'create-folder') {
             try {
-                // If on Linux, check if /mnt/c is actually there
-                if (process.platform === 'linux') {
-                   try {
-                       diagnostic.mntContents = fs.readdirSync('/mnt');
-                       diagnostic.cDriveMounted = fs.existsSync('/mnt/c');
-                   } catch (e) {}
-                }
-
-                // Check which segment is missing
-                const missingSegment = pathDiagnostics.find(d => !d.exists);
-                if (missingSegment && missingSegment.segment !== sanitizedUserName) {
+                // Check if user folder exists
+                try {
+                    await client.api(`/drives/${DRIVE_ID}/root:${userFolderPath}`).get();
                     return NextResponse.json({ 
-                        error: "Parent directory missing in your environment", 
-                        details: `The segment "${missingSegment.segment}" was not found at ${missingSegment.fullPath}.`,
-                        solution: "Ensure you have mounted the C:\\!Data folder or check that the path is exactly match (case sensitive).",
-                        diagnostic 
-                    }, { status: 404 });
-                }
-
-                if (!fs.existsSync(targetDir)) {
-                    // Try PowerShell (robust for synced volumes on Windows)
-                    if (process.platform === 'win32') {
-                        try {
-                            const psCommand = `powershell -Command "New-Item -ItemType Directory -Path '${targetDir}' -Force"`;
-                            diagnostic.command = psCommand;
-                            const output = execSync(psCommand, { encoding: 'utf8' });
-                            diagnostic.psOutput = output;
-                        } catch (psErr: any) {
-                            console.warn('[MKDIR] PowerShell failed, falling back to fs.mkdirSync', psErr.message);
-                            fs.mkdirSync(targetDir, { recursive: true });
-                        }
-                    } else {
-                        // For Linux/WSL/Docker, just try standard mkdirSync
-                        fs.mkdirSync(targetDir, { recursive: true });
+                        success: true, 
+                        message: "SharePoint folder already exists",
+                        path: userFolderPath 
+                    });
+                } catch (e: any) {
+                    if (e.code === 'itemNotFound') {
+                        // Create it
+                        await client.api(`/drives/${DRIVE_ID}/root:${BASE_FOLDER_PATH}/children`).post({
+                            name: sanitizedUserName,
+                            folder: {},
+                            "@microsoft.graph.conflictBehavior": "fail"
+                        });
+                        return NextResponse.json({ 
+                            success: true, 
+                            message: "SharePoint archival folder created",
+                            path: userFolderPath 
+                        });
                     }
-
-                    return NextResponse.json({ 
-                        success: true, 
-                        message: "Folder prepared successfully",
-                        path: targetDir,
-                        diagnostic
-                    });
-                } else {
-                    return NextResponse.json({ 
-                        success: true, 
-                        message: "Folder already exists",
-                        path: targetDir 
-                    });
+                    throw e;
                 }
-            } catch (mkdirErr: any) {
-                console.error('[MKDIR] Error:', mkdirErr);
-                return NextResponse.json({ 
-                    error: "Failed to create directory", 
-                    details: mkdirErr.message,
-                    diagnostic 
-                }, { status: 500 });
+            } catch (err: any) {
+                console.error('[SHAREPOINT] Folder Error:', err.message);
+                return NextResponse.json({ error: "Failed to prepare SharePoint folder", details: err.message }, { status: 500 });
             }
         }
 
@@ -144,47 +64,41 @@ export async function POST(request: Request) {
                 return NextResponse.json({ error: "Both Policy and Checklist files are required" }, { status: 400 });
             }
 
-            if (!fs.existsSync(targetDir)) {
-                return NextResponse.json({ 
-                    error: "Target folder does not exist. Please prepare folder first.",
-                    diagnostic 
-                }, { status: 400 });
-            }
-
             const dateStr = new Date().toISOString().split('T')[0];
             
-            // Helper to save file
-            const saveFile = async (file: File, prefix: string) => {
-                const ext = path.extname(file.name) || ".pdf";
-                const customName = `${prefix} [${dateStr}]${ext}`;
+            // Helper to upload to Graph
+            const uploadFile = async (file: File, prefix: string) => {
+                const ext = file.name.split('.').pop() || "pdf";
+                const customName = `${prefix} [${dateStr}].${ext}`;
                 const bytes = await file.arrayBuffer();
                 const buffer = Buffer.from(bytes);
-                const filePath = path.win32.join(targetDir, customName);
-                fs.writeFileSync(filePath, buffer);
+
+                // Use simple upload for files < 4MB (Standard for these docs)
+                await client.api(`/drives/${DRIVE_ID}/root:${userFolderPath}/${customName}:/content`)
+                    .put(buffer);
+                
                 return customName;
             };
 
-            const policyName = await saveFile(policyFile, "EQN IT Exit Policy");
-            const checklistName = await saveFile(checklistFile, "EQN IT Exit Checklist");
+            try {
+                const policyName = await uploadFile(policyFile, "EQN IT Exit Policy");
+                const checklistName = await uploadFile(checklistFile, "EQN IT Exit Checklist");
 
-            return NextResponse.json({ 
-                success: true, 
-                message: "Documents archived successfully",
-                files: [policyName, checklistName]
-            });
+                return NextResponse.json({ 
+                    success: true, 
+                    message: "Documents archived to SharePoint successfully",
+                    files: [policyName, checklistName]
+                });
+            } catch (err: any) {
+                console.error('[SHAREPOINT] Upload Error:', err.message);
+                return NextResponse.json({ error: "Failed to upload to SharePoint", details: err.message }, { status: 500 });
+            }
         }
 
         return NextResponse.json({ error: "Invalid action" }, { status: 400 });
 
     } catch (error: any) {
-        console.error('[UPLOAD] Fatal Error:', error);
-        return NextResponse.json(
-            { 
-                error: "Archival System Error", 
-                details: error.message,
-                diagnostic 
-            },
-            { status: 500 }
-        );
+        console.error('[ARCHIVAL] Fatal Error:', error);
+        return NextResponse.json({ error: "Archival System Error", details: error.message }, { status: 500 });
     }
 }
