@@ -330,8 +330,9 @@ function OffboardingContent() {
                         <thead className="bg-slate-950/50 text-slate-400 uppercase font-black text-[10px] tracking-widest border-b border-slate-800/60">
                             <tr>
                                 <th className="px-6 py-4">Employee</th>
-                                <th className="px-6 py-4 text-center">Device Status</th>
-                                <th className="px-6 py-4 text-center">Data Activity</th>
+                                <th className="px-6 py-4">Exit Date & Comments</th>
+                                <th className="px-4 py-4 text-center">Device Status</th>
+                                <th className="px-4 py-4 text-center">Data Activity</th>
                                 <th className="px-6 py-4 text-right">Actions</th>
                             </tr>
                         </thead>
@@ -358,6 +359,14 @@ function OffboardingContent() {
                                     const deviceName = intuneDevice?.deviceName || agent?.deviceName || "No device found";
                                     const isOnline = agent?.status === 'online';
                                     const compliance = intuneDevice?.complianceState || "Unknown";
+
+                                    const updateField = (field: string, val: string) => {
+                                        const newList = monitoredUsers.map(m => m.id === u.id ? { ...m, [field]: val } : m);
+                                        setMonitoredUsers(newList);
+                                        // Use a debounced or separate save button? No, let's just save for now
+                                        saveWatchlist(newList);
+                                    };
+
                                     return (
                                         <tr 
                                             key={u.id} 
@@ -375,13 +384,35 @@ function OffboardingContent() {
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-5 text-center">
+                                            <td className="px-6 py-5">
+                                                <div className="flex flex-col gap-2" onClick={(e) => e.stopPropagation()}>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-[9px] font-black text-slate-500 uppercase">Last Day:</span>
+                                                        <input 
+                                                            type="date" 
+                                                            value={u.lastDay || ""} 
+                                                            onChange={(e) => updateField('lastDay', e.target.value)}
+                                                            className="bg-slate-950 border border-slate-800 rounded px-2 py-0.5 text-[10px] text-slate-200 outline-none focus:border-blue-500 transition-colors"
+                                                        />
+                                                    </div>
+                                                    <div className="flex flex-col gap-1">
+                                                        <span className="text-[9px] font-black text-slate-500 uppercase">Comments:</span>
+                                                        <textarea 
+                                                            placeholder="What to do..."
+                                                            value={u.exitComments || ""}
+                                                            onChange={(e) => updateField('exitComments', e.target.value)}
+                                                            className="w-full bg-slate-950/50 border border-slate-800/60 rounded-lg p-2 text-[10px] text-slate-300 outline-none focus:border-blue-500/50 placeholder:text-slate-700 resize-none h-12"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-5 text-center">
                                                 <div className="flex flex-col items-center gap-1">
                                                     <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
                                                         isOnline ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-slate-900 text-slate-500 border-slate-800'
                                                     }`}>
                                                         {isOnline && <Activity size={10} className="animate-pulse" />}
-                                                        {deviceName}
+                                                        <span className="truncate max-w-[80px]">{deviceName}</span>
                                                     </div>
                                                     {intuneDevice && (
                                                         <span className={`text-[9px] font-black uppercase tracking-widest ${
@@ -392,22 +423,88 @@ function OffboardingContent() {
                                                     )}
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-5 text-center">
+                                            <td className="px-4 py-5 text-center">
                                                 <div className="flex flex-col items-center gap-1">
                                                     <span className="text-white font-bold text-xs">
                                                         {u.driveUsed ? (u.driveUsed / (1024 * 1024 * 1024)).toFixed(1) : "0.0"} GB
                                                     </span>
-                                                    <span className="text-[9px] text-slate-500 uppercase font-black uppercase tracking-tighter">Usage Detected</span>
+                                                    <span className="text-[9px] text-slate-500 uppercase font-black tracking-tighter">Usage</span>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-5 text-right">
-                                                <div className="flex justify-end gap-2">
+                                                <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                                                    <button 
+                                                        onClick={() => {
+                                                            const printWindow = window.open('', '_blank');
+                                                            if (printWindow) {
+                                                                printWindow.document.write(`
+                                                                    <html>
+                                                                    <head>
+                                                                        <title>Exit Interview - ${u.displayName}</title>
+                                                                        <style>
+                                                                            body { font-family: sans-serif; padding: 40px; color: #333; line-height: 1.6; }
+                                                                            .header { border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+                                                                            .title { font-size: 24px; font-weight: bold; text-transform: uppercase; }
+                                                                            .section { margin-bottom: 30px; }
+                                                                            .section-title { font-weight: bold; text-transform: uppercase; font-size: 14px; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 15px; }
+                                                                            .field { margin-bottom: 10px; }
+                                                                            .label { font-size: 11px; color: #666; font-weight: bold; text-transform: uppercase; display: block; }
+                                                                            .value { font-size: 16px; font-weight: 500; }
+                                                                            .policy { padding: 10px; background: #f9f9f9; border: 1px solid #eee; margin-bottom: 10px; border-radius: 5px; }
+                                                                            .signatures { margin-top: 60px; display: grid; grid-template-cols: 1fr 1fr; gap: 40px; }
+                                                                            .sig-box { border-top: 1px solid #333; padding-top: 10px; text-align: center; font-size: 12px; font-weight: bold; }
+                                                                            @media print { .no-print { display: none; } }
+                                                                        </style>
+                                                                    </head>
+                                                                    <body>
+                                                                        <div className="header">
+                                                                            <div className="title">Exit Interview Form</div>
+                                                                            <div>Equinox Outsourced Services</div>
+                                                                        </div>
+                                                                        
+                                                                        <div className="section">
+                                                                            <div className="section-title">Employee Information</div>
+                                                                            <div className="field"><span className="label">Name</span><div className="value">${u.displayName}</div></div>
+                                                                            <div className="field"><span className="label">Principal Name</span><div className="value">${u.userPrincipalName}</div></div>
+                                                                            <div className="field"><span className="label">Last Day of Service</span><div className="value">${u.lastDay || "Not Set"}</div></div>
+                                                                        </div>
+
+                                                                        <div className="section">
+                                                                            <div className="section-title">Comments / Instructions</div>
+                                                                            <div className="value" style="white-space: pre-wrap;">${u.exitComments || "No special instructions provided."}</div>
+                                                                        </div>
+
+                                                                        <div className="section">
+                                                                            <div className="section-title">Mandatory Policy Acknowledgment</div>
+                                                                            <div className="policy"><strong>1. Data & Email Summary</strong><br/><small>Review of data access and email archiving policies upon exit.</small></div>
+                                                                            <div className="policy"><strong>2. Exit Checklist</strong><br/><small>Confirmation of hardware return and access revocation.</small></div>
+                                                                            <div className="policy"><strong>3. Offboarding Confirmation Letter</strong><br/><small>Final employment status confirmation and post-exit obligations.</small></div>
+                                                                        </div>
+
+                                                                        <div className="signatures">
+                                                                            <div className="sig-box">Employee Signature</div>
+                                                                            <div className="sig-box">Management Signature</div>
+                                                                        </div>
+
+                                                                        <div className="no-print" style="margin-top: 40px; text-align: center;">
+                                                                            <button onclick="window.print()" style="padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Print Document</button>
+                                                                        </div>
+                                                                    </body>
+                                                                    </html>
+                                                                `);
+                                                                printWindow.document.close();
+                                                            }
+                                                        }}
+                                                        className="p-2 text-slate-500 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-xl transition-all"
+                                                        title="Print Exit Interview"
+                                                    >
+                                                        <FileText size={18} />
+                                                    </button>
                                                     {u.oneDriveUrl && (
                                                         <a 
                                                             href={u.oneDriveUrl} 
                                                             target="_blank" 
                                                             rel="noopener noreferrer"
-                                                            onClick={(e) => e.stopPropagation()}
                                                             className="p-2 text-slate-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-xl transition-all"
                                                             title="Open OneDrive"
                                                         >
@@ -415,19 +512,11 @@ function OffboardingContent() {
                                                         </a>
                                                     )}
                                                     <button 
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            removeFromWatchlist(u.id);
-                                                        }}
+                                                        onClick={() => removeFromWatchlist(u.id)}
                                                         className="p-2 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
+                                                        title="Remove from Watchlist"
                                                     >
                                                         <UserMinus size={18} />
-                                                    </button>
-                                                    <button 
-                                                        className="text-slate-600 hover:text-blue-400 p-2 transition-colors hover:bg-blue-500/10 rounded-lg"
-                                                        title="Deep Audit"
-                                                    >
-                                                        <ArrowLeft size={16} className="rotate-180" />
                                                     </button>
                                                 </div>
                                             </td>
