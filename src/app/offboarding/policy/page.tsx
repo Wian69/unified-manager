@@ -32,9 +32,9 @@ function PolicyContent() {
     }, [userId]);
 
     return (
-        <div className="min-h-screen bg-gray-200 py-12 flex justify-center text-black font-sans print:bg-white print:py-0">
+        <div className="min-h-screen bg-gray-200 py-12 flex justify-center print:bg-white print:py-0" style={{fontFamily: "'Calibri', 'Calibri Light', sans-serif", fontSize: "11pt"}}>
             {/* Strict Document Container */}
-            <div className="w-full max-w-[210mm] bg-white p-12 md:p-16 shadow-lg print:shadow-none print:p-0 min-h-[297mm] ring-1 ring-gray-300 print:ring-0">
+            <div className="w-full max-w-[210mm] bg-white p-12 md:p-16 shadow-lg print:shadow-none print:p-8 min-h-[297mm] ring-1 ring-gray-300 print:ring-0" style={{fontFamily: "inherit", fontSize: "inherit"}}>
                 
                 {/* Header Section */}
                 <div className="flex justify-between items-start border-b-2 border-black pb-8 mb-8">
