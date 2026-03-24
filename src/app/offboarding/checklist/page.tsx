@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { ArrowLeft, CheckCircle2, Circle, ShieldCheck, HardDrive, UserCheck, Key, Settings, CreditCard, Mail, Trash2, User, Landmark, Smartphone, Laptop, Database, AlertCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Circle, ShieldCheck, HardDrive, UserCheck, Key, Settings, CreditCard, Mail, Trash2, User, Landmark, Smartphone, Laptop, Database, AlertCircle, Printer } from "lucide-react";
 import { Suspense, useEffect, useState } from "react";
 
 interface Task {
@@ -13,7 +13,7 @@ interface Task {
 
 export default function ChecklistPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-500 font-mono text-xs tracking-widest uppercase">Initialising Checklist Engine...</div>}>
+        <Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-500 font-mono text-xs tracking-widest uppercase text-white animate-pulse">Initialising Protocol Monitor...</div>}>
             <ChecklistContent />
         </Suspense>
     );
@@ -32,27 +32,27 @@ function ChecklistContent() {
         { id: 'it-2', text: 'Email forward or shared mailbox members setup', completed: false, category: 'IT Administrative' },
         { id: 'it-3', text: 'Remove MS365 License', completed: false, category: 'IT Administrative' },
         { id: 'it-4', text: 'Remove from all groups on AD', completed: false, category: 'IT Administrative' },
-        { id: 'it-5', text: 'Company data removal: (Action Required)', completed: false, category: 'IT Administrative' },
+        { id: 'it-5', text: 'Company data removal verification', completed: false, category: 'IT Administrative' },
         { id: 'it-6', text: 'Clear MFA Settings', completed: false, category: 'IT Administrative' },
         
         // To be completed with the User
-        { id: 'user-1', text: 'Device Login Pin obtained', completed: false, category: 'To be completed with the User' },
-        { id: 'user-2', text: 'Uninstallation of Euphoria App and Office products from all personal devices', completed: false, category: 'To be completed with the User' },
+        { id: 'user-1', text: 'Device Login Pin obtained', completed: false, category: 'Internal User Coordination' },
+        { id: 'user-2', text: 'Uninstallation of Euphoria App and Office products from all personal devices', completed: false, category: 'Internal User Coordination' },
         
         // Return of Company Property
-        { id: 'prop-1', text: 'Return company-issued phone', completed: false, category: 'Return of Company Property' },
-        { id: 'prop-2', text: 'Return company-issued laptop', completed: false, category: 'Return of Company Property' },
-        { id: 'prop-3', text: 'Return any other equipment or materials', completed: false, category: 'Return of Company Property' },
+        { id: 'prop-1', text: 'Return company-issued phone', completed: false, category: 'Asset Recovery' },
+        { id: 'prop-2', text: 'Return company-issued laptop', completed: false, category: 'Asset Recovery' },
+        { id: 'prop-3', text: 'Return any other equipment or materials', completed: false, category: 'Asset Recovery' },
         
         // Data Removal
-        { id: 'data-1', text: 'Remove all company-related files, emails, and applications from personal devices', completed: false, category: 'Data Removal' },
-        { id: 'data-2', text: 'Verify no company data remains on any external storage devices', completed: false, category: 'Data Removal' },
+        { id: 'data-1', text: 'Remove all company-related files, emails, and applications from personal devices', completed: false, category: 'Data & Privacy Security' },
+        { id: 'data-2', text: 'Verify no company data remains on any external storage devices', completed: false, category: 'Data & Privacy Security' },
         
         // Final Checklist
-        { id: 'final-1', text: 'Confirm uninstallation of Euphoria app and Office products', completed: false, category: 'Final Checklist' },
-        { id: 'final-2', text: 'Confirm return of all company property', completed: false, category: 'Final Checklist' },
-        { id: 'final-3', text: 'Verify data removal from personal devices', completed: false, category: 'Final Checklist' },
-        { id: 'final-4', text: 'Confirm email forwarding setup', completed: false, category: 'Final Checklist' },
+        { id: 'final-1', text: 'Confirm uninstallation of Euphoria app and Office products', completed: false, category: 'Final Compliance Audit' },
+        { id: 'final-2', text: 'Confirm return of all company property', completed: false, category: 'Final Compliance Audit' },
+        { id: 'final-3', text: 'Verify data removal from personal devices', completed: false, category: 'Final Compliance Audit' },
+        { id: 'final-4', text: 'Confirm email forwarding setup', completed: false, category: 'Final Compliance Audit' },
     ]);
 
     useEffect(() => {
@@ -86,137 +86,154 @@ function ChecklistContent() {
     const progress = Math.round((tasks.filter(t => t.completed).length / tasks.length) * 100);
     const categories = [
         'IT Administrative', 
-        'To be completed with the User', 
-        'Return of Company Property', 
-        'Data Removal', 
-        'Final Checklist'
+        'Internal User Coordination', 
+        'Asset Recovery', 
+        'Data & Privacy Security', 
+        'Final Compliance Audit'
     ];
 
     return (
-        <div className="min-h-screen bg-slate-950 text-slate-200 selection:bg-blue-500/30">
-            {/* Header Area */}
-            <div className="bg-slate-900/40 border-b border-slate-800/60 pb-12 pt-8 backdrop-blur-md sticky top-0 z-40">
-                <div className="max-w-5xl mx-auto px-8">
+        <div className="min-h-screen bg-[#0b0f19] text-slate-200 selection:bg-blue-500/30 pb-32">
+            {/* Header Area - STRETCHED FULL WIDTH */}
+            <div className="bg-[#0b0f19]/80 border-b border-white/5 pb-12 pt-8 backdrop-blur-xl sticky top-0 z-40 px-12 print:hidden w-full max-w-none">
+                <div className="w-full">
                     <button 
                         onClick={() => router.back()}
                         className="mb-8 flex items-center gap-2 text-slate-500 hover:text-white transition-all text-xs font-black uppercase tracking-widest group"
                     >
                         <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
-                        Back to Watchlist
+                        Back to Monitor
                     </button>
                     
-                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-4">
-                                <div className="p-4 bg-emerald-500/20 text-emerald-400 rounded-2xl shadow-inner shadow-emerald-500/10 border border-emerald-500/10">
-                                    <CheckCircle2 size={32} />
+                    <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-12">
+                        <div className="flex items-center gap-6">
+                            <div className="p-6 bg-blue-600/20 text-blue-400 rounded-3xl shadow-2xl shadow-blue-500/5 border border-blue-500/10">
+                                <CheckCircle2 size={40} />
+                            </div>
+                            <div>
+                                <h1 className="text-5xl font-black text-white tracking-widest leading-none uppercase italic">IT EXIT <span className="text-blue-600 italic">INTERVIEW</span></h1>
+                                <p className="text-slate-400 font-black uppercase tracking-[0.4em] text-[10px] mt-4 opacity-60">Equinox Group Holdings, Inc. Protocol</p>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col md:flex-row items-center gap-12 bg-white/[0.02] p-6 rounded-[2rem] border border-white/5 grow xl:max-w-3xl">
+                             <div className="grow w-full space-y-3">
+                                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-500">
+                                    <span>Protocol Completion</span>
+                                    <span className={progress === 100 ? "text-emerald-500" : "text-white"}>{progress}%</span>
+                                </div>
+                                <div className="h-3 bg-slate-900 rounded-full overflow-hidden shadow-inner border border-white/5">
+                                    <div 
+                                        className={`h-full transition-all duration-1000 ease-out shadow-lg ${progress === 100 ? 'bg-emerald-500 shadow-emerald-500/30' : 'bg-blue-600 shadow-blue-500/30'}`}
+                                        style={{ width: `${progress}%` }}
+                                    />
+                                </div>
+                             </div>
+                             <button 
+                                onClick={() => window.print()}
+                                className="px-8 py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-white/10 transition-all flex items-center gap-2 whitespace-nowrap"
+                             >
+                                <Printer size={16} />
+                                Print Protocol
+                             </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* User Profile Overview - FULL WIDTH GRID */}
+            <div className="w-full px-12 mt-16 print:mt-0 max-w-none">
+                <div className="bg-[#0b0f19] border border-white/5 rounded-[2.5rem] p-12 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-12 relative overflow-hidden group shadow-2xl">
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.03] to-transparent pointer-events-none" />
+                    
+                    <div className="space-y-3 relative z-10 border-l border-blue-500 pl-6 h-full flex flex-col justify-center">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2 opacity-50">
+                             NAME
+                        </p>
+                        <p className="text-white font-black text-2xl leading-none uppercase tracking-tight">{userData?.displayName || "Initialising..."}</p>
+                    </div>
+
+                    <div className="space-y-3 relative z-10 border-l border-slate-800 pl-6 h-full flex flex-col justify-center">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2 opacity-50">
+                             PRINCIPAL IDENTIFIER
+                        </p>
+                        <p className="text-white font-black text-xs font-mono truncate tracking-widest">{userData?.userPrincipalName || "..."}</p>
+                    </div>
+
+                    <div className="space-y-3 relative z-10 border-l border-slate-800 pl-6 h-full flex flex-col justify-center">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2 opacity-50">
+                             ASSET CONTEXT
+                        </p>
+                        <div className="flex items-center gap-2">
+                            <Laptop size={14} className="text-blue-500" />
+                            <p className="text-white font-black text-sm uppercase italic">Managed Intune Endpoint</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-3 relative z-10 border-l border-slate-800 pl-6 h-full flex flex-col justify-center">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2 opacity-50">
+                             EFFECTIVE DATE
+                        </p>
+                        <p className="text-emerald-500 font-black text-2xl leading-none">{lastDay}</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Task Management Grid - WIDER & DENSE */}
+            <div className="w-full px-12 pb-32 mt-20 max-w-none">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-20">
+                    {categories.map((cat) => (
+                        <div key={cat} className="space-y-10 group">
+                            <div className="flex items-center gap-6 px-4">
+                                <div className="p-3 bg-white/5 rounded-2xl border border-white/5 text-blue-400 group-hover:scale-110 transition-transform">
+                                    {cat.includes('IT') && <Settings size={20} />}
+                                    {cat.includes('Coordination') && <UserCheck size={20} className="text-emerald-400" />}
+                                    {cat.includes('Recovery') && <Smartphone size={20} className="text-amber-400" />}
+                                    {cat.includes('Security') && <Database size={20} className="text-rose-400" />}
+                                    {cat.includes('Audit') && <ShieldCheck size={20} className="text-emerald-500" />}
                                 </div>
                                 <div>
-                                    <h1 className="text-4xl font-black text-white tracking-tight">IT Exit <span className="text-emerald-500 underline decoration-emerald-500/30 underline-offset-8">Interview</span></h1>
-                                    <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mt-2">Equinox Group Holdings, Inc. Protocol</p>
+                                    <h2 className="text-xl font-black text-white uppercase tracking-tighter leading-none">{cat}</h2>
+                                    <p className="text-[9px] font-black text-slate-600 uppercase tracking-[0.3em] mt-2">Functional Domain</p>
                                 </div>
-                            </div>
-                        </div>
-
-                        <div className="w-full md:w-64 space-y-3">
-                            <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-500">
-                                <span>Completion</span>
-                                <span className={progress === 100 ? "text-emerald-500" : "text-white"}>{progress}%</span>
-                            </div>
-                            <div className="h-2.5 bg-slate-800 rounded-full overflow-hidden shadow-inner border border-slate-700/50">
-                                <div 
-                                    className={`h-full transition-all duration-1000 ease-out shadow-lg ${progress === 100 ? 'bg-emerald-500 shadow-emerald-500/30' : 'bg-blue-600 shadow-blue-500/30'}`}
-                                    style={{ width: `${progress}%` }}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* User Information Summary Card */}
-            <div className="max-w-5xl mx-auto px-8 mt-12">
-                <div className="bg-slate-900/60 border border-slate-800/60 rounded-3xl p-8 grid grid-cols-1 md:grid-cols-4 gap-8 relative overflow-hidden group">
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent pointer-events-none" />
-                    <div className="space-y-1 relative z-10">
-                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2">
-                             <User size={12} className="text-blue-500" /> Username
-                        </p>
-                        <p className="text-white font-bold text-lg leading-none">{userData?.displayName || "Loading..."}</p>
-                    </div>
-                    <div className="space-y-1 relative z-10">
-                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2">
-                            <Mail size={12} className="text-blue-500" /> Email
-                        </p>
-                        <p className="text-white font-bold text-xs font-mono truncate">{userData?.userPrincipalName || "..."}</p>
-                    </div>
-                    <div className="space-y-1 relative z-10">
-                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2">
-                            <Laptop size={12} className="text-blue-500" /> Device
-                        </p>
-                        <p className="text-white font-bold text-sm">Managed Endpoint</p>
-                    </div>
-                    <div className="space-y-1 relative z-10">
-                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2">
-                            <Landmark size={12} className="text-blue-500" /> Last Day
-                        </p>
-                        <p className="text-emerald-400 font-black text-sm">{lastDay}</p>
-                    </div>
-                </div>
-            </div>
-
-            {/* Main Content Area */}
-            <div className="max-w-5xl mx-auto px-8 pb-32 mt-16">
-                <div className="grid grid-cols-1 gap-16">
-                    {categories.map((cat) => (
-                        <div key={cat} className="space-y-8">
-                            <div className="flex items-center gap-4 px-2">
-                                <div className="p-1.5 bg-slate-800 rounded-lg">
-                                    {cat.includes('IT') && <Settings size={14} className="text-blue-400" />}
-                                    {cat.includes('User') && <UserCheck size={14} className="text-emerald-400" />}
-                                    {cat.includes('Property') && <Smartphone size={14} className="text-amber-400" />}
-                                    {cat.includes('Data') && <Database size={14} className="text-rose-400" />}
-                                    {cat.includes('Final') && <CheckCircle2 size={14} className="text-emerald-500" />}
-                                </div>
-                                <h2 className="text-xs font-black text-slate-300 uppercase tracking-widest">{cat}</h2>
-                                <div className="h-px bg-slate-800 flex-grow" />
-                                <span className="text-[10px] font-bold text-slate-600 italic font-mono">
-                                    {tasks.filter(t => t.category === cat && t.completed).length}/{tasks.filter(t => t.category === cat).length}
+                                <div className="h-px bg-white/5 flex-grow mx-4 opacity-50" />
+                                <span className="text-xs font-black text-slate-500 font-mono tracking-widest">
+                                    {tasks.filter(t => t.category === cat && t.completed).length} / {tasks.filter(t => t.category === cat).length}
                                 </span>
                             </div>
 
-                            <div className="grid grid-cols-1 gap-3">
+                            <div className="grid grid-cols-1 gap-4">
                                 {tasks.filter(t => t.category === cat).map((task) => (
                                     <button 
                                         key={task.id}
                                         onClick={() => toggleTask(task.id)}
-                                        className={`flex items-center justify-between p-6 rounded-2xl border transition-all text-left outline-none hover:translate-x-1 group ${
+                                        className={`flex items-center justify-between p-8 rounded-[2rem] border transition-all text-left outline-none hover:translate-x-3 duration-500 shadow-xl ${
                                             task.completed 
-                                                ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-100/60 shadow-inner' 
-                                                : 'bg-slate-900/40 border-slate-800/60 hover:border-slate-700 hover:bg-slate-900/60 hover:shadow-xl'
+                                                ? 'bg-emerald-500/[0.02] border-emerald-500/20 text-slate-500 shadow-none' 
+                                                : 'bg-white/[0.02] border-white/5 hover:border-blue-500/30 hover:bg-white/[0.04] shadow-black/20'
                                         }`}
                                     >
-                                        <div className="flex items-center gap-5">
-                                            <div className={`transition-all duration-300 ${task.completed ? 'text-emerald-500 scale-110' : 'text-slate-700 group-hover:text-slate-500'}`}>
-                                                {task.completed ? <CheckCircle2 size={24} /> : <Circle size={24} />}
+                                        <div className="flex items-center gap-8">
+                                            <div className={`transition-all duration-700 ${task.completed ? 'text-emerald-500 rotate-0 scale-125' : 'text-slate-800 group-hover:text-slate-400 rotate-90 group-hover:rotate-0'}`}>
+                                                {task.completed ? <CheckCircle2 size={28} /> : <Circle size={28} />}
                                             </div>
-                                            <div>
-                                                <p className={`font-bold text-sm transition-all ${task.completed ? 'line-through decoration-emerald-500/50' : 'text-white'}`}>
+                                            <div className="space-y-1">
+                                                <p className={`font-black uppercase tracking-widest text-xs transition-all ${task.completed ? 'line-through text-slate-600' : 'text-white'}`}>
                                                     {task.text}
                                                 </p>
-                                                {task.text.includes('Company data removal') && !task.completed && (
-                                                    <div className="flex gap-4 mt-2">
-                                                        <span className="text-[9px] font-bold text-slate-500 border border-slate-800 px-2 py-0.5 rounded uppercase">Yes</span>
-                                                        <span className="text-[9px] font-bold text-slate-500 border border-slate-800 px-2 py-0.5 rounded uppercase">No Retrain Till Specified</span>
-                                                    </div>
+                                                {!task.completed && (
+                                                    <p className="text-[10px] text-slate-500 font-bold tracking-tight">Requirement Pending Verification</p>
                                                 )}
                                             </div>
                                         </div>
-                                        {!task.completed && (
-                                            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <div className="w-6 h-6 rounded-full border border-slate-700 flex items-center justify-center">
-                                                    <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                                                </div>
+                                        
+                                        {task.completed ? (
+                                             <div className="bg-emerald-500/10 px-4 py-2 rounded-xl border border-emerald-500/10">
+                                                <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Audit Passed</span>
+                                             </div>
+                                        ) : (
+                                            <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all group-hover:scale-110">
+                                                <ArrowLeft size={16} className="rotate-180 text-blue-500" />
                                             </div>
                                         )}
                                     </button>
@@ -226,31 +243,31 @@ function ChecklistContent() {
                     ))}
                 </div>
 
-                {/* Final Submission Card */}
+                {/* Final Protocol Certification Card */}
                 {progress === 100 && (
-                    <div className="mt-20 p-12 bg-gradient-to-br from-emerald-500/10 via-slate-900/50 to-transparent rounded-[3rem] border border-emerald-500/20 text-center space-y-8 animate-in slide-in-from-bottom-10 duration-1000 shadow-3xl shadow-emerald-500/5 relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-500 to-transparent opacity-50" />
-                        <div className="w-24 h-24 bg-emerald-500 text-slate-950 rounded-[2rem] flex items-center justify-center mx-auto shadow-2xl shadow-emerald-500/40 transform rotate-12 hover:rotate-0 transition-all duration-500 cursor-pointer">
-                            <ShieldCheck size={56} />
+                    <div className="mt-40 p-24 bg-gradient-to-br from-blue-600/10 via-slate-900 to-transparent rounded-[4rem] border border-blue-500/20 text-center space-y-12 animate-in fade-in zoom-in slide-in-from-bottom-20 duration-1000 shadow-[0_0_100px_rgba(37,99,235,0.05)] relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-blue-600 to-transparent opacity-50" />
+                        <div className="w-28 h-28 bg-blue-600 text-white rounded-[2.5rem] flex items-center justify-center mx-auto shadow-2xl shadow-blue-600/40 relative z-10">
+                            <ShieldCheck size={64} />
                         </div>
-                        <div className="space-y-4">
-                            <h3 className="text-3xl font-black text-white tracking-tight">Protocol Fully Validated</h3>
-                            <p className="text-slate-400 font-medium max-w-lg mx-auto leading-relaxed">
-                                All departmental steps for **{userData?.displayName || "the user"}** have been finalized. The separation of company assets and data for **Equinox Group Holdings, Inc.** is now complete.
+                        <div className="space-y-6 relative z-10">
+                            <h3 className="text-5xl font-black text-white tracking-widest uppercase italic leading-none">Status: <span className="text-blue-500">Separated</span></h3>
+                            <p className="text-slate-400 font-bold max-w-2xl mx-auto leading-relaxed text-lg tracking-tight">
+                                All departmental protocols for **{userData?.displayName || "Identity Under Review"}** have been finalized. Full separation of digital and physical assets for Equinox Group Holdings, Inc. is certified.
                             </p>
                         </div>
-                        <div className="flex flex-col md:flex-row items-center justify-center gap-4">
+                        <div className="flex flex-col md:flex-row items-center justify-center gap-8 relative z-10">
                             <button 
                                 onClick={() => router.push('/offboarding')}
-                                className="bg-emerald-600 hover:bg-emerald-500 text-white px-12 py-5 rounded-2xl font-black uppercase tracking-widest text-xs transition-all active:scale-95 shadow-xl shadow-emerald-600/30 w-full md:w-auto hover:-translate-y-1"
+                                className="bg-blue-600 hover:bg-blue-500 text-white px-20 py-6 rounded-3xl font-black uppercase tracking-[0.2em] text-sm transition-all active:scale-95 shadow-2xl shadow-blue-600/30 hover:-translate-y-2 duration-500"
                             >
-                                Submit Final Report
+                                Finalize Record
                             </button>
                             <button 
                                 onClick={() => window.print()}
-                                className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-8 py-5 rounded-2xl font-black uppercase tracking-widest text-xs transition-all active:scale-95 border border-slate-700 w-full md:w-auto"
+                                className="bg-white/5 hover:bg-white/10 text-white px-12 py-6 rounded-3xl font-black uppercase tracking-[0.2em] text-sm transition-all active:scale-95 border border-white/10 shadow-xl backdrop-blur-xl"
                             >
-                                Export as PDF
+                                Export Audit PDF
                             </button>
                         </div>
                     </div>

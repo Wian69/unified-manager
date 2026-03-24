@@ -1,12 +1,12 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { ArrowLeft, FileText, ShieldCheck, Lock, HardDrive, UserCheck, Scale, Mail, MessageSquare, Database, Smartphone, Laptop, Trash2, User } from "lucide-react";
+import { ArrowLeft, FileText, ShieldCheck, Lock, HardDrive, UserCheck, Scale, Mail, MessageSquare, Database, Smartphone, Laptop, Trash2, Printer, Download } from "lucide-react";
 import { Suspense, useEffect, useState } from "react";
 
 export default function PolicyPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-500 font-mono text-xs tracking-widest uppercase text-white animate-pulse">Loading Policy Engine...</div>}>
+        <Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-500 font-mono text-xs tracking-widest uppercase text-white animate-pulse">Loading Governance Context...</div>}>
             <PolicyContent />
         </Suspense>
     );
@@ -31,9 +31,9 @@ function PolicyContent() {
     }, [userId]);
 
     return (
-        <div className="min-h-screen bg-[#0b0f19] text-slate-200 selection:bg-blue-500/30 pb-32">
-            {/* Top Navigation Bar */}
-            <nav className="sticky top-0 z-50 bg-[#0b0f19]/80 backdrop-blur-xl border-b border-white/5 px-8 py-4 flex justify-between items-center shadow-2xl">
+        <div className="min-h-screen bg-[#0b0f19] text-slate-200 selection:bg-blue-500/30 pb-32 print:bg-white print:text-black">
+            {/* Top Navigation Bar - Hidden on Print */}
+            <nav className="sticky top-0 z-50 bg-[#0b0f19]/80 backdrop-blur-xl border-b border-white/5 px-8 py-4 flex justify-between items-center shadow-2xl print:hidden">
                 <div className="flex items-center gap-6">
                     <button 
                         onClick={() => router.back()}
@@ -43,254 +43,215 @@ function PolicyContent() {
                     </button>
                     <div className="h-6 w-px bg-white/10" />
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-500/10 text-blue-400 rounded-lg">
+                        <div className="p-2 bg-blue-600/20 text-blue-400 rounded-lg">
                             <ShieldCheck size={20} />
                         </div>
                         <div>
                             <h1 className="text-sm font-black uppercase tracking-widest text-white leading-none">IT Exit interview Policy</h1>
-                            <p className="text-[9px] text-slate-500 font-bold uppercase tracking-tighter mt-1">Equinox Group Holdings, Inc.</p>
+                            <p className="text-[9px] text-slate-500 font-bold uppercase tracking-tighter mt-1">Status: Compliance Verified</p>
                         </div>
                     </div>
                 </div>
                 <div className="flex items-center gap-4">
                     <button 
                         onClick={() => window.print()}
-                        className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all text-slate-400 hover:text-white"
+                        className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20"
                     >
-                        Print as PDF
+                        <Printer size={14} />
+                        Print for Records
                     </button>
                 </div>
             </nav>
 
-            {/* Document Content */}
-            <div className="max-w-4xl mx-auto px-8 mt-16 space-y-16">
+            {/* Document Container - FULL WIDTH */}
+            <div className="w-full px-12 mt-16 print:mt-0 print:px-0 max-w-none">
                 
-                {/* Header Section */}
-                <div className="space-y-4 border-l-4 border-blue-600 pl-8 py-2">
-                    <h2 className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] mb-4">Official Governance</h2>
-                    <h3 className="text-4xl font-black text-white tracking-tight leading-tight">Equinox Group Holdings, Inc. <br/> <span className="text-slate-500 text-3xl">- IT Exit interview Policy</span></h3>
-                    <p className="text-slate-400 font-medium text-sm">
-                        <span className="text-blue-400 font-bold">Effective Date:</span> This policy is effective as of {lastDay}
-                    </p>
-                </div>
-
-                {/* Purpose & Scope */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                    <div className="space-y-4">
-                        <h4 className="text-sm font-black text-white uppercase tracking-widest border-b border-white/10 pb-2">Purpose</h4>
-                        <p className="text-slate-400 text-sm leading-relaxed font-medium">
-                            The purpose of this policy is to ensure a smooth transition for employees leaving the company, safeguard company assets, and maintain data security.
-                        </p>
-                    </div>
-                    <div className="space-y-4">
-                        <h4 className="text-sm font-black text-white uppercase tracking-widest border-b border-white/10 pb-2">Scope</h4>
-                        <p className="text-slate-400 text-sm leading-relaxed font-medium">
-                            This policy applies to all employees who are exiting Equinox Group Holdings, Inc.
-                        </p>
-                    </div>
-                </div>
-
-                {/* Procedure List */}
-                <div className="space-y-10 bg-white/[0.02] p-10 rounded-[2rem] border border-white/5">
-                    <h4 className="text-xl font-black text-white flex items-center gap-3">
-                         <span className="w-8 h-8 rounded-lg bg-blue-600/10 text-blue-400 flex items-center justify-center text-sm">1</span>
-                         Procedure Tasks
-                    </h4>
-                    
-                    <div className="grid grid-cols-1 gap-8 ml-4">
-                        <div className="space-y-2">
-                            <h5 className="text-indigo-400 font-black text-[10px] uppercase tracking-widest">1. Uninstallation of Software</h5>
-                            <p className="text-slate-300 text-sm font-medium leading-relaxed">
-                                The **Group IT Support Specialist** will ensure that the Euphoria app, Outlook, Teams & Onedrive is uninstalled from all company and personal devices used by the departing employee.
-                            </p>
-                        </div>
-
-                        <div className="space-y-2">
-                            <h5 className="text-amber-400 font-black text-[10px] uppercase tracking-widest">2. Return of Company Property</h5>
-                            <p className="text-slate-300 text-sm font-medium leading-relaxed">
-                                The departing employee must return all company property, including but not limited to:
-                            </p>
-                            <ul className="text-slate-400 text-xs font-bold space-y-1 ml-4 list-disc marker:text-amber-500">
-                                <li>Company-issued phone</li>
-                                <li>Laptop</li>
-                                <li>Any other equipment or materials provided by the company</li>
-                            </ul>
-                        </div>
-
-                        <div className="space-y-2">
-                            <h5 className="text-rose-400 font-black text-[10px] uppercase tracking-widest">3. Data Removal</h5>
-                            <p className="text-slate-300 text-sm font-medium leading-relaxed">
-                                The **Group IT Support Specialist** will take all necessary steps to remove company data from non-company property. This includes:
-                            </p>
-                            <ul className="text-slate-400 text-xs font-bold space-y-1 ml-4 list-disc marker:text-rose-500">
-                                <li>Ensuring that all company-related files, emails, and applications are deleted from personal devices.</li>
-                                <li>Verifying that no company data remains on any external storage devices used by the employee.</li>
-                            </ul>
-                        </div>
-
-                        <div className="space-y-2">
-                            <h5 className="text-blue-400 font-black text-[10px] uppercase tracking-widest">4. Email Forwarding</h5>
-                            <p className="text-slate-300 text-sm font-medium leading-relaxed">
-                                The **Group IT Support Specialist** will set up necessary email forwarding to ensure that any important communications are redirected to the appropriate personnel.
-                            </p>
-                        </div>
-
-                        <div className="space-y-2">
-                            <h5 className="text-emerald-400 font-black text-[10px] uppercase tracking-widest">5. Final Checklist</h5>
-                            <p className="text-slate-300 text-sm font-medium leading-relaxed">
-                                The **Group IT Support Specialist** will provide the departing employee with a final checklist to ensure all steps are completed. This checklist will include:
-                            </p>
-                            <ul className="text-slate-400 text-xs font-bold space-y-1 ml-4 list-disc marker:text-emerald-500">
-                                <li>Confirmation of Euphoria app and other applications uninstallation</li>
-                                <li>Return of all company property</li>
-                                <li>Verification of data removal from personal devices</li>
-                                <li>Confirmation of email forwarding setup</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Responsibilities */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="p-8 bg-slate-900/50 rounded-3xl border border-white/5 space-y-4">
-                        <div className="flex items-center gap-3 text-white">
-                             <User size={18} className="text-blue-500" />
-                             <h4 className="font-black text-sm uppercase tracking-widest text-white">Departing Employee</h4>
-                        </div>
-                        <p className="text-slate-400 text-xs leading-relaxed font-medium">Ensure the return of all company property and compliance with data removal procedures.</p>
-                    </div>
-                    <div className="p-8 bg-slate-900/50 rounded-3xl border border-white/5 space-y-4">
-                        <div className="flex items-center gap-3 text-white">
-                             <ShieldCheck size={18} className="text-blue-500" />
-                             <h4 className="font-black text-sm uppercase tracking-widest text-white">Group IT Support Specialist</h4>
-                        </div>
-                        <p className="text-slate-400 text-xs leading-relaxed font-medium">Oversee the uninstallation of the Euphoria app, data removal, and email forwarding setup.</p>
-                    </div>
-                </div>
-
-                {/* Digital Information Summary */}
-                <div className="space-y-12 pt-16 border-t border-white/5">
-                    <div className="space-y-4">
-                        <h4 className="text-2xl font-black text-white tracking-tight">Post-Departure Digital Process</h4>
-                        <p className="text-slate-500 text-sm font-medium">The summary below outlines the process followed by the IT department for your digital information.</p>
-                    </div>
-
-                    <div className="space-y-8 divide-y divide-white/5">
-                        {/* Email */}
-                        <div className="pt-8 grid grid-cols-1 md:grid-cols-[200px_1fr] gap-8 group">
-                            <div className="flex items-center gap-3 text-blue-400">
-                                <Mail size={24} />
-                                <h5 className="font-black text-xs uppercase tracking-widest">1. Email Inbox</h5>
+                {/* PROFESSIONAL POLICY HEADER with LOGO */}
+                <div className="border-b-2 border-slate-800 pb-12 mb-16 flex flex-col md:flex-row justify-between items-start md:items-center gap-12 print:border-black print:mb-8">
+                    <div className="flex items-center gap-6">
+                        {/* CSS-ONLY Corporate Logo for Equinox */}
+                        <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                                <span className="text-5xl font-black tracking-tighter text-blue-600 print:text-black italic">EQUINOX</span>
+                                <div className="h-10 w-1 bg-slate-700 print:bg-black mr-2" />
+                                <div className="flex flex-col">
+                                    <span className="text-2xl font-black text-white print:text-black tracking-tight leading-none uppercase">Group Holdings</span>
+                                    <span className="text-lg font-bold text-slate-500 print:text-black leading-none uppercase tracking-widest">Global Protocol</span>
+                                </div>
                             </div>
-                            <div className="space-y-3">
-                                <p className="text-white text-sm font-black">Outlook / Microsoft 365 Mailbox</p>
-                                <ul className="text-slate-400 text-xs font-medium space-y-2 list-disc ml-4 marker:text-blue-600">
-                                    <li>Mailbox disabled on your last working day.</li>
-                                    <li>Manager or designated successor receives full access for business continuity.</li>
-                                    <li>Auto reply and forwarding (if applicable) configured per policy.</li>
-                                    <li>Mailbox retained for 12 months per retention policies.</li>
-                                </ul>
-                                <p className="text-[10px] text-blue-500/80 font-black uppercase">Result: Access fully revoked upon completion.</p>
+                            <p className="text-[10px] font-black tracking-[0.5em] text-slate-500 mt-2 ml-1 print:text-black">INC. CORPORATE GOVERNANCE</p>
+                        </div>
+                    </div>
+
+                    <div className="text-right space-y-2 group">
+                        <div className="inline-block px-4 py-1.5 bg-blue-600/10 border border-blue-500/20 rounded-full print:border-black">
+                            <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest print:text-black">Confidential Document</p>
+                        </div>
+                        <p className="text-sm font-bold text-white print:text-black">Ref ID: OFF-{userId?.substring(0,8).toUpperCase() || "GEN-01"}</p>
+                        <p className="text-[10px] text-slate-500 print:text-black font-mono">Issued by: Group IT Legal & Compliance</p>
+                    </div>
+                </div>
+
+                {/* Policy Metadata Detail View */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-20 bg-white/[0.02] p-10 rounded-3xl border border-white/5 print:border-black print:bg-white print:p-4 print:mb-10">
+                    <div className="space-y-1">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest print:text-black">Document Name</p>
+                        <p className="text-white font-black text-xl print:text-black leading-tight">IT Exit interview Policy</p>
+                    </div>
+                    <div className="space-y-1 border-l border-white/10 pl-8 print:border-black">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest print:text-black">Effective Date</p>
+                        <p className="text-emerald-400 font-black text-xl print:text-black">{lastDay}</p>
+                    </div>
+                    <div className="space-y-1 border-l border-white/10 pl-8 print:border-black">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest print:text-black">Subject Personnel</p>
+                        <p className="text-white font-black text-xl print:text-black">{userName}</p>
+                    </div>
+                    <div className="space-y-1 border-l border-white/10 pl-8 print:border-black">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest print:text-black">Classification</p>
+                        <p className="text-rose-500 font-black text-xl print:text-black uppercase">Restricted</p>
+                    </div>
+                </div>
+
+                {/* Primary Narrative Content - Expanded Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-20">
+                    <div className="space-y-16">
+                        {/* Section 1: Core Definitions */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                            <section className="space-y-4">
+                                <h4 className="flex items-center gap-3 text-lg font-black text-white uppercase tracking-widest print:text-black">
+                                    <div className="w-2 h-2 rounded-full bg-blue-500" />
+                                    Purpose
+                                </h4>
+                                <p className="text-slate-400 text-sm leading-relaxed font-medium print:text-black">
+                                    The purpose of this policy is to ensure a smooth transition for employees leaving the company, safeguard company assets, and maintain data security.
+                                </p>
+                            </section>
+                            <section className="space-y-4">
+                                <h4 className="flex items-center gap-3 text-lg font-black text-white uppercase tracking-widest print:text-black">
+                                    <div className="w-2 h-2 rounded-full bg-blue-500" />
+                                    Scope
+                                </h4>
+                                <p className="text-slate-400 text-sm leading-relaxed font-medium print:text-black">
+                                    This policy applies to all employees who are exiting Equinox Group Holdings, Inc.
+                                </p>
+                            </section>
+                        </div>
+
+                        {/* Section 2: Procedure Grid */}
+                        <section className="space-y-12">
+                            <h4 className="text-2xl font-black text-white uppercase tracking-tighter border-b border-white/10 pb-6 print:text-black">Departure Protocol <span className="text-blue-500">(Mandatory)</span></h4>
+                            
+                            <div className="space-y-12">
+                                <div className="grid grid-cols-1 md:grid-cols-[60px_1fr] gap-6 group">
+                                    <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center text-blue-400 font-black text-xl group-hover:bg-blue-600 group-hover:text-white transition-all print:border-black print:text-black print:bg-white print:border">1</div>
+                                    <div className="space-y-3">
+                                        <h5 className="text-white font-black text-lg uppercase tracking-tight print:text-black">Uninstallation of Euphoria App and Office products</h5>
+                                        <p className="text-slate-400 text-sm leading-relaxed font-medium print:text-black">
+                                            The Group IT Support Specialist will ensure that the <span className="text-white print:text-black font-bold">Euphoria app, Outlook, Teams & OneDrive</span> is uninstalled from all company and personal devices used by the departing employee.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-[60px_1fr] gap-6 group">
+                                    <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center text-amber-500 font-black text-xl group-hover:bg-amber-500 group-hover:text-white transition-all print:border-black print:text-black print:bg-white print:border">2</div>
+                                    <div className="space-y-4">
+                                        <h5 className="text-white font-black text-lg uppercase tracking-tight print:text-black">Return of Company Property</h5>
+                                        <p className="text-slate-400 text-sm leading-relaxed font-medium print:text-black">
+                                            The departing employee must return all company property, including but not limited to:
+                                        </p>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {[
+                                                { icon: <Smartphone size={16}/>, text: 'Company-issued phone' },
+                                                { icon: <Laptop size={16}/>, text: 'Company-issued laptop' },
+                                                { icon: <HardDrive size={16}/>, text: 'Other equipment or materials' }
+                                            ].map((item, i) => (
+                                                <div key={i} className="flex items-center gap-3 p-4 bg-white/5 rounded-xl border border-white/5 text-slate-300 print:text-black print:border-black">
+                                                    {item.icon}
+                                                    <span className="text-xs font-bold uppercase tracking-widest">{item.text}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-[60px_1fr] gap-6 group">
+                                    <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center text-rose-500 font-black text-xl group-hover:bg-rose-500 group-hover:text-white transition-all print:border-black print:text-black print:bg-white print:border">3</div>
+                                    <div className="space-y-3">
+                                        <h5 className="text-white font-black text-lg uppercase tracking-tight print:text-black">Data Removal Protocol</h5>
+                                        <p className="text-slate-400 text-sm leading-relaxed font-medium print:text-black">
+                                            The Group IT Support Specialist will take all necessary steps to remove company data from non-company property. This includes ensuring all files, emails, and applications are deleted and verifying no data remains on external storage devices.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* Additional Procedures */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                            <section className="space-y-4">
+                                <h4 className="text-blue-400 font-black text-xs uppercase tracking-widest">4. Email Forwarding</h4>
+                                <p className="text-slate-400 text-sm leading-relaxed print:text-black font-medium text-justify">
+                                    The Group IT Support Specialist will set up necessary email forwarding to ensure that any important communications are redirected to the appropriate personnel.
+                                </p>
+                            </section>
+                            <section className="space-y-4">
+                                <h4 className="text-emerald-400 font-black text-xs uppercase tracking-widest">5. Final Checklist</h4>
+                                <p className="text-slate-400 text-sm leading-relaxed print:text-black font-medium text-justify">
+                                    A final verification of Euphoria uninstallation, property return, data removal validation, and email forwarding setup must be confirmed signed.
+                                </p>
+                            </section>
+                        </div>
+                    </div>
+
+                    {/* Side Panel: Digital Retention Policy (Full Detail) */}
+                    <div className="space-y-12 print:page-break-before">
+                        <div className="bg-white/[0.03] p-10 rounded-[2.5rem] border border-white/5 shadow-2xl relative overflow-hidden print:border-black print:bg-white print:p-0 print:border-none print:shadow-none">
+                            <div className="absolute top-0 right-0 p-8 text-blue-500/10 pointer-events-none print:hidden">
+                                <Database size={160} />
+                            </div>
+                            
+                            <h4 className="text-xl font-black text-white uppercase tracking-tight mb-8 print:text-black">Digital Information Summary</h4>
+                            
+                            <div className="space-y-10">
+                                {[
+                                    { title: 'Email Mailbox', desc: 'Disabled immediately. Retained for 12 months. Manager receives full access.' },
+                                    { title: 'OneDrive Data', desc: 'Ownership transferred to manager for 7 days. Permanent deletion thereafter.' },
+                                    { title: 'Teams History', desc: 'Private chats follow legal retention rules. Channel files remain with the Team.' },
+                                    { title: 'Shared Systems', desc: 'Permissions revoked. All created content remains Equinox IP.' }
+                                ].map((sys, idx) => (
+                                    <div key={idx} className="space-y-2 relative z-10">
+                                        <p className="text-xs font-black text-blue-500 uppercase tracking-widest print:text-black">{sys.title}</p>
+                                        <p className="text-slate-400 text-sm leading-relaxed font-medium print:text-black">{sys.desc}</p>
+                                        <div className="h-px bg-white/5 w-1/3 mt-2 print:bg-black" />
+                                    </div>
+                                ))}
                             </div>
                         </div>
 
-                        {/* OneDrive */}
-                        <div className="pt-8 grid grid-cols-1 md:grid-cols-[200px_1fr] gap-8 group">
-                            <div className="flex items-center gap-3 text-indigo-400">
-                                <HardDrive size={24} />
-                                <h5 className="font-black text-xs uppercase tracking-widest">2. OneDrive</h5>
+                        {/* Signatures */}
+                        <div className="space-y-10 pt-12 border-t border-white/10 print:border-black print:border-t-2">
+                            <div className="space-y-6">
+                                <div className="h-0.5 bg-slate-700 w-full mb-2 print:bg-black" />
+                                <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-500 print:text-black">
+                                    <span>Employee Signature</span>
+                                    <span>Date</span>
+                                </div>
                             </div>
-                            <div className="space-y-3">
-                                <p className="text-white text-sm font-black">Cloud Files & Data</p>
-                                <ul className="text-slate-400 text-xs font-medium space-y-2 list-disc ml-4 marker:text-indigo-600">
-                                    <li>Ownership transferred to your manager.</li>
-                                    <li>7-day review period for business-related file relocation.</li>
-                                    <li>OneDrive contents deleted following retention period.</li>
-                                </ul>
-                                <div className="p-3 bg-indigo-500/5 rounded-lg border border-indigo-500/10">
-                                    <p className="text-[10px] text-indigo-400 font-bold uppercase tracking-tight">Note: Personal files export requires formal IT approval.</p>
+                            <div className="space-y-6">
+                                <div className="h-0.5 bg-slate-700 w-full mb-2 print:bg-black" />
+                                <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-500 print:text-black">
+                                    <span>Group IT Support Specialist</span>
+                                    <span>Date</span>
                                 </div>
                             </div>
                         </div>
-
-                        {/* Teams */}
-                        <div className="pt-8 grid grid-cols-1 md:grid-cols-[200px_1fr] gap-8 group">
-                            <div className="flex items-center gap-3 text-emerald-400">
-                                <MessageSquare size={24} />
-                                <h5 className="font-black text-xs uppercase tracking-widest">3. Teams</h5>
-                            </div>
-                            <div className="space-y-3">
-                                <p className="text-white text-sm font-black">Chats & Shared Files</p>
-                                <ul className="text-slate-400 text-xs font-medium space-y-2 list-disc ml-4 marker:text-emerald-600">
-                                    <li>Private chats stored per compliance and retention rules.</li>
-                                    <li>No direct access to private history unless legally required.</li>
-                                    <li>Files in Teams channels remain accessible to the department.</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        {/* SharePoint */}
-                        <div className="pt-8 grid grid-cols-1 md:grid-cols-[200px_1fr] gap-8 group">
-                            <div className="flex items-center gap-3 text-slate-400">
-                                <Database size={24} />
-                                <h5 className="font-black text-xs uppercase tracking-widest">4. SharePoint</h5>
-                            </div>
-                            <div className="space-y-3">
-                                <p className="text-white text-sm font-black">Corporate Environment</p>
-                                <ul className="text-slate-400 text-xs font-medium space-y-2 list-disc ml-4">
-                                    <li>All documents remain part of their respective sites.</li>
-                                    <li>Access permissions removed from all folders, groups, and sites.</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        {/* Applications */}
-                        <div className="pt-8 grid grid-cols-1 md:grid-cols-[200px_1fr] gap-8 group">
-                            <div className="flex items-center gap-3 text-amber-400">
-                                <Smartphone size={24} />
-                                <h5 className="font-black text-xs uppercase tracking-widest">5. Applications</h5>
-                            </div>
-                            <div className="space-y-3">
-                                <p className="text-white text-sm font-black">SaaS & Third-Party Platforms</p>
-                                <ul className="text-slate-400 text-xs font-medium space-y-2 list-disc ml-4 marker:text-amber-600">
-                                    <li>Full removal from systems (Jira, Freshservice, SAP, Slack).</li>
-                                    <li>Active tasks reassigned to department management.</li>
-                                    <li>All content remains IP of Equinox Group Holdings, Inc.</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        {/* Personal Data */}
-                        <div className="pt-8 grid grid-cols-1 md:grid-cols-[200px_1fr] gap-8 group">
-                            <div className="flex items-center gap-3 text-rose-400">
-                                <Trash2 size={24} />
-                                <h5 className="font-black text-xs uppercase tracking-widest">6. Personal Data</h5>
-                            </div>
-                            <div className="space-y-3">
-                                <p className="text-white text-sm font-black">Personal Files Review</p>
-                                <ul className="text-slate-400 text-xs font-medium space-y-2 list-disc ml-4 marker:text-rose-600">
-                                    <li>Personal Data Review request available before last day.</li>
-                                    <li>IT assist in identification and transfer of non-corporate items.</li>
-                                </ul>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
-                {/* Signature Section */}
-                <div className="mt-24 pt-16 border-t font-mono">
-                    <div className="flex flex-col md:flex-row justify-between items-end gap-16">
-                        <div className="w-full md:w-1/2 space-y-2">
-                             <div className="h-px bg-slate-400 w-full mb-4" />
-                             <p className="text-xs font-black uppercase tracking-widest text-slate-500">Employee Signature</p>
-                        </div>
-                        <div className="w-full md:w-1/3 space-y-2 text-right">
-                             <div className="h-px bg-slate-400 w-full mb-4" />
-                             <p className="text-xs font-black uppercase tracking-widest text-slate-500">Date: {lastDay}</p>
-                        </div>
-                    </div>
+                {/* Print Footer */}
+                <div className="hidden print:block fixed bottom-0 left-0 right-0 text-center py-8 text-[8px] font-black uppercase tracking-[0.5em] text-slate-400">
+                    &copy; {new Date().getFullYear()} Equinox Group Holdings, Inc. - Strictly Confidential
                 </div>
-
             </div>
         </div>
     );
