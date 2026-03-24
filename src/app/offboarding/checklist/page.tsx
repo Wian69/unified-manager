@@ -142,6 +142,19 @@ function ChecklistContent() {
                     <p className="mb-4">☐ Confirm email forwarding setup.</p>
                 </section>
 
+                {/* Company Assets Returned */}
+                <section className="mb-8">
+                    <h2 className="font-bold text-base mb-2 border-b border-black pb-1">Company Assets Returned</h2>
+                    <p className="mb-3 text-sm">The following company issued IT assets have been returned by the employee:</p>
+                    <p>☐ Laptop / Desktop</p>
+                    <p>☐ Power supply</p>
+                    <p>☐ External peripherals (mouse, keyboard, headset, adapters)</p>
+                    <p>☐ Mobile phone / SIM</p>
+                    <p>☐ Access cards / security tokens</p>
+                    <p>☐ Laptop Bag</p>
+                    <p className="mt-1">☐ Other: ______________________________________</p>
+                </section>
+
                 {/* Signatures */}
                 <div className="mt-16 pt-8">
                     <h2 className="font-bold text-base mb-8">Formal Acknowledgment</h2>
