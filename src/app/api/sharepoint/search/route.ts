@@ -18,16 +18,23 @@ export async function GET(req: NextRequest) {
         
         console.log(`[SEARCH] Querying Graph with term: ${query}`);
 
-        // Global search for both Drive Items (Files) and List Items (SharePoint/OneDrive content)
+        // Ultimate Global Search: Using wildcard and KQL for maximum discovery
         // NOTE: 'region' is required when using Application Permissions (Client Secret)
         const searchResponse = await client.api('/search/query').post({
             requests: [
                 {
                     entityTypes: ['driveItem', 'listItem'],
                     query: {
-                        queryString: query
+                        // Using wildcard and broad KQL to catch as much as possible
+                        queryString: `${query}* OR filename:${query}*`
                     },
-                    region: "ZAF" 
+                    region: "ZAF",
+                    from: 0,
+                    size: 100, // Increase result count
+                    fields: [
+                        'id', 'name', 'webUrl', 'size', 'lastModifiedDateTime', 
+                        'parentReference', 'file', 'listItem', 'fields'
+                    ]
                 }
             ]
         });
@@ -39,22 +46,35 @@ export async function GET(req: NextRequest) {
         // Transform the results into a cleaner format
         const results = hits.map((hit: any) => {
             const item = hit.resource;
-            // Sometimes it's a driveItem (item.webUrl), sometimes it's a listItem (item.fields.LinkFilename)
-            const url = item.webUrl || hit.summary || "#";
-            const name = item.name || item.listItem?.fields?.FileLeafRef || item.fields?.FileLeafRef || "Unknown File";
             
-            // Heuristic to identify OneDrive vs SharePoint
+            // Extract URL (handle both driveItem and listItem formats)
+            const url = item.webUrl || item.fields?.LinkFilename || hit.summary || "#";
+            
+            // Extract Name (prioritize multiple fields)
+            const name = item.name || 
+                        item.listItem?.fields?.FileLeafRef || 
+                        item.fields?.FileLeafRef || 
+                        item.fields?.LinkFilename || 
+                        "Unknown File";
+            
+            // Extract Location Heuristic
             const isOneDrive = url.includes("-my.sharepoint.com") || (!item.parentReference?.siteId && !item.parentReference?.sharepointIds);
+
+            // Extract Type
+            const mimeType = item.file?.mimeType || 
+                             (url.endsWith('.pdf') ? 'application/pdf' : 
+                              url.endsWith('.docx') ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : 
+                              'Document');
 
             return {
                 id: item.id || hit.id || hit.hitId,
                 name: name,
                 webUrl: url,
-                size: item.size || 0,
-                lastModified: item.lastModifiedDateTime || item.lastModified || new Date().toISOString(),
-                parentPath: item.parentReference?.path || 'Root',
+                size: item.size || item.fields?.File_x0020_Size || 0,
+                lastModified: item.lastModifiedDateTime || item.fields?.Modified || new Date().toISOString(),
+                parentPath: item.parentReference?.path || item.fields?.File_x0020_Dir_x0020_Ref || 'Root',
                 siteName: isOneDrive ? 'Personal OneDrive' : 'SharePoint Site',
-                type: item.file?.mimeType || 'Document'
+                type: mimeType
             };
         });
 
