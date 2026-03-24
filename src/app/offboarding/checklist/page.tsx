@@ -153,9 +153,6 @@ function ChecklistContent() {
     const [devicePin,  setDevicePin]  = useState("");
     const [dataRemoval, setDataRemoval] = useState<string|null>(null);
     const [saved, setSaved] = useState(false);
-    const [uploading, setUploading] = useState(false);
-    const [uploadStatus, setUploadStatus] = useState<string | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Load template from localStorage (falls back to defaults)
     const loadTemplate = (): Section[] => {
@@ -213,36 +210,6 @@ function ChecklistContent() {
     const resetTemplate = () => {
         localStorage.removeItem(TEMPLATE_KEY);
         setSections(DEFAULT_SECTIONS);
-    };
-
-    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file || !userName) return;
-
-        setUploading(true);
-        setUploadStatus(null);
-
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('userName', userName);
-
-        try {
-            const res = await fetch('/api/offboarding/upload', {
-                method: 'POST',
-                body: formData
-            });
-            const data = await res.json();
-            if (data.success) {
-                setUploadStatus("✅ " + data.message);
-            } else {
-                setUploadStatus("❌ Archival failed: " + (data.details || data.error));
-            }
-        } catch (err) {
-            setUploadStatus("❌ Error connecting to archival service");
-        } finally {
-            setUploading(false);
-            if (fileInputRef.current) fileInputRef.current.value = "";
-        }
     };
 
     return (
@@ -324,44 +291,6 @@ function ChecklistContent() {
                         <EditableSection sec={sec} onChange={updateSection} />
                     </div>
                 ))}
-
-                {/* Archival Section */}
-                <section className="mt-12 pt-12 border-t-2 border-black break-inside-avoid print:hidden">
-                    <h2 className="font-bold text-lg mb-4">Official Document Archival</h2>
-                    <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-8 text-center flex flex-col items-center">
-                        <p className="text-gray-600 mb-6 text-sm">
-                            Upload scanned signed copies of the Exit Interview policy and checklist.<br/>
-                            Documents will be archived to: <code>C:\!Data\...\Policies\{userName || 'User'}</code>
-                        </p>
-                        
-                        <div className="flex flex-col items-center gap-4">
-                            <input 
-                                type="file" 
-                                ref={fileInputRef}
-                                onChange={handleUpload}
-                                className="hidden" 
-                                accept=".pdf,.jpg,.jpeg,.png,.docx"
-                            />
-                            <button 
-                                onClick={() => fileInputRef.current?.click()}
-                                disabled={uploading || !userName}
-                                className={`px-10 py-3 rounded-lg font-bold transition-all shadow-md flex items-center gap-2 ${
-                                    uploading 
-                                    ? 'bg-gray-400 cursor-not-allowed text-white' 
-                                    : 'bg-blue-600 hover:bg-blue-700 text-white active:scale-95'
-                                }`}
-                            >
-                                {uploading ? 'Archiving...' : 'Scan & Archive Document'}
-                            </button>
-                            
-                            {uploadStatus && (
-                                <p className={`text-sm font-semibold mt-2 ${uploadStatus.includes('✅') ? 'text-green-600' : 'text-red-600'}`}>
-                                    {uploadStatus}
-                                </p>
-                            )}
-                        </div>
-                    </div>
-                </section>
 
                 {/* Add section */}
                 <button

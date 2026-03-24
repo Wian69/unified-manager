@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
-import { ArrowLeft, RefreshCw, ShieldAlert, FileText, Activity, Trash2, User, ExternalLink } from "lucide-react";
+import { useEffect, useState, use, useRef } from "react";
+import { ArrowLeft, RefreshCw, ShieldAlert, FileText, Activity, Trash2, User, ExternalLink, UploadCloud } from "lucide-react";
 import Link from "next/link";
 import SharePointDeletionsModule from "@/components/SharePointDeletionsModule";
 import EmailTraceModule from "@/components/EmailTraceModule";
@@ -13,6 +13,9 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [uploading, setUploading] = useState(false);
+    const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const [sinceDate, setSinceDate] = useState<string>(() => {
         // Default to 30 days ago to show more context by default
         const d = new Date();
@@ -48,6 +51,37 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
         } finally {
             setLoading(false);
             setLoadingSP(false);
+        }
+    };
+
+    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !user?.displayName) return;
+
+        setUploading(true);
+        setUploadStatus(null);
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('userName', user.displayName);
+
+        try {
+            const res = await fetch('/api/offboarding/upload', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            if (data.success) {
+                setUploadStatus("✅ " + data.message);
+                setTimeout(() => setUploadStatus(null), 5000);
+            } else {
+                setUploadStatus("❌ " + (data.details || data.error));
+            }
+        } catch (err) {
+            setUploadStatus("❌ Connection Error");
+        } finally {
+            setUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = "";
         }
     };
 
@@ -140,6 +174,36 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
                                 <Activity size={12} />
                                 Live Data
                             </Link>
+                            
+                            <div className="flex items-center gap-3">
+                                <input 
+                                    type="file" 
+                                    ref={fileInputRef}
+                                    onChange={handleUpload}
+                                    className="hidden" 
+                                    accept=".pdf,.jpg,.jpeg,.png,.docx"
+                                />
+                                <button 
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={uploading}
+                                    className={`flex items-center gap-2 text-[10px] text-white font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-lg transition-all active:scale-95 ${
+                                        uploading 
+                                        ? 'bg-slate-700 cursor-not-allowed' 
+                                        : 'bg-indigo-600 hover:bg-indigo-500 shadow-indigo-600/20'
+                                    }`}
+                                >
+                                    <UploadCloud size={12} className={uploading ? 'animate-bounce' : ''} />
+                                    {uploading ? 'Archiving...' : 'Archive Signed Docs'}
+                                </button>
+                                
+                                {uploadStatus && (
+                                    <div className={`text-[10px] font-bold px-3 py-1 rounded-lg animate-in slide-in-from-left-2 ${
+                                        uploadStatus.includes('✅') ? 'text-emerald-400 bg-emerald-400/10' : 'text-rose-400 bg-rose-400/10'
+                                    }`}>
+                                        {uploadStatus}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
