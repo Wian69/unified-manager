@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { UserMinus, ShieldAlert, FileText, Activity, RefreshCw, Search, ArrowLeft, User, Mail, CheckCircle2, ExternalLink } from "lucide-react";
+import { UserMinus, ShieldAlert, FileText, Activity, RefreshCw, Search, ArrowLeft, User, Mail, CheckCircle2, ExternalLink, ClipboardList } from "lucide-react";
 import Link from "next/link";
 import ActivityCard from "@/components/ActivityCard";
 import SharePointDeletionsModule from "@/components/SharePointDeletionsModule";
@@ -402,6 +402,30 @@ function OffboardingContent() {
                                             </td>
                                             <td className="px-6 py-5 text-right">
                                                 <div className="flex justify-end gap-2">
+                                                    {/* Policy Button */}
+                                                    <button 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            router.push(`/offboarding/policy?user=${u.id}`);
+                                                        }}
+                                                        className="p-2 text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-xl transition-all"
+                                                        title="Offboarding Policy"
+                                                    >
+                                                        <FileText size={18} />
+                                                    </button>
+
+                                                    {/* Checklist Button */}
+                                                    <button 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            router.push(`/offboarding/checklist?user=${u.id}`);
+                                                        }}
+                                                        className="p-2 text-slate-500 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-xl transition-all"
+                                                        title="Offboarding Checklist"
+                                                    >
+                                                        <CheckCircle2 size={18} />
+                                                    </button>
+
                                                     {u.oneDriveUrl && (
                                                         <a 
                                                             href={u.oneDriveUrl} 
@@ -422,12 +446,6 @@ function OffboardingContent() {
                                                         className="p-2 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
                                                     >
                                                         <UserMinus size={18} />
-                                                    </button>
-                                                    <button 
-                                                        className="text-slate-600 hover:text-blue-400 p-2 transition-colors hover:bg-blue-500/10 rounded-lg"
-                                                        title="Deep Audit"
-                                                    >
-                                                        <ArrowLeft size={16} className="rotate-180" />
                                                     </button>
                                                 </div>
                                             </td>
