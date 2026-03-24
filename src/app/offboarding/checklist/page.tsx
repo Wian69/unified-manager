@@ -107,7 +107,7 @@ function ChecklistContent() {
                     
                         <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-12 print:gap-4">
                             <div className="flex items-center gap-6">
-                                <img src="/equinox-logo.png" alt="Equinox Outsourced Services" className="h-16 w-auto" />
+                                <img src="/Equinox-Logo-Transparent.png" alt="Equinox Outsourced Services" className="h-20 w-auto drop-shadow-md" />
                             <div className="h-12 w-px bg-white/10 mx-2 print:hidden" />
                             <div>
                                 <h1 className="text-4xl font-black text-white tracking-widest leading-none uppercase italic">IT EXIT <span className="text-blue-600 italic">INTERVIEW</span></h1>

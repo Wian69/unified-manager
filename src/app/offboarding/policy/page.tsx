@@ -71,7 +71,7 @@ function PolicyContent() {
                     <div className="flex items-center gap-6">
                         {/* Final Company Logo */}
                         <div className="flex flex-col">
-                            <img src="/equinox-logo.png" alt="Equinox Outsourced Services" className="h-20 w-auto" />
+                            <img src="/Equinox-Logo-Transparent.png" alt="Equinox Outsourced Services" className="h-24 w-auto drop-shadow-lg" />
                             <p className="text-[10px] font-black tracking-[0.5em] text-slate-500 mt-4 ml-1 print:text-black">INC. CORPORATE GOVERNANCE</p>
                         </div>
                     </div>
