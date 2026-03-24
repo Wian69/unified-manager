@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
     try {
         const agents: any = await getAgents();
         const now = new Date().getTime();
-        const OFFLINE_THRESHOLD_MS = 12 * 1000; // 12 seconds
+        const OFFLINE_THRESHOLD_MS = 25 * 1000; // 25 seconds
 
         const agentsList = Object.keys(agents).map(id => {
             const agent = agents[id];

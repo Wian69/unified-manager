@@ -198,6 +198,8 @@ function OffboardingContent() {
 
     useEffect(() => {
         fetchOffboardingData();
+        const interval = setInterval(fetchOffboardingData, 3000);
+        return () => clearInterval(interval);
     }, []);
 
     const searchParams = useSearchParams();

