@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useRef } from 'react';
-import { ShieldAlert, CheckCircle2, FileText, UploadCloud, X, ChevronRight, ChevronLeft, RefreshCw, Smartphone } from 'lucide-react';
+import React, { useState } from 'react';
+import { ShieldAlert, CheckCircle2, UploadCloud, X, ChevronRight, ChevronLeft, RefreshCw, Smartphone } from 'lucide-react';
 import SignaturePad from './SignaturePad';
 
 interface DigitalOffboardingWizardProps {
@@ -25,9 +25,6 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
         { id: 6, label: "Email forwarding setup", checked: false },
     ]);
 
-    const policyRef = useRef<HTMLDivElement>(null);
-    const checklistRef = useRef<HTMLDivElement>(null);
-
     const handleCheck = (id: number) => {
         setChecklist(prev => prev.map(item => item.id === id ? { ...item, checked: !item.checked } : item));
     };
@@ -43,31 +40,84 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
 
         try {
             const jsPDF = (await import('jspdf')).default;
-            const html2canvas = (await import('html2canvas')).default;
-
             setStatus("Generating documents...");
 
-            const generatePDF = async (ref: React.RefObject<HTMLDivElement | null>) => {
-                if (!ref.current) return null;
-                // Use scale: 2 for high quality, use clone option to avoid potential style pollution
-                const canvas = await html2canvas(ref.current, { 
-                    scale: 2, 
-                    backgroundColor: "#ffffff",
-                    logging: false,
-                    useCORS: true
-                });
-                const imgData = canvas.toDataURL('image/png');
-                const pdf = new jsPDF('p', 'mm', 'a4');
-                const imgProps = pdf.getImageProperties(imgData);
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-                return pdf.output('blob');
-            };
+            // --- PDF 1: POLICY ---
+            const policyPdf = new jsPDF('p', 'mm', 'a4');
+            policyPdf.setFont("helvetica", "bold");
+            policyPdf.setFontSize(22);
+            policyPdf.text("IT Offboarding Policy", 105, 30, { align: "center" });
+            policyPdf.setLineWidth(0.5);
+            policyPdf.line(20, 35, 190, 35);
 
-            const policyBlob = await generatePDF(policyRef);
-            const checklistBlob = await generatePDF(checklistRef);
+            policyPdf.setFontSize(12);
+            policyPdf.setFont("helvetica", "normal");
+            policyPdf.text(`Subject Personnel: ${user.displayName}`, 20, 50);
+            policyPdf.text(`Last Working Day: ${user.lastWorkingDay || "Today"}`, 20, 60);
 
+            policyPdf.setFont("helvetica", "bold");
+            policyPdf.text("1. Purpose", 20, 75);
+            policyPdf.setFont("helvetica", "normal");
+            policyPdf.text("To ensure a smooth transition, safeguard company assets, and maintain data security.", 20, 82, { maxWidth: 170 });
+
+            policyPdf.setFont("helvetica", "bold");
+            policyPdf.text("2. Procedure", 20, 95);
+            policyPdf.setFont("helvetica", "normal");
+            const procs = [
+                "- Uninstallation of Euphoria/Office from all devices.",
+                "- Return of company hardware (Phone, Laptop).",
+                "- Data removal from personal devices.",
+                "- Email forwarding setup."
+            ];
+            procs.forEach((p, i) => policyPdf.text(p, 25, 102 + (i * 7)));
+
+            // Signatures
+            policyPdf.line(20, 160, 190, 160);
+            policyPdf.setFontSize(10);
+            policyPdf.text("Employee Signature", 20, 170);
+            policyPdf.addImage(policySignature, 'PNG', 20, 175, 60, 20);
+            
+            policyPdf.text("IT Admin Signature", 130, 170);
+            policyPdf.addImage(adminSignature, 'PNG', 130, 175, 60, 20);
+            
+            const policyBlob = policyPdf.output('blob');
+
+            // --- PDF 2: CHECKLIST ---
+            const checklistPdf = new jsPDF('p', 'mm', 'a4');
+            checklistPdf.setFont("helvetica", "bold");
+            checklistPdf.setFontSize(22);
+            checklistPdf.text("Offboarding Verification Checklist", 105, 30, { align: "center" });
+            checklistPdf.line(20, 35, 190, 35);
+
+            checklistPdf.setFontSize(12);
+            checklistPdf.setFont("helvetica", "normal");
+            checklistPdf.text(`Employee: ${user.displayName}`, 20, 50);
+            checklistPdf.text(`Date: ${new Date().toLocaleDateString()}`, 20, 60);
+
+            checklistPdf.setFont("helvetica", "bold");
+            checklistPdf.text("Items Verified:", 20, 75);
+            checklistPdf.setFont("helvetica", "normal");
+            checklist.forEach((item, i) => {
+                const y = 85 + (i * 10);
+                checklistPdf.rect(20, y - 4, 4, 4); // checkbox
+                if (item.checked) {
+                    checklistPdf.text("X", 21.5, y - 1);
+                }
+                checklistPdf.text(item.label, 28, y);
+            });
+
+            // Signatures
+            checklistPdf.line(20, 160, 190, 160);
+            checklistPdf.setFontSize(10);
+            checklistPdf.text("Employee Signature", 20, 170);
+            checklistPdf.addImage(policySignature, 'PNG', 20, 175, 60, 20);
+            
+            checklistPdf.text("IT Admin Signature", 130, 170);
+            checklistPdf.addImage(adminSignature, 'PNG', 130, 175, 60, 20);
+
+            const checklistBlob = checklistPdf.output('blob');
+
+            // --- UPLOAD ---
             if (!policyBlob || !checklistBlob) throw new Error("Failed to generate PDFs");
 
             setStatus("Uploading to SharePoint...");
@@ -104,66 +154,6 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
 
     return (
         <div className="fixed inset-0 z-[150] bg-slate-950 flex flex-col animate-in slide-in-from-bottom-5 duration-300">
-            {/* Hidden Source for PDFs - Using explicit hex colors to avoid html2canvas "lab" parser errors */}
-            <div style={{ position: 'fixed', top: 0, left: '-9999px', width: '800px', backgroundColor: '#ffffff', color: '#0f172a', pointerEvents: 'none' }}>
-                <div ref={policyRef} style={{ padding: '64px', backgroundColor: '#ffffff' }}>
-                    <h4 style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '24px', borderBottom: '2px solid #e2e8f0', paddingBottom: '24px', marginBottom: '32px' }}>IT Offboarding Policy</h4>
-                    <div style={{ fontSize: '18px', lineHeight: '1.6' }}>
-                        <p style={{ marginBottom: '12px' }}><strong>Subject Personnel:</strong> {user.displayName}</p>
-                        <p style={{ marginBottom: '12px' }}><strong>Last Working Day:</strong> {user.lastWorkingDay || "Today"}</p>
-                        <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '24px', marginTop: '24px' }}>
-                            <p style={{ fontWeight: 'bold', marginBottom: '12px' }}>1. Purpose</p>
-                            <p style={{ marginBottom: '12px' }}>To ensure a smooth transition, safeguard company assets, and maintain data security.</p>
-                            <p style={{ fontWeight: 'bold', marginBottom: '12px' }}>2. Procedure</p>
-                            <ul style={{ paddingLeft: '32px', listStyleType: 'disc' }}>
-                                <li style={{ marginBottom: '8px' }}>Uninstallation of Euphoria/Office from all devices.</li>
-                                <li style={{ marginBottom: '8px' }}>Return of company hardware (Phone, Laptop).</li>
-                                <li style={{ marginBottom: '8px' }}>Data removal from personal devices.</li>
-                                <li style={{ marginBottom: '8px' }}>Email forwarding setup.</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div style={{ marginTop: '80px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '48px', paddingTop: '48px', borderTop: '1px solid #e2e8f0' }}>
-                        <div>
-                            <p style={{ fontSize: '10px', fontWeight: '900', color: '#64748b', textTransform: 'uppercase', marginBottom: '16px' }}>Employee Signature</p>
-                            {policySignature && <img src={policySignature} alt="Employee Signature" style={{ height: '80px', borderBottom: '1px solid #cbd5e1' }} />}
-                        </div>
-                        <div>
-                            <p style={{ fontSize: '10px', fontWeight: '900', color: '#64748b', textTransform: 'uppercase', marginBottom: '16px' }}>IT Admin Signature</p>
-                            {adminSignature && <img src={adminSignature} alt="Admin Signature" style={{ height: '80px', borderBottom: '1px solid #cbd5e1' }} />}
-                        </div>
-                    </div>
-                </div>
-
-                <div ref={checklistRef} style={{ padding: '64px', backgroundColor: '#ffffff' }}>
-                    <h4 style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '24px', borderBottom: '2px solid #e2e8f0', paddingBottom: '24px', marginBottom: '32px' }}>Offboarding Verification Checklist</h4>
-                    <div style={{ fontSize: '18px', lineHeight: '1.6' }}>
-                         <p style={{ marginBottom: '12px' }}><strong>Employee:</strong> {user.displayName}</p>
-                         <p style={{ marginBottom: '12px' }}><strong>Date:</strong> {new Date().toLocaleDateString()}</p>
-                         <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '32px', marginTop: '32px' }}>
-                            {checklist.map(item => (
-                                <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-                                    <div style={{ width: '24px', height: '24px', borderRadius: '4px', border: '2px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: item.checked ? '#000000' : 'transparent', borderColor: item.checked ? '#000000' : '#cbd5e1' }}>
-                                        {item.checked && <CheckCircle2 size={16} color="#ffffff" />}
-                                    </div>
-                                    <span style={{ color: item.checked ? '#0f172a' : '#475569' }}>{item.label}</span>
-                                </div>
-                            ))}
-                         </div>
-                    </div>
-                    <div style={{ marginTop: '80px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '48px', paddingTop: '48px', borderTop: '1px solid #e2e8f0' }}>
-                        <div>
-                            <p style={{ fontSize: '10px', fontWeight: '900', color: '#64748b', textTransform: 'uppercase', marginBottom: '16px' }}>Employee Signature</p>
-                            {policySignature && <img src={policySignature} alt="Employee Signature" style={{ height: '80px', borderBottom: '1px solid #cbd5e1' }} />}
-                        </div>
-                        <div>
-                            <p style={{ fontSize: '10px', fontWeight: '900', color: '#64748b', textTransform: 'uppercase', marginBottom: '16px' }}>IT Admin Signature</p>
-                            {adminSignature && <img src={adminSignature} alt="Admin Signature" style={{ height: '80px', borderBottom: '1px solid #cbd5e1' }} />}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             {/* Header */}
             <div className="bg-slate-900 border-b border-slate-800 p-6 flex justify-between items-center sticky top-0 z-20">
                 <div className="flex items-center gap-3">
