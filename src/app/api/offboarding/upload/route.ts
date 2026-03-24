@@ -18,23 +18,36 @@ export async function POST(request: Request) {
         
         // Sanitize User Name for Folder
         const sanitizedUserName = userName.replace(/[^a-z0-9\s.-]/gi, '_').trim();
-        const targetDir = path.join(baseDir, sanitizedUserName);
+        // Force Win32 paths to avoid mixed slashes appearing in some environments
+        const targetDir = path.win32.normalize(path.win32.join(baseDir, sanitizedUserName));
+
+        diagnostic.platform = process.platform;
+        diagnostic.targetDir = targetDir;
+        diagnostic.baseDirExists = fs.existsSync(baseDir);
 
         // ACTION: CREATE FOLDER
         if (action === 'create-folder') {
-            if (!fs.existsSync(targetDir)) {
-                fs.mkdirSync(targetDir, { recursive: true });
+            try {
+                if (!fs.existsSync(targetDir)) {
+                    fs.mkdirSync(targetDir, { recursive: true });
+                    return NextResponse.json({ 
+                        success: true, 
+                        message: "Folder prepared successfully",
+                        path: targetDir 
+                    });
+                } else {
+                    return NextResponse.json({ 
+                        success: true, 
+                        message: "Folder already exists",
+                        path: targetDir 
+                    });
+                }
+            } catch (mkdirErr: any) {
                 return NextResponse.json({ 
-                    success: true, 
-                    message: "Folder prepared successfully",
-                    path: targetDir 
-                });
-            } else {
-                return NextResponse.json({ 
-                    success: true, 
-                    message: "Folder already exists",
-                    path: targetDir 
-                });
+                    error: "Failed to create directory", 
+                    details: mkdirErr.message,
+                    diagnostic 
+                }, { status: 500 });
             }
         }
 
@@ -48,7 +61,10 @@ export async function POST(request: Request) {
             }
 
             if (!fs.existsSync(targetDir)) {
-                return NextResponse.json({ error: "Target folder does not exist. Please prepare folder first." }, { status: 400 });
+                return NextResponse.json({ 
+                    error: "Target folder does not exist. Please prepare folder first.",
+                    diagnostic 
+                }, { status: 400 });
             }
 
             const dateStr = new Date().toISOString().split('T')[0];
@@ -59,7 +75,7 @@ export async function POST(request: Request) {
                 const customName = `${prefix} [${dateStr}]${ext}`;
                 const bytes = await file.arrayBuffer();
                 const buffer = Buffer.from(bytes);
-                const filePath = path.join(targetDir, customName);
+                const filePath = path.win32.join(targetDir, customName);
                 fs.writeFileSync(filePath, buffer);
                 return customName;
             };
