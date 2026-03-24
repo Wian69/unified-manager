@@ -135,20 +135,33 @@ function ExtraAdminItems() {
     );
 }
 
+const TEMPLATE_KEY = "eqn-checklist-template";
+
 /* ── main component ─────────────────────────────────────────── */
 function ChecklistContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const userId = searchParams.get('user');
 
-    const [userName,  setUserName]  = useState("");
-    const [userEmail, setUserEmail] = useState("");
-    const [userTitle, setUserTitle] = useState("");
-    const [deviceName,setDeviceName]= useState("");
-    const [lastDay,   setLastDay]   = useState("");
-    const [devicePin, setDevicePin] = useState("");
+    const [userName,   setUserName]   = useState("");
+    const [userEmail,  setUserEmail]  = useState("");
+    const [userTitle,  setUserTitle]  = useState("");
+    const [deviceName, setDeviceName] = useState("");
+    const [lastDay,    setLastDay]    = useState("");
+    const [devicePin,  setDevicePin]  = useState("");
     const [dataRemoval, setDataRemoval] = useState<string|null>(null);
-    const [sections, setSections]   = useState<Section[]>(DEFAULT_SECTIONS);
+    const [saved, setSaved] = useState(false);
+
+    // Load template from localStorage (falls back to defaults)
+    const loadTemplate = (): Section[] => {
+        try {
+            const raw = localStorage.getItem(TEMPLATE_KEY);
+            if (raw) return JSON.parse(raw);
+        } catch {}
+        return DEFAULT_SECTIONS;
+    };
+
+    const [sections, setSections] = useState<Section[]>(loadTemplate);
 
     useEffect(() => {
         if (userId) {
@@ -174,6 +187,17 @@ function ChecklistContent() {
 
     const removeSection = (id: number) =>
         setSections(prev => prev.filter(s => s.id !== id));
+
+    const saveTemplate = () => {
+        localStorage.setItem(TEMPLATE_KEY, JSON.stringify(sections));
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+    };
+
+    const resetTemplate = () => {
+        localStorage.removeItem(TEMPLATE_KEY);
+        setSections(DEFAULT_SECTIONS);
+    };
 
     return (
         <div className="min-h-screen py-12 flex flex-col items-center print:py-0 print:bg-white" style={{background:"#c8c8c8", fontFamily:"'Calibri','Calibri Light',sans-serif", fontSize:"11pt", color:"#111111"}}>
@@ -277,7 +301,13 @@ function ChecklistContent() {
                 </div>
 
                 {/* Controls */}
-                <div className="mt-12 text-center print:hidden border-t border-gray-200 pt-8 flex justify-center gap-4">
+                <div className="mt-12 text-center print:hidden border-t border-gray-200 pt-8 flex flex-wrap justify-center gap-3">
+                    <button onClick={saveTemplate} className={`px-8 py-3 text-white text-sm font-bold uppercase tracking-wider transition-colors ${saved ? 'bg-green-700' : 'bg-blue-700 hover:bg-blue-900'}`}>
+                        {saved ? '✓ Template Saved' : 'Save as Template'}
+                    </button>
+                    <button onClick={resetTemplate} className="px-8 py-3 bg-white text-gray-700 border border-gray-400 text-sm font-bold uppercase tracking-wider hover:bg-gray-100 transition-colors">
+                        Reset to Default
+                    </button>
                     <button onClick={() => window.print()} className="px-8 py-3 bg-gray-900 text-white text-sm font-bold uppercase tracking-wider hover:bg-black transition-colors">
                         Print Checklist
                     </button>
