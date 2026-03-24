@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState, use, useRef } from "react";
-import { ArrowLeft, RefreshCw, ShieldAlert, FileText, Activity, Trash2, User, ExternalLink, UploadCloud, ClipboardList } from "lucide-react";
+import { ArrowLeft, RefreshCw, ShieldAlert, FileText, Activity, Trash2, User, ExternalLink, UploadCloud, ClipboardList, Smartphone, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import SharePointDeletionsModule from "@/components/SharePointDeletionsModule";
 import EmailTraceModule from "@/components/EmailTraceModule";
 import TeamsChatModule from "@/components/TeamsChatModule";
 import ActivityCard from "@/components/ActivityCard";
+import DigitalOffboardingWizard from "@/components/DigitalOffboardingWizard";
 
 export default function UserOffboardingPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -16,6 +17,7 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
     const [uploading, setUploading] = useState(false);
     const [uploadStatus, setUploadStatus] = useState<string | null>(null);
     const [showModal, setShowModal] = useState(false);
+    const [showWizard, setShowWizard] = useState(false);
     const [folderPrepared, setFolderPrepared] = useState(false);
     const [policyFile, setPolicyFile] = useState<File | null>(null);
     const [checklistFile, setChecklistFile] = useState<File | null>(null);
@@ -160,7 +162,16 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
 
     return (
         <div className="p-8 space-y-12 animate-in fade-in duration-700">
-            {/* Archival Modal */}
+            {/* Digital Offboarding Wizard */}
+            {showWizard && (
+                <DigitalOffboardingWizard 
+                    user={user} 
+                    onClose={() => setShowWizard(false)} 
+                    onComplete={fetchData} 
+                />
+            )}
+
+            {/* Archival Modal (Legacy/Manual) */}
             {showModal && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
                     <div className="bg-slate-900 border border-slate-800 rounded-3xl p-10 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
@@ -291,38 +302,52 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
                     </div>
                     
                     {/* Action Panel */}
-                    <div className="flex flex-col items-center md:items-end gap-3 self-end">
-                        <div className="flex items-center gap-3">
-                            <Link 
-                                href={`/offboarding/${id}/livedata`}
-                                className="flex items-center gap-2 text-[10px] text-white font-black uppercase tracking-widest bg-emerald-600 hover:bg-emerald-500 px-5 py-2.5 rounded-xl shadow-lg shadow-emerald-600/20 transition-all active:scale-95 border border-emerald-500/20"
-                            >
-                                <Activity size={12} />
-                                Live Data
-                            </Link>
-                            
+                    <div className="flex flex-col gap-4 self-end min-w-[280px]">
+                        {/* Digital First Action */}
+                        <button 
+                            onClick={() => setShowWizard(true)}
+                            className="w-full flex items-center justify-between p-5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-2xl shadow-xl shadow-blue-500/20 group/wiz transition-all active:scale-[0.98] border border-blue-400/20"
+                        >
+                            <div className="flex items-center gap-4">
+                                <div className="p-2.5 bg-white/10 rounded-xl group-hover/wiz:bg-white/20 transition-all">
+                                    <Smartphone size={20} />
+                                </div>
+                                <div className="text-left">
+                                    <p className="text-[11px] font-black uppercase tracking-widest leading-none mb-1">Digital Offboarding</p>
+                                    <p className="text-[9px] text-blue-100/60 font-medium font-mono">Mobile-Ready • No Paper</p>
+                                </div>
+                            </div>
+                            <ChevronRight size={20} className="group-hover/wiz:translate-x-1 transition-transform" />
+                        </button>
+
+                        <div className="grid grid-cols-2 gap-3">
                             {!folderPrepared ? (
                                 <button 
                                     onClick={prepareFolder}
                                     disabled={uploading}
-                                    className="flex items-center gap-2 text-[10px] text-white font-black uppercase tracking-widest bg-indigo-600 hover:bg-indigo-500 px-5 py-2.5 rounded-xl shadow-lg shadow-indigo-600/20 transition-all active:scale-95 border border-indigo-500/20"
+                                    className="flex items-center justify-center gap-2 px-4 py-3 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl text-[9px] font-black uppercase tracking-widest border border-slate-800 transition-all active:scale-95"
                                 >
-                                    <Trash2 size={12} />
-                                    Prepare Archival Folder
+                                    {uploading ? <RefreshCw size={12} className="animate-spin" /> : <UploadCloud size={12} />}
+                                    Prepare Folder
                                 </button>
                             ) : (
                                 <button 
                                     onClick={() => setShowModal(true)}
-                                    className="flex items-center gap-2 text-[10px] text-white font-black uppercase tracking-widest bg-indigo-600 hover:bg-indigo-500 px-5 py-2.5 rounded-xl shadow-lg shadow-indigo-600/20 transition-all active:scale-95 border border-indigo-500/20"
+                                    className="flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
                                 >
-                                    <UploadCloud size={12} />
-                                    Archive Signed Docs
+                                    <FileText size={12} /> Manual Upload
                                 </button>
                             )}
+                            <Link 
+                                href={`/offboarding/${id}/livedata`}
+                                className="flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-600/20 active:scale-95 border border-emerald-500/20"
+                            >
+                                <Activity size={12} /> Live Data
+                            </Link>
                         </div>
-                        
+
                         {uploadStatus && (
-                            <div className={`text-[9px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-lg animate-in fade-in slide-in-from-right-2 border ${
+                            <div className={`text-[9px] font-black uppercase tracking-[0.2em] px-4 py-2 rounded-lg text-center border animate-in fade-in slide-in-from-right-2 ${
                                 uploadStatus.includes('✅') 
                                 ? 'text-emerald-400 bg-emerald-400/10 border-emerald-500/20' 
                                 : 'text-blue-400 bg-blue-400/10 border-blue-500/20'
