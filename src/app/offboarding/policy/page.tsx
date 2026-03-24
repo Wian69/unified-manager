@@ -39,7 +39,6 @@ function PolicyContent() {
                     <img src="/Equinox-Logo-Transparent.png" alt="Equinox Outsourced Services" className="h-24 w-auto drop-shadow-sm" />
                     <div className="text-right flex flex-col justify-end mt-4">
                         <h1 className="text-2xl font-bold tracking-tight text-gray-900">IT Offboarding Policy</h1>
-                        <p className="text-xs text-gray-500 mt-2 uppercase">Ref ID: OFF-{userId?.substring(0,8).toUpperCase() || "GEN-01"}</p>
                     </div>
                 </div>
 
@@ -132,7 +131,7 @@ function PolicyContent() {
                         </div>
                         <div className="space-y-6">
                             <div className="border-b border-black pt-4"></div>
-                            <p className="font-bold text-sm text-gray-900">Employee Signature</p>
+                            <p className="font-bold text-sm text-gray-900">{userName === "________________________" ? "Employee Signature" : userName}</p>
                         </div>
                     </div>
                 </div>
