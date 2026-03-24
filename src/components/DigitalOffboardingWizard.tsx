@@ -42,7 +42,6 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
         setStatus("Loading modules...");
 
         try {
-            // Dynamic imports to avoid Turbopack build issues with Node-only libs
             const jsPDF = (await import('jspdf')).default;
             const html2canvas = (await import('html2canvas')).default;
 
@@ -99,6 +98,66 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
 
     return (
         <div className="fixed inset-0 z-[150] bg-slate-950 flex flex-col animate-in slide-in-from-bottom-5 duration-300">
+            {/* Hidden Source for PDFs (Required for html2canvas while unmounted in steps) */}
+            <div className="fixed top-0 left-[-9999px] w-[800px] bg-white text-slate-900 pointer-events-none">
+                <div ref={policyRef} className="p-16 space-y-8 bg-white">
+                    <h4 className="text-center font-bold text-2xl border-b-2 border-slate-200 pb-6">IT Offboarding Policy</h4>
+                    <div className="space-y-6 text-lg">
+                        <p><strong>Subject Personnel:</strong> {user.displayName}</p>
+                        <p><strong>Last Working Day:</strong> {user.lastWorkingDay || "Today"}</p>
+                        <div className="border-t border-slate-100 pt-6 space-y-4">
+                            <p className="font-bold">1. Purpose</p>
+                            <p>To ensure a smooth transition, safeguard company assets, and maintain data security.</p>
+                            <p className="font-bold">2. Procedure</p>
+                            <ul className="list-disc pl-8 space-y-3">
+                                <li>Uninstallation of Euphoria/Office from all devices.</li>
+                                <li>Return of company hardware (Phone, Laptop).</li>
+                                <li>Data removal from personal devices.</li>
+                                <li>Email forwarding setup.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div className="mt-20 grid grid-cols-2 gap-12 pt-12 border-t border-slate-200">
+                        <div className="space-y-4">
+                            <p className="text-xs font-black text-slate-500 uppercase">Employee Signature</p>
+                            {policySignature && <img src={policySignature} alt="Employee Signature" className="h-20 border-b border-slate-300" />}
+                        </div>
+                        <div className="space-y-4">
+                            <p className="text-xs font-black text-slate-500 uppercase">IT Admin Signature</p>
+                            {adminSignature && <img src={adminSignature} alt="Admin Signature" className="h-20 border-b border-slate-300" />}
+                        </div>
+                    </div>
+                </div>
+
+                <div ref={checklistRef} className="p-16 space-y-8 bg-white">
+                    <h4 className="text-center font-bold text-2xl border-b-2 border-slate-200 pb-6">Offboarding Verification Checklist</h4>
+                    <div className="space-y-6 text-lg">
+                         <p><strong>Employee:</strong> {user.displayName}</p>
+                         <p><strong>Date:</strong> {new Date().toLocaleDateString()}</p>
+                         <div className="border-t border-slate-100 pt-8 space-y-4">
+                            {checklist.map(item => (
+                                <div key={item.id} className="flex items-center gap-4">
+                                    <div className={`w-6 h-6 rounded border-2 flex items-center justify-center ${item.checked ? 'bg-black border-black' : 'border-slate-300'}`}>
+                                        {item.checked && <CheckCircle2 size={16} className="text-white" />}
+                                    </div>
+                                    <span>{item.label}</span>
+                                </div>
+                            ))}
+                         </div>
+                    </div>
+                    <div className="mt-20 grid grid-cols-2 gap-12 pt-12 border-t border-slate-200">
+                        <div className="space-y-4">
+                            <p className="text-xs font-black text-slate-500 uppercase">Employee Signature</p>
+                            {policySignature && <img src={policySignature} alt="Employee Signature" className="h-20 border-b border-slate-300" />}
+                        </div>
+                        <div className="space-y-4">
+                            <p className="text-xs font-black text-slate-500 uppercase">IT Admin Signature</p>
+                            {adminSignature && <img src={adminSignature} alt="Admin Signature" className="h-20 border-b border-slate-300" />}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {/* Header */}
             <div className="bg-slate-900 border-b border-slate-800 p-6 flex justify-between items-center sticky top-0 z-20">
                 <div className="flex items-center gap-3">
@@ -117,7 +176,7 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                     
                     {/* STEP 1: POLICY REVIEW */}
                     {step === 1 && (
-                        <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
+                        <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300 text-left">
                             <div className="bg-blue-600/10 p-6 rounded-2xl border border-blue-500/20">
                                 <h3 className="text-lg font-bold text-blue-400 mb-2 flex items-center gap-2">
                                     <ShieldAlert size={20} /> Review IT Policy
@@ -125,7 +184,7 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                                 <p className="text-xs text-blue-300/60 leading-relaxed italic">Please go through the following policy with the employee.</p>
                             </div>
                             
-                            <div ref={policyRef} className="bg-white p-8 rounded-2xl shadow-xl text-slate-900 text-sm space-y-6">
+                            <div className="bg-white p-8 rounded-2xl shadow-xl text-slate-900 text-sm space-y-6">
                                 <h4 className="text-center font-bold text-lg border-b border-slate-200 pb-4 mb-6">IT Offboarding Policy</h4>
                                 <div className="space-y-4">
                                     <p><strong>Subject Personnel:</strong> {user.displayName}</p>
@@ -148,7 +207,7 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
 
                     {/* STEP 2: CHECKLIST */}
                     {step === 2 && (
-                        <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
+                        <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300 text-left">
                             <div className="bg-emerald-600/10 p-6 rounded-2xl border border-emerald-500/20">
                                 <h3 className="text-lg font-bold text-emerald-400 mb-2 flex items-center gap-2">
                                     <CheckCircle2 size={20} /> Completion Checklist
@@ -156,7 +215,7 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                                 <p className="text-xs text-emerald-300/60 leading-relaxed italic">Verify each item before proceeding to signatures.</p>
                             </div>
 
-                            <div ref={checklistRef} className="bg-slate-900 border border-slate-800 rounded-2xl divide-y divide-slate-800">
+                            <div className="bg-slate-900 border border-slate-800 rounded-2xl divide-y divide-slate-800">
                                 <div className="p-6 bg-slate-950/50 rounded-t-2xl">
                                      <h4 className="text-sm font-bold text-white uppercase tracking-widest text-center">Offboarding Verification</h4>
                                 </div>
@@ -178,7 +237,7 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
 
                     {/* STEP 3: SIGNATURES */}
                     {step === 3 && (
-                        <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-300">
+                        <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-300 text-left">
                              <div className="bg-purple-600/10 p-6 rounded-2xl border border-purple-500/20">
                                 <h3 className="text-lg font-bold text-purple-400 mb-2 flex items-center gap-2">
                                     <UploadCloud size={20} /> Digital Signatures
@@ -201,7 +260,7 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
 
                     {/* STEP 4: SUBMITTING */}
                     {step === 4 && (
-                        <div className="flex flex-col items-center justify-center space-y-8 animate-in zoom-in-95 duration-500 min-h-[400px]">
+                        <div className="flex flex-col items-center justify-center space-y-8 animate-in zoom-in-95 duration-500 min-h-[400px] text-left">
                             {uploading ? (
                                 <div className="flex flex-col items-center gap-6">
                                     <RefreshCw className="animate-spin text-blue-500" size={64} />
