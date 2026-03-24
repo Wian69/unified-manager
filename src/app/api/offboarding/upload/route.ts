@@ -64,15 +64,30 @@ export async function POST(request: Request) {
         if (action === 'create-folder') {
             try {
                 if (!fs.existsSync(targetDir)) {
-                    // Use PowerShell to create directory - more robust for synced SharePoint volumes
-                    const psCommand = `powershell -Command "New-Item -ItemType Directory -Path '${targetDir}' -Force"`;
-                    diagnostic.command = psCommand;
-                    const output = execSync(psCommand, { encoding: 'utf8' });
-                    diagnostic.psOutput = output;
+                    // 1. If we are on Windows, try PowerShell (robust for synced volumes)
+                    if (process.platform === 'win32') {
+                        try {
+                            const psCommand = `powershell -Command "New-Item -ItemType Directory -Path '${targetDir}' -Force"`;
+                            diagnostic.command = psCommand;
+                            const output = execSync(psCommand, { encoding: 'utf8' });
+                            diagnostic.psOutput = output;
+                        } catch (psErr: any) {
+                            console.warn('[MKDIR] PowerShell failed, falling back to fs.mkdirSync', psErr.message);
+                            fs.mkdirSync(targetDir, { recursive: true });
+                        }
+                    } else {
+                        // 2. If we are NOT on Windows (Linux/Vercel/Docker), explain the issue
+                        return NextResponse.json({ 
+                            error: "Incompatible Environment", 
+                            details: `The server is running on ${process.platform} and cannot access your local C:\\ drive directly.`,
+                            solution: "Ensure you are running the project locally on your Windows PC (e.g. npm run dev in PowerShell) to access local storage archival.",
+                            diagnostic
+                        }, { status: 400 });
+                    }
 
                     return NextResponse.json({ 
                         success: true, 
-                        message: "Folder prepared successfully via shells",
+                        message: "Folder prepared successfully",
                         path: targetDir,
                         diagnostic
                     });
@@ -88,8 +103,6 @@ export async function POST(request: Request) {
                 return NextResponse.json({ 
                     error: "Failed to create directory", 
                     details: mkdirErr.message,
-                    stdout: mkdirErr.stdout,
-                    stderr: mkdirErr.stderr,
                     diagnostic 
                 }, { status: 500 });
             }
