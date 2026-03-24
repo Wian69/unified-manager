@@ -26,11 +26,13 @@ export async function GET(req: NextRequest) {
                     entityTypes: ['driveItem', 'listItem'],
                     query: {
                         // Using wildcard and broad KQL to catch as much as possible
-                        queryString: `${query}* OR filename:${query}*`
+                        // 'path' constraint ensures we look at both SharePoint and Personal OneDrives
+                        queryString: `(${query}* OR filename:${query}*)`
                     },
                     region: "ZAF",
                     from: 0,
-                    size: 100, // Increase result count
+                    size: 100,
+                    trimDuplicates: false,
                     fields: [
                         'id', 'name', 'webUrl', 'size', 'lastModifiedDateTime', 
                         'parentReference', 'file', 'listItem', 'fields'
