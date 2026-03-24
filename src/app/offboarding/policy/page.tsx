@@ -130,11 +130,11 @@ function PolicyContent() {
                 </div>
 
                 {/* Data Retention Section */}
-                <div className="space-y-8 text-[11pt] leading-relaxed text-gray-900 mt-10 pt-10 border-t-2 border-black">
+                <div className="space-y-4 text-[11pt] leading-relaxed text-gray-900 mt-6 pt-6 border-t-2 border-black">
                     <section>
-                        <h2 className="text-lg font-bold mb-4">Data & System Access After Offboarding</h2>
+                        <h2 className="text-lg font-bold mb-3">Data & System Access After Offboarding</h2>
                         
-                        <div className="space-y-8">
+                        <div className="space-y-6">
                             <div className="break-inside-avoid">
                                 <h3 className="font-bold mb-2">1. Email (Outlook / Microsoft 365 Mailbox)</h3>
                                 <p className="font-bold mb-1">What happens:</p>
@@ -203,8 +203,8 @@ function PolicyContent() {
                 </div>
 
                 {/* Signatures Section */}
-                <div className="mt-20 pt-16">
-                    <h2 className="text-xl font-bold mb-12">Formal Acknowledgment</h2>
+                <div className="mt-10 pt-8 break-inside-avoid">
+                    <h2 className="text-xl font-bold mb-6">Formal Acknowledgment</h2>
                     <div className="grid grid-cols-2 gap-16">
                         <div className="space-y-6">
                             <div className="border-b border-black pt-4"></div>
