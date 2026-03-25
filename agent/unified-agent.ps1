@@ -3,7 +3,7 @@ param(
 )
 
 # Unified Enterprise Agent (UEA)
-# Version: 1.4.1
+# Version: 1.4.2
 # Description: Lightweight persistence and telemetry agent for Unified Manager.
 
 $ErrorActionPreference = "Stop"
@@ -51,7 +51,7 @@ function Get-RobustId {
 try {
     $AgentId = Get-RobustId "UUID"
     $SerialNumber = Get-RobustId "Serial"
-    $Version = "1.4.1"
+    $Version = "1.4.2"
     
     Log-Message "AGENT IDENTIFIED (ROBUST): ID=$AgentId, SERIAL=$SerialNumber"
     Log-Message "Heartbeat interval: 3 seconds"
@@ -284,15 +284,22 @@ try { `$Web = New-Object System.Net.WebClient; `$ImgBytes = `$Web.DownloadData('
                                 $CurrentSession = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
                                 
                                 if ($ActiveUser -and $ActiveUser -eq $CurrentSession) {
-                                    Log-Message "Direct Session Popup: User match. Running directly hidden..."
-                                    # Use a more hidden launch method for direct session
-                                    Start-Process "powershell.exe" -ArgumentList "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PopupScript`"" -WindowStyle Hidden
-                                    $Result = "Message displayed directly to current session: $ActiveUser"
+                                    Log-Message "Direct Session Popup: User match. Running via VBS stealth wrapper..."
+                                    $VbsPath = "$InstallDir\launcher.vbs"
+                                    $VbsCode = "CreateObject(`"WScript.Shell`").Run `"powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"`"$PopupScript`"`"`", 0, False"
+                                    $VbsCode | Out-File -FilePath $VbsPath -Force -Encoding ascii
+                                    
+                                    Start-Process "wscript.exe" -ArgumentList "`"$VbsPath`""
+                                    $Result = "Message displayed via VBS Stealth for session: $ActiveUser"
                                 } elseif ($ActiveUser) {
-                                    Log-Message "Elevated Session Popup: Attempting Scheduled Task..."
+                                    Log-Message "Elevated Session Popup: Attempting Scheduled Task via VBS..."
                                     try {
-                                        # Use -NoProfile and -NonInteractive for scheduled tasks
-                                        $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PopupScript`""
+                                        $VbsPath = "$InstallDir\launcher_task.vbs"
+                                        $VbsCode = "CreateObject(`"WScript.Shell`").Run `"powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"`"$PopupScript`"`"`", 0, False"
+                                        $VbsCode | Out-File -FilePath $VbsPath -Force -Encoding ascii
+
+                                        # Scheduled Task executes wscript.exe which is a GUI host (no console)
+                                        $Action = New-ScheduledTaskAction -Execute "wscript.exe" -Argument "`"$VbsPath`""
                                         $Principal = New-ScheduledTaskPrincipal -UserId $ActiveUser -LogonType Interactive
                                         $Settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
                                         
@@ -300,12 +307,11 @@ try { `$Web = New-Object System.Net.WebClient; `$ImgBytes = `$Web.DownloadData('
                                         Register-ScheduledTask -TaskName $TaskName -Action $Action -Principal $Principal -Settings $Settings -Force | Out-Null
                                         Start-ScheduledTask -TaskName $TaskName | Out-Null
                                         
-                                        # Give it a few seconds to trigger before cleaning up
                                         Start-Sleep -Seconds 5
                                         Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false | Out-Null
-                                        $Result = "Message queued via Scheduled Task for: $ActiveUser"
+                                        $Result = "Message queued via VBS Scheduled Task for: $ActiveUser"
                                     } catch {
-                                        $Result = "Error: Failed to register popup task (requires Admin). Details: $($_.Exception.Message)"
+                                        $Result = "Error: Failed to register popup task. Details: $($_.Exception.Message)"
                                     }
                                 } else {
                                     $Result = "Skipped UI Message: No active user logged in."
