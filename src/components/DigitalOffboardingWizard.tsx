@@ -124,89 +124,175 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                 compress: true
             });
             const pageWidth = policyPdf.internal.pageSize.getWidth();
+            const pageHeight = policyPdf.internal.pageSize.getHeight();
+            const margin = 20;
+            const contentWidth = pageWidth - (margin * 2);
+            let y = 35;
+
+            const checkPageBreak = (doc: any, currentY: number, needed: number) => {
+                if (currentY + needed > pageHeight - 20) {
+                    doc.addPage();
+                    return 20; // Reset Y to top margin
+                }
+                return currentY;
+            };
             
             // Header
-            if (logoBase64) policyPdf.addImage(logoBase64, 'PNG', 20, 15, 40, 15, undefined, 'FAST');
+            if (logoBase64) policyPdf.addImage(logoBase64, 'PNG', margin, 15, 40, 15, undefined, 'FAST');
             policyPdf.setFont("helvetica", "bold");
             policyPdf.setFontSize(18);
-            policyPdf.text("IT Offboarding Policy", pageWidth - 20, 25, { align: "right" });
+            policyPdf.text("IT Offboarding Policy", pageWidth - margin, 25, { align: "right" });
             policyPdf.setLineWidth(0.5);
-            policyPdf.line(20, 35, pageWidth - 20, 35);
+            policyPdf.line(margin, 35, pageWidth - margin, 35);
 
             // Cover Details Box
-            policyPdf.rect(20, 45, pageWidth - 40, 35);
+            y = 45;
+            policyPdf.rect(margin, y, contentWidth, 35);
             policyPdf.setFontSize(9);
-            policyPdf.text("Policy Owner:", 25, 52); policyPdf.setFont("helvetica", "normal"); policyPdf.text("Group IT Support Specialist", 60, 52);
-            policyPdf.line(25, 55, pageWidth - 25, 55);
-            policyPdf.setFont("helvetica", "bold"); policyPdf.text("Subject Personnel:", 25, 61); policyPdf.setFont("helvetica", "normal"); policyPdf.text(user.displayName, 60, 61);
-            policyPdf.line(25, 64, pageWidth - 25, 64);
-            policyPdf.setFont("helvetica", "bold"); policyPdf.text("Job Title:", 25, 70); policyPdf.setFont("helvetica", "normal"); policyPdf.text(userDetails.jobTitle, 60, 70);
-            policyPdf.line(25, 73, pageWidth - 25, 73);
-            policyPdf.setFont("helvetica", "bold"); policyPdf.text("Last Working Day:", 25, 79); policyPdf.setFont("helvetica", "normal"); policyPdf.text(userDetails.lastDay, 60, 79);
+            policyPdf.text("Policy Owner:", margin + 5, y + 7); policyPdf.setFont("helvetica", "normal"); policyPdf.text("Group IT Support Specialist", margin + 45, y + 7);
+            policyPdf.line(margin + 5, y + 10, pageWidth - margin - 5, y + 10);
+            policyPdf.setFont("helvetica", "bold"); policyPdf.text("Subject Personnel:", margin + 5, y + 16); policyPdf.setFont("helvetica", "normal"); policyPdf.text(user.displayName, margin + 45, y + 16);
+            policyPdf.line(margin + 5, y + 19, pageWidth - margin - 5, y + 19);
+            policyPdf.setFont("helvetica", "bold"); policyPdf.text("Job Title:", margin + 5, y + 25); policyPdf.setFont("helvetica", "normal"); policyPdf.text(userDetails.jobTitle, margin + 45, y + 25);
+            policyPdf.line(margin + 5, y + 28, pageWidth - margin - 5, y + 28);
+            policyPdf.setFont("helvetica", "bold"); policyPdf.text("Last Working Day:", margin + 5, y + 34); policyPdf.setFont("helvetica", "normal"); policyPdf.text(userDetails.lastDay, margin + 45, y + 34);
+            y += 45;
 
-            // Body Sections
-            let y = 95;
-            policyPdf.setFont("helvetica", "bold"); policyPdf.setFontSize(11); policyPdf.text("Purpose", 20, y); y += 6;
+            y = checkPageBreak(policyPdf, y, 20);
+            policyPdf.setFont("helvetica", "bold"); policyPdf.setFontSize(11); policyPdf.text("Purpose", margin, y); y += 6;
             policyPdf.setFont("helvetica", "normal"); policyPdf.setFontSize(10); 
-            policyPdf.text("To ensure a smooth transition for employees leaving the company, safeguard company assets, and maintain data security.", 20, y, { maxWidth: 170 });
+            policyPdf.text("To ensure a smooth transition for employees leaving the company, safeguard company assets, and maintain data security.", margin, y, { maxWidth: contentWidth });
             y += 12;
 
-            policyPdf.setFont("helvetica", "bold"); policyPdf.setFontSize(11); policyPdf.text("Scope", 20, y); y += 6;
+            y = checkPageBreak(policyPdf, y, 20);
+            policyPdf.setFont("helvetica", "bold"); policyPdf.setFontSize(11); policyPdf.text("Scope", margin, y); y += 6;
             policyPdf.setFont("helvetica", "normal"); policyPdf.setFontSize(10); 
-            policyPdf.text("This policy applies to all employees who are exiting Equinox Group Holdings, Inc.", 20, y);
-            y += 12;
+            policyPdf.text("This policy applies to all employees who are exiting Equinox Group Holdings, Inc.", margin, y);
+            y += 15;
 
-            policyPdf.setFont("helvetica", "bold"); policyPdf.setFontSize(11); policyPdf.text("Procedure", 20, y); y += 8;
+            y = checkPageBreak(policyPdf, y, 40);
+            policyPdf.setFont("helvetica", "bold"); policyPdf.setFontSize(11); policyPdf.text("Procedure", margin, y); y += 8;
             policyPdf.setFontSize(10);
             
-            const procedureItems = [
-                { t: "Uninstallation of Euphoria App and Office products:", d: "The Equinox Group Holdings Inc. IT support will ensure that the Euphoria app, Outlook, Teams & OneDrive is uninstalled from all company and personal devices used by the employee." },
-                { t: "Return of Company Property:", d: "The departing employee must return all company property (Phone, Laptop, Peripherals) provided by the company." },
-                { t: "Data Removal:", d: "IT support will take all necessary steps to remove company data from non company property, ensuring all files and applications are deleted." },
-                { t: "Email Forwarding:", d: "IT support will set up necessary email forwarding to ensure important communications are redirected appropriately." }
+            const procedureSections = [
+                { t: "Uninstallation of Euphoria App and Office products:", d: "The Equinox Group Holdings Inc. IT support will ensure that the Euphoria app, Outlook, Teams & OneDrive is uninstalled from all company and personal devices used by the departing employee." },
+                { t: "Return of Company Property", d: "The departing employee must return all company property, including but not limited to:", list: ["Company-issued phone", "Laptop", "Any other equipment or materials provided by the company"] },
+                { t: "Data Removal", d: "The Equinox Group Holdings Inc. IT support will take all necessary steps to remove company data from non company property. This includes:", list: ["Ensuring that all company-related files, emails, and applications are deleted", "Verifying no data remains on external storage devices used by the employee"] },
+                { t: "Email Forwarding", d: "The Equinox Group Holdings Inc. IT support will set up necessary email forwarding to ensure that any important communications are redirected to the appropriate personnel." },
+                { t: "Final Checklist", d: "The Equinox Group Holdings Inc. IT support will provide the departing employee with a final checklist to ensure all steps are completed. This checklist will include:", list: ["Confirm uninstallation of Euphoria app and Office products", "Confirm return of all company property", "Verify data removal from personal devices", "Confirm email forwarding setup"] }
             ];
 
             const lineHeight = 5;
-            procedureItems.forEach(item => {
-                policyPdf.setFont("helvetica", "bold"); 
-                policyPdf.text(item.t, 20, y); 
-                y += lineHeight;
+            procedureSections.forEach(sec => {
+                y = checkPageBreak(policyPdf, y, 20);
+                policyPdf.setFont("helvetica", "bold"); policyPdf.text(sec.t, margin, y); y += lineHeight;
+                policyPdf.setFont("helvetica", "normal");
+                const lines = policyPdf.splitTextToSize(sec.d, contentWidth);
+                policyPdf.text(lines, margin, y);
+                y += (lines.length * lineHeight);
+                
+                if (sec.list) {
+                    sec.list.forEach(li => {
+                        y = checkPageBreak(policyPdf, y, 6);
+                        policyPdf.text("• " + li, margin + 5, y);
+                        y += lineHeight;
+                    });
+                }
+                y += 4;
+            });
+
+            // Data Retention Section
+            y = checkPageBreak(policyPdf, y, 30);
+            policyPdf.setLineWidth(0.5);
+            policyPdf.line(margin, y, pageWidth - margin, y); y += 10;
+            
+            policyPdf.setFont("helvetica", "bold"); policyPdf.setFontSize(11); 
+            policyPdf.text("Data & System Access After Offboarding", margin, y); y += 10;
+            
+            const retentionDetails = [
+                { 
+                    t: "1. Email (Outlook / Microsoft 365 Mailbox)", 
+                    h: "What happens:",
+                    l: ["Your mailbox will be disabled on your last working day.", "Your manager or designated successor will receive full access for business continuity.", "Auto reply and forwarding (if applicable) will be configured according to company policy.", "Your mailbox will be retained for 12 months according to Equinox Group Holdings, Inc.'s retention policies."],
+                    i: "You will no longer have access after offboarding is completed."
+                },
+                {
+                    t: "2. OneDrive Files",
+                    h: "What happens:",
+                    l: ["Ownership of your OneDrive files will be transferred to your manager.", "Your manager will have access for 7 days to review and relocate required business related files.", "After the retention period, your OneDrive and its contents will be deleted following company policy."],
+                    i: "Personal files may be exported only after IT review and formal approval."
+                },
+                {
+                    t: "3. Teams Chats & Teams Files",
+                    h: "Teams Chats:",
+                    l: ["Private Teams chats remain stored according to compliance and retention rules.", "No one receives direct access to your private chat history unless legally required."],
+                    h2: "Teams Files:",
+                    l2: ["Files in Teams channels remain accessible to the team.", "Files shared in private chats follow OneDrive transfer rules."]
+                },
+                {
+                    t: "4. SharePoint & Network Drives",
+                    l: ["All SharePoint documents remain part of their respective sites.", "Access permissions will be updated to remove you from shared folders, groups, and sites."]
+                },
+                {
+                    t: "5. Applications & SaaS Platforms",
+                    h: "For any third party systems (e.g., MS365, Euphoria, Payspace, Fusion):",
+                    l: ["Your access will be fully removed.", "Active tasks or projects may be reassigned to your department.", "All content created remains the intellectual property of Equinox Group Holdings, Inc."]
+                },
+                {
+                    t: "6. Personal Data on Company Devices",
+                    h: "If you stored personal files on company equipment:",
+                    l: ["You may request a Personal Data Review before your last day.", "IT will help identify items that may be transferred, while ensuring no corporate data is removed."]
+                }
+            ];
+
+            policyPdf.setFontSize(9);
+            retentionDetails.forEach(sec => {
+                const estHeight = 30 + (sec.l ? sec.l.length * 5 : 0);
+                y = checkPageBreak(policyPdf, y, estHeight);
+                
+                policyPdf.setFont("helvetica", "bold"); policyPdf.text(sec.t, margin, y); y += 6;
+                if (sec.h) { policyPdf.text(sec.h, margin, y); y += 5; }
                 
                 policyPdf.setFont("helvetica", "normal");
-                const lines = policyPdf.splitTextToSize(item.d, 170);
-                policyPdf.text(lines, 20, y);
-                y += (lines.length * lineHeight) + 4; // Add padding after block
+                if (sec.l) {
+                    sec.l.forEach(li => {
+                        const liLines = policyPdf.splitTextToSize(li, contentWidth - 10);
+                        policyPdf.text("• ", margin + 5, y);
+                        policyPdf.text(liLines, margin + 10, y);
+                        y += (liLines.length * 4.5);
+                    });
+                }
+                
+                if (sec.h2) { y += 2; policyPdf.setFont("helvetica", "bold"); policyPdf.text(sec.h2, margin, y); y += 5; policyPdf.setFont("helvetica", "normal"); }
+                if (sec.l2) {
+                    sec.l2.forEach(li => {
+                        const liLines = policyPdf.splitTextToSize(li, contentWidth - 10);
+                        policyPdf.text("• ", margin + 5, y);
+                        policyPdf.text(liLines, margin + 10, y);
+                        y += (liLines.length * 4.5);
+                    });
+                }
+
+                if (sec.i) {
+                    policyPdf.setFont("helvetica", "italic");
+                    policyPdf.text(sec.i, margin, y);
+                    y += 6;
+                }
+                y += 5;
             });
 
-            // Data Retention
-            policyPdf.line(20, y, pageWidth - 20, y); y += 8;
-            policyPdf.setFont("helvetica", "bold"); policyPdf.setFontSize(11); policyPdf.text("Data & System Access After Offboarding", 20, y); y += 8;
-            policyPdf.setFontSize(8.5); policyPdf.setFont("helvetica", "normal");
-            const retentionPoints = [
-                "1. Email: Mailbox disabled on last day; manager/successor access; 12 month retention.",
-                "2. OneDrive: Ownership transferred to manager; access for 7 days; deleted thereafter.",
-                "3. Teams: Private chats retained for compliance; channel files remain; shared follow OneDrive rules.",
-                "4. SharePoint: Documents remain on sites; access permissions removed.",
-                "5. SaaS Platforms: Access fully removed from all platforms (MS365, Euphoria, Fusion etc).",
-                "6. Personal Data: Personal files may be exported ONLY after IT review and formal approval."
-            ];
-            const pointsLineHeight = 4.5;
-            retentionPoints.forEach(pt => {
-                const lines = policyPdf.splitTextToSize(pt, 170);
-                policyPdf.text(lines, 20, y);
-                y += (lines.length * pointsLineHeight) + 2;
-            });
-
-            // Signatures
-            y = Math.max(y + 10, 230); // At least 230 or after content
-            policyPdf.setFont("helvetica", "bold"); policyPdf.setFontSize(11); policyPdf.text("Formal Acknowledgment", 20, y); y += 20;
-            policyPdf.line(20, y, 90, y); policyPdf.line(120, y, 190, y); y += 5;
-            policyPdf.setFontSize(8); 
-            policyPdf.text("Equinox Group Holdings Inc. IT Support", 20, y);
-            policyPdf.text(user.displayName, 120, y);
+            // Signatures Section
+            y = checkPageBreak(policyPdf, y, 50);
+            y += 10;
+            policyPdf.setFont("helvetica", "bold"); policyPdf.setFontSize(12); policyPdf.text("Formal Acknowledgment", margin, y); y += 15;
+            policyPdf.setLineWidth(0.5);
+            policyPdf.line(margin, y, margin + 70, y); policyPdf.line(pageWidth - margin - 70, y, pageWidth - margin, y); y += 6;
+            policyPdf.setFontSize(9); 
+            policyPdf.text("Equinox Group Holdings Inc. IT Support", margin, y);
+            policyPdf.text(user.displayName, pageWidth - margin, y, { align: "right" });
             
-            policyPdf.addImage(adminSignature, 'JPEG', 20, y - 22, 50, 15, undefined, 'FAST');
-            policyPdf.addImage(policySignature, 'JPEG', 120, y - 22, 50, 15, undefined, 'FAST');
+            policyPdf.addImage(adminSignature, 'JPEG', margin, y - 22, 50, 15, undefined, 'FAST');
+            policyPdf.addImage(policySignature, 'JPEG', pageWidth - margin - 50, y - 22, 50, 15, undefined, 'FAST');
 
             const policyBlob = policyPdf.output('blob');
 
@@ -219,17 +305,19 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                 compress: true
             });
             
+            y = 20;
             // Header
-            if (logoBase64) checklistPdf.addImage(logoBase64, 'PNG', 20, 15, 35, 12, undefined, 'FAST');
+            if (logoBase64) checklistPdf.addImage(logoBase64, 'PNG', margin, 15, 35, 12, undefined, 'FAST');
             checklistPdf.setFont("helvetica", "bold");
             checklistPdf.setFontSize(16);
-            checklistPdf.text("IT Exit Interview Checklist", pageWidth - 20, 25, { align: "right" });
-            checklistPdf.line(20, 32, pageWidth - 20, 32);
+            checklistPdf.text("IT Exit Interview Checklist", pageWidth - margin, 25, { align: "right" });
+            checklistPdf.line(margin, 32, pageWidth - margin, 32);
 
             // User Info Section
             y = 45;
-            checklistPdf.setFontSize(10); checklistPdf.text("User Information", 20, y); y += 4;
-            checklistPdf.line(20, y, pageWidth - 20, y); y += 6;
+            checklistPdf.setFontSize(10); 
+            checklistPdf.text("User Information", margin, y); y += 4;
+            checklistPdf.line(margin, y, pageWidth - margin, y); y += 6;
             const userInfo = [
                 ["Username:", user.displayName],
                 ["Email:", userDetails.email],
@@ -238,19 +326,21 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
             ];
             const infoLineHeight = 5;
             userInfo.forEach(info => {
+                y = checkPageBreak(checklistPdf, y, 10);
                 checklistPdf.setFont("helvetica", "bold"); 
-                checklistPdf.text(info[0], 25, y);
+                checklistPdf.text(info[0], margin + 5, y);
                 
                 checklistPdf.setFont("helvetica", "normal");
-                const valLines = checklistPdf.splitTextToSize(info[1] || "---", 120);
-                checklistPdf.text(valLines, 60, y);
+                const valLines = checklistPdf.splitTextToSize(info[1] || "---", contentWidth - 50);
+                checklistPdf.text(valLines, margin + 45, y);
                 y += Math.max(7, valLines.length * infoLineHeight + 2);
             });
 
             // IT Admin Section
+            y = checkPageBreak(checklistPdf, y, 20);
             y += 5;
-            checklistPdf.setFont("helvetica", "bold"); checklistPdf.text("IT Administrative", 20, y); y += 4;
-            checklistPdf.line(20, y, pageWidth - 20, y); y += 6;
+            checklistPdf.setFont("helvetica", "bold"); checklistPdf.text("IT Administrative", margin, y); y += 4;
+            checklistPdf.line(margin, y, pageWidth - margin, y); y += 6;
             const adminRows = [
                 [`Shared mailbox created:`, itAdmin.sharedMailbox || "---"],
                 [`Email forward or shared mailbox members:`, itAdmin.emailForward || "---"],
@@ -261,43 +351,50 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                 [`Device Login Pin:`, itAdmin.devicePin || "---"]
             ];
             adminRows.forEach(row => {
+                y = checkPageBreak(checklistPdf, y, 10);
                 checklistPdf.setFont("helvetica", "normal"); 
-                checklistPdf.text(row[0], 25, y);
+                checklistPdf.text(row[0], margin + 5, y);
                 
                 checklistPdf.setFont("helvetica", "bold");
-                const valLines = checklistPdf.splitTextToSize(row[1] || "---", 100);
-                checklistPdf.text(valLines, 80, y);
+                // Label x is margin+5 (~25). Value x moved to margin+90 (~110) to avoid overlap.
+                const valLines = checklistPdf.splitTextToSize(row[1] || "---", contentWidth - 95);
+                checklistPdf.text(valLines, margin + 90, y);
                 y += Math.max(7, valLines.length * infoLineHeight + 1);
             });
 
             // Checklist Verification (Section 1 & 2)
+            y = checkPageBreak(checklistPdf, y, 20);
             y += 8;
-            checklistPdf.setFont("helvetica", "bold"); checklistPdf.text("Verification Items", 20, y); y += 4;
-            checklistPdf.line(20, y, pageWidth - 20, y); y += 7;
+            checklistPdf.setFont("helvetica", "bold"); checklistPdf.text("Verification Items", margin, y); y += 4;
+            checklistPdf.line(margin, y, pageWidth - margin, y); y += 7;
             checklistPdf.setFontSize(8.5);
 
             checklist.forEach((item, i) => {
-                const boxSize = 3;
-                checklistPdf.rect(20, y - 3, boxSize, boxSize);
-                if (item.checked) checklistPdf.text("X", 20.8, y - 0.5);
-                checklistPdf.setFont("helvetica", "normal");
-                checklistPdf.text(item.label, 26, y, { maxWidth: 160 });
-                y += (item.label.length > 90 ? 10 : 7);
+                const lines = checklistPdf.splitTextToSize(item.label, contentWidth - 15);
+                y = checkPageBreak(checklistPdf, y, lines.length * 6 + 4);
                 
-                // New page if needed
-                if (y > 270) { checklistPdf.addPage(); y = 20; }
+                checklistPdf.rect(margin + 5, y - 3, 4, 4); // Checkbox
+                if (item.checked) {
+                    checklistPdf.setFont("zapfdingbats");
+                    checklistPdf.text('4', margin + 5.5, y - 0.5); // Checkmark (ZapfDingbats '4' is check)
+                    checklistPdf.setFont("helvetica");
+                }
+                checklistPdf.text(lines, margin + 12, y);
+                y += (lines.length * 6) + 2;
             });
 
-            // Signatures
-            if (y > 230) { checklistPdf.addPage(); y = 40; } else { y = 240; }
-            checklistPdf.setFont("helvetica", "bold"); checklistPdf.setFontSize(11); checklistPdf.text("Formal Acknowledgment", 20, y); y += 20;
-            checklistPdf.line(20, y, 90, y); checklistPdf.line(120, y, 190, y); y += 5;
-            checklistPdf.setFontSize(8); 
-            checklistPdf.text("Equinox Group Holdings Inc. IT Support", 20, y);
-            checklistPdf.text(user.displayName, 120, y);
+            // Final Signatures
+            y = checkPageBreak(checklistPdf, y, 50);
+            y += 15;
+            checklistPdf.setFont("helvetica", "bold"); checklistPdf.setFontSize(12); checklistPdf.text("Formal Acknowledgment", margin, y); y += 15;
+            checklistPdf.setLineWidth(0.5);
+            checklistPdf.line(margin, y, margin + 70, y); checklistPdf.line(pageWidth - margin - 70, y, pageWidth - margin, y); y += 6;
+            checklistPdf.setFontSize(9); 
+            checklistPdf.text("Equinox Group Holdings Inc. IT Support", margin, y);
+            checklistPdf.text(user.displayName, pageWidth - margin, y, { align: "right" });
             
-            checklistPdf.addImage(adminSignature, 'JPEG', 20, y - 22, 50, 15, undefined, 'FAST');
-            checklistPdf.addImage(policySignature, 'JPEG', 120, y - 22, 50, 15, undefined, 'FAST');
+            checklistPdf.addImage(adminSignature, 'JPEG', margin, y - 22, 50, 15, undefined, 'FAST');
+            checklistPdf.addImage(policySignature, 'JPEG', pageWidth - margin - 50, y - 22, 50, 15, undefined, 'FAST');
 
             const checklistBlob = checklistPdf.output('blob');
 
