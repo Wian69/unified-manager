@@ -3,7 +3,7 @@ param(
 )
 
 # Unified Enterprise Agent (UEA)
-# Version: 1.4.0
+# Version: 1.4.1
 # Description: Lightweight persistence and telemetry agent for Unified Manager.
 
 $ErrorActionPreference = "Stop"
@@ -51,7 +51,7 @@ function Get-RobustId {
 try {
     $AgentId = Get-RobustId "UUID"
     $SerialNumber = Get-RobustId "Serial"
-    $Version = "1.4.0"
+    $Version = "1.4.1"
     
     Log-Message "AGENT IDENTIFIED (ROBUST): ID=$AgentId, SERIAL=$SerialNumber"
     Log-Message "Heartbeat interval: 3 seconds"
@@ -284,21 +284,28 @@ try { `$Web = New-Object System.Net.WebClient; `$ImgBytes = `$Web.DownloadData('
                                 $CurrentSession = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
                                 
                                 if ($ActiveUser -and $ActiveUser -eq $CurrentSession) {
-                                    Log-Message "Direct Session Popup: User match. Running directly..."
-                                    powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -File "$PopupScript"
+                                    Log-Message "Direct Session Popup: User match. Running directly hidden..."
+                                    # Use a more hidden launch method for direct session
+                                    Start-Process "powershell.exe" -ArgumentList "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PopupScript`"" -WindowStyle Hidden
                                     $Result = "Message displayed directly to current session: $ActiveUser"
                                 } elseif ($ActiveUser) {
                                     Log-Message "Elevated Session Popup: Attempting Scheduled Task..."
                                     try {
-                                        $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PopupScript`""
+                                        # Use -NoProfile and -NonInteractive for scheduled tasks
+                                        $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PopupScript`""
                                         $Principal = New-ScheduledTaskPrincipal -UserId $ActiveUser -LogonType Interactive
-                                        Register-ScheduledTask -TaskName "UnifiedAgentPopup" -Action $Action -Principal $Principal -Force | Out-Null
-                                        Start-ScheduledTask -TaskName "UnifiedAgentPopup" | Out-Null
-                                        Start-Sleep -Seconds 2
-                                        Unregister-ScheduledTask -TaskName "UnifiedAgentPopup" -Confirm:$false | Out-Null
+                                        $Settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
+                                        
+                                        $TaskName = "UnifiedAgentPopup_$(Get-Random)"
+                                        Register-ScheduledTask -TaskName $TaskName -Action $Action -Principal $Principal -Settings $Settings -Force | Out-Null
+                                        Start-ScheduledTask -TaskName $TaskName | Out-Null
+                                        
+                                        # Give it a few seconds to trigger before cleaning up
+                                        Start-Sleep -Seconds 5
+                                        Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false | Out-Null
                                         $Result = "Message queued via Scheduled Task for: $ActiveUser"
                                     } catch {
-                                        $Result = "Error: Failed to register popup task (requires Admin). Message skipped for other user session."
+                                        $Result = "Error: Failed to register popup task (requires Admin). Details: $($_.Exception.Message)"
                                     }
                                 } else {
                                     $Result = "Skipped UI Message: No active user logged in."
