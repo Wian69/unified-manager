@@ -97,6 +97,7 @@ export async function POST(request: Request) {
                 const buffer = Buffer.from(bytes);
 
                 // Use simple upload for files < 4MB (Standard for these docs)
+                console.log(`[ARCHIVAL] Uploading ${customName} (${Math.round(buffer.length / 1024)} KB)`);
                 await client.api(`${userFolderRequestPath}/${customName}:/content`)
                     .put(buffer);
                 

@@ -117,11 +117,16 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
             setStatus("Generating Official Policy...");
 
             // --- PDF 1: POLICY (MATCHING manual policy/page.tsx) ---
-            const policyPdf = new jsPDF('p', 'mm', 'a4');
+            const policyPdf = new jsPDF({
+                orientation: 'p',
+                unit: 'mm',
+                format: 'a4',
+                compress: true
+            });
             const pageWidth = policyPdf.internal.pageSize.getWidth();
             
             // Header
-            if (logoBase64) policyPdf.addImage(logoBase64, 'PNG', 20, 15, 40, 15);
+            if (logoBase64) policyPdf.addImage(logoBase64, 'PNG', 20, 15, 40, 15, undefined, 'FAST');
             policyPdf.setFont("helvetica", "bold");
             policyPdf.setFontSize(18);
             policyPdf.text("IT Offboarding Policy", pageWidth - 20, 25, { align: "right" });
@@ -189,17 +194,22 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
             policyPdf.text("Equinox Group Holdings Inc. IT Support", 20, y);
             policyPdf.text(user.displayName, 120, y);
             
-            policyPdf.addImage(adminSignature, 'PNG', 20, y - 22, 50, 15);
-            policyPdf.addImage(policySignature, 'PNG', 120, y - 22, 50, 15);
+            policyPdf.addImage(adminSignature, 'JPEG', 20, y - 22, 50, 15, undefined, 'FAST');
+            policyPdf.addImage(policySignature, 'JPEG', 120, y - 22, 50, 15, undefined, 'FAST');
 
             const policyBlob = policyPdf.output('blob');
 
             // --- PDF 2: CHECKLIST (MATCHING manual checklist/page.tsx) ---
             setStatus("Generating Official Checklist...");
-            const checklistPdf = new jsPDF('p', 'mm', 'a4');
+            const checklistPdf = new jsPDF({
+                orientation: 'p',
+                unit: 'mm',
+                format: 'a4',
+                compress: true
+            });
             
             // Header
-            if (logoBase64) checklistPdf.addImage(logoBase64, 'PNG', 20, 15, 35, 12);
+            if (logoBase64) checklistPdf.addImage(logoBase64, 'PNG', 20, 15, 35, 12, undefined, 'FAST');
             checklistPdf.setFont("helvetica", "bold");
             checklistPdf.setFontSize(16);
             checklistPdf.text("IT Exit Interview Checklist", pageWidth - 20, 25, { align: "right" });
@@ -266,8 +276,8 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
             checklistPdf.text("Equinox Group Holdings Inc. IT Support", 20, y);
             checklistPdf.text(user.displayName, 120, y);
             
-            checklistPdf.addImage(adminSignature, 'PNG', 20, y - 22, 50, 15);
-            checklistPdf.addImage(policySignature, 'PNG', 120, y - 22, 50, 15);
+            checklistPdf.addImage(adminSignature, 'JPEG', 20, y - 22, 50, 15, undefined, 'FAST');
+            checklistPdf.addImage(policySignature, 'JPEG', 120, y - 22, 50, 15, undefined, 'FAST');
 
             const checklistBlob = checklistPdf.output('blob');
 

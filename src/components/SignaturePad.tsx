@@ -56,7 +56,8 @@ export default function SignaturePad({ onSave, label }: SignaturePadProps) {
     const stopDrawing = () => {
         setIsDrawing(false);
         if (!isEmpty) {
-            const dataUrl = canvasRef.current?.toDataURL('image/png');
+            // Use JPEG with 0.6 quality for much smaller file size
+            const dataUrl = canvasRef.current?.toDataURL('image/jpeg', 0.6);
             if (dataUrl) onSave(dataUrl);
         }
     };
@@ -77,7 +78,7 @@ export default function SignaturePad({ onSave, label }: SignaturePadProps) {
             const ctx = canvas.getContext('2d');
             if (ctx) {
                 ctx.strokeStyle = '#000000';
-                ctx.lineWidth = 2;
+                ctx.lineWidth = 1.5; // Slightly thinner for smaller canvas
                 ctx.lineCap = 'round';
                 ctx.lineJoin = 'round';
             }
@@ -113,8 +114,8 @@ export default function SignaturePad({ onSave, label }: SignaturePadProps) {
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500" />
                 <canvas
                     ref={canvasRef}
-                    width={800}
-                    height={300}
+                    width={400}
+                    height={150}
                     onMouseDown={startDrawing}
                     onMouseMove={draw}
                     onMouseUp={stopDrawing}
