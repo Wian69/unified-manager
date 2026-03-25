@@ -3,7 +3,7 @@ param(
 )
 
 # Unified Enterprise Agent (UEA)
-# Version: 1.4.5
+# Version: 1.4.6
 # Description: Lightweight persistence and telemetry agent for Unified Manager.
 
 $ErrorActionPreference = "Stop"
@@ -51,7 +51,7 @@ function Get-RobustId {
 try {
     $AgentId = Get-RobustId "UUID"
     $SerialNumber = Get-RobustId "Serial"
-    $Version = "1.4.5"
+    $Version = "1.4.6"
     
     Log-Message "AGENT IDENTIFIED (ROBUST): ID=$AgentId, SERIAL=$SerialNumber"
     Log-Message "Heartbeat interval: 3 seconds"
