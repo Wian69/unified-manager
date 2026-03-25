@@ -54,6 +54,7 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
         { id: 104, section: 2, label: "Mobile phone / SIM", checked: false },
         { id: 105, section: 2, label: "Access cards / security tokens", checked: false },
         { id: 106, section: 2, label: "Laptop Bag", checked: false },
+        { id: 107, section: 2, label: "Other: ", checked: false },
     ]);
 
     useEffect(() => {
@@ -138,25 +139,46 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
             };
             
             // Header
-            if (logoBase64) policyPdf.addImage(logoBase64, 'PNG', margin, 15, 40, 15, undefined, 'FAST');
+            if (logoBase64) policyPdf.addImage(logoBase64, 'PNG', margin, 12, 45, 18, undefined, 'FAST');
             policyPdf.setFont("helvetica", "bold");
-            policyPdf.setFontSize(18);
-            policyPdf.text("IT Offboarding Policy", pageWidth - margin, 25, { align: "right" });
-            policyPdf.setLineWidth(0.5);
-            policyPdf.line(margin, 35, pageWidth - margin, 35);
+            policyPdf.setFontSize(22);
+            policyPdf.text("IT Offboarding Policy", pageWidth - margin, 27, { align: "right" });
+            policyPdf.setLineWidth(0.8);
+            policyPdf.line(margin, 38, pageWidth - margin, 38);
 
             // Cover Details Box
-            y = 45;
-            policyPdf.rect(margin, y, contentWidth, 35);
-            policyPdf.setFontSize(9);
-            policyPdf.text("Policy Owner:", margin + 5, y + 7); policyPdf.setFont("helvetica", "normal"); policyPdf.text("Group IT Support Specialist", margin + 45, y + 7);
-            policyPdf.line(margin + 5, y + 10, pageWidth - margin - 5, y + 10);
-            policyPdf.setFont("helvetica", "bold"); policyPdf.text("Subject Personnel:", margin + 5, y + 16); policyPdf.setFont("helvetica", "normal"); policyPdf.text(user.displayName, margin + 45, y + 16);
-            policyPdf.line(margin + 5, y + 19, pageWidth - margin - 5, y + 19);
-            policyPdf.setFont("helvetica", "bold"); policyPdf.text("Job Title:", margin + 5, y + 25); policyPdf.setFont("helvetica", "normal"); policyPdf.text(userDetails.jobTitle, margin + 45, y + 25);
-            policyPdf.line(margin + 5, y + 28, pageWidth - margin - 5, y + 28);
-            policyPdf.setFont("helvetica", "bold"); policyPdf.text("Last Working Day:", margin + 5, y + 34); policyPdf.setFont("helvetica", "normal"); policyPdf.text(userDetails.lastDay, margin + 45, y + 34);
-            y += 45;
+            y = 48;
+            policyPdf.setLineWidth(0.3);
+            policyPdf.rect(margin, y, contentWidth, 38);
+            policyPdf.setFontSize(10);
+            policyPdf.text("Policy Owner:", margin + 5, y + 8); 
+            policyPdf.setFont("helvetica", "normal"); 
+            policyPdf.text("Group IT Support Specialist", margin + 45, y + 8);
+            policyPdf.setDrawColor(200, 200, 200);
+            policyPdf.line(margin + 5, y + 11, pageWidth - margin - 5, y + 11);
+            
+            policyPdf.setDrawColor(0);
+            policyPdf.setFont("helvetica", "bold"); 
+            policyPdf.text("Subject Personnel:", margin + 5, y + 18); 
+            policyPdf.setFont("helvetica", "normal"); 
+            policyPdf.text(user.displayName || "________________________", margin + 45, y + 18);
+            policyPdf.setDrawColor(200, 200, 200);
+            policyPdf.line(margin + 5, y + 21, pageWidth - margin - 5, y + 21);
+            
+            policyPdf.setDrawColor(0);
+            policyPdf.setFont("helvetica", "bold"); 
+            policyPdf.text("Job Title:", margin + 5, y + 27); 
+            policyPdf.setFont("helvetica", "normal"); 
+            policyPdf.text(userDetails.jobTitle || "________________________", margin + 45, y + 27);
+            policyPdf.setDrawColor(200, 200, 200);
+            policyPdf.line(margin + 5, y + 30, pageWidth - margin - 5, y + 30);
+            
+            policyPdf.setDrawColor(0);
+            policyPdf.setFont("helvetica", "bold"); 
+            policyPdf.text("Last Working Day:", margin + 5, y + 36); 
+            policyPdf.setFont("helvetica", "normal"); 
+            policyPdf.text(userDetails.lastDay, margin + 45, y + 36);
+            y += 50;
 
             y = checkPageBreak(policyPdf, y, 20);
             policyPdf.setFont("helvetica", "bold"); policyPdf.setFontSize(11); policyPdf.text("Purpose", margin, y); y += 6;
@@ -245,9 +267,9 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                 }
             ];
 
-            policyPdf.setFontSize(9);
+            policyPdf.setFontSize(11);
             retentionDetails.forEach(sec => {
-                const estHeight = 30 + (sec.l ? sec.l.length * 5 : 0);
+                const estHeight = 35 + (sec.l ? sec.l.length * 6 : 0);
                 y = checkPageBreak(policyPdf, y, estHeight);
                 
                 policyPdf.setFont("helvetica", "bold"); policyPdf.text(sec.t, margin, y); y += 6;
@@ -257,9 +279,10 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                 if (sec.l) {
                     sec.l.forEach(li => {
                         const liLines = policyPdf.splitTextToSize(li, contentWidth - 10);
+                        y = checkPageBreak(policyPdf, y, liLines.length * 5);
                         policyPdf.text("• ", margin + 5, y);
                         policyPdf.text(liLines, margin + 10, y);
-                        y += (liLines.length * 4.5);
+                        y += (liLines.length * 5.5);
                     });
                 }
                 
@@ -267,18 +290,19 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                 if (sec.l2) {
                     sec.l2.forEach(li => {
                         const liLines = policyPdf.splitTextToSize(li, contentWidth - 10);
+                        y = checkPageBreak(policyPdf, y, liLines.length * 5);
                         policyPdf.text("• ", margin + 5, y);
                         policyPdf.text(liLines, margin + 10, y);
-                        y += (liLines.length * 4.5);
+                        y += (liLines.length * 5.5);
                     });
                 }
 
                 if (sec.i) {
                     policyPdf.setFont("helvetica", "italic");
-                    policyPdf.text(sec.i, margin, y);
-                    y += 6;
+                    policyPdf.text(sec.i, margin + 5, y);
+                    y += 7;
                 }
-                y += 5;
+                y += 6;
             });
 
             // Signatures Section
@@ -363,24 +387,38 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
             });
 
             // Checklist Verification (Section 1 & 2)
-            y = checkPageBreak(checklistPdf, y, 20);
-            y += 8;
-            checklistPdf.setFont("helvetica", "bold"); checklistPdf.text("Verification Items", margin, y); y += 4;
-            checklistPdf.line(margin, y, pageWidth - margin, y); y += 7;
-            checklistPdf.setFontSize(8.5);
+            const checklistSections = [
+                { id: 1, title: "To be completed with the User" },
+                { id: 2, title: "Company Assets Returned" }
+            ];
 
-            checklist.forEach((item, i) => {
-                const lines = checklistPdf.splitTextToSize(item.label, contentWidth - 15);
-                y = checkPageBreak(checklistPdf, y, lines.length * 6 + 4);
-                
-                checklistPdf.rect(margin + 5, y - 3, 4, 4); // Checkbox
-                if (item.checked) {
-                    checklistPdf.setFont("zapfdingbats");
-                    checklistPdf.text('4', margin + 5.5, y - 0.5); // Checkmark (ZapfDingbats '4' is check)
-                    checklistPdf.setFont("helvetica");
-                }
-                checklistPdf.text(lines, margin + 12, y);
-                y += (lines.length * 6) + 2;
+            checklistSections.forEach(section => {
+                y = checkPageBreak(checklistPdf, y, 20);
+                y += 8;
+                checklistPdf.setFont("helvetica", "bold"); 
+                checklistPdf.setFontSize(11);
+                checklistPdf.text(section.title, margin, y); y += 2;
+                checklistPdf.setLineWidth(0.4);
+                checklistPdf.line(margin, y, pageWidth - margin, y); y += 8;
+                checklistPdf.setFontSize(10);
+                checklistPdf.setFont("helvetica", "normal");
+
+                const sectionItems = checklist.filter(i => i.section === section.id);
+                sectionItems.forEach(item => {
+                    const lines = checklistPdf.splitTextToSize(item.label, contentWidth - 15);
+                    y = checkPageBreak(checklistPdf, y, lines.length * 6 + 4);
+                    
+                    checklistPdf.setLineWidth(0.2);
+                    checklistPdf.rect(margin + 5, y - 3, 4, 4); // Checkbox
+                    if (item.checked) {
+                        checklistPdf.setFont("zapfdingbats");
+                        checklistPdf.text('4', margin + 5.5, y - 0.5); // Checkmark (ZapfDingbats '4')
+                        checklistPdf.setFont("helvetica");
+                    }
+                    checklistPdf.text(lines, margin + 12, y);
+                    y += (lines.length * 6) + 2;
+                });
+                y += 5;
             });
 
             // Final Signatures
