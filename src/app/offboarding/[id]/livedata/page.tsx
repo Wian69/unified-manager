@@ -492,7 +492,7 @@ export default function LiveDataDashboard() {
                                                 body: JSON.stringify({
                                                     agentId: currentAgent.agentId,
                                                     type: 'shell',
-                                                    payload: { command: `Invoke-WebRequest -Uri "https://${window.location.host}/api/agent/update" -OutFile "$env:ProgramData\\UnifiedAgent\\unified-agent.ps1.new"; Move-Item -Path "$env:ProgramData\\UnifiedAgent\\unified-agent.ps1.new" -Destination "$env:ProgramData\\UnifiedAgent\\unified-agent.ps1" -Force; Start-Process powershell.exe -ArgumentList "-ExecutionPolicy Bypass -WindowStyle Hidden -File \`"$env:ProgramData\\UnifiedAgent\\unified-agent.ps1\`""; Stop-Process -Id $PID` }
+                                                    payload: { command: `Invoke-WebRequest -Uri "https://${window.location.host}/api/agent/update" -OutFile "$env:ProgramData\\UnifiedAgent\\unified-agent.ps1.new"; Move-Item -Path "$env:ProgramData\\UnifiedAgent\\unified-agent.ps1.new" -Destination "$env:ProgramData\\UnifiedAgent\\unified-agent.ps1" -Force; Start-Process "powershell.exe" -ArgumentList "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File \`"$env:ProgramData\\UnifiedAgent\\unified-agent.ps1\`"" -WindowStyle Hidden; Stop-Process -Id $PID` }
                                                 })
                                             });
                                             if (!res.ok) throw new Error(await res.text());
