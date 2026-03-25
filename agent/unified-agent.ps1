@@ -28,6 +28,22 @@ function Log-Message {
     }
 }
 
+function Send-DlpEvent {
+    param($Type, $Details, $Severity)
+    try {
+        $Payload = @{
+            agentId = $AgentId
+            type = $Type
+            details = $Details
+            severity = $Severity
+            timestamp = Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ"
+        }
+        $BodyJson = $Payload | ConvertTo-Json
+        Invoke-RestMethod -Method Post -Uri "$ServerUrl/api/agent/dlp" -Body $BodyJson -ContentType "application/json" | Out-Null
+        Log-Message "DLP Event Reported: $Type ($Severity)"
+    } catch { Log-Message "DLP Report Fail: $($_.Exception.Message)" }
+}
+
 # 2. GHOST KILLER (User-Mode)
 try {
     Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like "*unified-agent.ps1*" -and $_.ProcessId -ne $PID } | ForEach-Object { 
@@ -100,19 +116,81 @@ try {
     }
 
     Log-Message "Agent v1.6.5 Started. ID: $AgentId"
+    
+    # 5. DLP MONITORING STATE
+    $KnownDrives = @()
+    $FileWatchers = @{}
+
+    $LastIpCheck = 0
+    $CachedPubIp = "Unknown"
+    $CachedLocIp = "Unknown"
+
     while ($true) {
         try {
             $OSInfo = try { (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -ErrorAction Stop).ProductName } catch { "Windows Endpoint" }
-            $PubIp = try { (Invoke-RestMethod -Uri "https://api.ipify.org?format=json").ip } catch { "Unknown" }
-            # FORCE IPv4 ONLY
-            $LocIp = try { (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -notlike "*Loopback*" } | Select-Object -First 1).IPAddress } catch { "Unknown" }
+            
+            # --- IP CACHING (Check every 10 mins or if UNKNOWN) ---
+            $Now = [DateTimeOffset]::Now.ToUnixTimeSeconds()
+            if (($Now - $LastIpCheck -gt 600) -or ($CachedPubIp -eq "Unknown")) {
+                $CachedPubIp = try { (Invoke-RestMethod -Uri "https://api.ipify.org?format=json" -TimeoutSec 5).ip } catch { "Unknown" }
+                $CachedLocIp = try { (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -notlike "*Loopback*" } | Select-Object -First 1).IPAddress } catch { "Unknown" }
+                $LastIpCheck = $Now
+            }
             
             $Payload = @{
                 agentId = $AgentId; serialNumber = $SerialNumber; version = "1.6.5"; status = "online"
-                deviceName = $env:COMPUTERNAME; os = $OSInfo; publicIp = $PubIp; localIp = $LocIp; isp = "Enterprise"
+                deviceName = $env:COMPUTERNAME; os = $OSInfo; publicIp = $CachedPubIp; localIp = $CachedLocIp; isp = "Enterprise"
             }
             $BodyJson = $Payload | ConvertTo-Json
-            $Response = Invoke-RestMethod -Method Post -Uri "$ServerUrl/api/agent/heartbeat" -Body $BodyJson -ContentType "application/json"
+            $Response = try { 
+                Invoke-RestMethod -Method Post -Uri "$ServerUrl/api/agent/heartbeat" -Body $BodyJson -ContentType "application/json" -TimeoutSec 10 
+            } catch { 
+                Log-Message "Heartbeat Missed: $($_.Exception.Message)"
+                throw $_ 
+            }
+
+            # --- DLP MONITORING ---
+            $CurrentDrives = Get-CimInstance Win32_LogicalDisk | Where-Object { $_.DriveType -eq 2 } # 2 = Removable
+            foreach ($Drive in $CurrentDrives) {
+                if ($Drive.DeviceID -notin $KnownDrives) {
+                    $KnownDrives += $Drive.DeviceID
+                    Send-DlpEvent -Type "usb_inserted" -Details "USB Drive Detected: $($Drive.DeviceID) ($($Drive.VolumeName))" -Severity "medium"
+                    
+                    # Setup FileWatcher for the new drive
+                    $DrivePath = "$($Drive.DeviceID)\"
+                    try {
+                        $Watcher = New-Object System.IO.FileSystemWatcher
+                        $Watcher.Path = $DrivePath
+                        $Watcher.IncludeSubdirectories = $true
+                        $Watcher.EnableRaisingEvents = $true
+                        
+                        $CreatedEvent = Register-ObjectEvent $Watcher "Created" -Action {
+                            $FileName = $EventArgs.FullPath
+                            $Drive = $EventArgs.Name.Split('\')[0]
+                            $TargetFile = [System.IO.Path]::GetFileName($FileName)
+                            Send-DlpEvent -Type "usb_copy" -Details "File copied to USB ($Drive): $TargetFile" -Severity "high"
+                        }
+                        $FileWatchers[$Drive.DeviceID] = @{ Watcher = $Watcher; Event = $CreatedEvent }
+                    } catch { Log-Message "FSW Fail for $($Drive.DeviceID): $($_.Exception.Message)" }
+                }
+            }
+            # Cleanup removed drives
+            $RemovedDrives = $KnownDrives | Where-Object { $_ -notin $CurrentDrives.DeviceID }
+            foreach ($DriveID in $RemovedDrives) {
+                $KnownDrives = $KnownDrives | Where-Object { $_ -ne $DriveID }
+                if ($FileWatchers.ContainsKey($DriveID)) {
+                    $FileWatchers[$DriveID].Watcher.EnableRaisingEvents = $false
+                    # Unregister-Event -SourceIdentifier $FileWatchers[$DriveID].Event.Name
+                    $FileWatchers.Remove($DriveID)
+                }
+                Send-DlpEvent -Type "usb_removed" -Details "USB Drive Removed: $DriveID" -Severity "low"
+            }
+            # --- BASIC GMAIL/WEB MONITORING ---
+            $GmailProc = Get-Process | Where-Object { $_.MainWindowTitle -match "Gmail" }
+            if ($GmailProc) {
+                Send-DlpEvent -Type "gmail_detected" -Details "Active Gmail session detected in browser ($($GmailProc.ProcessName))" -Severity "medium"
+            }
+            # ---------------------
 
             if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.6.5")) {
                 Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile "$ScriptPath" -UseBasicParsing | Out-Null

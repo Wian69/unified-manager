@@ -112,6 +112,10 @@ export default function DevicesPage() {
                     <div>
                         <h1 className="text-2xl font-bold text-white">Device Management</h1>
                         <p className="text-slate-400">View and manage all Intune enrolled devices. <span className="text-[10px] font-mono text-slate-500 bg-slate-800/50 px-2 py-0.5 rounded ml-2">Storage: {activeStorage}</span></p>
+                        <p className="text-[9px] text-slate-500 mt-1 uppercase tracking-widest flex items-center gap-1">
+                            <AlertTriangle size={10} className="text-amber-500" />
+                            Note: Intune Portal changes may take 10-20 minutes to sync via Graph API.
+                        </p>
                     </div>
                 </div>
                 <button 
@@ -207,7 +211,11 @@ export default function DevicesPage() {
                                                 )}
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className={`px-2 py-1 text-xs font-semibold rounded-full ${d.complianceState === 'compliant' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
+                                                <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                                                    (d.complianceState || "").toLowerCase() === 'compliant' ? 'bg-emerald-500/20 text-emerald-400' : 
+                                                    (d.complianceState || "").toLowerCase() === 'ingraceperiod' ? 'bg-amber-500/20 text-amber-400' : 
+                                                    'bg-rose-500/20 text-rose-400'
+                                                }`}>
                                                     {d.complianceState || 'unknown'}
                                                 </span>
                                             </td>
@@ -342,7 +350,11 @@ export default function DevicesPage() {
                                             </div>
                                             <div>
                                                 <span className="block text-xs font-semibold uppercase text-slate-500 mb-1">Compliance State</span>
-                                                <span className={`px-2 py-1 text-xs font-semibold rounded-full ${selectedDeviceData.device.complianceState === 'compliant' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
+                                                <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                                                    (selectedDeviceData.device.complianceState || "").toLowerCase() === 'compliant' ? 'bg-emerald-500/20 text-emerald-400' : 
+                                                    (selectedDeviceData.device.complianceState || "").toLowerCase() === 'ingraceperiod' ? 'bg-amber-500/20 text-amber-400' : 
+                                                    'bg-rose-500/20 text-rose-400'
+                                                }`}>
                                                     {selectedDeviceData.device.complianceState || 'unknown'}
                                                 </span>
                                             </div>

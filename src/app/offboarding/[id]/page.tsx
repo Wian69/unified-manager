@@ -6,6 +6,7 @@ import Link from "next/link";
 import SharePointDeletionsModule from "@/components/SharePointDeletionsModule";
 import EmailTraceModule from "@/components/EmailTraceModule";
 import TeamsChatModule from "@/components/TeamsChatModule";
+import DlpModule from "@/components/DlpModule";
 import ActivityCard from "@/components/ActivityCard";
 import dynamic from "next/dynamic";
 
@@ -412,6 +413,14 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
                             userDisplayName={user.displayName}
                             sinceDate={sinceDate}
                             oneDriveUrl={user.oneDriveUrl}
+                        />
+                    </section>
+
+                    <section>
+                        <DlpModule 
+                            userId={id}
+                            userDisplayName={user.displayName}
+                            sinceDate={sinceDate}
                         />
                     </section>
 

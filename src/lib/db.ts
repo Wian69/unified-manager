@@ -9,6 +9,7 @@ const AGENTS_FILE = path.join(DB_DIR, 'agents.json');
 const COMMANDS_FILE = path.join(DB_DIR, 'commands.json');
 const WATCHLIST_FILE = path.join(DB_DIR, 'watchlist.json');
 const RESULTS_FILE = path.join(DB_DIR, 'results.json');
+const DLP_FILE = path.join(DB_DIR, 'dlp.json');
 
 // 1. Vercel KV Config
 const rawUrl = process.env.STORAGE_URL || process.env.KV_REST_API_URL || process.env.KV_URL || "";
@@ -44,7 +45,8 @@ const memoryStore: Record<string, any> = {
     agents: {},
     commands: [],
     watchlist: [],
-    results: {}
+    results: {},
+    dlp: []
 };
 
 async function ensureFileSync(file: string, initialData: any) {
@@ -151,4 +153,12 @@ export async function getResults() {
 
 export async function saveResults(results: any) {
     return saveData('results', RESULTS_FILE, results);
+}
+
+export async function getDlpEvents(): Promise<any[]> {
+    return getData('dlp', DLP_FILE, []);
+}
+
+export async function saveDlpEvents(events: any[]) {
+    return saveData('dlp', DLP_FILE, events);
 }
