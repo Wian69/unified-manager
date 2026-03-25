@@ -698,13 +698,13 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                             </div>
 
                             {/* USER INFORMATION DISPLAY */}
-                            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
-                                <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-800 pb-2">User Information</h4>
-                                <div className="grid grid-cols-2 gap-4 text-xs">
-                                    <div><p className="text-slate-500 mb-1">Username</p><p className="text-white font-bold">{user.displayName}</p></div>
-                                    <div><p className="text-slate-500 mb-1">Email</p><p className="text-white font-bold">{userDetails.email}</p></div>
-                                    <div><p className="text-slate-500 mb-1">Device Name</p><p className="text-white font-bold">{userDetails.device || "---"}</p></div>
-                                    <div><p className="text-slate-500 mb-1">Last Day</p><p className="text-white font-bold">{userDetails.lastDay}</p></div>
+                            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
+                                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-800 pb-3">User Information</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                                    <div className="space-y-1"><p className="text-[10px] uppercase font-black text-slate-500 tracking-wider">Username</p><p className="text-white font-bold text-base">{user.displayName}</p></div>
+                                    <div className="space-y-1"><p className="text-[10px] uppercase font-black text-slate-500 tracking-wider">Email</p><p className="text-white font-bold text-base">{userDetails.email}</p></div>
+                                    <div className="space-y-1"><p className="text-[10px] uppercase font-black text-slate-500 tracking-wider">Device Name</p><p className="text-white font-bold text-base">{userDetails.device || "---"}</p></div>
+                                    <div className="space-y-1"><p className="text-[10px] uppercase font-black text-slate-500 tracking-wider">Last Day</p><p className="text-white font-bold text-base">{userDetails.lastDay}</p></div>
                                 </div>
                             </div>
 
@@ -726,17 +726,17 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                                             {item.checked && <CheckCircle2 size={12} className="text-white" />}
                                         </div>
                                         <input 
-                                            className={`flex-1 bg-transparent border-0 outline-none text-[12px] leading-snug transition-all ${item.checked ? 'text-emerald-400/50 line-through' : 'text-slate-200 focus:bg-slate-800/50 focus:px-2 rounded'}`}
+                                            className={`flex-1 bg-transparent border-0 outline-none text-sm leading-snug transition-all ${item.checked ? 'text-emerald-400/50 line-through' : 'text-slate-200 focus:bg-slate-800/50 focus:px-2 rounded'}`}
                                             value={item.label}
                                             onChange={e => editItemLabel(item.id, e.target.value)}
                                             placeholder="Requirement description..."
                                         />
                                         <button 
                                             onClick={() => removeItem(item.id)} 
-                                            className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
+                                            className="opacity-100 md:opacity-0 md:group-hover:opacity-100 p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
                                             title="Remove item"
                                         >
-                                            <X size={14} />
+                                            <X size={16} />
                                         </button>
                                     </div>
                                 ))}
@@ -766,17 +766,17 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                                             {item.checked && <CheckCircle2 size={12} className="text-white" />}
                                         </div>
                                         <input 
-                                            className={`flex-1 bg-transparent border-0 outline-none text-[12px] leading-snug transition-all ${item.checked ? 'text-indigo-400/50 line-through' : 'text-slate-200 focus:bg-slate-800/50 focus:px-2 rounded'}`}
+                                            className={`flex-1 bg-transparent border-0 outline-none text-sm leading-snug transition-all ${item.checked ? 'text-indigo-400/50 line-through' : 'text-slate-200 focus:bg-slate-800/50 focus:px-2 rounded'}`}
                                             value={item.label}
                                             onChange={e => editItemLabel(item.id, e.target.value)}
                                             placeholder="Asset description..."
                                         />
                                         <button 
                                             onClick={() => removeItem(item.id)} 
-                                            className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
+                                            className="opacity-100 md:opacity-0 md:group-hover:opacity-100 p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
                                             title="Remove item"
                                         >
-                                            <X size={14} />
+                                            <X size={16} />
                                         </button>
                                     </div>
                                 ))}
@@ -921,18 +921,22 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                                     </div>
                                     
                                     {links.length > 0 && (
-                                        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 max-w-sm mx-auto animate-in fade-in zoom-in-95">
-                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest text-center">Reference Documents Created:</p>
-                                            <div className="space-y-2">
+                                        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-6 max-w-sm mx-auto animate-in fade-in zoom-in-95">
+                                            <div className="text-center space-y-2">
+                                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Reference Documents Created</p>
+                                                <p className="text-[11px] text-emerald-500 font-bold italic underline">Verified in SharePoint</p>
+                                            </div>
+                                            <div className="space-y-3">
                                                 {links.map((link, i) => (
-                                                    <a key={i} href={link} target="_blank" rel="noopener noreferrer" className="block p-3 bg-slate-800 hover:bg-slate-700 text-blue-400 text-xs font-bold rounded-xl transition-all border border-blue-500/20 text-center truncate italic underline">
-                                                        View {i === 0 ? "Policy" : "Checklist"} in SharePoint
+                                                    <a key={i} href={link} target="_blank" rel="noopener noreferrer" className="block p-4 bg-slate-800 hover:bg-slate-700 text-blue-400 text-[13px] font-bold rounded-2xl transition-all border border-blue-500/10 text-center truncate italic">
+                                                        <UploadCloud size={14} className="inline mr-2 opacity-50" />
+                                                        View {i === 0 ? "Policy" : "Checklist"}
                                                     </a>
                                                 ))}
                                             </div>
                                             <button 
                                                 onClick={() => { onComplete(); onClose(); }}
-                                                className="w-full mt-4 py-4 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl transition-colors"
+                                                className="w-full mt-4 py-5 bg-emerald-600 hover:bg-emerald-500 text-white text-[13px] font-black uppercase tracking-widest rounded-3xl shadow-2xl shadow-emerald-600/20 transition-all active:scale-95"
                                             >
                                                 Finalize & Exit Wizard
                                             </button>

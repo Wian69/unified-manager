@@ -104,23 +104,22 @@ export default function SignaturePad({ onSave, label }: SignaturePadProps) {
 
     return (
         <div className="space-y-4">
-            <div className="flex justify-between items-end">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{label}</label>
-                {!isEmpty && (
-                    <button 
-                        onClick={clear}
-                        className="text-[9px] font-bold text-rose-500 hover:text-rose-400 uppercase tracking-tighter"
-                    >
-                        Clear Signature
-                    </button>
-                )}
+            <div className="flex justify-between items-center bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{label}</label>
+                <button 
+                    onClick={clear}
+                    disabled={isEmpty}
+                    className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${isEmpty ? 'text-slate-700 cursor-not-allowed' : 'text-rose-500 hover:bg-rose-500/10'}`}
+                >
+                    Clear
+                </button>
             </div>
             <div className="relative group">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500" />
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-3xl blur opacity-0 group-hover:opacity-100 transition duration-500" />
                 <canvas
                     ref={canvasRef}
-                    width={400}
-                    height={150}
+                    width={500} // Increased resolution for cleaner signatures
+                    height={200}
                     onMouseDown={startDrawing}
                     onMouseMove={draw}
                     onMouseUp={stopDrawing}
@@ -128,7 +127,7 @@ export default function SignaturePad({ onSave, label }: SignaturePadProps) {
                     onTouchStart={startDrawing}
                     onTouchMove={draw}
                     onTouchEnd={stopDrawing}
-                    className="relative w-full aspect-[8/3] bg-white border border-slate-800 rounded-2xl cursor-crosshair touch-none"
+                    className="relative w-full aspect-[5/2] bg-white border border-slate-800 rounded-2xl cursor-crosshair touch-none shadow-inner"
                     style={{ background: '#ffffff' }}
                 />
             </div>
