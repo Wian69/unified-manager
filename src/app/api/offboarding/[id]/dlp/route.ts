@@ -4,9 +4,9 @@ import { getGraphClient } from '@/lib/graph';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
-        const userId = params.id;
+        const { id: userId } = await params;
         if (!userId) {
             return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
         }
