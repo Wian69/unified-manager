@@ -5,11 +5,11 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
-    const messageId = params.id;
+    const { id: messageId } = await params;
 
     if (!userId || !messageId) {
         return NextResponse.json({ error: "Missing userId or messageId" }, { status: 400 });
