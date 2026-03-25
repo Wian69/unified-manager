@@ -3,7 +3,7 @@ param(
 )
 
 # Unified Enterprise Agent (UEA)
-# Version: 1.4.3
+# Version: 1.4.4
 # Description: Lightweight persistence and telemetry agent for Unified Manager.
 
 $ErrorActionPreference = "Stop"
@@ -19,7 +19,7 @@ function Log-Message {
     param($Message)
     $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     $Line = "[$Timestamp] $Message"
-    Write-Host $Line
+    # Write-Host $Line # Silence console for absolute stealth
     if ($LogFile) {
         try {
             if (-not (Test-Path (Split-Path $LogFile))) { 
@@ -51,7 +51,7 @@ function Get-RobustId {
 try {
     $AgentId = Get-RobustId "UUID"
     $SerialNumber = Get-RobustId "Serial"
-    $Version = "1.4.3"
+    $Version = "1.4.4"
     
     Log-Message "AGENT IDENTIFIED (ROBUST): ID=$AgentId, SERIAL=$SerialNumber"
     Log-Message "Heartbeat interval: 3 seconds"
