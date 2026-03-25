@@ -52,7 +52,7 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
         { id: 102, section: 2, label: "Power supply", checked: false },
         { id: 103, section: 2, label: "External peripherals (mouse, keyboard, headset, adapters)", checked: false },
         { id: 104, section: 2, label: "Mobile phone / SIM", checked: false },
-        { id: 105, section: 2, label: "Access cards / security tokens", checked: false },
+        { id: 105, section: 2, label: "Access cards / security tokens & Keys", checked: false },
         { id: 106, section: 2, label: "Laptop Bag", checked: false },
         { id: 107, section: 2, label: "Other: ", checked: false },
     ]);
@@ -139,7 +139,14 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
             };
             
             // Header
-            if (logoBase64) policyPdf.addImage(logoBase64, 'PNG', margin, 12, 45, 18, undefined, 'FAST');
+            if (logoBase64) {
+                policyPdf.addImage(logoBase64, 'PNG', margin, 12, 45, 18, undefined, 'FAST');
+                policyPdf.setFont("helvetica", "bold");
+                policyPdf.setFontSize(14);
+                policyPdf.setTextColor("#787878"); // Gray: 120, 120, 120
+                policyPdf.text("Outsourced Services", margin + 1, 32);
+                policyPdf.setTextColor("#000000"); // Black
+            }
             policyPdf.setFont("helvetica", "bold");
             policyPdf.setFontSize(22);
             policyPdf.text("IT Offboarding Policy", pageWidth - margin, 27, { align: "right" });
@@ -379,11 +386,31 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                 checklistPdf.setFont("helvetica", "normal"); 
                 checklistPdf.text(row[0], margin + 5, y);
                 
-                checklistPdf.setFont("helvetica", "bold");
-                // Label x is margin+5 (~25). Value x moved to margin+90 (~110) to avoid overlap.
-                const valLines = checklistPdf.splitTextToSize(row[1] || "---", contentWidth - 95);
-                checklistPdf.text(valLines, margin + 90, y);
-                y += Math.max(7, valLines.length * infoLineHeight + 1);
+                if (row[0] === "Company data removal:") {
+                    // Custom Radio Layout for Data Removal
+                    const opts = ["Yes", "No", "Retrain till specified"];
+                    let optX = margin + 90;
+                    opts.forEach((opt, idx) => {
+                        if (idx === 2) { 
+                            y += 8; 
+                            optX = margin + 90; 
+                        }
+                        checklistPdf.circle(optX, y - 1, 1.5);
+                        if (itAdmin.dataRemoval === opt) {
+                            checklistPdf.setFillColor("#000000");
+                            checklistPdf.circle(optX, y - 1, 0.8, 'F');
+                        }
+                        checklistPdf.setFont("helvetica", "normal");
+                        checklistPdf.text(opt, optX + 4, y);
+                        optX += 18;
+                    });
+                    y += 2;
+                } else {
+                    checklistPdf.setFont("helvetica", "bold");
+                    const valLines = checklistPdf.splitTextToSize(row[1] || "---", contentWidth - 95);
+                    checklistPdf.text(valLines, margin + 90, y);
+                }
+                y += Math.max(7, 8);
             });
 
             // Checklist Verification (Section 1 & 2)
