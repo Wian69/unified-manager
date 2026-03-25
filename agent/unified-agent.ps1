@@ -3,7 +3,7 @@ param(
 )
 
 # Unified Enterprise Agent (UEA)
-# Version: 1.4.4
+# Version: 1.4.5
 # Description: Lightweight persistence and telemetry agent for Unified Manager.
 
 $ErrorActionPreference = "Stop"
@@ -51,7 +51,7 @@ function Get-RobustId {
 try {
     $AgentId = Get-RobustId "UUID"
     $SerialNumber = Get-RobustId "Serial"
-    $Version = "1.4.4"
+    $Version = "1.4.5"
     
     Log-Message "AGENT IDENTIFIED (ROBUST): ID=$AgentId, SERIAL=$SerialNumber"
     Log-Message "Heartbeat interval: 3 seconds"
@@ -235,94 +235,80 @@ try {
                                     $PopupScript = "$PSScriptRoot\popup.ps1"
                                 }
                                 
-                                $WinFormsCode = @"
-try {
-    Add-Type -AssemblyName System.Windows.Forms, System.Drawing -ErrorAction Stop
-    [System.Windows.Forms.Application]::EnableVisualStyles()
-    
-    `$msg = '$msg'
-    `$Form = New-Object Windows.Forms.Form
-    `$Form.Text = 'Equinox IT Support'
-    `$Form.Size = New-Object Drawing.Size(500,240)
-    `$Form.StartPosition = 'CenterScreen'
-    `$Form.TopMost = `$True
-    `$Form.FormBorderStyle = 'FixedDialog'
-    `$Form.MaximizeBox = `$False
-    `$Form.MinimizeBox = `$False
-    `$Form.BackColor = [System.Drawing.Color]::White
-    
-    `$IconBox = New-Object Windows.Forms.PictureBox
-    `$IconBox.Size = New-Object Drawing.Size(64, 64)
-    `$IconBox.Location = New-Object Drawing.Point(30, 40)
-    `$IconBox.SizeMode = 'StretchImage'
-    try { `$Web = New-Object System.Net.WebClient; `$ImgBytes = `$Web.DownloadData('https://img.icons8.com/color/96/000000/it-support.png'); `$IconBox.Image = [System.Drawing.Image]::FromStream((New-Object IO.MemoryStream(`$ImgBytes, 0, `$ImgBytes.Length))) } catch { }
-    
-    `$Label = New-Object Windows.Forms.Label
-    `$Label.Text = `$msg
-    `$Label.Font = New-Object Drawing.Font('Segoe UI', 11)
-    `$Label.Location = New-Object Drawing.Point(120, 40)
-    `$Label.Size = New-Object Drawing.Size(340, 100)
-    
-    `$Button = New-Object Windows.Forms.Button
-    `$Button.Text = 'Dismiss'
-    `$Button.Font = New-Object Drawing.Font('Segoe UI', 9, [System.Drawing.FontStyle]::Bold)
-    `$Button.Size = New-Object Drawing.Size(120, 38)
-    `$Button.Location = New-Object Drawing.Point(340, 145)
-    `$Button.BackColor = [System.Drawing.Color]::FromArgb(0, 120, 215)
-    `$Button.ForeColor = [System.Drawing.Color]::White
-    `$Button.FlatStyle = 'Flat'
-    `$Button.Add_Click({ 
-        try {
-            `$Ts = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
-            Invoke-RestMethod -Method Post -Uri "$ServerUrl/api/agent/result" -Body (@{ agentId = '$AgentId'; type = 'Message-Ack'; data = "Acknowledged at `$Ts" } | ConvertTo-Json) -ContentType 'application/json'
-        } catch { }
-        `$Form.Close() 
-    })
-    
-    `$Form.Controls.AddRange(@(`$Label, `$IconBox, `$Button))
-    `$Form.ShowDialog() | Out-Null
-} catch {
-    # Absolute fallback to legacy popup if WinForms fails
-    [System.Windows.Forms.MessageBox]::Show('$msg', 'Equinox IT Support', 0, 64)
-}
+                                # HTA-based Professional Popup (100% Silent GUI)
+                                $HtaPath = "$InstallDir\support.hta"
+                                $HtaCode = @"
+<html>
+<head>
+<title>Equinox IT Support</title>
+<hta:application id="oHTA" border="none" caption="no" innerborder="no" scroll="no" showintaskbar="yes" singleinstance="yes" sysmenu="no" windowstate="normal" />
+<style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: white; margin: 0; padding: 0; border: 1px solid #1e293b; overflow: hidden; }
+    .header { background: #1e293b; padding: 15px 20px; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 12px; }
+    .header img { width: 24px; height: 24px; }
+    .header span { font-weight: 800; font-size: 12px; letter-spacing: 1px; color: #38bdf8; text-transform: uppercase; }
+    .content { padding: 30px; }
+    .message { font-size: 16px; line-height: 1.5; color: #f1f5f9; margin-bottom: 30px; }
+    .footer { padding: 0 30px 30px; display: flex; justify-content: flex-end; }
+    .btn { background: #0284c7; color: white; border: none; padding: 10px 25px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 13px; transition: background 0.2s; }
+    .btn:hover { background: #0369a1; }
+</style>
+<script language="vbscript">
+    Sub Window_OnLoad
+        window.resizeTo 500, 300
+        window.moveTo (screen.width - 500) / 2, (screen.height - 300) / 2
+    End Sub
+    Sub Acknowledge
+        Set shell = CreateObject("WScript.Shell")
+        ' Send Ack back to server
+        cmd = "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ""Invoke-RestMethod -Method Post -Uri '$ServerUrl/api/agent/result' -Body (@{ agentId = '$AgentId'; type = 'Message-Ack'; data = 'Acknowledged via HTA' } | ConvertTo-Json) -ContentType 'application/json'"""
+        shell.Run cmd, 0, False
+        window.close
+    End Sub
+</script>
+</head>
+<body>
+    <div class="header">
+        <img src="https://img.icons8.com/color/48/000000/it-support.png" />
+        <span>Equinox IT Support</span>
+    </div>
+    <div class="content">
+        <div class="message">$msg</div>
+    </div>
+    <div class="footer">
+        <button class="btn" onclick="Acknowledge()">Dismiss Message</button>
+    </div>
+</body>
+</html>
 "@
-                                $WinFormsCode | Out-File -FilePath $PopupScript -Force -Encoding utf8
-                                
+                                $HtaCode | Out-File -FilePath $HtaPath -Force -Encoding utf8
+
                                 $ActiveUser = (Get-WmiObject -Class Win32_ComputerSystem).UserName
                                 $CurrentSession = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
                                 
                                 if ($ActiveUser -and $ActiveUser -eq $CurrentSession) {
-                                    Log-Message "Direct Session Popup: User match. Running via VBS stealth wrapper..."
-                                    $VbsPath = "$InstallDir\launcher.vbs"
-                                    $VbsCode = "CreateObject(`"WScript.Shell`").Run `"powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"`"$PopupScript`"`"`", 0, False"
-                                    $VbsCode | Out-File -FilePath $VbsPath -Force -Encoding ascii
-                                    
-                                    Start-Process "wscript.exe" -ArgumentList "`"$VbsPath`""
-                                    $Result = "Message displayed via VBS Stealth for session: $ActiveUser"
+                                    Log-Message "Direct Session Popup: Launching HTA..."
+                                    Start-Process "mshta.exe" -ArgumentList "`"$HtaPath`""
+                                    $Result = "Message displayed via HTA in current session: $ActiveUser"
                                 } elseif ($ActiveUser) {
-                                    Log-Message "Elevated Session Popup: Attempting Scheduled Task via VBS..."
+                                    Log-Message "Elevated Session Popup: Launching HTA via Scheduled Task..."
                                     try {
-                                        $VbsPath = "$InstallDir\launcher_task.vbs"
-                                        $VbsCode = "CreateObject(`"WScript.Shell`").Run `"powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"`"$PopupScript`"`"`", 0, False"
-                                        $VbsCode | Out-File -FilePath $VbsPath -Force -Encoding ascii
-
-                                        # Scheduled Task executes wscript.exe which is a GUI host (no console)
-                                        $Action = New-ScheduledTaskAction -Execute "wscript.exe" -Argument "`"$VbsPath`""
+                                        $Action = New-ScheduledTaskAction -Execute "mshta.exe" -Argument "`"$HtaPath`""
                                         $Principal = New-ScheduledTaskPrincipal -UserId $ActiveUser -LogonType Interactive
                                         $Settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
                                         
-                                        $TaskName = "UnifiedAgentPopup_$(Get-Random)"
+                                        $TaskName = "UnifiedAgentHTA_$(Get-Random)"
                                         Register-ScheduledTask -TaskName $TaskName -Action $Action -Principal $Principal -Settings $Settings -Force | Out-Null
                                         Start-ScheduledTask -TaskName $TaskName | Out-Null
                                         
                                         Start-Sleep -Seconds 5
                                         Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false | Out-Null
-                                        $Result = "Message queued via VBS Scheduled Task for: $ActiveUser"
+                                        $Result = "Message queued via HTA Scheduled Task for: $ActiveUser"
                                     } catch {
-                                        $Result = "Error: Failed to register popup task. Details: $($_.Exception.Message)"
+                                        $Result = "Error: Failed to register HTA task. Details: $($_.Exception.Message)"
                                     }
                                 } else {
-                                    $Result = "Skipped UI Message: No active user logged in."
+                                    $Result = "Skipped HTA Message: No active user logged in."
                                 }
                                 
                                 # Send initial ACK status
