@@ -550,20 +550,92 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
 
                                     <div>
                                         <p className="font-bold mb-1">Email Forwarding:</p>
-                                        <p>IT support will set up necessary email forwarding to ensure important communications are redirected appropriately.</p>
+                                        <p>The Equinox Group Holdings Inc. IT support will set up necessary email forwarding to ensure that any important communications are redirected to the appropriate personnel.</p>
+                                    </div>
+
+                                    <div>
+                                        <p className="font-bold mb-1">Final Checklist</p>
+                                        <p className="mb-2">The Equinox Group Holdings Inc. IT support will provide the departing employee with a final checklist to ensure all steps are completed. This checklist will include:</p>
+                                        <ul className="list-disc pl-8 space-y-1">
+                                            <li>Confirm uninstallation of Euphoria app and Office products</li>
+                                            <li>Confirm return of all company property</li>
+                                            <li>Verify data removal from personal devices</li>
+                                            <li>Confirm email forwarding setup</li>
+                                        </ul>
                                     </div>
                                 </section>
 
-                                <div className="pt-8 border-t-2 border-slate-900 space-y-6">
+                                <div className="pt-8 border-t-2 border-slate-900 space-y-8 text-sm">
                                     <h5 className="font-bold text-lg">Data & System Access After Offboarding</h5>
                                     
-                                    <div className="space-y-4 text-xs bg-slate-50 p-6 rounded-xl border border-slate-100 italic">
-                                        <p><strong>1. Email:</strong> Mailbox disabled on last day; manager/successor receives access; retained for 12 months.</p>
-                                        <p><strong>2. OneDrive:</strong> Ownership transferred to manager; access for 7 days; deleted thereafter.</p>
-                                        <p><strong>3. Teams:</strong> Private chats retained for compliance; channel files remain in team; shared files follow OneDrive rules.</p>
-                                        <p><strong>4. SharePoint:</strong> Documents remain on sites; access removed from groups/sites.</p>
-                                        <p><strong>5. SaaS Platforms:</strong> Access fully removed (MS365, Euphoria, Fusion etc).</p>
-                                        <p><strong>6. Personal Data:</strong> Personal files may be exported only after IT review and formal approval.</p>
+                                    <div className="space-y-6">
+                                        <div>
+                                            <p className="font-bold mb-1">1. Email (Outlook / Microsoft 365 Mailbox)</p>
+                                            <p className="font-bold text-[10px] uppercase text-slate-500 mb-1">What happens:</p>
+                                            <ul className="list-disc pl-8 space-y-1 mb-2">
+                                                <li>Your mailbox will be disabled on your last working day.</li>
+                                                <li>Your manager or designated successor will receive full access for business continuity.</li>
+                                                <li>Auto reply and forwarding (if applicable) will be configured according to company policy.</li>
+                                                <li>Your mailbox will be retained for 12 months according to Equinox Group Holdings, Inc.'s retention policies.</li>
+                                            </ul>
+                                            <p className="italic text-slate-500">You will no longer have access after offboarding is completed.</p>
+                                        </div>
+
+                                        <div>
+                                            <p className="font-bold mb-1">2. OneDrive Files</p>
+                                            <p className="font-bold text-[10px] uppercase text-slate-500 mb-1">What happens:</p>
+                                            <ul className="list-disc pl-8 space-y-1 mb-2">
+                                                <li>Ownership of your OneDrive files will be transferred to your manager.</li>
+                                                <li>Your manager will have access for 7 days to review and relocate required business related files.</li>
+                                                <li>After the retention period, your OneDrive and its contents will be deleted following company policy.</li>
+                                            </ul>
+                                            <p className="italic text-slate-500">Personal files may be exported only after IT review and formal approval.</p>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            <p className="font-bold mb-1">3. Teams Chats & Teams Files</p>
+                                            <div>
+                                                <p className="font-bold text-[10px] uppercase text-slate-500 mb-1">Teams Chats:</p>
+                                                <ul className="list-disc pl-8 space-y-1">
+                                                    <li>Private Teams chats remain stored according to compliance and retention rules.</li>
+                                                    <li>No one receives direct access to your private chat history unless legally required.</li>
+                                                </ul>
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-[10px] uppercase text-slate-500 mb-1">Teams Files:</p>
+                                                <ul className="list-disc pl-8 space-y-1">
+                                                    <li>Files in Teams channels remain accessible to the team.</li>
+                                                    <li>Files shared in private chats follow OneDrive transfer rules.</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <p className="font-bold mb-1">4. SharePoint & Network Drives</p>
+                                            <ul className="list-disc pl-8 space-y-1">
+                                                <li>All SharePoint documents remain part of their respective sites.</li>
+                                                <li>Access permissions will be updated to remove you from shared folders, groups, and sites.</li>
+                                            </ul>
+                                        </div>
+
+                                        <div>
+                                            <p className="font-bold mb-1">5. Applications & SaaS Platforms</p>
+                                            <p className="font-bold text-[10px] uppercase text-slate-500 mb-1">For any third party systems (e.g., MS365, Euphoria, Payspace, Fusion):</p>
+                                            <ul className="list-disc pl-8 space-y-1">
+                                                <li>Your access will be fully removed.</li>
+                                                <li>Active tasks or projects may be reassigned to your department.</li>
+                                                <li>All content created remains the intellectual property of Equinox Group Holdings, Inc.</li>
+                                            </ul>
+                                        </div>
+
+                                        <div>
+                                            <p className="font-bold mb-1">6. Personal Data on Company Devices</p>
+                                            <p className="font-bold text-[10px] uppercase text-slate-500 mb-1">If you stored personal files on company equipment:</p>
+                                            <ul className="list-disc pl-8 space-y-1">
+                                                <li>You may request a Personal Data Review before your last day.</li>
+                                                <li>IT will help identify items that may be transferred, while ensuring no corporate data is removed.</li>
+                                            </ul>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
