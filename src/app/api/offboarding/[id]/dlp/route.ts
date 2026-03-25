@@ -19,8 +19,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         // Note: Using search/filter to find devices assigned to this userId
         let serials: string[] = [];
         try {
-            const deviceRes = await client.api('/deviceManagement/managedDevices')
-                .filter(`userId eq '${userId}'`)
+            const deviceRes = await client.api(`/users/${userId}/managedDevices`)
                 .select('serialNumber')
                 .get();
             

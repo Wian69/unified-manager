@@ -10,8 +10,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         // 1. Get managed devices for this user from Graph
         let serials: string[] = [];
         try {
-            const deviceRes = await client.api('/deviceManagement/managedDevices')
-                .filter(`userId eq '${userId}'`)
+            const deviceRes = await client.api(`/users/${userId}/managedDevices`)
                 .select('serialNumber')
                 .get();
             
