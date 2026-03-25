@@ -166,10 +166,16 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                 { t: "Email Forwarding:", d: "IT support will set up necessary email forwarding to ensure important communications are redirected appropriately." }
             ];
 
+            const lineHeight = 5;
             procedureItems.forEach(item => {
-                policyPdf.setFont("helvetica", "bold"); policyPdf.text(item.t, 20, y); y += 5;
-                policyPdf.setFont("helvetica", "normal"); policyPdf.text(item.d, 20, y, { maxWidth: 170 });
-                y += 10;
+                policyPdf.setFont("helvetica", "bold"); 
+                policyPdf.text(item.t, 20, y); 
+                y += lineHeight;
+                
+                policyPdf.setFont("helvetica", "normal");
+                const lines = policyPdf.splitTextToSize(item.d, 170);
+                policyPdf.text(lines, 20, y);
+                y += (lines.length * lineHeight) + 4; // Add padding after block
             });
 
             // Data Retention
@@ -184,10 +190,15 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                 "5. SaaS Platforms: Access fully removed from all platforms (MS365, Euphoria, Fusion etc).",
                 "6. Personal Data: Personal files may be exported ONLY after IT review and formal approval."
             ];
-            retentionPoints.forEach(p => { policyPdf.text(p, 20, y); y += 5; });
+            const pointsLineHeight = 4.5;
+            retentionPoints.forEach(pt => {
+                const lines = policyPdf.splitTextToSize(pt, 170);
+                policyPdf.text(lines, 20, y);
+                y += (lines.length * pointsLineHeight) + 2;
+            });
 
             // Signatures
-            y = 230;
+            y = Math.max(y + 10, 230); // At least 230 or after content
             policyPdf.setFont("helvetica", "bold"); policyPdf.setFontSize(11); policyPdf.text("Formal Acknowledgment", 20, y); y += 20;
             policyPdf.line(20, y, 90, y); policyPdf.line(120, y, 190, y); y += 5;
             policyPdf.setFontSize(8); 
@@ -225,10 +236,15 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                 ["Device:", userDetails.device],
                 ["Last Day:", userDetails.lastDay]
             ];
+            const infoLineHeight = 5;
             userInfo.forEach(info => {
-                checklistPdf.setFont("helvetica", "bold"); checklistPdf.text(info[0], 25, y);
-                checklistPdf.setFont("helvetica", "normal"); checklistPdf.text(info[1] || "---", 60, y);
-                y += 7;
+                checklistPdf.setFont("helvetica", "bold"); 
+                checklistPdf.text(info[0], 25, y);
+                
+                checklistPdf.setFont("helvetica", "normal");
+                const valLines = checklistPdf.splitTextToSize(info[1] || "---", 120);
+                checklistPdf.text(valLines, 60, y);
+                y += Math.max(7, valLines.length * infoLineHeight + 2);
             });
 
             // IT Admin Section
@@ -245,9 +261,13 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                 [`Device Login Pin:`, itAdmin.devicePin || "---"]
             ];
             adminRows.forEach(row => {
-                checklistPdf.setFont("helvetica", "normal"); checklistPdf.text(row[0], 25, y);
-                checklistPdf.setFont("helvetica", "bold"); checklistPdf.text(row[1], 80, y);
-                y += 6;
+                checklistPdf.setFont("helvetica", "normal"); 
+                checklistPdf.text(row[0], 25, y);
+                
+                checklistPdf.setFont("helvetica", "bold");
+                const valLines = checklistPdf.splitTextToSize(row[1] || "---", 100);
+                checklistPdf.text(valLines, 80, y);
+                y += Math.max(7, valLines.length * infoLineHeight + 1);
             });
 
             // Checklist Verification (Section 1 & 2)

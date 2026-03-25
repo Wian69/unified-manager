@@ -66,7 +66,8 @@ export default function SignaturePad({ onSave, label }: SignaturePadProps) {
         const canvas = canvasRef.current;
         const ctx = canvas?.getContext('2d');
         if (canvas && ctx) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
             setIsEmpty(true);
             onSave("");
         }
@@ -77,6 +78,10 @@ export default function SignaturePad({ onSave, label }: SignaturePadProps) {
         if (canvas) {
             const ctx = canvas.getContext('2d');
             if (ctx) {
+                // Initialize white background for JPEG support
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
                 ctx.strokeStyle = '#000000';
                 ctx.lineWidth = 1.5; // Slightly thinner for smaller canvas
                 ctx.lineCap = 'round';
