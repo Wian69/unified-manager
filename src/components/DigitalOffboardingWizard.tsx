@@ -14,6 +14,7 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
     const [step, setStep] = useState(1);
     const [uploading, setUploading] = useState(false);
     const [status, setStatus] = useState<string | null>(null);
+    const [links, setLinks] = useState<string[]>([]);
     const [policySignature, setPolicySignature] = useState("");
     const [adminSignature, setAdminSignature] = useState("");
 
@@ -480,11 +481,14 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
             const data = await res.json();
 
             if (data.success) {
+                if (data.links) setLinks(data.links);
                 setStatus("✅ Offboarding Complete!");
                 setTimeout(() => {
-                    onComplete();
-                    onClose();
-                }, 2000);
+                    if (!data.links) {
+                        onComplete();
+                        onClose();
+                    }
+                }, 5000); // Wait longer if links are shown
             } else {
                 setStatus("❌ " + (data.details || data.error));
             }
@@ -833,7 +837,7 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                                     <div className="pt-2">
                                         <p className="text-[10px] text-slate-500 font-bold uppercase mb-3">Company Data Removal Confirmation</p>
                                         <div className="flex gap-4">
-                                            {["Yes", "No", "Retained till specified"].map(opt => (
+                                            {["Yes", "No", "Retrain till specified"].map(opt => (
                                                 <label key={opt} className="flex items-center gap-2 cursor-pointer group">
                                                     <input 
                                                         type="radio" 
@@ -891,10 +895,30 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                                     <div className={`text-2xl font-black uppercase tracking-tighter ${status?.includes('✅') ? 'text-emerald-400' : 'text-white'}`}>
                                         {status || "Ready to Finalize"}
                                     </div>
+                                    
+                                    {links.length > 0 && (
+                                        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 max-w-sm mx-auto animate-in fade-in zoom-in-95">
+                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest text-center">Reference Documents Created:</p>
+                                            <div className="space-y-2">
+                                                {links.map((link, i) => (
+                                                    <a key={i} href={link} target="_blank" rel="noopener noreferrer" className="block p-3 bg-slate-800 hover:bg-slate-700 text-blue-400 text-xs font-bold rounded-xl transition-all border border-blue-500/20 text-center truncate italic underline">
+                                                        View {i === 0 ? "Policy" : "Checklist"} in SharePoint
+                                                    </a>
+                                                ))}
+                                            </div>
+                                            <button 
+                                                onClick={() => { onComplete(); onClose(); }}
+                                                className="w-full mt-4 py-4 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl transition-colors"
+                                            >
+                                                Finalize & Exit Wizard
+                                            </button>
+                                        </div>
+                                    )}
+
                                     {!status?.includes('✅') && (
                                         <button 
                                             onClick={handleSubmit}
-                                            className="px-12 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-lg font-black uppercase tracking-widest shadow-2xl shadow-blue-600/20 active:scale-95 transition-all text-center flex items-center justify-center gap-3"
+                                            className="px-12 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-lg font-black uppercase tracking-widest shadow-2xl shadow-blue-600/20 active:scale-95 transition-all text-center flex items-center justify-center gap-3 mx-auto"
                                         >
                                             <UploadCloud size={24} /> Finalize Offboarding
                                         </button>

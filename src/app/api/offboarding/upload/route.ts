@@ -65,50 +65,59 @@ export async function POST(request: Request) {
                 return NextResponse.json({ error: "Both Policy and Checklist files are required" }, { status: 400 });
             }
 
-            // --- AUTO-ENSURE FOLDER EXISTS ---
+            // --- 1. ENSURE FOLDER EXISTS & GET ITS ID ---
+            let userFolderId = "";
             try {
+                console.log(`[ARCHIVAL] Locating/Creating folder: ${sanitizedUserName}`);
                 try {
-                    await client.api(userFolderRequestPath).get();
+                    const folderMeta = await client.api(userFolderRequestPath).get();
+                    userFolderId = folderMeta.id;
+                    console.log(`[ARCHIVAL] Found existing folder ID: ${userFolderId}`);
                 } catch (e: any) {
                     if (e.code === 'itemNotFound') {
-                        await client.api(`/drives/${DRIVE_ID}/items/${BASE_FOLDER_ID}/children`).post({
+                        const newFolder = await client.api(`/drives/${DRIVE_ID}/items/${BASE_FOLDER_ID}/children`).post({
                             name: sanitizedUserName,
                             folder: {},
                             "@microsoft.graph.conflictBehavior": "fail"
                         });
-                        console.log(`[ARCHIVAL] Created missing folder for ${sanitizedUserName}`);
+                        userFolderId = newFolder.id;
+                        console.log(`[ARCHIVAL] Created new folder ID: ${userFolderId}`);
                     } else {
                         throw e;
                     }
                 }
             } catch (folderErr: any) {
-                console.error('[SHAREPOINT] Auto-Folder Error:', folderErr.message);
-                return NextResponse.json({ error: "Failed to ensure SharePoint folder exists", details: folderErr.message }, { status: 500 });
+                console.error('[SHAREPOINT] Folder Resolution Error:', folderErr.message);
+                return NextResponse.json({ error: "Failed to resolve SharePoint folder", details: folderErr.message }, { status: 500 });
             }
-            // ---------------------------------
 
             const dateStr = new Date().toISOString().split('T')[0];
+            const fileResults: any[] = [];
             
-            // Helper to upload to Graph
+            // --- 2. UPLOAD FILES BY ID ---
             const uploadFile = async (file: File, prefix: string) => {
                 const ext = file.name.split('.').pop() || "pdf";
                 const customName = `${prefix} [${dateStr}].${ext}`;
                 const bytes = await file.arrayBuffer();
                 const buffer = Buffer.from(bytes);
 
-                // Use simple upload for files < 4MB (Standard for these docs)
-                console.log(`[ARCHIVAL] Uploading ${customName} (${Math.round(buffer.length / 1024)} KB)`);
-                await client.api(`${userFolderRequestPath}/${customName}:/content`)
+                console.log(`[ARCHIVAL] Uploading ${customName} (${Math.round(buffer.length / 1024)} KB) to folder ${userFolderId}`);
+                
+                // Upload by parent ID + filename
+                const uploadResult = await client.api(`/drives/${DRIVE_ID}/items/${userFolderId}:/${customName}:/content`)
                     .put(buffer);
                 
-                return customName;
+                return { name: customName, webUrl: uploadResult.webUrl };
             };
 
             try {
-                const policyName = await uploadFile(policyFile, "EQN IT Exit Policy");
-                const checklistName = await uploadFile(checklistFile, "EQN IT Exit Checklist");
+                const res1 = await uploadFile(policyFile, "EQN IT Exit Policy");
+                const res2 = await uploadFile(checklistFile, "EQN IT Exit Checklist");
+                fileResults.push(res1, res2);
 
-                // Update Watchlist Status to "Offboarding Complete"
+                console.log(`[ARCHIVAL] Successfully uploaded 2 files to SharePoint`);
+
+                // --- 3. UPDATE WATCHLIST STATUS ---
                 try {
                     const watchlist = await getWatchlist();
                     const updatedWatchlist = watchlist.map((u: any) => {
@@ -118,19 +127,19 @@ export async function POST(request: Request) {
                         return u;
                     });
                     await saveWatchlist(updatedWatchlist);
-                    console.log(`[ARCHIVAL] Updated status for ${userName} to 'Offboarding Complete'`);
+                    console.log(`[ARCHIVAL] Watchlist status updated for ${userName}`);
                 } catch (dbErr) {
-                    console.error('[ARCHIVAL] Failed to update watchlist status:', dbErr);
-                    // Don't fail the whole request if only the DB update fails
+                    console.error('[ARCHIVAL] DB status update failed:', dbErr);
                 }
 
                 return NextResponse.json({ 
                     success: true, 
-                    message: "Documents archived to SharePoint successfully",
-                    files: [policyName, checklistName]
+                    message: "Archived to SharePoint successfully",
+                    files: fileResults.map(f => f.name),
+                    links: fileResults.map(f => f.webUrl)
                 });
             } catch (err: any) {
-                console.error('[SHAREPOINT] Upload Error:', err.message);
+                console.error('[SHAREPOINT] Upload Task Error:', err.message);
                 return NextResponse.json({ error: "Failed to upload to SharePoint", details: err.message }, { status: 500 });
             }
         }
