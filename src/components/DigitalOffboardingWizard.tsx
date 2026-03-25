@@ -134,7 +134,7 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
             const checkPageBreak = (doc: any, currentY: number, needed: number) => {
                 if (currentY + needed > pageHeight - 20) {
                     doc.addPage();
-                    return 20; // Reset Y to top margin
+                    return 30; // Reset Y to safe top margin
                 }
                 return currentY;
             };
@@ -142,10 +142,7 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
             // Header
             if (logoBase64) {
                 policyPdf.addImage(logoBase64, 'PNG', margin, 12, 45, 18, undefined, 'FAST');
-                policyPdf.setFont("helvetica", "bold");
-                policyPdf.setFontSize(14);
-                policyPdf.setTextColor("#787878"); // Gray: 120, 120, 120
-                policyPdf.text("Outsourced Services", margin + 1, 32);
+                // Removed manual "Outsourced Services" text to prevent overlap with logo
                 policyPdf.setTextColor("#000000"); // Black
             }
             policyPdf.setFont("helvetica", "bold");
@@ -313,18 +310,26 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                 y += 6;
             });
 
-            // Signatures Section
-            y = checkPageBreak(policyPdf, y, 50);
-            y += 10;
-            policyPdf.setFont("helvetica", "bold"); policyPdf.setFontSize(12); policyPdf.text("Formal Acknowledgment", margin, y); y += 15;
+            // Formal Acknowledgment Section
+            y = checkPageBreak(policyPdf, y, 60);
+            y += 25; // More spacing from content
+            policyPdf.setFont("helvetica", "bold"); 
+            policyPdf.setFontSize(12); 
+            policyPdf.text("Formal Acknowledgment", margin, y); 
+            y += 35; // Large space for signatures
+            
             policyPdf.setLineWidth(0.5);
-            policyPdf.line(margin, y, margin + 70, y); policyPdf.line(pageWidth - margin - 70, y, pageWidth - margin, y); y += 6;
+            policyPdf.line(margin, y, margin + 70, y); 
+            policyPdf.line(pageWidth - margin - 70, y, pageWidth - margin, y); 
+            y += 6;
+            
             policyPdf.setFontSize(9); 
             policyPdf.text("Equinox Group Holdings Inc. IT Support", margin, y);
             policyPdf.text(user.displayName, pageWidth - margin, y, { align: "right" });
             
-            policyPdf.addImage(adminSignature, 'JPEG', margin, y - 22, 50, 15, undefined, 'FAST');
-            policyPdf.addImage(policySignature, 'JPEG', pageWidth - margin - 50, y - 22, 50, 15, undefined, 'FAST');
+            // Signatures ABOVE lines, no overlap with title
+            policyPdf.addImage(adminSignature, 'JPEG', margin, y - 25, 50, 18, undefined, 'FAST');
+            policyPdf.addImage(policySignature, 'JPEG', pageWidth - margin - 50, y - 25, 50, 18, undefined, 'FAST');
 
             const policyBlob = policyPdf.output('blob');
 
@@ -337,16 +342,18 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                 compress: true
             });
             
-            y = 20;
-            // Header
-            if (logoBase64) checklistPdf.addImage(logoBase64, 'PNG', margin, 15, 35, 12, undefined, 'FAST');
+            // Header (Unified with Policy)
+            if (logoBase64) {
+                checklistPdf.addImage(logoBase64, 'PNG', margin, 12, 45, 18, undefined, 'FAST');
+            }
             checklistPdf.setFont("helvetica", "bold");
-            checklistPdf.setFontSize(16);
-            checklistPdf.text("IT Exit Interview Checklist", pageWidth - margin, 25, { align: "right" });
-            checklistPdf.line(margin, 32, pageWidth - margin, 32);
+            checklistPdf.setFontSize(22);
+            checklistPdf.text("IT Exit Interview Checklist", pageWidth - margin, 27, { align: "right" });
+            checklistPdf.setLineWidth(0.8);
+            checklistPdf.line(margin, 38, pageWidth - margin, 38);
 
             // User Info Section
-            y = 45;
+            y = 48;
             checklistPdf.setFontSize(10); 
             checklistPdf.text("User Information", margin, y); y += 4;
             checklistPdf.line(margin, y, pageWidth - margin, y); y += 6;
@@ -450,17 +457,24 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
             });
 
             // Final Signatures
-            y = checkPageBreak(checklistPdf, y, 50);
-            y += 15;
-            checklistPdf.setFont("helvetica", "bold"); checklistPdf.setFontSize(12); checklistPdf.text("Formal Acknowledgment", margin, y); y += 15;
+            y = checkPageBreak(checklistPdf, y, 60);
+            y += 20;
+            checklistPdf.setFont("helvetica", "bold"); 
+            checklistPdf.setFontSize(12); 
+            checklistPdf.text("Formal Acknowledgment", margin, y); 
+            y += 35;
+            
             checklistPdf.setLineWidth(0.5);
-            checklistPdf.line(margin, y, margin + 70, y); checklistPdf.line(pageWidth - margin - 70, y, pageWidth - margin, y); y += 6;
+            checklistPdf.line(margin, y, margin + 70, y); 
+            checklistPdf.line(pageWidth - margin - 70, y, pageWidth - margin, y); 
+            y += 6;
+            
             checklistPdf.setFontSize(9); 
             checklistPdf.text("Equinox Group Holdings Inc. IT Support", margin, y);
             checklistPdf.text(user.displayName, pageWidth - margin, y, { align: "right" });
             
-            checklistPdf.addImage(adminSignature, 'JPEG', margin, y - 22, 50, 15, undefined, 'FAST');
-            checklistPdf.addImage(policySignature, 'JPEG', pageWidth - margin - 50, y - 22, 50, 15, undefined, 'FAST');
+            checklistPdf.addImage(adminSignature, 'JPEG', margin, y - 25, 50, 18, undefined, 'FAST');
+            checklistPdf.addImage(policySignature, 'JPEG', pageWidth - margin - 50, y - 25, 50, 18, undefined, 'FAST');
 
             const checklistBlob = checklistPdf.output('blob');
 
