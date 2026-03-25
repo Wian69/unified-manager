@@ -12,6 +12,33 @@ export default function EmailTraceModule({ userId, userDisplayName, sinceDate, o
     const [endDate, setEndDate] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
     const [expandedEmailId, setExpandedEmailId] = useState<string | null>(null);
+    const [fullMessages, setFullMessages] = useState<Record<string, any>>({});
+    const [fetchingFull, setFetchingFull] = useState<string | null>(null);
+
+    const toggleExpand = async (emailId: string) => {
+        if (expandedEmailId === emailId) {
+            setExpandedEmailId(null);
+            return;
+        }
+
+        setExpandedEmailId(emailId);
+        
+        // Fetch full message if not already cached
+        if (!fullMessages[emailId]) {
+            setFetchingFull(emailId);
+            try {
+                const res = await fetch(`/api/email/message/${emailId}?userId=${userId}`);
+                const result = await res.json();
+                if (result.data) {
+                    setFullMessages(prev => ({ ...prev, [emailId]: result.data }));
+                }
+            } catch (err) {
+                console.error("Failed to fetch full message:", err);
+            } finally {
+                setFetchingFull(null);
+            }
+        }
+    };
 
     const fetchEmails = async () => {
         setLoading(true);
@@ -180,8 +207,8 @@ export default function EmailTraceModule({ userId, userDisplayName, sinceDate, o
                                 {filteredEmails.map((email: any) => (
                                     <React.Fragment key={email.id}>
                                         <tr 
-                                            className="hover:bg-blue-500/5 cursor-pointer transition-colors group"
-                                            onClick={() => setExpandedEmailId(expandedEmailId === email.id ? null : email.id)}
+                                            className={`hover:bg-blue-500/5 cursor-pointer transition-colors group ${expandedEmailId === email.id ? 'bg-blue-500/5' : ''}`}
+                                            onClick={() => toggleExpand(email.id)}
                                         >
                                             <td className="px-8 py-6">
                                                 <div className="space-y-1">
@@ -214,38 +241,94 @@ export default function EmailTraceModule({ userId, userDisplayName, sinceDate, o
                                         {expandedEmailId === email.id && (
                                             <tr className="bg-blue-500/5">
                                                 <td colSpan={4} className="px-8 py-8 border-b border-slate-800/40 animate-in slide-in-from-top-2 duration-300">
-                                                    <div className="space-y-6">
-                                                        <div>
-                                                            <p className="text-[10px] text-blue-400 uppercase font-black tracking-widest mb-3">Message Preview</p>
-                                                            <div className="bg-slate-950 p-6 rounded-2xl border border-slate-800 text-slate-300 text-sm leading-relaxed whitespace-pre-wrap font-sans">
-                                                                {email.bodyPreview}...
-                                                            </div>
+                                                    {fetchingFull === email.id ? (
+                                                        <div className="flex flex-col items-center justify-center py-10 text-slate-500 gap-3">
+                                                            <RefreshCw size={24} className="animate-spin text-blue-500" />
+                                                            <p className="font-mono text-[9px] uppercase tracking-widest">Loading Full Message...</p>
                                                         </div>
-                                                        
-                                                        {email.hasAttachments && email.attachments && (
-                                                            <div>
-                                                                <p className="text-[10px] text-emerald-400 uppercase font-black tracking-widest mb-3 flex items-center gap-2">
-                                                                    <Paperclip size={10} />
-                                                                    Attachments Detected
-                                                                </p>
-                                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                                    {email.attachments.map((att: any, idx: number) => (
-                                                                        <div key={idx} className="flex items-center justify-between p-4 bg-slate-900 rounded-xl border border-slate-800 hover:border-emerald-500/30 transition-all">
-                                                                            <div className="flex items-center gap-3">
-                                                                                <div className="p-2 bg-emerald-500/10 rounded-lg">
-                                                                                    <Paperclip size={14} className="text-emerald-500" />
-                                                                                </div>
-                                                                                <div>
-                                                                                    <p className="text-xs font-bold text-slate-200">{att.name}</p>
-                                                                                    <p className="text-[10px] text-slate-500 uppercase">{(att.size / 1024).toFixed(1)} KB • {att.contentType.split('/')[1]}</p>
-                                                                                </div>
+                                                    ) : fullMessages[email.id] ? (
+                                                        <div className="space-y-8">
+                                                            {/* Metadata */}
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-900/50 p-6 rounded-2xl border border-slate-800">
+                                                                <div className="space-y-3">
+                                                                    <div>
+                                                                        <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">To Recipients</p>
+                                                                        <div className="flex flex-wrap gap-2">
+                                                                            {fullMessages[email.id].toRecipients?.map((r: any, idx: number) => (
+                                                                                <span key={idx} className="px-2 py-1 bg-slate-800 text-slate-300 text-[11px] rounded border border-slate-700">{r.emailAddress.name || r.emailAddress.address}</span>
+                                                                            ))}
+                                                                        </div>
+                                                                    </div>
+                                                                    {fullMessages[email.id].ccRecipients?.length > 0 && (
+                                                                        <div>
+                                                                            <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">CC Recipients</p>
+                                                                            <div className="flex flex-wrap gap-2">
+                                                                                {fullMessages[email.id].ccRecipients.map((r: any, idx: number) => (
+                                                                                    <span key={idx} className="px-2 py-1 bg-slate-800 text-slate-300 text-[11px] rounded border border-slate-700">{r.emailAddress.name || r.emailAddress.address}</span>
+                                                                                ))}
                                                                             </div>
                                                                         </div>
-                                                                    ))}
+                                                                    )}
+                                                                </div>
+                                                                <div className="space-y-3">
+                                                                    <div>
+                                                                        <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">Subject</p>
+                                                                        <p className="text-sm font-bold text-white">{fullMessages[email.id].subject}</p>
+                                                                    </div>
+                                                                    <div>
+                                                                        <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">Sent Date</p>
+                                                                        <p className="text-sm text-slate-300">{formatDate(fullMessages[email.id].sentDateTime)}</p>
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                        )}
-                                                    </div>
+
+                                                            {/* Body */}
+                                                            <div>
+                                                                <p className="text-[10px] text-blue-400 uppercase font-black tracking-widest mb-3">Message Body</p>
+                                                                <div className="bg-white rounded-2xl border border-slate-800 overflow-hidden shadow-2xl">
+                                                                    {fullMessages[email.id].body?.contentType === 'html' ? (
+                                                                        <div 
+                                                                            className="p-8 text-black overflow-x-auto min-h-[300px]"
+                                                                            dangerouslySetInnerHTML={{ __html: fullMessages[email.id].body.content }}
+                                                                        />
+                                                                    ) : (
+                                                                        <div className="p-8 text-black text-sm leading-relaxed whitespace-pre-wrap font-sans min-h-[100px]">
+                                                                            {fullMessages[email.id].body?.content || "No content found."}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            {/* Attachments */}
+                                                            {fullMessages[email.id].hasAttachments && fullMessages[email.id].attachments && (
+                                                                <div>
+                                                                    <p className="text-[10px] text-emerald-400 uppercase font-black tracking-widest mb-3 flex items-center gap-2">
+                                                                        <Paperclip size={10} />
+                                                                        Attachments ({fullMessages[email.id].attachments.length})
+                                                                    </p>
+                                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                                                        {fullMessages[email.id].attachments.map((att: any, idx: number) => (
+                                                                            <div key={idx} className="flex items-center justify-between p-4 bg-slate-900 rounded-xl border border-slate-800 group/att">
+                                                                                <div className="flex items-center gap-3">
+                                                                                    <div className="p-2 bg-emerald-500/10 rounded-lg group-hover/att:scale-110 transition-transform">
+                                                                                        <Paperclip size={14} className="text-emerald-500" />
+                                                                                    </div>
+                                                                                    <div className="min-w-0">
+                                                                                        <p className="text-xs font-bold text-slate-200 truncate pr-2">{att.name}</p>
+                                                                                        <p className="text-[10px] text-slate-500 uppercase">{(att.size / 1024).toFixed(1)} KB • {att.contentType.split('/')[1]}</p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <div className="p-10 text-center text-rose-500 font-black uppercase tracking-widest text-xs">
+                                                            Error loading full message.
+                                                        </div>
+                                                    )}
                                                 </td>
                                             </tr>
                                         )}
