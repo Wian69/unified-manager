@@ -531,8 +531,8 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
             </div>
 
             {/* Content Area */}
-            <div className="flex-1 overflow-y-auto p-6 md:p-12 pb-32">
-                <div className="max-w-2xl mx-auto space-y-12">
+            <div className="flex-1 overflow-y-auto px-4 md:px-12 py-8 pb-32">
+                <div className="max-w-2xl mx-auto space-y-10">
                     
                     {/* STEP 1: POLICY REVIEW */}
                     {step === 1 && (
@@ -550,15 +550,23 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                                     <h4 className="text-xl font-bold uppercase tracking-tight">IT Offboarding Policy</h4>
                                 </div>
 
-                                <div className="grid grid-cols-[140px_1fr] gap-x-4 gap-y-2 text-xs border border-slate-900 p-6 mb-8">
-                                    <span className="font-bold">Policy Owner:</span>
-                                    <span>Group IT Support Specialist</span>
-                                    <span className="font-bold">Subject Personnel:</span>
-                                    <span className="font-semibold text-blue-800">{user.displayName}</span>
-                                    <span className="font-bold">Job Title:</span>
-                                    <span>{userDetails.jobTitle}</span>
-                                    <span className="font-bold">Last Working Day:</span>
-                                    <span className="font-semibold">{userDetails.lastDay}</span>
+                                <div className="flex flex-col md:grid md:grid-cols-[140px_1fr] gap-x-6 gap-y-4 text-sm border border-slate-900 bg-slate-950/50 p-6 mb-8 rounded-xl">
+                                    <div className="flex flex-col md:contents">
+                                        <span className="text-[10px] uppercase text-slate-500 font-bold tracking-widest md:text-xs md:text-slate-900 md:normal-case md:tracking-normal">Policy Owner</span>
+                                        <span className="font-semibold text-slate-300 md:text-slate-900">Group IT Support Specialist</span>
+                                    </div>
+                                    <div className="flex flex-col md:contents">
+                                        <span className="text-[10px] uppercase text-slate-500 font-bold tracking-widest md:text-xs md:text-slate-900 md:normal-case md:tracking-normal">Subject Personnel</span>
+                                        <span className="font-bold text-blue-400 md:text-blue-800">{user.displayName}</span>
+                                    </div>
+                                    <div className="flex flex-col md:contents">
+                                        <span className="text-[10px] uppercase text-slate-500 font-bold tracking-widest md:text-xs md:text-slate-900 md:normal-case md:tracking-normal">Job Title</span>
+                                        <span className="text-slate-300 md:text-slate-900">{userDetails.jobTitle}</span>
+                                    </div>
+                                    <div className="flex flex-col md:contents">
+                                        <span className="text-[10px] uppercase text-slate-500 font-bold tracking-widest md:text-xs md:text-slate-900 md:normal-case md:tracking-normal">Last Working Day</span>
+                                        <span className="font-bold text-slate-300 md:text-slate-900">{userDetails.lastDay}</span>
+                                    </div>
                                 </div>
 
                                 <section>
@@ -960,26 +968,26 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
             </div>
 
             {/* Footer Navigation */}
-            <div className="bg-slate-900 border-t border-slate-800 p-6 flex justify-between gap-4 fixed bottom-0 left-0 right-0 z-20">
+            <div className="bg-slate-900 border-t border-slate-800 p-4 md:p-6 flex gap-3 fixed bottom-0 left-0 right-0 z-20 pb-safe">
                 {step > 1 && step < 4 && (
                     <button 
                         onClick={prev}
-                        className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-slate-800 text-slate-300 rounded-2xl font-bold uppercase tracking-widest text-[12px] hover:bg-slate-700 transition-all border border-slate-700"
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-4 bg-slate-800 text-slate-300 rounded-2xl font-bold uppercase tracking-widest text-[11px] hover:bg-slate-700 transition-all border border-slate-700 active:scale-95"
                     >
-                        <ChevronLeft size={20} /> Back
+                        <ChevronLeft size={18} /> Back
                     </button>
                 )}
                 {step < 4 && (
                     <button 
                         onClick={step === 3 ? next : next}
                         disabled={step === 2 && checklist.some(i => !i.checked)}
-                        className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[12px] transition-all ${
+                        className={`flex-[2] flex items-center justify-center gap-2 px-4 py-4 rounded-2xl font-black uppercase tracking-widest text-[11px] transition-all shadow-xl active:scale-95 ${
                             step === 2 && checklist.some(i => !i.checked)
                             ? 'bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700'
-                            : 'bg-white text-slate-900 hover:bg-slate-200 shadow-xl'
+                            : 'bg-white text-slate-900 hover:bg-slate-200'
                         }`}
                     >
-                        {step === 3 ? "Review & Finalize" : "Next Step"} <ChevronRight size={20} />
+                        {step === 3 ? "Review & Finalize" : "Next Step"} <ChevronRight size={18} />
                     </button>
                 )}
             </div>
