@@ -3,11 +3,17 @@ param(
 )
 
 # Unified Enterprise Agent (UEA)
-# Version: 1.4.8
+# Version: 1.4.9
 # Description: Professional stealth endpoint agent with premium Support GUI.
 
 $ProgressPreference = 'SilentlyContinue' # CRITICAL: Prevents console flickering during web calls
 $ErrorActionPreference = "Stop"
+
+# Ghost-Killer: Absolute Silence
+Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like "*unified-agent.ps1*" -and $_.ProcessId -ne $PID } | ForEach-Object { 
+    Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue 
+}
+
 $InstallDir = "$env:ProgramData\UnifiedAgent"
 $LogFile = "$InstallDir\agent.log"
 $ScriptPath = "$InstallDir\unified-agent.ps1"
@@ -58,7 +64,7 @@ try {
     # 1. Self-Identification
     $AgentId = try { (Get-CimInstance Win32_ComputerSystemProduct -ErrorAction SilentlyContinue).UUID } catch { "$($env:COMPUTERNAME)-$(Get-Random)" }
     $SerialNumber = try { (Get-CimInstance Win32_Bios -ErrorAction SilentlyContinue).SerialNumber } catch { "Unknown" }
-    $Version = "1.4.8"
+    $Version = "1.4.9"
     
     # 2. Persistence Check
     $TaskExists = Get-ScheduledTask -TaskName "UEA_Persistence" -ErrorAction SilentlyContinue
