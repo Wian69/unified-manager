@@ -3,7 +3,7 @@ param(
 )
 
 # Unified Enterprise Agent (UEA)
-# Version: 1.4.9
+# Version: 1.5.0
 # Description: Professional stealth endpoint agent with premium Support GUI.
 
 # 1. ENVIRONMENT SANITATION
@@ -40,7 +40,7 @@ function Install-StealthAgent {
     if (-not $IsAdmin) { return }
     try {
         if (-not (Test-Path $InstallDir)) { New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null }
-        $Config = @{ ServerUrl = $ServerUrl; Version = "1.4.9" }
+        $Config = @{ ServerUrl = $ServerUrl; Version = "1.5.0" }
         $Config | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
         
         $VbsMainPath = "$InstallDir\uea_stealth.vbs"
@@ -76,7 +76,7 @@ try {
         if ($SavedConfig) { $ServerUrl = $SavedConfig.ServerUrl }
     }
 
-    Log-Message "Agent v1.4.9 Started. ID: $AgentId"
+    Log-Message "Agent v1.5.0 Started. ID: $AgentId"
 
     # 5. HEARTBEAT LOOP
     while ($true) {
@@ -84,14 +84,14 @@ try {
             $Response = Invoke-RestMethod -Method Post -Uri "$ServerUrl/api/agent/heartbeat" -Body (ConvertTo-Json @{
                 agentId = $AgentId
                 serialNumber = $SerialNumber
-                version = "1.4.9"
+                version = "1.5.0"
                 status = "online"
                 deviceName = $env:COMPUTERNAME
                 localIp = try { (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -notlike "*Loopback*" -and $_.IPv4Address -notlike "169.254*" } | Select-Object -First 1).IPv4Address } catch { "Unknown" }
             }) -ContentType "application/json"
 
             # Upgrade Hook
-            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.4.9")) {
+            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.5.0")) {
                 Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile "$ScriptPath" -UseBasicParsing | Out-Null
                 Install-StealthAgent
                 $VbsRestart = "$InstallDir\restart.vbs"
@@ -135,7 +135,7 @@ try { `$Web = New-Object System.Net.WebClient; `$ImgBytes = `$Web.DownloadData('
 `$Disclaimer.Location = New-Object Drawing.Point(120, 55)
 `$Disclaimer.Size = New-Object Drawing.Size(350, 15)
 `$Content = New-Object Windows.Forms.Label
-`$Content.Text = '$msgContent'
+`$Content.Text = "$msgContent"
 `$Content.Font = New-Object Drawing.Font('Segoe UI', 11)
 `$Content.Location = New-Object Drawing.Point(120, 85)
 `$Content.Size = New-Object Drawing.Size(360, 100)
