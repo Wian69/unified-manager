@@ -97,11 +97,12 @@ export default function DlpModule({ userId, userDisplayName, sinceDate }: { user
         setLoading(true);
         try {
             const res = await fetch(`/api/devices/${userId}/scan`, { method: 'POST' });
-            if (!res.ok) throw new Error('Failed to trigger scan');
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to trigger scan');
             alert('Scan command queued. Results will appear in the log within 60 seconds.');
             fetchEvents();
         } catch (err: any) {
-            alert(`Error: ${err.message}`);
+            alert(`Scan Error: ${err.message}`);
         } finally {
             setLoading(false);
         }
