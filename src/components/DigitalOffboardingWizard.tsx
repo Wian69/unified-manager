@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from 'react';
-import { ShieldAlert, CheckCircle2, UploadCloud, X, ChevronRight, ChevronLeft, RefreshCw, Smartphone, ListChecks, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ShieldAlert, CheckCircle2, UploadCloud, X, ChevronRight, ChevronLeft, RefreshCw, Smartphone, ListChecks, ShieldCheck, Mail, Laptop, Shield } from 'lucide-react';
 import SignaturePad from './SignaturePad';
 
 interface DigitalOffboardingWizardProps {
@@ -16,120 +16,258 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
     const [status, setStatus] = useState<string | null>(null);
     const [policySignature, setPolicySignature] = useState("");
     const [adminSignature, setAdminSignature] = useState("");
-    
-    // Sync with DEFAULT_SECTIONS from checklist/page.tsx
+
+    const [userDetails, setUserDetails] = useState({
+        email: user.mail || user.userPrincipalName || "",
+        device: "",
+        jobTitle: user.jobTitle || "________________________",
+        lastDay: user.lastWorkingDay || new Date().toLocaleDateString()
+    });
+
+    const [itAdmin, setItAdmin] = useState({
+        sharedMailbox: "",
+        emailForward: "",
+        removeLicense: false,
+        removeFromGroups: false,
+        dataRemoval: "Yes",
+        clearMFA: false,
+        devicePin: ""
+    });
+
     const [checklist, setChecklist] = useState([
-        { id: 1, label: "Uninstall Euphoria app & Office products from all devices", checked: false },
-        { id: 2, label: "Return company-issued phone", checked: false },
-        { id: 3, label: "Return company-issued laptop & power supply", checked: false },
-        { id: 4, label: "Return peripherals (mouse, keyboard, headset, bag)", checked: false },
-        { id: 5, label: "Remove company files/emails from personal devices", checked: false },
-        { id: 6, label: "Verify no data remains on external storage", checked: false },
-        { id: 7, label: "Confirm email forwarding setup", checked: false },
-        { id: 8, label: "Clear MFA settings & remove from AD groups", checked: false },
+        // Section 1: To be completed with the User
+        { id: 1, section: 1, label: "Ensure the Euphoria app and Office products is uninstalled from all company and personal devices.", checked: false },
+        { id: 2, section: 1, label: "Return company-issued phone.", checked: false },
+        { id: 3, section: 1, label: "Return company-issued laptop.", checked: false },
+        { id: 4, section: 1, label: "Return any other equipment or materials provided by the company.", checked: false },
+        { id: 5, section: 1, label: "Remove all company-related files, emails, and applications from personal devices.", checked: false },
+        { id: 6, section: 1, label: "Verify no company data remains on any external storage devices used by the employee.", checked: false },
+        { id: 7, section: 1, label: "Confirm uninstallation of Euphoria app and Office products.", checked: false },
+        { id: 8, section: 1, label: "Confirm return of all company property.", checked: false },
+        { id: 9, section: 1, label: "Verify data removal from personal devices.", checked: false },
+        { id: 10, section: 1, label: "Confirm email forwarding setup.", checked: false },
+        
+        // Section 2: Company Assets Returned
+        { id: 101, section: 2, label: "Laptop / Desktop", checked: false },
+        { id: 102, section: 2, label: "Power supply", checked: false },
+        { id: 103, section: 2, label: "External peripherals (mouse, keyboard, headset, adapters)", checked: false },
+        { id: 104, section: 2, label: "Mobile phone / SIM", checked: false },
+        { id: 105, section: 2, label: "Access cards / security tokens", checked: false },
+        { id: 106, section: 2, label: "Laptop Bag", checked: false },
     ]);
+
+    useEffect(() => {
+        // Fetch Device Details
+        fetch(`/api/devices`)
+            .then(r => r.json())
+            .then(d => {
+                if (d.devices?.length > 0) {
+                    const userDevices = d.devices.filter((dev: any) => dev.userId === user.id);
+                    const sorted = (userDevices.length > 0 ? userDevices : d.devices)
+                        .sort((a: any, b: any) => new Date(b.lastSyncDateTime || 0).getTime() - new Date(a.lastSyncDateTime || 0).getTime());
+                    setUserDetails(prev => ({ ...prev, device: sorted[0].deviceName || sorted[0].displayName || "" }));
+                }
+            })
+            .catch(() => {});
+    }, [user.id]);
 
     const handleCheck = (id: number) => {
         setChecklist(prev => prev.map(item => item.id === id ? { ...item, checked: !item.checked } : item));
     };
 
+    const addCustomItem = (section: number) => {
+        const newId = Math.max(...checklist.map(i => i.id), 1000) + 1;
+        setChecklist(prev => [...prev, { id: newId, section, label: "Custom Item...", checked: false }]);
+    };
+
+    const editItemLabel = (id: number, label: string) => {
+        setChecklist(prev => prev.map(item => item.id === id ? { ...item, label } : item));
+    };
+
+    const removeItem = (id: number) => {
+        setChecklist(prev => prev.filter(item => item.id !== id));
+    };
+
     const handleSubmit = async () => {
         if (!policySignature || !adminSignature) {
-            alert("Signatures are required");
+            alert("Signatures are required to finalize offboarding.");
             return;
         }
 
         setUploading(true);
-        setStatus("Loading modules...");
+        setStatus("Loading PDF engine...");
 
         try {
             const jsPDF = (await import('jspdf')).default;
-            setStatus("Generating documents...");
+            
+            // Helper to get Logo as Base64
+            const getLogoBase64 = async () => {
+                try {
+                    const response = await fetch('/Equinox-Logo-Transparent.png');
+                    const blob = await response.blob();
+                    return new Promise<string>((resolve) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result as string);
+                        reader.readAsDataURL(blob);
+                    });
+                } catch { return null; }
+            };
 
-            // --- PDF 1: POLICY ---
+            const logoBase64 = await getLogoBase64();
+            setStatus("Generating Official Policy...");
+
+            // --- PDF 1: POLICY (MATCHING manual policy/page.tsx) ---
             const policyPdf = new jsPDF('p', 'mm', 'a4');
+            const pageWidth = policyPdf.internal.pageSize.getWidth();
+            
+            // Header
+            if (logoBase64) policyPdf.addImage(logoBase64, 'PNG', 20, 15, 40, 15);
             policyPdf.setFont("helvetica", "bold");
-            policyPdf.setFontSize(22);
-            policyPdf.text("IT Offboarding Policy", 105, 30, { align: "center" });
+            policyPdf.setFontSize(18);
+            policyPdf.text("IT Offboarding Policy", pageWidth - 20, 25, { align: "right" });
             policyPdf.setLineWidth(0.5);
-            policyPdf.line(20, 35, 190, 35);
+            policyPdf.line(20, 35, pageWidth - 20, 35);
 
+            // Cover Details Box
+            policyPdf.rect(20, 45, pageWidth - 40, 35);
+            policyPdf.setFontSize(9);
+            policyPdf.text("Policy Owner:", 25, 52); policyPdf.setFont("helvetica", "normal"); policyPdf.text("Group IT Support Specialist", 60, 52);
+            policyPdf.line(25, 55, pageWidth - 25, 55);
+            policyPdf.setFont("helvetica", "bold"); policyPdf.text("Subject Personnel:", 25, 61); policyPdf.setFont("helvetica", "normal"); policyPdf.text(user.displayName, 60, 61);
+            policyPdf.line(25, 64, pageWidth - 25, 64);
+            policyPdf.setFont("helvetica", "bold"); policyPdf.text("Job Title:", 25, 70); policyPdf.setFont("helvetica", "normal"); policyPdf.text(userDetails.jobTitle, 60, 70);
+            policyPdf.line(25, 73, pageWidth - 25, 73);
+            policyPdf.setFont("helvetica", "bold"); policyPdf.text("Last Working Day:", 25, 79); policyPdf.setFont("helvetica", "normal"); policyPdf.text(userDetails.lastDay, 60, 79);
+
+            // Body Sections
+            let y = 95;
+            policyPdf.setFont("helvetica", "bold"); policyPdf.setFontSize(11); policyPdf.text("Purpose", 20, y); y += 6;
+            policyPdf.setFont("helvetica", "normal"); policyPdf.setFontSize(10); 
+            policyPdf.text("To ensure a smooth transition for employees leaving the company, safeguard company assets, and maintain data security.", 20, y, { maxWidth: 170 });
+            y += 12;
+
+            policyPdf.setFont("helvetica", "bold"); policyPdf.setFontSize(11); policyPdf.text("Scope", 20, y); y += 6;
+            policyPdf.setFont("helvetica", "normal"); policyPdf.setFontSize(10); 
+            policyPdf.text("This policy applies to all employees who are exiting Equinox Group Holdings, Inc.", 20, y);
+            y += 12;
+
+            policyPdf.setFont("helvetica", "bold"); policyPdf.setFontSize(11); policyPdf.text("Procedure", 20, y); y += 8;
             policyPdf.setFontSize(10);
-            policyPdf.setFont("helvetica", "normal");
-            policyPdf.text(`Subject Personnel: ${user.displayName}`, 20, 45);
-            policyPdf.text(`Job Title: ${user.jobTitle || "N/A"}`, 20, 52);
-            policyPdf.text(`Last Working Day: ${user.lastWorkingDay || "Today"}`, 20, 59);
-
-            policyPdf.setFont("helvetica", "bold");
-            policyPdf.text("Purpose", 20, 70);
-            policyPdf.setFont("helvetica", "normal");
-            policyPdf.text("To ensure a smooth transition, safeguard company assets, and maintain data security.", 20, 75, { maxWidth: 170 });
-
-            policyPdf.setFont("helvetica", "bold");
-            policyPdf.text("Procedure Snapshot", 20, 85);
-            policyPdf.setFont("helvetica", "normal");
-            const procs = [
-                "- Uninstallation of Euphoria App and Office products (Outlook, Teams, OneDrive).",
-                "- Return of all company property (Phone, Laptop, Peripherals).",
-                "- Data removal from personal devices and external storage.",
-                "- Setup of email forwarding for business continuity."
+            
+            const procedureItems = [
+                { t: "Uninstallation of Euphoria App and Office products:", d: "The Equinox Group Holdings Inc. IT support will ensure that the Euphoria app, Outlook, Teams & OneDrive is uninstalled from all company and personal devices used by the employee." },
+                { t: "Return of Company Property:", d: "The departing employee must return all company property (Phone, Laptop, Peripherals) provided by the company." },
+                { t: "Data Removal:", d: "IT support will take all necessary steps to remove company data from non company property, ensuring all files and applications are deleted." },
+                { t: "Email Forwarding:", d: "IT support will set up necessary email forwarding to ensure important communications are redirected appropriately." }
             ];
-            procs.forEach((p, i) => policyPdf.text(p, 25, 92 + (i * 7), { maxWidth: 165 }));
 
-            policyPdf.setFont("helvetica", "bold");
-            policyPdf.text("Data Retention & Access", 20, 125);
-            policyPdf.setFont("helvetica", "normal");
-            const retentions = [
-                "1. Email: Mailbox disabled on last day; retained for 12 months.",
-                "2. OneDrive: Ownership transferred to manager; retained for 7 days.",
-                "3. Teams: Channel files remain accessible; private chats follow OneDrive rules.",
-                "4. Applications: Access fully removed from all SaaS platforms (MS365, Fusion etc)."
+            procedureItems.forEach(item => {
+                policyPdf.setFont("helvetica", "bold"); policyPdf.text(item.t, 20, y); y += 5;
+                policyPdf.setFont("helvetica", "normal"); policyPdf.text(item.d, 20, y, { maxWidth: 170 });
+                y += 10;
+            });
+
+            // Data Retention
+            policyPdf.line(20, y, pageWidth - 20, y); y += 8;
+            policyPdf.setFont("helvetica", "bold"); policyPdf.setFontSize(11); policyPdf.text("Data & System Access After Offboarding", 20, y); y += 8;
+            policyPdf.setFontSize(8.5); policyPdf.setFont("helvetica", "normal");
+            const retentionPoints = [
+                "1. Email: Mailbox disabled on last day; manager/successor access; 12 month retention.",
+                "2. OneDrive: Ownership transferred to manager; access for 7 days; deleted thereafter.",
+                "3. Teams: Private chats retained for compliance; channel files remain; shared follow OneDrive rules.",
+                "4. SharePoint: Documents remain on sites; access permissions removed.",
+                "5. SaaS Platforms: Access fully removed from all platforms (MS365, Euphoria, Fusion etc).",
+                "6. Personal Data: Personal files may be exported ONLY after IT review and formal approval."
             ];
-            retentions.forEach((r, i) => policyPdf.text(r, 20, 132 + (i * 7)));
+            retentionPoints.forEach(p => { policyPdf.text(p, 20, y); y += 5; });
 
             // Signatures
-            policyPdf.line(20, 180, 190, 180);
-            policyPdf.setFontSize(9);
-            policyPdf.text("Equinox IT Support Signature", 20, 188);
-            policyPdf.addImage(adminSignature, 'PNG', 20, 195, 50, 15);
+            y = 230;
+            policyPdf.setFont("helvetica", "bold"); policyPdf.setFontSize(11); policyPdf.text("Formal Acknowledgment", 20, y); y += 20;
+            policyPdf.line(20, y, 90, y); policyPdf.line(120, y, 190, y); y += 5;
+            policyPdf.setFontSize(8); 
+            policyPdf.text("Equinox Group Holdings Inc. IT Support", 20, y);
+            policyPdf.text(user.displayName, 120, y);
             
-            policyPdf.text(`${user.displayName} Signature`, 130, 188);
-            policyPdf.addImage(policySignature, 'PNG', 130, 195, 50, 15);
-            
+            policyPdf.addImage(adminSignature, 'PNG', 20, y - 22, 50, 15);
+            policyPdf.addImage(policySignature, 'PNG', 120, y - 22, 50, 15);
+
             const policyBlob = policyPdf.output('blob');
 
-            // --- PDF 2: CHECKLIST ---
+            // --- PDF 2: CHECKLIST (MATCHING manual checklist/page.tsx) ---
+            setStatus("Generating Official Checklist...");
             const checklistPdf = new jsPDF('p', 'mm', 'a4');
+            
+            // Header
+            if (logoBase64) checklistPdf.addImage(logoBase64, 'PNG', 20, 15, 35, 12);
             checklistPdf.setFont("helvetica", "bold");
-            checklistPdf.setFontSize(22);
-            checklistPdf.text("IT Exit Interview Checklist", 105, 30, { align: "center" });
-            checklistPdf.line(20, 35, 190, 35);
+            checklistPdf.setFontSize(16);
+            checklistPdf.text("IT Exit Interview Checklist", pageWidth - 20, 25, { align: "right" });
+            checklistPdf.line(20, 32, pageWidth - 20, 32);
 
-            checklistPdf.setFontSize(10);
-            checklistPdf.setFont("helvetica", "normal");
-            checklistPdf.text(`Employee: ${user.displayName}`, 20, 45);
-            checklistPdf.text(`Date: ${new Date().toLocaleDateString()}`, 20, 52);
+            // User Info Section
+            y = 45;
+            checklistPdf.setFontSize(10); checklistPdf.text("User Information", 20, y); y += 4;
+            checklistPdf.line(20, y, pageWidth - 20, y); y += 6;
+            const userInfo = [
+                ["Username:", user.displayName],
+                ["Email:", userDetails.email],
+                ["Device:", userDetails.device],
+                ["Last Day:", userDetails.lastDay]
+            ];
+            userInfo.forEach(info => {
+                checklistPdf.setFont("helvetica", "bold"); checklistPdf.text(info[0], 25, y);
+                checklistPdf.setFont("helvetica", "normal"); checklistPdf.text(info[1] || "---", 60, y);
+                y += 7;
+            });
 
-            checklistPdf.setFont("helvetica", "bold");
-            checklistPdf.text("Verification Items:", 20, 65);
-            checklistPdf.setFont("helvetica", "normal");
+            // IT Admin Section
+            y += 5;
+            checklistPdf.setFont("helvetica", "bold"); checklistPdf.text("IT Administrative", 20, y); y += 4;
+            checklistPdf.line(20, y, pageWidth - 20, y); y += 6;
+            const adminRows = [
+                [`Shared mailbox created:`, itAdmin.sharedMailbox || "---"],
+                [`Email forward or shared mailbox members:`, itAdmin.emailForward || "---"],
+                [`Remove MS365 License:`, itAdmin.removeLicense ? "Yes" : "No"],
+                [`Remove from all groups on AD:`, itAdmin.removeFromGroups ? "Yes" : "No"],
+                [`Company data removal:`, itAdmin.dataRemoval],
+                [`Clear MFA Settings:`, itAdmin.clearMFA ? "Yes" : "No"],
+                [`Device Login Pin:`, itAdmin.devicePin || "---"]
+            ];
+            adminRows.forEach(row => {
+                checklistPdf.setFont("helvetica", "normal"); checklistPdf.text(row[0], 25, y);
+                checklistPdf.setFont("helvetica", "bold"); checklistPdf.text(row[1], 80, y);
+                y += 6;
+            });
+
+            // Checklist Verification (Section 1 & 2)
+            y += 8;
+            checklistPdf.setFont("helvetica", "bold"); checklistPdf.text("Verification Items", 20, y); y += 4;
+            checklistPdf.line(20, y, pageWidth - 20, y); y += 7;
+            checklistPdf.setFontSize(8.5);
+
             checklist.forEach((item, i) => {
-                const y = 75 + (i * 10);
-                checklistPdf.rect(20, y - 4, 4, 4); 
-                if (item.checked) {
-                    checklistPdf.text("X", 21.5, y - 1);
-                }
-                checklistPdf.text(item.label, 28, y);
+                const boxSize = 3;
+                checklistPdf.rect(20, y - 3, boxSize, boxSize);
+                if (item.checked) checklistPdf.text("X", 20.8, y - 0.5);
+                checklistPdf.setFont("helvetica", "normal");
+                checklistPdf.text(item.label, 26, y, { maxWidth: 160 });
+                y += (item.label.length > 90 ? 10 : 7);
+                
+                // New page if needed
+                if (y > 270) { checklistPdf.addPage(); y = 20; }
             });
 
             // Signatures
-            checklistPdf.line(20, 180, 190, 180);
-            checklistPdf.setFontSize(9);
-            checklistPdf.text("Equinox IT Support Signature", 20, 188);
-            checklistPdf.addImage(adminSignature, 'PNG', 20, 195, 50, 15);
+            if (y > 230) { checklistPdf.addPage(); y = 40; } else { y = 240; }
+            checklistPdf.setFont("helvetica", "bold"); checklistPdf.setFontSize(11); checklistPdf.text("Formal Acknowledgment", 20, y); y += 20;
+            checklistPdf.line(20, y, 90, y); checklistPdf.line(120, y, 190, y); y += 5;
+            checklistPdf.setFontSize(8); 
+            checklistPdf.text("Equinox Group Holdings Inc. IT Support", 20, y);
+            checklistPdf.text(user.displayName, 120, y);
             
-            checklistPdf.text(`${user.displayName} Signature`, 130, 188);
-            checklistPdf.addImage(policySignature, 'PNG', 130, 195, 50, 15);
+            checklistPdf.addImage(adminSignature, 'PNG', 20, y - 22, 50, 15);
+            checklistPdf.addImage(policySignature, 'PNG', 120, y - 22, 50, 15);
 
             const checklistBlob = checklistPdf.output('blob');
 
@@ -196,73 +334,256 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                                 <p className="text-xs text-blue-300/60 leading-relaxed italic">Review the core offboarding requirements with the employee.</p>
                             </div>
                             
-                            <div className="bg-white p-8 rounded-2xl shadow-xl text-slate-900 text-sm space-y-6">
-                                <h4 className="text-center font-bold text-lg border-b border-slate-200 pb-4 mb-6">Equinox IT Offboarding Policy</h4>
-                                <div className="space-y-4 text-[13px] leading-relaxed">
-                                    <div className="bg-slate-50 p-4 rounded-xl space-y-2 border border-slate-100">
-                                        <p><strong>Subject:</strong> {user.displayName}</p>
-                                        <p><strong>Last Working Day:</strong> {user.lastWorkingDay || "Today"}</p>
-                                    </div>
+                            <div className="bg-white p-12 rounded-2xl shadow-xl text-slate-900 text-[11pt] space-y-8 leading-relaxed font-sans max-h-[70vh] overflow-y-auto">
+                                <div className="flex justify-between items-start border-b-2 border-slate-900 pb-6 mb-8">
+                                    <img src="/Equinox-Logo-Transparent.png" alt="Logo" className="h-16 w-auto" />
+                                    <h4 className="text-xl font-bold uppercase tracking-tight">IT Offboarding Policy</h4>
+                                </div>
+
+                                <div className="grid grid-cols-[140px_1fr] gap-x-4 gap-y-2 text-xs border border-slate-900 p-6 mb-8">
+                                    <span className="font-bold">Policy Owner:</span>
+                                    <span>Group IT Support Specialist</span>
+                                    <span className="font-bold">Subject Personnel:</span>
+                                    <span className="font-semibold text-blue-800">{user.displayName}</span>
+                                    <span className="font-bold">Job Title:</span>
+                                    <span>{userDetails.jobTitle}</span>
+                                    <span className="font-bold">Last Working Day:</span>
+                                    <span className="font-semibold">{userDetails.lastDay}</span>
+                                </div>
+
+                                <section>
+                                    <h5 className="font-bold text-lg mb-2 underline decoration-blue-500/30">Purpose</h5>
+                                    <p>To ensure a smooth transition for employees leaving the company, safeguard company assets, and maintain data security.</p>
+                                </section>
+
+                                <section>
+                                    <h5 className="font-bold text-lg mb-2 underline decoration-blue-500/30">Scope</h5>
+                                    <p>This policy applies to all employees who are exiting Equinox Group Holdings, Inc.</p>
+                                </section>
+
+                                <section className="space-y-6">
+                                    <h5 className="font-bold text-lg mb-2 underline decoration-blue-500/30">Procedure</h5>
                                     
-                                    <section>
-                                        <p className="font-bold text-blue-800 mb-1 uppercase text-[10px] tracking-widest">Purpose</p>
-                                        <p>To ensure a smooth transition, safeguard company assets, and maintain data security.</p>
-                                    </section>
+                                    <div>
+                                        <p className="font-bold mb-1">Uninstallation of Euphoria App and Office products:</p>
+                                        <p>The Equinox Group Holdings Inc. IT support will ensure that the Euphoria app, Outlook, Teams & OneDrive is uninstalled from all company and personal devices used by the employee.</p>
+                                    </div>
 
-                                    <section>
-                                        <p className="font-bold text-blue-800 mb-2 uppercase text-[10px] tracking-widest">Core Procedures</p>
-                                        <ul className="list-disc pl-5 space-y-1 text-slate-700">
-                                            <li><span className="font-bold">Software:</span> Uninstall Euphoria App, Outlook, Teams & OneDrive from all devices.</li>
-                                            <li><span className="font-bold">Hardware:</span> Return of phone, laptop, and any provided equipment.</li>
-                                            <li><span className="font-bold">Data:</span> Removal of company files from personal devices.</li>
-                                            <li><span className="font-bold">Email:</span> Setup of mandatory email forwarding.</li>
+                                    <div>
+                                        <p className="font-bold mb-1">Return of Company Property:</p>
+                                        <ul className="list-disc pl-8 space-y-1">
+                                            <li>Company-issued phone</li>
+                                            <li>Laptop</li>
+                                            <li>Any other equipment or materials provided by the company</li>
                                         </ul>
-                                    </section>
+                                    </div>
 
-                                    <section className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                                        <p className="font-bold text-[10px] uppercase tracking-widest text-slate-500 mb-2">Access Retention</p>
-                                        <div className="grid grid-cols-2 gap-4 text-[11px]">
-                                            <div>
-                                                <p className="font-bold">Email</p>
-                                                <p className="text-slate-500 italic">Disabled on last day; 12 month retention.</p>
-                                            </div>
-                                            <div>
-                                                <p className="font-bold">OneDrive</p>
-                                                <p className="text-slate-500 italic">Manager access for 7 days.</p>
-                                            </div>
-                                        </div>
-                                    </section>
+                                    <div>
+                                        <p className="font-bold mb-1">Data Removal:</p>
+                                        <p>IT support will take all necessary steps to remove company data from non company property, ensuring all company-related files, emails, and applications are deleted.</p>
+                                    </div>
+
+                                    <div>
+                                        <p className="font-bold mb-1">Email Forwarding:</p>
+                                        <p>IT support will set up necessary email forwarding to ensure important communications are redirected appropriately.</p>
+                                    </div>
+                                </section>
+
+                                <div className="pt-8 border-t-2 border-slate-900 space-y-6">
+                                    <h5 className="font-bold text-lg">Data & System Access After Offboarding</h5>
+                                    
+                                    <div className="space-y-4 text-xs bg-slate-50 p-6 rounded-xl border border-slate-100 italic">
+                                        <p><strong>1. Email:</strong> Mailbox disabled on last day; manager/successor receives access; retained for 12 months.</p>
+                                        <p><strong>2. OneDrive:</strong> Ownership transferred to manager; access for 7 days; deleted thereafter.</p>
+                                        <p><strong>3. Teams:</strong> Private chats retained for compliance; channel files remain in team; shared files follow OneDrive rules.</p>
+                                        <p><strong>4. SharePoint:</strong> Documents remain on sites; access removed from groups/sites.</p>
+                                        <p><strong>5. SaaS Platforms:</strong> Access fully removed (MS365, Euphoria, Fusion etc).</p>
+                                        <p><strong>6. Personal Data:</strong> Personal files may be exported only after IT review and formal approval.</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    {/* STEP 2: CHECKLIST */}
+                    {/* STEP 2: CHECKLIST & IT ADMIN */}
                     {step === 2 && (
-                        <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300 text-left">
+                        <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300 text-left pb-12">
                             <div className="bg-emerald-600/10 p-6 rounded-2xl border border-emerald-500/20">
                                 <h3 className="text-lg font-bold text-emerald-400 mb-2 flex items-center gap-2">
-                                    <ListChecks size={20} /> Verification Checklist
+                                    <ListChecks size={20} /> Exit Interview Verification
                                 </h3>
-                                <p className="text-xs text-emerald-300/60 leading-relaxed italic">Tap each item to confirm completion.</p>
+                                <p className="text-xs text-emerald-300/60 leading-relaxed italic">Complete all sections to ensure compliant archival.</p>
                             </div>
 
-                            <div className="bg-slate-900 border border-slate-800 rounded-2xl divide-y divide-slate-800">
-                                <div className="p-6 bg-slate-950/50 rounded-t-2xl border-b border-slate-800">
-                                     <h4 className="text-[10px] font-black text-white uppercase tracking-widest text-center">Equipment & Security Verification</h4>
+                            {/* USER INFORMATION DISPLAY */}
+                            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+                                <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-800 pb-2">User Information</h4>
+                                <div className="grid grid-cols-2 gap-4 text-xs">
+                                    <div><p className="text-slate-500 mb-1">Username</p><p className="text-white font-bold">{user.displayName}</p></div>
+                                    <div><p className="text-slate-500 mb-1">Email</p><p className="text-white font-bold">{userDetails.email}</p></div>
+                                    <div><p className="text-slate-500 mb-1">Device Name</p><p className="text-white font-bold">{userDetails.device || "---"}</p></div>
+                                    <div><p className="text-slate-500 mb-1">Last Day</p><p className="text-white font-bold">{userDetails.lastDay}</p></div>
                                 </div>
-                                {checklist.map(item => (
+                            </div>
+
+                            {/* SECTION 1: TO BE COMPLETED WITH USER */}
+                            <div className="bg-slate-900 border border-slate-800 rounded-2xl divide-y divide-slate-800 overflow-hidden">
+                                <div className="p-4 bg-slate-950/50 border-b border-slate-800 flex items-center gap-2">
+                                    <Shield size={14} className="text-blue-500" />
+                                    <h4 className="text-[10px] font-black text-white uppercase tracking-widest">Section 1: Completed with User</h4>
+                                </div>
+                                {checklist.filter(i => i.section === 1).map(item => (
                                     <div 
                                         key={item.id} 
-                                        className={`p-5 flex items-center gap-4 cursor-pointer transition-all ${item.checked ? 'bg-emerald-500/5' : 'hover:bg-slate-800/50'}`}
-                                        onClick={() => handleCheck(item.id)}
+                                        className={`p-4 flex items-start gap-4 transition-all group ${item.checked ? 'bg-emerald-500/5' : 'hover:bg-slate-800/50'}`}
                                     >
-                                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${item.checked ? 'bg-emerald-500 border-emerald-500' : 'border-slate-700'}`}>
-                                            {item.checked && <CheckCircle2 size={16} className="text-white" />}
+                                        <div 
+                                            className={`mt-1 flex-shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center cursor-pointer transition-all ${item.checked ? 'bg-emerald-500 border-emerald-500' : 'border-slate-700'}`}
+                                            onClick={() => handleCheck(item.id)}
+                                        >
+                                            {item.checked && <CheckCircle2 size={12} className="text-white" />}
                                         </div>
-                                        <span className={`text-sm ${item.checked ? 'text-emerald-400 font-bold' : 'text-slate-300'}`}>{item.label}</span>
+                                        <input 
+                                            className={`flex-1 bg-transparent border-0 outline-none text-[12px] leading-tight ${item.checked ? 'text-emerald-400 font-bold' : 'text-slate-300'}`}
+                                            value={item.label}
+                                            onChange={e => editItemLabel(item.id, e.target.value)}
+                                        />
+                                        {item.id > 100 && ( // Allow removing custom items
+                                            <button onClick={() => removeItem(item.id)} className="opacity-0 group-hover:opacity-100 p-1 text-slate-500 hover:text-red-400 transition-all"><X size={14} /></button>
+                                        )}
                                     </div>
                                 ))}
+                                <button 
+                                    onClick={() => addCustomItem(1)}
+                                    className="w-full py-3 text-[10px] text-slate-500 hover:text-slate-300 uppercase tracking-widest font-bold border-t border-slate-800 transition-all"
+                                >
+                                    + Add Custom Requirement
+                                </button>
+                            </div>
+
+                            {/* SECTION 2: ASSETS RETURNED */}
+                            <div className="bg-slate-900 border border-slate-800 rounded-2xl divide-y divide-slate-800 overflow-hidden">
+                                <div className="p-4 bg-slate-950/50 border-b border-slate-800 flex items-center gap-2">
+                                    <Laptop size={14} className="text-indigo-500" />
+                                    <h4 className="text-[10px] font-black text-white uppercase tracking-widest">Section 2: Assets Returned</h4>
+                                </div>
+                                {checklist.filter(i => i.section === 2).map(item => (
+                                    <div 
+                                        key={item.id} 
+                                        className={`p-4 flex items-center gap-4 transition-all group ${item.checked ? 'bg-indigo-500/5' : 'hover:bg-slate-800/50'}`}
+                                    >
+                                        <div 
+                                            className={`flex-shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center cursor-pointer transition-all ${item.checked ? 'bg-indigo-500 border-indigo-500' : 'border-slate-700'}`}
+                                            onClick={() => handleCheck(item.id)}
+                                        >
+                                            {item.checked && <CheckCircle2 size={12} className="text-white" />}
+                                        </div>
+                                        <input 
+                                            className={`flex-1 bg-transparent border-0 outline-none text-[12px] ${item.checked ? 'text-indigo-400 font-bold' : 'text-slate-300'}`}
+                                            value={item.label}
+                                            onChange={e => editItemLabel(item.id, e.target.value)}
+                                        />
+                                        {item.id > 1000 && ( // Allow removing custom items
+                                            <button onClick={() => removeItem(item.id)} className="opacity-0 group-hover:opacity-100 p-1 text-slate-500 hover:text-red-400 transition-all"><X size={14} /></button>
+                                        )}
+                                    </div>
+                                ))}
+                                <button 
+                                    onClick={() => addCustomItem(2)}
+                                    className="w-full py-3 text-[10px] text-slate-500 hover:text-slate-300 uppercase tracking-widest font-bold border-t border-slate-800 transition-all"
+                                >
+                                    + Add Custom Asset
+                                </button>
+                            </div>
+
+                            {/* IT ADMINISTRATIVE */}
+                            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
+                                <h4 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest border-b border-slate-800 pb-2 flex items-center gap-2">
+                                    <RefreshCw size={14} /> IT Administrative Tasks
+                                </h4>
+                                
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] text-slate-500 font-bold uppercase">Shared Mailbox Created</label>
+                                            <input 
+                                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:border-blue-500/50 outline-none"
+                                                value={itAdmin.sharedMailbox}
+                                                onChange={e => setItAdmin(prev => ({...prev, sharedMailbox: e.target.value}))}
+                                                placeholder="e.g. Successor Name"
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] text-slate-500 font-bold uppercase">Email Forward / Members</label>
+                                            <input 
+                                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:border-blue-500/50 outline-none"
+                                                value={itAdmin.emailForward}
+                                                onChange={e => setItAdmin(prev => ({...prev, emailForward: e.target.value}))}
+                                                placeholder="e.g. manager@eqn.com"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] text-slate-500 font-bold uppercase">Device Login PIN</label>
+                                            <input 
+                                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:border-blue-500/50 outline-none"
+                                                value={itAdmin.devicePin}
+                                                onChange={e => setItAdmin(prev => ({...prev, devicePin: e.target.value}))}
+                                                placeholder="Last known PIN..."
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="flex flex-wrap gap-4 pt-2">
+                                        <label className="flex items-center gap-3 cursor-pointer group">
+                                            <input 
+                                                type="checkbox" 
+                                                className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-blue-600 focus:ring-0 focus:ring-offset-0"
+                                                checked={itAdmin.removeLicense}
+                                                onChange={e => setItAdmin(prev => ({...prev, removeLicense: e.target.checked}))}
+                                            />
+                                            <span className="text-[11px] text-slate-300 group-hover:text-white transition-colors">Remove MS365 License</span>
+                                        </label>
+                                        <label className="flex items-center gap-3 cursor-pointer group">
+                                            <input 
+                                                type="checkbox" 
+                                                className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-blue-600 focus:ring-0 focus:ring-offset-0"
+                                                checked={itAdmin.removeFromGroups}
+                                                onChange={e => setItAdmin(prev => ({...prev, removeFromGroups: e.target.checked}))}
+                                            />
+                                            <span className="text-[11px] text-slate-300 group-hover:text-white transition-colors">Remove from all groups on AD</span>
+                                        </label>
+                                        <label className="flex items-center gap-3 cursor-pointer group">
+                                            <input 
+                                                type="checkbox" 
+                                                className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-blue-600 focus:ring-0 focus:ring-offset-0"
+                                                checked={itAdmin.clearMFA}
+                                                onChange={e => setItAdmin(prev => ({...prev, clearMFA: e.target.checked}))}
+                                            />
+                                            <span className="text-[11px] text-slate-300 group-hover:text-white transition-colors">Clear MFA Settings</span>
+                                        </label>
+                                    </div>
+
+                                    <div className="pt-2">
+                                        <p className="text-[10px] text-slate-500 font-bold uppercase mb-3">Company Data Removal Confirmation</p>
+                                        <div className="flex gap-4">
+                                            {["Yes", "No", "Retained till specified"].map(opt => (
+                                                <label key={opt} className="flex items-center gap-2 cursor-pointer group">
+                                                    <input 
+                                                        type="radio" 
+                                                        name="dataRemoval"
+                                                        className="w-4 h-4 border-slate-700 bg-slate-950 text-emerald-500 focus:ring-0 focus:ring-offset-0"
+                                                        checked={itAdmin.dataRemoval === opt}
+                                                        onChange={() => setItAdmin(prev => ({...prev, dataRemoval: opt}))}
+                                                    />
+                                                    <span className={`text-[11px] transition-colors ${itAdmin.dataRemoval === opt ? 'text-emerald-400 font-bold' : 'text-slate-500 group-hover:text-slate-300'}`}>{opt}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     )}
