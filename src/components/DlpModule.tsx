@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldAlert, Usb, Mail, RefreshCw, Calendar, Download, Search, AlertCircle, CircleCheck, Info, Camera, AlertTriangle } from "lucide-react";
+import { ShieldAlert, Usb, Mail, RefreshCw, Calendar, Download, Search, AlertCircle, CircleCheck, Info, Camera, AlertTriangle, FileText } from "lucide-react";
 
 interface DlpEvent {
     id: string;
@@ -210,7 +210,31 @@ export default function DlpModule({ userId, userDisplayName, sinceDate }: { user
                                             </div>
                                         </td>
                                         <td className="px-8 py-6">
-                                            <p className="text-slate-300 font-medium">{event.details}</p>
+                                            {event.type === 'security_snapshot' ? (
+                                                <div className="space-y-3">
+                                                    <p className="text-slate-300 font-medium">{event.details.split('|')[0]}</p>
+                                                    {event.details.includes('|') && (
+                                                        <img 
+                                                            src={event.details.split('|')[1]} 
+                                                            alt="Security Snapshot"
+                                                            className="rounded-lg border border-slate-800 w-full max-w-sm h-auto cursor-zoom-in hover:border-rose-500/50 transition-all shadow-lg"
+                                                            onClick={() => window.open(event.details.split('|')[1])}
+                                                        />
+                                                    )}
+                                                </div>
+                                            ) : event.type === 'discovery_result' ? (
+                                                <div className="space-y-2">
+                                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3">Discovery Scan Matches :</p>
+                                                    {event.details.replace('Scan found files: ', '').split(', ').map((f, i) => (
+                                                        <div key={i} className="flex items-center gap-2 text-[10px] text-slate-400 font-mono break-all group/file hover:text-white transition-colors">
+                                                            <FileText size={12} className="text-slate-600 group-hover/file:text-blue-500" />
+                                                            {f}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <p className="text-slate-300 font-medium">{event.details}</p>
+                                            )}
                                         </td>
                                         <td className="px-8 py-6 text-center">
                                             <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest border ${getSeverityStyles(event.severity)}`}>

