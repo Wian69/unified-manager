@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDlpEvents, saveDlpEvents } from '@/lib/db';
-import { v4 as uuidv4 } from 'uuid';
+import crypto from 'crypto';
 
 export async function POST(req: NextRequest) {
     try {
@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
 
         const events = await getDlpEvents();
         const newEvent = {
-            id: uuidv4(),
+            id: crypto.randomUUID(),
             agentId,
             type,
             details,
