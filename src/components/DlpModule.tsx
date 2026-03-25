@@ -60,6 +60,7 @@ export default function DlpModule({ userId, userDisplayName, sinceDate }: { user
         switch (type?.toLowerCase()) {
             case 'usb_inserted':
             case 'usb_removed':
+            case 'usb_blocked_attempt':
             case 'usb_copy': return <Usb size={16} />;
             case 'gmail_detected':
             case 'gmail_exfiltration': return <Mail size={16} />;

