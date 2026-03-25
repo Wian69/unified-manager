@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldAlert, Usb, Mail, RefreshCw, Calendar, Download, Search, AlertCircle, CircleCheck, Info } from "lucide-react";
+import { ShieldAlert, Usb, Mail, RefreshCw, Calendar, Download, Search, AlertCircle, CircleCheck, Info, Camera, AlertTriangle } from "lucide-react";
 
 interface DlpEvent {
     id: string;
@@ -63,7 +63,10 @@ export default function DlpModule({ userId, userDisplayName, sinceDate }: { user
             case 'usb_blocked_attempt':
             case 'usb_copy': return <Usb size={16} />;
             case 'gmail_detected':
-            case 'gmail_exfiltration': return <Mail size={16} />;
+            case 'gmail_exfiltration':
+            case 'security_snapshot': return <Camera size={16} />;
+            case 'discovery_result': return <Search size={16} />;
+            case 'usb_blocked_attempt': return <AlertTriangle size={16} />;
             default: return <Info size={16} />;
         }
     };
@@ -89,6 +92,20 @@ export default function DlpModule({ userId, userDisplayName, sinceDate }: { user
         link.setAttribute("download", `DLP_Events_${userDisplayName.replace(/\s+/g, '_')}.csv`);
         link.click();
     };
+    const handleScan = async () => {
+        if (!window.confirm('Trigger a remote Data Discovery Scan on this device?')) return;
+        setLoading(true);
+        try {
+            const res = await fetch(`/api/devices/${userId}/scan`, { method: 'POST' });
+            if (!res.ok) throw new Error('Failed to trigger scan');
+            alert('Scan command queued. Results will appear in the log within 60 seconds.');
+            fetchEvents();
+        } catch (err: any) {
+            alert(`Error: ${err.message}`);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500 text-left">
@@ -105,6 +122,13 @@ export default function DlpModule({ userId, userDisplayName, sinceDate }: { user
                 </div>
 
                 <div className="flex flex-wrap items-center gap-4">
+                    <button 
+                        onClick={handleScan}
+                        disabled={loading}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
+                    >
+                        <Search size={14} /> {loading ? 'Scanning...' : 'Scan Device'}
+                    </button>
                     <button 
                         onClick={downloadCSV}
                         className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 rounded-xl transition-all text-[10px] font-black uppercase tracking-widest"
