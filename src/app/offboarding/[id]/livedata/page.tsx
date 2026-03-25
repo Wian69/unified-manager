@@ -283,7 +283,7 @@ export default function LiveDataDashboard() {
                                 }
                                 return matchedAgents.map((a: any) => (
                                     <option key={`${d.id}-${a.id}`} value={a.id}>
-                                        Matched: {d.deviceName} ({a.publicIp}) {a.status === 'online' ? '🟢 ONLINE' : '🔴 OFFLINE'}
+                                        Matched: {d.deviceName} ({a.localIp || a.publicIp}) {a.status === 'online' ? '🟢 ONLINE' : '🔴 OFFLINE'}
                                     </option>
                                 ));
                             })}
@@ -291,7 +291,7 @@ export default function LiveDataDashboard() {
                             <option disabled>────────── ACTIVE AGENTS (UNMATCHED) ──────────</option>
                             {agents.filter(a => a.status === 'online').map(a => (
                                 <option key={`active-${a.id}`} value={a.id}>
-                                    Stray: {a.deviceName} ({a.serialNumber}) - {a.publicIp} [PROVISIONAL]
+                                    Stray: {a.deviceName} ({a.serialNumber}) - {a.localIp || a.publicIp} [PROVISIONAL]
                                 </option>
                             ))}
                         </select>
@@ -307,8 +307,8 @@ export default function LiveDataDashboard() {
                 <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-[50px] pointer-events-none" />
                     <Hash size={16} className="text-blue-500 mb-4" />
-                    <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">Public IP</p>
-                    <p className="text-lg text-white font-mono">{currentAgent ? currentAgent.publicIp || "Unknown" : "---.---.---.---"}</p>
+                    <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">Internal IPv4</p>
+                    <p className="text-lg text-white font-mono">{currentAgent ? currentAgent.localIp || currentAgent.publicIp : "---.---.---.---"}</p>
                 </div>
                 <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-[50px] pointer-events-none" />

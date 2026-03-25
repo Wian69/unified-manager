@@ -200,7 +200,7 @@ export default function DevicesPage() {
                                                             <div className={`w-2 h-2 rounded-full ${agent.status === 'online' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
                                                             {agent.status === 'online' ? 'Live Agent' : 'Agent Offline'}
                                                         </div>
-                                                        <div className="text-[11px] text-slate-400">{agent.publicIp}</div>
+                                                        <div className="text-[11px] text-slate-400">{agent.localIp || agent.publicIp}</div>
                                                     </div>
                                                 ) : (
                                                     <span className="text-slate-600 text-[11px]">No Agent</span>
@@ -274,8 +274,8 @@ export default function DevicesPage() {
 
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                                                 <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
-                                                    <span className="text-[10px] text-slate-500 uppercase font-bold block mb-1">Public Network</span>
-                                                    <div className="text-slate-200 font-medium">{getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName)?.publicIp}</div>
+                                                    <span className="text-[10px] text-slate-500 uppercase font-bold block mb-1">Internal IPv4</span>
+                                                    <div className="text-slate-200 font-medium">{getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName)?.localIp || getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName)?.publicIp}</div>
                                                     <div className="text-[10px] text-slate-500">{getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName)?.isp}</div>
                                                 </div>
                                                 <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
