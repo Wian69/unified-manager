@@ -3,7 +3,7 @@ param(
 )
 
 # Unified Enterprise Agent (UEA)
-# Version: 1.5.0
+# Version: 1.5.1
 # Description: Professional stealth endpoint agent with premium Support GUI.
 
 # 1. ENVIRONMENT SANITATION
@@ -13,7 +13,8 @@ $InstallDir = "$env:ProgramData\UnifiedAgent"
 $LogFile = "$InstallDir\agent.log"
 $ScriptPath = "$InstallDir\unified-agent.ps1"
 $ConfigPath = "$InstallDir\config.json"
-$SupportLogo = "https://img.icons8.com/color/96/000000/it-support.png"
+# Official Equinox branding
+$SupportLogo = "Equinox-Logo-Transparent.png"
 
 function Log-Message {
     param($Message)
@@ -40,7 +41,7 @@ function Install-StealthAgent {
     if (-not $IsAdmin) { return }
     try {
         if (-not (Test-Path $InstallDir)) { New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null }
-        $Config = @{ ServerUrl = $ServerUrl; Version = "1.5.0" }
+        $Config = @{ ServerUrl = $ServerUrl; Version = "1.5.1" }
         $Config | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
         
         $VbsMainPath = "$InstallDir\uea_stealth.vbs"
@@ -76,7 +77,7 @@ try {
         if ($SavedConfig) { $ServerUrl = $SavedConfig.ServerUrl }
     }
 
-    Log-Message "Agent v1.5.0 Started. ID: $AgentId"
+    Log-Message "Agent v1.5.1 Started. ID: $AgentId"
 
     # 5. HEARTBEAT LOOP
     while ($true) {
@@ -84,14 +85,14 @@ try {
             $Response = Invoke-RestMethod -Method Post -Uri "$ServerUrl/api/agent/heartbeat" -Body (ConvertTo-Json @{
                 agentId = $AgentId
                 serialNumber = $SerialNumber
-                version = "1.5.0"
+                version = "1.5.1"
                 status = "online"
                 deviceName = $env:COMPUTERNAME
                 localIp = try { (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -notlike "*Loopback*" -and $_.IPv4Address -notlike "169.254*" } | Select-Object -First 1).IPv4Address } catch { "Unknown" }
             }) -ContentType "application/json"
 
             # Upgrade Hook
-            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.5.0")) {
+            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.5.1")) {
                 Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile "$ScriptPath" -UseBasicParsing | Out-Null
                 Install-StealthAgent
                 $VbsRestart = "$InstallDir\restart.vbs"
@@ -121,30 +122,31 @@ Add-Type -AssemblyName System.Windows.Forms, System.Drawing
 `$IconBox.Size = New-Object Drawing.Size(80, 80)
 `$IconBox.Location = New-Object Drawing.Point(20, 30)
 `$IconBox.SizeMode = 'StretchImage'
-try { `$Web = New-Object System.Net.WebClient; `$ImgBytes = `$Web.DownloadData('$SupportLogo'); `$IconBox.Image = [System.Drawing.Image]::FromStream((New-Object IO.MemoryStream(`$ImgBytes, 0, `$ImgBytes.Length))) } catch { }
+`$LogoUrl = "$ServerUrl/$SupportLogo"
+try { `$Web = New-Object System.Net.WebClient; `$ImgBytes = `$Web.DownloadData(`$LogoUrl); `$IconBox.Image = [System.Drawing.Image]::FromStream((New-Object IO.MemoryStream(`$ImgBytes, 0, `$ImgBytes.Length))) } catch { }
 `$Header = New-Object Windows.Forms.Label
 `$Header.Text = 'EQUINOX IT SUPPORT'
-`$Header.ForeColor = [System.Drawing.Color]::FromArgb(0, 120, 215)
-`$Header.Font = New-Object Drawing.Font('Segoe UI', 12, [System.Drawing.FontStyle]::Bold)
+`$Header.ForeColor = [System.Drawing.Color]::FromArgb(15, 23, 42)
+`$Header.Font = New-Object Drawing.Font('Segoe UI', 14, [System.Drawing.FontStyle]::Bold)
 `$Header.Location = New-Object Drawing.Point(120, 30)
-`$Header.Size = New-Object Drawing.Size(350, 25)
+`$Header.Size = New-Object Drawing.Size(350, 30)
 `$Disclaimer = New-Object Windows.Forms.Label
-`$Disclaimer.Text = 'IMPORTANT: This communication is from your official company IT Support team.'
-`$Disclaimer.Font = New-Object Drawing.Font('Segoe UI', 8, [System.Drawing.FontStyle]::Italic)
-`$Disclaimer.ForeColor = [System.Drawing.Color]::DarkSlateGray
-`$Disclaimer.Location = New-Object Drawing.Point(120, 55)
-`$Disclaimer.Size = New-Object Drawing.Size(350, 15)
+`$Disclaimer.Text = '*** OFFICIAL COMPANY COMMUNICATION ***'
+`$Disclaimer.Font = New-Object Drawing.Font('Segoe UI', 9, [System.Drawing.FontStyle]::Bold)
+`$Disclaimer.ForeColor = [System.Drawing.Color]::FromArgb(2, 132, 199)
+`$Disclaimer.Location = New-Object Drawing.Point(120, 60)
+`$Disclaimer.Size = New-Object Drawing.Size(350, 20)
 `$Content = New-Object Windows.Forms.Label
 `$Content.Text = "$msgContent"
 `$Content.Font = New-Object Drawing.Font('Segoe UI', 11)
-`$Content.Location = New-Object Drawing.Point(120, 85)
-`$Content.Size = New-Object Drawing.Size(360, 100)
+`$Content.Location = New-Object Drawing.Point(120, 95)
+`$Content.Size = New-Object Drawing.Size(360, 90)
 `$Button = New-Object Windows.Forms.Button
-`$Button.Text = 'Acknowledge & Dismiss'
+`$Button.Text = 'Acknowledge'
 `$Button.Font = New-Object Drawing.Font('Segoe UI', 10, [System.Drawing.FontStyle]::Bold)
 `$Button.Size = New-Object Drawing.Size(180, 45)
 `$Button.Location = New-Object Drawing.Point(300, 200)
-`$Button.BackColor = [System.Drawing.Color]::FromArgb(0, 120, 215)
+`$Button.BackColor = [System.Drawing.Color]::FromArgb(15, 23, 42)
 `$Button.ForeColor = [System.Drawing.Color]::White
 `$Button.FlatStyle = 'Flat'
 `$Button.Add_Click({ `$Form.Close() })
