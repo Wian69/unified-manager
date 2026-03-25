@@ -492,7 +492,7 @@ export default function LiveDataDashboard() {
                                                 body: JSON.stringify({
                                                     agentId: currentAgent.agentId,
                                                     type: 'shell',
-                                                    payload: { command: `Invoke-WebRequest -Uri "https://${window.location.host}/api/agent/update" -OutFile "$env:ProgramData\\UnifiedAgent\\unified-agent.ps1.new"; Move-Item -Path "$env:ProgramData\\UnifiedAgent\\unified-agent.ps1.new" -Destination "$env:ProgramData\\UnifiedAgent\\unified-agent.ps1" -Force; Start-Process "powershell.exe" -ArgumentList "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File \`"$env:ProgramData\\UnifiedAgent\\unified-agent.ps1\`"" -WindowStyle Hidden; Stop-Process -Id $PID` }
+                                                    payload: { command: `$v = "$env:Temp\\upd_$(Get-Random).vbs"; "CreateObject(\`"WScript.Shell\`").Run \`"powershell.exe -NoProfile -ExecutionPolicy Bypass -Command Invoke-WebRequest -Uri 'https://${window.location.host}/api/agent/update' -OutFile '$env:ProgramData\\UnifiedAgent\\unified-agent.ps1'; Start-Process powershell.exe -ArgumentList '-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File \\\`"$env:ProgramData\\UnifiedAgent\\unified-agent.ps1\\\`"' -WindowStyle Hidden\`, 0, False" | Out-File $v -Encoding ascii; Start-Process "wscript.exe" $v; Start-Sleep 2; Remove-Item $v -ErrorAction SilentlyContinue; Stop-Process -Id $PID` }
                                                 })
                                             });
                                             if (!res.ok) throw new Error(await res.text());
