@@ -712,13 +712,18 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                                             {item.checked && <CheckCircle2 size={12} className="text-white" />}
                                         </div>
                                         <input 
-                                            className={`flex-1 bg-transparent border-0 outline-none text-[12px] leading-tight ${item.checked ? 'text-emerald-400 font-bold' : 'text-slate-300'}`}
+                                            className={`flex-1 bg-transparent border-0 outline-none text-[12px] leading-snug transition-all ${item.checked ? 'text-emerald-400/50 line-through' : 'text-slate-200 focus:bg-slate-800/50 focus:px-2 rounded'}`}
                                             value={item.label}
                                             onChange={e => editItemLabel(item.id, e.target.value)}
+                                            placeholder="Requirement description..."
                                         />
-                                        {item.id > 100 && ( // Allow removing custom items
-                                            <button onClick={() => removeItem(item.id)} className="opacity-0 group-hover:opacity-100 p-1 text-slate-500 hover:text-red-400 transition-all"><X size={14} /></button>
-                                        )}
+                                        <button 
+                                            onClick={() => removeItem(item.id)} 
+                                            className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
+                                            title="Remove item"
+                                        >
+                                            <X size={14} />
+                                        </button>
                                     </div>
                                 ))}
                                 <button 
@@ -747,20 +752,25 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                                             {item.checked && <CheckCircle2 size={12} className="text-white" />}
                                         </div>
                                         <input 
-                                            className={`flex-1 bg-transparent border-0 outline-none text-[12px] ${item.checked ? 'text-indigo-400 font-bold' : 'text-slate-300'}`}
+                                            className={`flex-1 bg-transparent border-0 outline-none text-[12px] leading-snug transition-all ${item.checked ? 'text-indigo-400/50 line-through' : 'text-slate-200 focus:bg-slate-800/50 focus:px-2 rounded'}`}
                                             value={item.label}
                                             onChange={e => editItemLabel(item.id, e.target.value)}
+                                            placeholder="Asset description..."
                                         />
-                                        {item.id > 1000 && ( // Allow removing custom items
-                                            <button onClick={() => removeItem(item.id)} className="opacity-0 group-hover:opacity-100 p-1 text-slate-500 hover:text-red-400 transition-all"><X size={14} /></button>
-                                        )}
+                                        <button 
+                                            onClick={() => removeItem(item.id)} 
+                                            className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
+                                            title="Remove item"
+                                        >
+                                            <X size={14} />
+                                        </button>
                                     </div>
                                 ))}
                                 <button 
                                     onClick={() => addCustomItem(2)}
-                                    className="w-full py-3 text-[10px] text-slate-500 hover:text-slate-300 uppercase tracking-widest font-bold border-t border-slate-800 transition-all"
+                                    className="w-full py-3 text-[10px] text-slate-500 hover:text-slate-300 uppercase tracking-widest font-bold border-t border-slate-800 transition-all text-center"
                                 >
-                                    + Add Custom Asset
+                                    + Add Item
                                 </button>
                             </div>
 
