@@ -26,15 +26,25 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             return NextResponse.json({ error: 'No Intune-managed devices found for this user.' }, { status: 404 });
         }
 
-        // 2. Map serials or deviceNames to agentIds
+        // 2. Map serials or deviceNames to the LATEST active agent
         const agentsMap: any = await getAgents();
-        const agentId = Object.keys(agentsMap).find(id => {
-            const agent = agentsMap[id];
-            const agentSerial = (agent.serialNumber || "").toLowerCase().trim();
-            const agentName = (agent.deviceName || "").toLowerCase().trim();
-            
-            return serials.includes(agentSerial) || deviceNames.includes(agentName);
-        });
+        const activeAgents = Object.keys(agentsMap)
+            .map(id => ({ id, ...agentsMap[id] }))
+            .filter(agent => {
+                const agentSerial = (agent.serialNumber || "").toLowerCase().trim();
+                const agentName = (agent.deviceName || "").toLowerCase().trim();
+                return serials.includes(agentSerial) || deviceNames.includes(agentName);
+            })
+            .sort((a, b) => {
+                // Prioritize v3.x, then newest heartbeat
+                const vA = a.version || "0.0.0";
+                const vB = b.version || "0.0.0";
+                if (vB.startsWith('3.') && !vA.startsWith('3.')) return 1;
+                if (vA.startsWith('3.') && !vB.startsWith('3.')) return -1;
+                return new Date(b.lastSeen).getTime() - new Date(a.lastSeen).getTime();
+            });
+
+        const agentId = activeAgents.length > 0 ? activeAgents[0].id : null;
 
         if (!agentId) {
             return NextResponse.json({ 
