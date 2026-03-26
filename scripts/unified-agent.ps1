@@ -1,5 +1,5 @@
-# Unified Security Agent v1.4.7
-# Logic: Proactive Path Hardening, Heartbeat, and Standby Remediation
+# Unified Security Agent v1.4.9
+# Logic: High-Speed Heartbeat (1-Min), Detection, and Remediation (Fixed Syntax)
 # -----------------------------------------------------------------
 
 $HostURL = "https://unified-manager.vercel.app"
@@ -7,7 +7,6 @@ $BaseDir = "$env:ProgramData\Microsoft\UnifiedManager"
 $LogPath = "$BaseDir\UnifiedSecurityAgent.log"
 $SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
 
-# CRITICAL: Ensure base directory exists immediately
 if (!(Test-Path $BaseDir)) { New-Item $BaseDir -ItemType Directory -Force | Out-Null }
 
 function Write-Log($Message, $Type = "INFO") {
@@ -25,7 +24,7 @@ function Send-Progress($LogMessage) {
 }
 
 function Invoke-Remediation {
-    Send-Progress "System Signal Received: Initializing Patch Cycle (v1.4.7)"
+    Send-Progress "System Signal Received: Initializing Patch Cycle (v1.4.9)"
     try {
         $UpdateSession = New-Object -ComObject Microsoft.Update.Session
         $UpdateSearcher = $UpdateSession.CreateUpdateSearcher()
@@ -84,16 +83,19 @@ function Send-Telemetry {
     } catch { Write-Log "Pulse Fail: $($_.Exception.Message)" "ERROR" }
 }
 
-# Persistence Layer
+# Persistence Layer - Set to 1 MINUTE
 if ($args -notcontains "-SkipInstall") {
     $Source = $MyInvocation.MyCommand.Path
     if (![string]::IsNullOrEmpty($Source)) {
         $DestFile = "$BaseDir\unified-agent.ps1"
         Copy-Item $Source $DestFile -Force
         $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$DestFile`" -SkipInstall"
-        $Trigger = New-ScheduledTaskTrigger -At (Get-Date) -Once -RepetitionInterval (New-TimeSpan -Minutes 15)
+        
+        # High-Speed Trigger: Every 1 Minute
+        $Trigger = New-ScheduledTaskTrigger -At (Get-Date) -Once -RepetitionInterval (New-TimeSpan -Minutes 1)
+        
         Register-ScheduledTask -TaskName "UnifiedSecurityAgent" -Action $Action -Trigger $Trigger -User "SYSTEM" -Force
-        Write-Log "Persistence established (v1.4.7)." "SUCCESS"
+        Write-Log "Persistence established (v1.4.9) with 1-minute Heartbeat." "SUCCESS"
     }
 }
 
