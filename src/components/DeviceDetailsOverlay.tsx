@@ -130,13 +130,13 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
                                         <span className="text-blue-400">{deviceData.device.userDisplayName || 'None Assigned'}</span>
                                     </div>
                                     <div>
-                                        <span className="block text-xs font-semibold uppercase text-slate-500 mb-1">UPN</span>
+                                        <span className="block text-xs font-bold uppercase text-slate-500 mb-1.5">UPN</span>
                                         <div className="flex items-center gap-3">
-                                            <span className="text-slate-300">{deviceData.device.userPrincipalName || 'N/A'}</span>
+                                            <span className="text-slate-300 text-sm">{deviceData.device.userPrincipalName || 'N/A'}</span>
                                             {deviceData.device.userPrincipalName && (
                                                 <Link 
                                                     href={`/offboarding?user=${encodeURIComponent(deviceData.device.userPrincipalName)}`}
-                                                    className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 rounded text-[9px] font-black uppercase tracking-tighter transition-all border border-blue-600/30"
+                                                    className="flex items-center gap-2 px-3 py-1 bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 rounded text-xs font-black uppercase tracking-tight transition-all border border-blue-600/30"
                                                 >
                                                     Audit Deletions
                                                 </Link>
@@ -200,30 +200,30 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
                                         <Cpu className="text-emerald-500" size={18} />
                                     </div>
                                     <div>
-                                        <h3 className="text-lg font-bold text-slate-200 flex items-center gap-2">
+                                        <h3 className="text-xl font-bold text-slate-100 flex items-center gap-3">
                                             Security Operations
                                             {agentReport?.remediationActive && (
-                                                <span className="text-[9px] px-2 py-0.5 bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-full animate-pulse font-black uppercase tracking-tighter">
+                                                <span className="text-xs px-3 py-1 bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-full animate-pulse font-black uppercase tracking-tighter">
                                                     Remediation in Progress...
                                                 </span>
                                             )}
                                         </h3>
-                                        <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Targeted Unified Agent</p>
+                                        <p className="text-xs text-slate-500 uppercase tracking-widest font-black mt-1">Targeted Unified Agent</p>
                                     </div>
                                 </div>
 
                                 {/* Live Telemetry Section */}
-                                <div className="mb-6 p-4 bg-slate-950 border border-slate-800 rounded-2xl shadow-2xl">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Live Agent Telemetry</span>
+                                <div className="mb-8 p-6 bg-slate-950 border border-slate-800 rounded-3xl shadow-2xl">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                                            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Live Agent Telemetry</span>
                                         </div>
-                                        <span className="text-[9px] text-slate-600 font-mono">CHANNEL: 01-SEC-RPT</span>
+                                        <span className="text-xs text-slate-600 font-mono">CHANNEL: 01-SEC-RPT</span>
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <div className="flex justify-between items-center text-[11px] border-b border-slate-900 pb-2">
+                                    <div className="space-y-4">
+                                        <div className="flex justify-between items-center text-sm border-b border-slate-900 pb-3">
                                             <span className="text-slate-500">Security Pulse Status:</span>
                                             <span className={agentReport ? "text-emerald-400 font-bold" : "text-amber-500 font-bold"}>
                                                 {agentReport ? "ACTIVE / REPORTING" : "WAITING FOR AGENT..."}
@@ -231,19 +231,19 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
                                         </div>
                                         
                                         <div className="pt-2">
-                                            <p className="text-[10px] text-slate-500 mb-2 italic">Reported Findings {agentReport?.timestamp && `(Last seen: ${new Date(agentReport.timestamp).toLocaleTimeString()})`}:</p>
-                                            <div className="bg-black/40 p-3 rounded-lg border border-slate-900/50 min-h-[60px] flex flex-col justify-center">
+                                            <p className="text-xs text-slate-500 mb-3 italic">Reported Findings {agentReport?.timestamp && `(Last seen: ${new Date(agentReport.timestamp).toLocaleTimeString()})`}:</p>
+                                            <div className="bg-black/40 p-4 rounded-xl border border-slate-900/50 min-h-[80px] flex flex-col justify-center">
                                                 {agentReport ? (
-                                                    <div className="space-y-1.5">
-                                                        <p className={`text-[11px] flex items-center gap-2 ${agentReport.updateCount > 0 ? 'text-rose-400 font-bold' : 'text-emerald-400'}`}>
-                                                            {agentReport.updateCount > 0 ? <ShieldAlert size={10} /> : <CheckCircle size={10} />}
+                                                    <div className="space-y-2.5">
+                                                        <p className={`text-sm flex items-center gap-3 ${agentReport.updateCount > 0 ? 'text-rose-400 font-bold' : 'text-emerald-400'}`}>
+                                                            {agentReport.updateCount > 0 ? <ShieldAlert size={14} /> : <CheckCircle size={14} />}
                                                             {agentReport.updateCount} Missing Security Patches
                                                         </p>
                                                         
                                                         {agentReport.missingUpdates?.length > 0 && (
-                                                            <div className="pl-4 space-y-1">
+                                                            <div className="pl-6 space-y-1.5">
                                                                 {agentReport.missingUpdates.map((title: string, i: number) => (
-                                                                    <p key={`upd-${i}`} className="text-[10px] text-rose-400/80 flex items-center gap-1.5 break-words">
+                                                                    <p key={`upd-${i}`} className="text-xs text-rose-400/80 flex items-center gap-2 break-word leading-relaxed">
                                                                          • {title}
                                                                     </p>
                                                                 ))}
@@ -252,14 +252,14 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
 
                                                         {agentReport.vulnerabilities?.length > 0 ? (
                                                             agentReport.vulnerabilities.map((v: string, i: number) => (
-                                                                <p key={`vuln-${i}`} className="text-[11px] text-amber-500/90 flex items-center gap-2 mt-1">
-                                                                    <AlertTriangle size={10} />
+                                                                <p key={`vuln-${i}`} className="text-sm text-amber-500/90 flex items-center gap-3 mt-1.5">
+                                                                    <AlertTriangle size={14} />
                                                                     {v.replace(/-/g, ' ')}
                                                                 </p>
                                                             ))
                                                         ) : agentReport.updateCount === 0 ? (
-                                                            <p className="text-[11px] text-slate-400 flex items-center gap-2 mt-1">
-                                                                <ShieldCheck size={10} className="text-emerald-500" />
+                                                            <p className="text-sm text-slate-400 flex items-center gap-3 mt-1.5">
+                                                                <ShieldCheck size={14} className="text-emerald-500" />
                                                                 Endpoint security posture is optimal.
                                                             </p>
                                                         ) : null}
@@ -276,18 +276,18 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
 
                                     {/* Deployment Logs */}
                                     {(remediating || remediationLogs.length > 0) && (
-                                        <div className="mt-4 p-3 bg-black/60 rounded-xl border border-rose-500/20 font-mono text-[9px] space-y-1 animate-in fade-in slide-in-from-bottom-2">
-                                            <div className="flex justify-between items-center mb-1 text-rose-400 font-black">
-                                                <span>DEPLOYMENT TRACE</span>
-                                                <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-ping" />
+                                        <div className="mt-5 p-4 bg-black/60 rounded-2xl border border-rose-500/20 font-mono text-xs space-y-1.5 animate-in fade-in slide-in-from-bottom-2">
+                                            <div className="flex justify-between items-center mb-2 text-rose-400 font-black">
+                                                <span className="tracking-widest">DEPLOYMENT TRACE</span>
+                                                <div className="w-2 h-2 bg-rose-500 rounded-full animate-ping" />
                                             </div>
                                             {remediationLogs.map((log, i) => (
-                                                <div key={i} className="flex gap-2">
-                                                    <span className="text-slate-600">[{i+1}]</span>
-                                                    <span className="text-slate-400">{log}</span>
+                                                <div key={i} className="flex gap-3">
+                                                    <span className="text-slate-600 min-w-[20px]">[{i+1}]</span>
+                                                    <span className="text-slate-300">{log}</span>
                                                 </div>
                                             ))}
-                                            {remediating && <div className="text-rose-500/60 animate-pulse mt-1">&gt;&nbsp;Committing changes to Graph API...</div>}
+                                            {remediating && <div className="text-rose-500/60 animate-pulse mt-2">&gt;&nbsp;Committing changes to Graph API...</div>}
                                         </div>
                                     )}
                                 </div>
@@ -296,14 +296,14 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
                                     <button 
                                         onClick={handleRemediate}
                                         disabled={remediating || agentReport?.remediationActive}
-                                        className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl transition-all group border ${
+                                        className={`flex flex-col items-center justify-center gap-3 p-6 rounded-3xl transition-all group border ${
                                             remediating || agentReport?.remediationActive
                                                 ? 'bg-slate-900/40 border-slate-800 cursor-not-allowed'
                                                 : 'bg-slate-900/60 hover:bg-emerald-500/10 border-slate-800 hover:border-emerald-500/30'
                                         }`}
                                     >
-                                        <Zap className={`group-hover:text-emerald-400 ${remediating || agentReport?.remediationActive ? 'animate-pulse text-emerald-500' : 'text-slate-400'}`} size={24} />
-                                        <span className="text-[10px] font-bold text-slate-300 group-hover:text-emerald-200 uppercase tracking-tighter">
+                                        <Zap className={`group-hover:text-emerald-400 ${remediating || agentReport?.remediationActive ? 'animate-pulse text-emerald-500' : 'text-slate-400'}`} size={32} />
+                                        <span className="text-xs font-bold text-slate-300 group-hover:text-emerald-200 uppercase tracking-tighter">
                                             {agentReport?.remediationActive ? 'Patching Endpoint...' : 'Deploy Instant Fix'}
                                         </span>
                                     </button>
