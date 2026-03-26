@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { saveAgentReport } from '@/lib/db';
+import { saveAgentReportBySerial } from '@/lib/db';
 
 /**
  * Endpoint for the Unified Security Agent to report vulnerabilities and 
@@ -8,19 +8,23 @@ import { saveAgentReport } from '@/lib/db';
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const { deviceId, deviceName, vulnerabilities, updateCount, status } = body;
+        const { deviceId, serialNumber, deviceName, vulnerabilities, updateCount, status } = body;
 
-        if (!deviceId) {
-            return NextResponse.json({ error: "Missing deviceId" }, { status: 400 });
+        // We prefer Serial Number as it's the most reliable link between Graph and the Agent
+        const idToStore = serialNumber || deviceId;
+
+        if (!idToStore) {
+            return NextResponse.json({ error: "Missing identifier (deviceId or serialNumber)" }, { status: 400 });
         }
 
-        console.log(`[AGENT-REPORT] Device: ${deviceName} (${deviceId})`);
+        console.log(`[AGENT-REPORT] Device: ${deviceName} (SN: ${serialNumber})`);
         console.log(`[AGENT-REPORT] Status: ${status}`);
         console.log(`[AGENT-REPORT] Updates Found: ${updateCount}`);
-        console.log(`[AGENT-REPORT] Vulnerabilities:`, vulnerabilities);
 
-        // Persist the report to the database (KV or Supabase)
-        await saveAgentReport(deviceId, {
+        // Persist the report to the database using the Serial Number
+        await saveAgentReportBySerial(idToStore, {
+            deviceId,
+            serialNumber,
             deviceName,
             vulnerabilities: vulnerabilities || [],
             updateCount: updateCount || 0,

@@ -121,14 +121,14 @@ export async function saveWatchlist(watchlist: any) {
     return saveData('watchlist', WATCHLIST_FILE, watchlist);
 }
 
-export async function getAgentReport(deviceId: string) {
-    const key = `agent_report:${deviceId}`;
-    const filePath = path.join(DB_DIR, `agent_report_${deviceId}.json`);
+export async function getAgentReportBySerial(serialNumber: string) {
+    const key = `agent_report_sn:${serialNumber}`;
+    const filePath = path.join(DB_DIR, `agent_report_sn_${serialNumber}.json`);
     return getData(key, filePath, null);
 }
 
-export async function saveAgentReport(deviceId: string, report: any) {
-    const key = `agent_report:${deviceId}`;
-    const filePath = path.join(DB_DIR, `agent_report_${deviceId}.json`);
-    return saveData(key, filePath, report);
+export async function saveAgentReportBySerial(serialNumber: string, report: any) {
+    const key = `agent_report_sn:${serialNumber}`;
+    const filePath = path.join(DB_DIR, `agent_report_sn_${serialNumber}.json`);
+    await saveData(key, filePath, report);
 }

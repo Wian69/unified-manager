@@ -31,8 +31,12 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
     };
 
     const fetchTelemetry = async () => {
+        // Use Serial Number if available, as it's the most reliable link between Graph and Agent
+        const identifier = deviceData?.device?.serialNumber || deviceId;
+        if (!identifier) return;
+
         try {
-            const res = await fetch(`/api/security/report/${deviceId}`);
+            const res = await fetch(`/api/security/report/${identifier}`);
             const data = await res.json();
             if (data && data.timestamp) {
                 setAgentReport(data);
@@ -43,11 +47,17 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
     useEffect(() => {
         if (deviceId) {
             fetchDetails();
+        }
+    }, [deviceId]);
+
+    // Fetch telemetry once device data (and serial number) is available
+    useEffect(() => {
+        if (deviceData?.device) {
             fetchTelemetry();
             const interval = setInterval(fetchTelemetry, 30000);
             return () => clearInterval(interval);
         }
-    }, [deviceId]);
+    }, [deviceData]);
 
     const handleRemediate = async () => {
         setRemediating(true);

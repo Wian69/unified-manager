@@ -80,8 +80,10 @@ if ($args -contains "-Remediate") {
 # --- 5. REPORT TO HOST ---
 try {
     Write-Log "Reporting findings to host: $HostURL"
+    $SerialNumber = (Get-CimInstance Win32_BIOS).SerialNumber
     $Payload = @{
         deviceId = (Get-CimInstance Win32_ComputerSystemProduct).UUID
+        serialNumber = $SerialNumber
         deviceName = $env:COMPUTERNAME
         vulnerabilities = $Vulnerabilities
         updateCount = $UpdateCount

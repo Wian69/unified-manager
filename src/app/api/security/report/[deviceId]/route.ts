@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAgentReport } from '@/lib/db';
+import { getAgentReportBySerial } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,10 +11,12 @@ export async function GET(
         const { deviceId } = await params;
         
         if (!deviceId) {
-            return NextResponse.json({ error: "Missing deviceId" }, { status: 400 });
+            return NextResponse.json({ error: "Missing identifier" }, { status: 400 });
         }
 
-        const report = await getAgentReport(deviceId);
+        // The 'deviceId' parameter in this route can now be either the Graph ID or the Serial Number.
+        // We prioritize Serial Number as established in the new mapping logic.
+        const report = await getAgentReportBySerial(deviceId);
 
         return NextResponse.json(report || { 
             status: "No report found",
