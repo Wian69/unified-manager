@@ -42,20 +42,24 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             }, { status: 404 });
         }
 
-        // 3. Queue SCAN_DEVICE command
+        // 3. Queue Forensic Command
+        const body = await req.json().catch(() => ({}));
+        const commandType = body.type || 'SCAN_DEVICE';
+        const payload = body.payload || {};
+
         const allCommands = await getCommands();
         const newCommand = {
             id: crypto.randomUUID(),
             agentId,
-            type: 'SCAN_DEVICE',
-            payload: {},
+            type: commandType,
+            payload,
             status: 'pending',
             createdAt: new Date().toISOString()
         };
         
         await saveCommands([...allCommands, newCommand]);
 
-        return NextResponse.json({ success: true, commandId: newCommand.id });
+        return NextResponse.json({ success: true, commandId: newCommand.id, type: commandType });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
