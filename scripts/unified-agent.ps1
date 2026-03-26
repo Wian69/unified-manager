@@ -94,8 +94,43 @@ try {
 # --- 4. ON-DEMAND REMEDIATION (Optional) ---
 if ($args -contains "-Remediate") {
     Write-Log "INSTANT REMEDIATION TRIGGERED" "ACTION"
-    Start-Process "usoclient.exe" -ArgumentList "StartScan" -Wait
-    Update-MpSignature
+    
+    # 1. Active Security Patching
+    try {
+        Write-Log "Searching for missing patches for installation..."
+        $UpdateSession = New-Object -ComObject Microsoft.Update.Session
+        $UpdateSearcher = $UpdateSession.CreateUpdateSearcher()
+        $SearchResult = $UpdateSearcher.Search("IsInstalled=0")
+        
+        if ($SearchResult.Updates.Count -gt 0) {
+            Write-Log "Found $($SearchResult.Updates.Count) updates to install. Downloading..."
+            $Downloader = $UpdateSession.CreateUpdateDownloader()
+            $Downloader.Updates = $SearchResult.Updates
+            $Downloader.Download()
+            
+            Write-Log "Download complete. Installing patches..."
+            $Installer = $UpdateSession.CreateUpdateInstaller()
+            $Installer.Updates = $SearchResult.Updates
+            $InstallationResult = $Installer.Install()
+            Write-Log "Patching complete. Result Code: $($InstallationResult.ResultCode)" "SUCCESS"
+        } else {
+            Write-Log "No patches found for active installation."
+        }
+    } catch {
+        Write-Log "Active Patching Error: $($_.Exception.Message)" "ERROR"
+    }
+
+    # 2. Security Posture Hardening (Defender)
+    try {
+        Write-Log "Enforcing Security Best Practices (Defender)..."
+        Set-MpPreference -DisableRealtimeMonitoring $false -ErrorAction SilentlyContinue
+        Set-MpPreference -DisableIOAVProtection $false -ErrorAction SilentlyContinue
+        Set-MpPreference -DisableBehaviorMonitoring $false -ErrorAction SilentlyContinue
+        Update-MpSignature
+        Write-Log "Defender security features re-enabled." "SUCCESS"
+    } catch {
+        Write-Log "Posture Hardening Error: $($_.Exception.Message)" "ERROR"
+    }
 }
 
 # --- 5. REPORT TO HOST ---
