@@ -16,6 +16,7 @@ export async function GET(req: NextRequest) {
         if (!latestPulse) {
             return NextResponse.json({
                 status: 'idle',
+                percent: -1, // Hidden
                 message: 'No active remediation pulse found.'
             });
         }
@@ -31,21 +32,9 @@ export async function GET(req: NextRequest) {
             details: [] as any[]
         };
 
-        runStates.value?.forEach((state: any) => {
-            if (state.runState === 'success') summary.success++;
-            else if (state.runState === 'error') summary.error++;
-            else summary.pending++;
-
-            summary.details.push({
-                deviceId: state.managedDeviceId,
-                deviceName: state.deviceName || 'Unknown Device',
-                status: state.runState,
-                lastUpdate: state.lastStateUpdateDateTime
-            });
-        });
-
-        // 3. Percentage calculation
-        const percent = summary.total > 0 ? Math.round((summary.success / summary.total) * 100) : 0;
+        // If no devices have checked in yet but the script is brand new (< 5 mins), show 1% instead of 0% to force UI visibility
+        const isNew = (new Date().getTime() - new Date(latestPulse.createdDateTime).getTime()) < 5 * 60 * 1000;
+        let percent = summary.total > 0 ? Math.round((summary.success / summary.total) * 100) : (isNew ? 1 : 0);
 
         return NextResponse.json({
             status: percent === 100 ? 'completed' : 'in-progress',
