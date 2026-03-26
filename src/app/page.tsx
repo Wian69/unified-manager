@@ -35,7 +35,7 @@ export default function Dashboard() {
             
             clearTimeout(timeoutId);
 
-            setData(prev => ({ 
+            setData((prev: any) => ({ 
                 ...prev,
                 devices: devs || prev.devices, 
                 users: usrs || prev.users, 
