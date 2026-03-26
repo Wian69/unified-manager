@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { Laptop, RefreshCw, AlertTriangle, X } from "lucide-react";
 import DeviceDetailsOverlay from "@/components/DeviceDetailsOverlay";
 
 export default function DevicesPage() {
