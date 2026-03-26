@@ -49,7 +49,8 @@ try {
     Write-Log "Scanning for critical Windows Updates..."
     $UpdateSession = New-Object -ComObject Microsoft.Update.Session
     $UpdateSearcher = $UpdateSession.CreateUpdateSearcher()
-    $SearchResult = $UpdateSearcher.Search("IsInstalled=0 and Type='Software' and IsHidden=0")
+    # Broaden search to include ALL missing updates (Security, Critical, Drivers)
+    $SearchResult = $UpdateSearcher.Search("IsInstalled=0 and IsHidden=0")
     $UpdateCount = $SearchResult.Updates.Count
     $MissingUpdatesList = @()
     
@@ -57,8 +58,14 @@ try {
         $MissingUpdatesList += $Update.Title
     }
     
+    # Check for Pending Reboot (Critical Security Vulnerability)
+    if (Test-Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired") {
+        $Vulnerabilities += "System-PendingReboot"
+        Write-Log "VULNERABILITY DETECTED: System requires a reboot for updates." "WARN"
+    }
+
     if ($UpdateCount -gt 0) {
-        Write-Log "VULNERABILITY DETECTED: $UpdateCount missing security patches." "WARN"
+        Write-Log "VULNERABILITY DETECTED: $UpdateCount missing patches." "WARN"
     }
 } catch {
     Write-Log "Detection Error: $($_.Exception.Message)" "ERROR"
@@ -68,9 +75,18 @@ try {
 try {
     Write-Log "Checking Defender Security Posture..."
     $Status = Get-MpComputerStatus
-    if ($Status.RealTimeProtectionEnabled -ne $true) { $Vulnerabilities += "RealTimeProtection-Disabled" }
-    if ($Status.AntivirusEnabled -ne $true) { $Vulnerabilities += "Antivirus-Disabled" }
-    if ($Status.AntispywareSignatureAge -gt 3) { $Vulnerabilities += "Signatures-Outdated" }
+    if ($Status.RealTimeProtectionEnabled -ne $true) { 
+        $Vulnerabilities += "RealTimeProtection-Disabled"
+        Write-Log "Insecure State: RealTimeProtection is OFF" "WARN"
+    }
+    if ($Status.AntivirusEnabled -ne $true) { 
+        $Vulnerabilities += "Antivirus-Disabled" 
+        Write-Log "Insecure State: Antivirus is OFF" "WARN"
+    }
+    if ($Status.AntispywareSignatureAge -gt 1) { 
+        $Vulnerabilities += "Signatures-Outdated" 
+        Write-Log "Insecure State: Signatures are $($Status.AntispywareSignatureAge) days old" "WARN"
+    }
 } catch {
     Write-Log "Defender Check Error: $($_.Exception.Message)" "ERROR"
 }
