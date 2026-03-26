@@ -19,7 +19,27 @@ Write-Log "Initializing Unified Security Agent..."
 $Vulnerabilities = @()
 $UpdateCount = 0
 
-# --- 1. DEEP UPDATE DETECTION ---
+# --- 1. PERSISTENCE & HEARTBEAT INSTALLATION ---
+if ($args -notcontains "-SkipInstall") {
+    Write-Log "Deploying persistence layer (Scheduled Task)..."
+    try {
+        $InstallPath = "$env:ProgramData\Microsoft\UnifiedManager"
+        if (-not (Test-Path $InstallPath)) { New-Item -Path $InstallPath -ItemType Directory -Force }
+        $ScriptPath = "$InstallPath\unified-agent.ps1"
+        Copy-Item -Path $PSCommandPath -Destination $ScriptPath -Force
+        
+        $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$ScriptPath`" -SkipInstall"
+        $Trigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 15)
+        $Settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
+        
+        Register-ScheduledTask -TaskName "UnifiedSecurityAgent" -Action $Action -Trigger $Trigger -Settings $Settings -Force -User "SYSTEM"
+        Write-Log "Heartbeat task registered (15m interval)." "SUCCESS"
+    } catch {
+        Write-Log "Persistence Error: $($_.Exception.Message)" "ERROR"
+    }
+}
+
+# --- 2. DEEP UPDATE DETECTION ---
 try {
     Write-Log "Scanning for critical Windows Updates..."
     $UpdateSession = New-Object -ComObject Microsoft.Update.Session
@@ -34,7 +54,7 @@ try {
     Write-Log "Detection Error: $($_.Exception.Message)" "ERROR"
 }
 
-# --- 2. DEFENDER VULNERABILITY CHECK ---
+# --- 3. DEFENDER VULNERABILITY CHECK ---
 try {
     Write-Log "Checking Defender Security Posture..."
     $Status = Get-MpComputerStatus
@@ -45,14 +65,14 @@ try {
     Write-Log "Defender Check Error: $($_.Exception.Message)" "ERROR"
 }
 
-# --- 3. ON-DEMAND REMEDIATION (Optional) ---
+# --- 4. ON-DEMAND REMEDIATION (Optional) ---
 if ($args -contains "-Remediate") {
     Write-Log "INSTANT REMEDIATION TRIGGERED" "ACTION"
     Start-Process "usoclient.exe" -ArgumentList "StartScan" -Wait
     Update-MpSignature
 }
 
-# --- 4. REPORT TO HOST ---
+# --- 5. REPORT TO HOST ---
 try {
     Write-Log "Reporting findings to host: $HostURL"
     $Payload = @{
@@ -60,7 +80,7 @@ try {
         deviceName = $env:COMPUTERNAME
         vulnerabilities = $Vulnerabilities
         updateCount = $UpdateCount
-        status = "Completed"
+        status = "Active/Reporting"
     } | ConvertTo-Json
     
     Invoke-RestMethod -Uri "$HostURL/api/security/report" -Method Post -Body $Payload -ContentType "application/json"
@@ -69,4 +89,4 @@ try {
     Write-Log "Host Communication Failed: $($_.Exception.Message)" "ERROR"
 }
 
-Write-Log "Diagnostic sequence complete."
+Write-Log "Agent sequence complete."

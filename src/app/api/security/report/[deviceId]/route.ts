@@ -5,10 +5,10 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(
     req: NextRequest,
-    { params }: { params: { deviceId: string } }
+    { params }: { params: Promise<{ deviceId: string }> }
 ) {
     try {
-        const { deviceId } = params;
+        const { deviceId } = await params;
         
         if (!deviceId) {
             return NextResponse.json({ error: "Missing deviceId" }, { status: 400 });
