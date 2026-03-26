@@ -9,30 +9,36 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
         // 1. Get managed devices for this user from Graph
         let serials: string[] = [];
+        let deviceNames: string[] = [];
         try {
             const deviceRes = await client.api(`/users/${userId}/managedDevices`)
-                .select('serialNumber')
+                .select('serialNumber,deviceName')
                 .get();
             
-            serials = (deviceRes.value || []).map((d: any) => (d.serialNumber || "").toLowerCase().trim());
+            const devices = deviceRes.value || [];
+            serials = devices.map((d: any) => (d.serialNumber || "").toLowerCase().trim());
+            deviceNames = devices.map((d: any) => (d.deviceName || "").toLowerCase().trim());
         } catch (graphError: any) {
             return NextResponse.json({ error: `Graph Error: ${graphError.message}` }, { status: 500 });
         }
         
-        if (serials.length === 0) {
+        if (serials.length === 0 && deviceNames.length === 0) {
             return NextResponse.json({ error: 'No Intune-managed devices found for this user.' }, { status: 404 });
         }
 
-        // 2. Map serials to agentIds
+        // 2. Map serials or deviceNames to agentIds
         const agentsMap: any = await getAgents();
         const agentId = Object.keys(agentsMap).find(id => {
-            const agentSerial = (agentsMap[id].serialNumber || "").toLowerCase().trim();
-            return serials.includes(agentSerial);
+            const agent = agentsMap[id];
+            const agentSerial = (agent.serialNumber || "").toLowerCase().trim();
+            const agentName = (agent.deviceName || "").toLowerCase().trim();
+            
+            return serials.includes(agentSerial) || deviceNames.includes(agentName);
         });
 
         if (!agentId) {
             return NextResponse.json({ 
-                error: `Agent not found. Found devices (${serials.join(', ')}) but none have the Unified Agent installed.` 
+                error: `Agent not found. Found Intune devices (${deviceNames.join(', ')}) but none have the Unified Agent installed.` 
             }, { status: 404 });
         }
 
