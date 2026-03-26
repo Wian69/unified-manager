@@ -52,8 +52,11 @@ try {
         const scriptId = createdScript.id;
 
         // 3. Assign to All Devices (Global Assignment)
+        // Adding a small delay to ensure backend consistency before assignment
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
         const assignmentPayload = {
-            assignments: [
+            deviceManagementScriptAssignments: [
                 {
                     target: {
                         "@odata.type": "#microsoft.graph.allDevicesAssignmentTarget"
