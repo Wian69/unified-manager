@@ -86,16 +86,17 @@ export default function Dashboard() {
 
     useEffect(() => {
         fetchDashboardData();
+        fetchRemediationStatus();
     }, []);
 
     useEffect(() => {
         let interval: any;
-        if (remediating || (remediationStatus && remediationStatus.percent >= 0)) {
-            fetchRemediationStatus();
+        // Keep polling if we are currently clicking remediate OR if there is an active/recent status on the server
+        if (remediating || (remediationStatus && remediationStatus.percent < 100)) {
             interval = setInterval(fetchRemediationStatus, 5000);
         }
         return () => clearInterval(interval);
-    }, [remediating, remediationStatus]);
+    }, [remediating, remediationStatus?.percent]);
 
     const activeRing = data.updates?.rings?.find((r: any) => r.displayName?.includes('Update'))?.displayName || "Windows 11 Updates";
     
