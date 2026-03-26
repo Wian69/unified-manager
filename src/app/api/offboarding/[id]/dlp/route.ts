@@ -16,34 +16,37 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         const client = getGraphClient();
 
         // 1. Get managed devices for this user from Graph
-        // Note: Using search/filter to find devices assigned to this userId
         let serials: string[] = [];
+        let deviceNames: string[] = [];
         try {
             const deviceRes = await client.api(`/users/${userId}/managedDevices`)
-                .select('serialNumber')
+                .select('serialNumber,deviceName')
                 .get();
             
-            serials = (deviceRes.value || []).map((d: any) => (d.serialNumber || "").toLowerCase().trim());
+            const devices = deviceRes.value || [];
+            serials = devices.map((d: any) => (d.serialNumber || "").toLowerCase().trim());
+            deviceNames = devices.map((d: any) => (d.deviceName || "").toLowerCase().trim());
         } catch (graphError: any) {
             console.warn(`[DLP] Graph fetch failed for user ${userId}:`, graphError.message);
-            // Fallback: If Graph fails, we might still have agentId if we could map it elsewhere, 
-            // but usually Graph is our source of truth for user->device mapping.
         }
 
-        if (serials.length === 0) {
+        if (serials.length === 0 && deviceNames.length === 0) {
             console.log(`[DLP] No devices found for user ${userId} in Intune.`);
             return NextResponse.json({ events: [] });
         }
 
-        // 2. Map serials to agentIds from our local/Supabase DB
+        // 2. Map serials/deviceNames to agentIds
         const agentsMap: any = await getAgents();
         const agentIds = Object.keys(agentsMap).filter(id => {
-            const agentSerial = (agentsMap[id].serialNumber || "").toLowerCase().trim();
-            return serials.includes(agentSerial);
+            const agent = agentsMap[id];
+            const agentSerial = (agent.serialNumber || "").toLowerCase().trim();
+            const agentName = (agent.deviceName || "").toLowerCase().trim();
+            
+            return serials.includes(agentSerial) || deviceNames.includes(agentName);
         });
 
         if (agentIds.length === 0) {
-            console.log(`[DLP] Devices found (${serials.join(',')}) but no active Enterprise Agents matched.`);
+            console.log(`[DLP] Devices found (${deviceNames.join(',')}) but no active Enterprise Agents matched.`);
             return NextResponse.json({ events: [] });
         }
 
