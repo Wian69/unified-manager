@@ -11,11 +11,27 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
             .select('id,deviceName,operatingSystem,osVersion,complianceState,lastSyncDateTime,serialNumber,manufacturer,model,userPrincipalName,userDisplayName,enrolledDateTime,isEncrypted,jailBroken,wifiMacAddress,ethernetMacAddress,totalStorageSpaceInBytes,freeStorageSpaceInBytes')
             .get();
 
-        // 2. Fetch device compliance policies logic (MUST USE BETA for detailed settingStates)
+        // 2. Fetch device compliance policies (Attempt expansion first)
         let complianceStates = [];
         try {
-            const cpResponse = await client.api(`/deviceManagement/managedDevices/${id}/deviceCompliancePolicyStates`).version('beta').get();
+            const cpResponse = await client.api(`/deviceManagement/managedDevices/${id}/deviceCompliancePolicyStates`)
+                .version('beta')
+                .expand('settingStates')
+                .get();
             complianceStates = cpResponse.value || [];
+
+            // FALLBACK: If settingStates are missing for a non-compliant policy, fetch them individually
+            for (let i = 0; i < complianceStates.length; i++) {
+                const p = complianceStates[i];
+                if (p.state !== 'compliant' && (!p.settingStates || p.settingStates.length === 0)) {
+                    try {
+                        const settings = await client.api(`/deviceManagement/managedDevices/${id}/deviceCompliancePolicyStates/${p.id}/settingStates`).version('beta').get();
+                        complianceStates[i].settingStates = settings.value || [];
+                    } catch (sErr) {
+                        console.warn(`[API] Follow-up fetch failed for policy ${p.id}:`, sErr);
+                    }
+                }
+            }
         } catch (e) {
             console.warn('[API] Could not fetch compliance states for device:', id);
         }

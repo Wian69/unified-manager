@@ -297,6 +297,19 @@ export default function DevicesPage() {
                                                                 </div>
                                                                 
                                                                 {/* Granular Setting states - ONLY show failures to reduce noise */}
+                                                                {p.state !== 'compliant' && (!p.settingStates || p.settingStates.length === 0) && (
+                                                                    <div className="p-4 bg-slate-900/40">
+                                                                        <div className="flex items-start gap-3 p-3 bg-amber-500/5 border border-amber-500/20 rounded-lg">
+                                                                            <AlertTriangle className="text-amber-500 shrink-0" size={16} />
+                                                                            <div>
+                                                                                <p className="text-[11px] text-amber-400 font-bold mb-1">Diagnostic Data Pending Sync</p>
+                                                                                <p className="text-[10px] text-slate-400 leading-tight">Specific setting-level failures are still being synchronized from the device. This usually resolves after the next successful device sync.</p>
+                                                                                <p className="text-[10px] text-slate-500 mt-2 italic">Ref: Intune Admin Center &gt; Devices &gt; Monitor &gt; Compliance status</p>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+
                                                                 {p.settingStates?.filter((s: any) => s.state !== 'compliant' && s.state !== 'notApplicable').length > 0 && (
                                                                     <div className="p-4 bg-slate-900/40 space-y-4">
                                                                         <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mb-2 italic">Non-Compliant Settings Detected:</p>
