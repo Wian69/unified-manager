@@ -304,7 +304,7 @@ export default function LiveDataDashboard() {
                                 }
                                 return matchedAgents.map((a: any) => (
                                     <option key={`${d.id}-${a.id}`} value={a.id}>
-                                        {a.version?.startsWith('3') ? '🚀 MASTER:' : '⚠️ LEGACY:'} {d.deviceName} ({a.localIp || a.publicIp}) {a.status === 'online' ? '🟢 ONLINE' : '🔴 OFFLINE'} v{a.version || '?.?'}
+                                        {d.deviceName} ({a.localIp || a.publicIp}) {a.status === 'online' ? '🟢 ONLINE' : '🔴 OFFLINE'} [v{a.version || '?.?'}]
                                     </option>
                                 ));
                             })}
