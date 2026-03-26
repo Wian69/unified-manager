@@ -71,7 +71,7 @@ function Send-Telemetry {
         } | ConvertTo-Json
 
         $Response = Invoke-RestMethod -Uri "$HostURL/api/security/report" -Method Post -Body $Payload -ContentType "application/json"
-        Write-Log "Heartbeat Success. Command Status: $($Response.command || 'None')" "SUCCESS"
+        Write-Log "Heartbeat Success. Command Status: $($Response.command)" "SUCCESS"
 
         # Direct C2 Logic: Check for commands from dashboard response
         if ($Response.command -eq "remediate") {
