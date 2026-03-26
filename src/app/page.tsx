@@ -217,12 +217,12 @@ export default function Dashboard() {
                             )}
                         </div>
 
-                        {(remediating || remediationStatus) && (
+                        {(remediating || (remediationStatus && remediationStatus.percent >= 0)) && (
                             <div className="bg-slate-950/40 border border-slate-800/80 rounded-xl p-6 animate-in slide-in-from-bottom-4 duration-500">
                                 <div className="flex justify-between items-end mb-2">
                                     <div>
                                         <div className="text-[10px] text-slate-500 uppercase font-black tracking-widest">Global Remediation Progress</div>
-                                        <div className="text-white font-bold">{remediationStatus?.scriptName || "Initializing Pulse..."}</div>
+                                        <div className="text-white font-bold">{remediationStatus?.scriptName || "Initializing Remediation Pulse..."}</div>
                                     </div>
                                     <div className="text-right">
                                         <div className="text-2xl font-black text-emerald-400">{remediationStatus?.percent || 0}%</div>
@@ -243,14 +243,31 @@ export default function Dashboard() {
                                             <span className="text-[10px] text-slate-400 tracking-tight">of {baseVulns} Fixed</span>
                                         </div>
                                     </div>
-                                    <div className="flex flex-col gap-1">
-                                        <div className="text-[10px] text-slate-500 uppercase font-bold">Success Rate</div>
-                                        <div className="flex items-baseline gap-2">
+                                    <div className="flex flex-col gap-1 text-right">
+                                        <div className="text-[10px] text-slate-500 uppercase font-bold">Targeted Devices</div>
+                                        <div className="flex items-baseline justify-end gap-2">
                                             <span className="text-xl font-black text-emerald-500">{remediationStatus?.summary?.success || 0}</span>
-                                            <span className="text-[10px] text-slate-400">({remediationStatus?.summary?.total || 0} targeted)</span>
+                                            <span className="text-[10px] text-slate-400">/ {remediationStatus?.summary?.total || 0}</span>
                                         </div>
                                     </div>
                                 </div>
+                                
+                                {remediationStatus?.summary?.details?.length > 0 && (
+                                    <div className="mt-6 pt-6 border-t border-slate-800/50">
+                                        <div className="text-[9px] text-slate-500 uppercase font-black mb-3 tracking-widest">Recent Device Activity</div>
+                                        <div className="grid grid-cols-1 gap-2">
+                                            {remediationStatus.summary.details.slice(0, 3).map((d: any) => (
+                                                <div key={d.deviceId} className="flex items-center justify-between text-[11px] bg-slate-900/50 p-2 rounded border border-slate-800/30">
+                                                    <span className="text-slate-300 font-medium">{d.deviceName}</span>
+                                                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                                                        d.status === 'success' ? 'bg-emerald-500/10 text-emerald-500' :
+                                                        d.status === 'error' ? 'bg-rose-500/10 text-rose-500' : 'bg-slate-700 text-slate-400'
+                                                    }`}>{d.status}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
