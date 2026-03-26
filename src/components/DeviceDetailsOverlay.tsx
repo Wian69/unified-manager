@@ -231,19 +231,19 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
                                         </div>
                                         
                                         <div className="pt-2">
-                                            <p className="text-xs text-slate-500 mb-3 italic">Reported Findings {agentReport?.timestamp && `(Last seen: ${new Date(agentReport.timestamp).toLocaleTimeString()})`}:</p>
-                                            <div className="bg-black/40 p-4 rounded-xl border border-slate-900/50 min-h-[80px] flex flex-col justify-center">
+                                            <p className="text-sm text-slate-500 mb-3 italic">Reported Findings {agentReport?.timestamp && `(Last seen: ${new Date(agentReport.timestamp).toLocaleTimeString()})`}:</p>
+                                            <div className="bg-black/40 p-5 rounded-2xl border border-slate-900/50 min-h-[100px] flex flex-col justify-center">
                                                 {agentReport ? (
-                                                    <div className="space-y-2.5">
-                                                        <p className={`text-sm flex items-center gap-3 ${agentReport.updateCount > 0 ? 'text-rose-400 font-bold' : 'text-emerald-400'}`}>
-                                                            {agentReport.updateCount > 0 ? <ShieldAlert size={14} /> : <CheckCircle size={14} />}
+                                                    <div className="space-y-3">
+                                                        <p className={`text-base flex items-center gap-3 ${agentReport.updateCount > 0 ? 'text-rose-400 font-bold' : 'text-emerald-400 font-bold'}`}>
+                                                            {agentReport.updateCount > 0 ? <ShieldAlert size={18} /> : <CheckCircle size={18} />}
                                                             {agentReport.updateCount} Missing Security Patches
                                                         </p>
                                                         
                                                         {agentReport.missingUpdates?.length > 0 && (
-                                                            <div className="pl-6 space-y-1.5">
+                                                            <div className="pl-6 space-y-2">
                                                                 {agentReport.missingUpdates.map((title: string, i: number) => (
-                                                                    <p key={`upd-${i}`} className="text-xs text-rose-400/80 flex items-center gap-2 break-word leading-relaxed">
+                                                                    <p key={`upd-${i}`} className="text-sm text-rose-400/90 flex items-center gap-2 break-word leading-relaxed">
                                                                          • {title}
                                                                     </p>
                                                                 ))}
@@ -276,18 +276,18 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
 
                                     {/* Deployment Logs */}
                                     {(remediating || remediationLogs.length > 0) && (
-                                        <div className="mt-5 p-4 bg-black/60 rounded-2xl border border-rose-500/20 font-mono text-xs space-y-1.5 animate-in fade-in slide-in-from-bottom-2">
-                                            <div className="flex justify-between items-center mb-2 text-rose-400 font-black">
-                                                <span className="tracking-widest">DEPLOYMENT TRACE</span>
-                                                <div className="w-2 h-2 bg-rose-500 rounded-full animate-ping" />
+                                        <div className="mt-6 p-5 bg-black/60 rounded-3xl border border-rose-500/30 font-mono text-sm space-y-2 animate-in fade-in slide-in-from-bottom-2">
+                                            <div className="flex justify-between items-center mb-3 text-rose-400 font-black">
+                                                <span className="tracking-widest text-sm">DEPLOYMENT TRACE</span>
+                                                <div className="w-2.5 h-2.5 bg-rose-500 rounded-full animate-ping" />
                                             </div>
                                             {remediationLogs.map((log, i) => (
-                                                <div key={i} className="flex gap-3">
-                                                    <span className="text-slate-600 min-w-[20px]">[{i+1}]</span>
-                                                    <span className="text-slate-300">{log}</span>
+                                                <div key={i} className="flex gap-4">
+                                                    <span className="text-slate-500 min-w-[30px] font-bold">[{i+1}]</span>
+                                                    <span className="text-slate-200 font-medium">{log}</span>
                                                 </div>
                                             ))}
-                                            {remediating && <div className="text-rose-500/60 animate-pulse mt-2">&gt;&nbsp;Committing changes to Graph API...</div>}
+                                            {remediating && <div className="text-rose-500/80 animate-pulse mt-3 font-bold">&gt;&nbsp;Committing changes to Graph API...</div>}
                                         </div>
                                     )}
                                 </div>
