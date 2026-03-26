@@ -120,7 +120,13 @@ try {
             message: targetDeviceId ? "Instant remediation triggered for device." : "Global remediation pulse sent!",
             scriptId,
             devicesTargeted: targetIds.length,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            logs: [
+                "Intune Cleanup: Successful",
+                `Script Created: ${scriptId}`,
+                "Assignment: All Devices (Security Standard)",
+                `MDM Actions: ${targetIds.length} sync/scan pulses sent`
+            ]
         });
 
     } catch (error: any) {

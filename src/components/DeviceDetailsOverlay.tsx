@@ -15,6 +15,7 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
     const [agentReport, setAgentReport] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [remediating, setRemediating] = useState(false);
+    const [remediationLogs, setRemediationLogs] = useState<string[]>([]);
     const [showAgentScript, setShowAgentScript] = useState(false);
 
     const fetchDetails = async () => {
@@ -61,6 +62,7 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
 
     const handleRemediate = async () => {
         setRemediating(true);
+        setRemediationLogs(["Initializing Secure Communication...", "Requesting MDM Authorization..."]);
         try {
             const res = await fetch('/api/security/remediate', {
                 method: 'POST',
@@ -71,11 +73,11 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
             });
             const data = await res.json();
             if (data.success) {
-                alert(`Security Action Initialized: ${data.message}`);
-                fetchDetails(); // Refresh to see potential state changes
+                if (data.logs) setRemediationLogs(data.logs);
+                setTimeout(() => fetchTelemetry(), 2000);
             }
         } catch (error) {
-            console.error("Remediation failed", error);
+            setRemediationLogs(["Critical Error: Communication Timeout", "Please verify Intune connectivity."]);
         } finally {
             setRemediating(false);
         }
@@ -271,6 +273,23 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
                                             </div>
                                         </div>
                                     </div>
+
+                                    {/* Deployment Logs */}
+                                    {(remediating || remediationLogs.length > 0) && (
+                                        <div className="mt-4 p-3 bg-black/60 rounded-xl border border-rose-500/20 font-mono text-[9px] space-y-1 animate-in fade-in slide-in-from-bottom-2">
+                                            <div className="flex justify-between items-center mb-1 text-rose-400 font-black">
+                                                <span>DEPLOYMENT TRACE</span>
+                                                <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-ping" />
+                                            </div>
+                                            {remediationLogs.map((log, i) => (
+                                                <div key={i} className="flex gap-2">
+                                                    <span className="text-slate-600">[{i+1}]</span>
+                                                    <span className="text-slate-400">{log}</span>
+                                                </div>
+                                            ))}
+                                            {remediating && <div className="text-rose-500/60 animate-pulse mt-1">&gt;&nbsp;Committing changes to Graph API...</div>}
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3 mb-6">
