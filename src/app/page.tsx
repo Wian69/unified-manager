@@ -247,6 +247,7 @@ export default function Dashboard() {
                     </div>
                 </div>
             </div>
+            </div>
 
                 <div className="lg:col-span-full bg-slate-900/40 backdrop-blur-md rounded-2xl border border-slate-800/60 p-6">
                     <h2 className="text-xl font-bold text-slate-200 mb-4">Recent Devices</h2>
