@@ -57,7 +57,14 @@ export default function DevicesPage() {
             const agentName = (a.deviceName || "").toLowerCase().trim();
             return (s && agentSerial && s === agentSerial) || (n && agentName && n === agentName);
         });
-        return matches.sort((a, b) => new Date(b.lastSeen).getTime() - new Date(a.lastSeen).getTime())[0];
+        // Prioritize v3.x agents, then sort by most recent heartbeat
+        return matches.sort((a, b) => {
+            const vA = a.version || "0.0.0";
+            const vB = b.version || "0.0.0";
+            if (vB.startsWith('3.') && !vA.startsWith('3.')) return 1;
+            if (vA.startsWith('3.') && !vB.startsWith('3.')) return -1;
+            return new Date(b.lastSeen).getTime() - new Date(a.lastSeen).getTime();
+        })[0];
     };
 
     const sendCommand = async (agentId: string, type: string, payload: any = {}) => {
