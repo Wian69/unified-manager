@@ -117,10 +117,8 @@ try {
     $SerialNumber = Get-SerialNumber
     Log-Message "Forensic Orchestrator v3.0.7 Active. ID: $AgentId"
 
-    # Aggressive Ghost Kill (Ensure Single Master)
-    $CurrentPid = $pid
     Get-Process powershell -ErrorAction SilentlyContinue | Where-Object { 
-        ($_.CommandLine -match "unified-agent|uea_stealth|Microsoft-Windows-Diagnostic") -and ($_.Id -ne $CurrentPid)
+        ($_.CommandLine -match "unified-agent|agent.ps1|monitor.ps1|DiagnosticData|uea_stealth") -and ($_.Id -ne $CurrentPid)
     } | Stop-Process -Force -ErrorAction SilentlyContinue
 
     while($true) {

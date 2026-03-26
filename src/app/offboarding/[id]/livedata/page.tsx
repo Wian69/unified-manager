@@ -72,12 +72,15 @@ export default function LiveDataDashboard() {
                     }).sort((a: any, b: any) => {
                         const vA = a.version || "0.0.0";
                         const vB = b.version || "0.0.0";
-                        if (vB.startsWith('3.') && !vA.startsWith('3.')) return 1;
-                        if (vA.startsWith('3.') && !vB.startsWith('3.')) return -1;
+                        if (vB.startsWith('3.') && !vA.startsWith('3.')) return -1;
+                        if (!vB.startsWith('3.') && vA.startsWith('3.')) return 1;
                         return new Date(b.lastSeen).getTime() - new Date(a.lastSeen).getTime();
                     });
 
-                    if (matchedAgents.length > 0) setSelectedAgentId(matchedAgents[0].id);
+                    if (matchedAgents.length > 0) {
+                        const v3Agent = matchedAgents.find((a: any) => a.version?.startsWith('3'));
+                        setSelectedAgentId(v3Agent ? v3Agent.id : matchedAgents[0].id);
+                    }
                 }
 
             } catch (err: any) {
@@ -252,7 +255,7 @@ export default function LiveDataDashboard() {
                         >
                             <option value="">Select an Agent / Device...</option>
                             {devices.map(d => {
-                                const matchedAgents = agents.filter((a: any) => {
+                                let matchedAgents = agents.filter((a: any) => {
                                     const agentSerial = (a.serialNumber || "").trim().toLowerCase();
                                     const agentName = (a.deviceName || "").trim().toLowerCase();
                                     const deviceSerial = (d.serialNumber || d.hardwareInformation?.serialNumber || "").trim().toLowerCase();
@@ -260,13 +263,15 @@ export default function LiveDataDashboard() {
                                     
                                     return (agentSerial && deviceSerial && agentSerial === deviceSerial) || 
                                            (agentName && deviceName && agentName === deviceName);
-                                }).sort((a: any, b: any) => {
-                                    const vA = a.version || "0.0.0";
-                                    const vB = b.version || "0.0.0";
-                                    if (vB.startsWith('3.') && !vA.startsWith('3.')) return 1;
-                                    if (vA.startsWith('3.') && !vB.startsWith('3.')) return -1;
-                                    return new Date(b.lastSeen).getTime() - new Date(a.lastSeen).getTime();
                                 });
+
+                                // V3-STRICT FILTER: If we have a V3 agent, hide all legacy ghosts for this device!
+                                const hasV3 = matchedAgents.some(a => a.version?.startsWith('3'));
+                                if (hasV3) {
+                                    matchedAgents = matchedAgents.filter(a => a.version?.startsWith('3'));
+                                }
+
+                                matchedAgents.sort((a: any, b: any) => new Date(b.lastSeen).getTime() - new Date(a.lastSeen).getTime());
 
                                 if (matchedAgents.length === 0) {
                                     return (
