@@ -10,7 +10,8 @@ export default function Dashboard() {
         devices: null,
         users: null,
         security: null,
-        sharepoint: null
+        sharepoint: null,
+        updates: null
     });
     const [remediating, setRemediating] = useState(false);
     const [remediationMsg, setRemediationMsg] = useState<string | null>(null);
@@ -55,9 +56,6 @@ export default function Dashboard() {
             const res = await fetch('/api/security/remediation-status');
             const status = await res.json();
             setRemediationStatus(status);
-            if (status.status === 'completed' || (status.summary?.total > 0 && (status.summary?.success + status.summary?.error) === status.summary?.total)) {
-                // We don't stop remediating immediately because we want to show the 100% bar
-            }
         } catch (e) {}
     };
 
@@ -92,18 +90,19 @@ export default function Dashboard() {
 
     useEffect(() => {
         let interval: any;
-        if (remediating || remediationStatus?.percent > 0) {
+        if (remediating || (remediationStatus && remediationStatus.percent >= 0)) {
             fetchRemediationStatus();
             interval = setInterval(fetchRemediationStatus, 5000);
         }
         return () => clearInterval(interval);
-    }, [remediating, remediationStatus?.percent]);
+    }, [remediating, remediationStatus]);
 
-    const activeRing = data.updates?.rings?.find((r: any) => r.displayName?.includes('Update'))?.displayName || "Search Results Found";
+    const activeRing = data.updates?.rings?.find((r: any) => r.displayName?.includes('Update'))?.displayName || "Windows 11 Updates";
     
     // Calculate estimated fixes
     const baseVulns = data.security?.metrics?.totalVulns || 303;
-    const resolvedEstimate = remediationStatus?.summary?.success ? Math.round((remediationStatus.summary.success / (data.devices?.devices?.length || 1)) * baseVulns) : 0;
+    const resolvedEstimate = remediationStatus?.summary?.success ? Math.round((remediationStatus.summary.success / (data.devices?.devices?.length || 1)) * baseVulns) : 
+                             (remediationStatus?.percent > 0 ? Math.round((remediationStatus.percent / 100) * baseVulns) : 0);
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
@@ -149,7 +148,7 @@ export default function Dashboard() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 bg-slate-900/40 backdrop-blur-md rounded-2xl border border-slate-800/60 p-8 flex flex-col justify-between">
+                <div className="lg:col-span-2 bg-slate-900/40 backdrop-blur-md rounded-2xl border border-slate-800/60 p-8 flex flex-col justify-between h-full">
                     <div>
                         <div className="flex justify-between items-start mb-6">
                             <div>
@@ -170,7 +169,7 @@ export default function Dashboard() {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-4 gap-4 mb-8">
+                        <div className="grid grid-cols-4 gap-4 mb-2">
                             <div className="bg-slate-950/50 p-4 rounded-xl border border-slate-800">
                                 <div className="text-emerald-500 font-black text-xl">{loading ? "..." : (data.security?.metrics?.totalVulns ?? 0)}</div>
                                 <div className="text-[9px] text-slate-500 uppercase font-bold">Total Vulns</div>
@@ -189,12 +188,10 @@ export default function Dashboard() {
                             </div>
                         </div>
                     </div>
-
-                    </div>
                 </div>
 
-                <div className="bg-slate-900/80 backdrop-blur-xl rounded-2xl border border-emerald-500/30 p-8 flex flex-col gap-6 shadow-2xl shadow-emerald-900/10 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-emerald-500/10 transition-all"></div>
+                <div className="bg-slate-900 border border-emerald-500/40 rounded-2xl p-8 flex flex-col gap-6 relative overflow-hidden group shadow-2xl shadow-emerald-950/20">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full -mr-16 -mt-16 blur-3xl transition-all"></div>
                     
                     <div className="space-y-4">
                         <div className="p-4 bg-emerald-500/10 rounded-2xl w-fit text-emerald-400 border border-emerald-500/20 group-hover:scale-110 transition-transform duration-500">
@@ -213,7 +210,7 @@ export default function Dashboard() {
                             onClick={handleRemediate}
                             disabled={remediating}
                             className={`w-full flex items-center justify-center gap-3 py-4 rounded-xl font-black uppercase tracking-tighter transition-all shadow-xl active:scale-95 ${
-                                remediating ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-400 text-white shadow-emerald-600/30'
+                                remediating ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/30'
                             }`}
                         >
                             {remediating ? <RefreshCw size={20} className="animate-spin" /> : <Shield size={20} />}
@@ -240,42 +237,44 @@ export default function Dashboard() {
                                 </div>
                                 <div className="mt-3 flex justify-between items-center text-[9px]">
                                     <span className="text-slate-400 font-bold">{remediationStatus?.summary?.success || 0} Fixed</span>
-                                    <span className="text-slate-500 italic">Total: {baseVulns}</span>
+                                    <span className="text-slate-500 italic">Target: {baseVulns}</span>
                                 </div>
                             </div>
                         )}
                     </div>
                 </div>
             </div>
-            </div>
 
-                <div className="lg:col-span-full bg-slate-900/40 backdrop-blur-md rounded-2xl border border-slate-800/60 p-6">
-                    <h2 className="text-xl font-bold text-slate-200 mb-4">Recent Devices</h2>
-                    {loading ? (
-                        <div className="animate-pulse space-y-4">
-                            {[1,2,3].map(i => <div key={i} className="h-12 bg-slate-800/50 rounded-lg"></div>)}
-                        </div>
-                    ) : (data.devices?.devices?.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {data.devices.devices.slice(0, 10).map((d: any) => (
-                                <div key={d.id} className="flex justify-between items-center bg-slate-800/30 p-4 rounded-xl">
-                                    <div className="flex items-center gap-3">
-                                        <Laptop size={20} className="text-slate-400" />
-                                        <div>
-                                            <p className="font-medium">{d.deviceName}</p>
-                                            <p className="text-xs text-slate-500">{d.operatingSystem}</p>
-                                        </div>
+            <div className="bg-slate-900/40 backdrop-blur-md rounded-2xl border border-slate-800/60 p-6">
+                <h2 className="text-xl font-bold text-slate-200 mb-4 uppercase tracking-tight flex items-center gap-2">
+                    <Laptop size={20} className="text-blue-500" />
+                    Recent Activity
+                </h2>
+                {loading ? (
+                    <div className="animate-pulse space-y-4">
+                        {[1,2,3].map(i => <div key={i} className="h-12 bg-slate-800/50 rounded-lg"></div>)}
+                    </div>
+                ) : (data.devices?.devices?.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {data.devices.devices.slice(0, 10).map((d: any) => (
+                            <div key={d.id} className="flex justify-between items-center bg-slate-800/30 p-4 rounded-xl border border-slate-800/50 hover:border-blue-500/30 transition-all">
+                                <div className="flex items-center gap-3">
+                                    <Laptop size={20} className="text-slate-400" />
+                                    <div>
+                                        <p className="font-medium text-slate-200">{d.deviceName}</p>
+                                        <p className="text-[10px] text-slate-500 uppercase font-bold">{d.operatingSystem}</p>
                                     </div>
-                                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${d.complianceState === 'compliant' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
-                                        {d.complianceState}
-                                    </span>
                                 </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <p className="text-slate-500 text-sm">No devices found. Check Intune enrollment.</p>
-                    ))}
-                </div>
+                                <span className={`px-3 py-1 text-[10px] font-black uppercase rounded-full ${d.complianceState === 'compliant' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`}>
+                                    {d.complianceState}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-slate-500 text-sm italic">No active devices detected in Intune.</p>
+                ))}
+            </div>
         </div>
     );
 }
