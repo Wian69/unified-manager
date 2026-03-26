@@ -132,14 +132,18 @@ export default function Dashboard() {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-4 mb-8">
+                        <div className="grid grid-cols-4 gap-4 mb-8">
+                            <div className="bg-slate-950/50 p-4 rounded-xl border border-slate-800">
+                                <div className="text-emerald-500 font-black text-xl">{loading ? "..." : (data.security?.metrics?.totalVulns ?? 0)}</div>
+                                <div className="text-[9px] text-slate-500 uppercase font-bold">Total Vulns</div>
+                            </div>
                             <div className="bg-slate-950/50 p-4 rounded-xl border border-slate-800">
                                 <div className="text-rose-500 font-black text-xl">{loading ? "..." : (data.security?.metrics?.critical ?? 0)}</div>
-                                <div className="text-[9px] text-slate-500 uppercase font-bold">Critical Vulns</div>
+                                <div className="text-[9px] text-slate-500 uppercase font-bold">Critical</div>
                             </div>
                             <div className="bg-slate-950/50 p-4 rounded-xl border border-slate-800">
                                 <div className="text-amber-500 font-black text-xl">{loading ? "..." : (data.security?.metrics?.high ?? 0)}</div>
-                                <div className="text-[9px] text-slate-500 uppercase font-bold">High Severity</div>
+                                <div className="text-[9px] text-slate-500 uppercase font-bold">High Sever.</div>
                             </div>
                             <div className="bg-slate-950/50 p-4 rounded-xl border border-slate-800">
                                 <div className="text-blue-500 font-black text-xl">{loading ? "..." : (data.security?.metrics?.nonCompliant ?? 0)}</div>

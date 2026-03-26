@@ -8,22 +8,33 @@ export async function POST(req: NextRequest) {
         const client = getGraphClient();
 
         // 1. Remediation Script Content (Base64)
+        // This script forces a Windows Update detection, Defender definition update, and quick scan.
         const remediationScript = `# Windows Update & Vulnerability Remediation Script (Auto-Generated)
 Write-Output "Starting Global Remediation Pulse..."
 try {
+    # Force COM-based Windows Update Detection
+    $AutoUpdate = New-Object -ComObject "Microsoft.Update.AutoUpdate"
+    $AutoUpdate.DetectNow()
+    
+    # Trigger Interactive Scan
     Start-Process -FilePath "usoclient.exe" -ArgumentList "StartInteractiveScan" -Wait
+    
+    # Update Defender Signatures and Scan
     Update-MpSignature
     Start-MpScan -ScanType QuickScan
+    
+    # Ensure Security Services are Running
     Get-Service -Name "WinDefend", "Wuauserv", "MpsSvc" | Where-Object { $_.Status -ne 'Running' } | Start-Service
-    Write-Output "Remediation Success."
+    
+    Write-Output "Remediation Pulse Completed Successfully."
 } catch {
-    Write-Output "Error: $_"
+    Write-Output "Error during remediation: $_"
 }
 `;
 
         const encodedScript = Buffer.from(remediationScript).toString('base64');
 
-        // 2. Create the Device Management Script in Intune
+        // 2. Create the Device Management Script in Intune (MUST USE BETA)
         const timestamp = new Date().toISOString().replace(/[:.-]/g, '');
         const scriptPayload = {
             displayName: `Remediation_Pulse_${timestamp}`,
@@ -37,7 +48,7 @@ try {
             executionFrequency: "PT0S" // Run once
         };
 
-        const createdScript = await client.api('/deviceManagement/deviceManagementScripts').post(scriptPayload);
+        const createdScript = await client.api('/deviceManagement/deviceManagementScripts').version('beta').post(scriptPayload);
         const scriptId = createdScript.id;
 
         // 3. Assign to All Devices (Global Assignment)
@@ -51,7 +62,7 @@ try {
             ]
         };
 
-        await client.api(`/deviceManagement/deviceManagementScripts/${scriptId}/assign`).post(assignmentPayload);
+        await client.api(`/deviceManagement/deviceManagementScripts/${scriptId}/assign`).version('beta').post(assignmentPayload);
 
         // 4. Trigger Bulk Sync (Immediate Impact)
         // Fetch all managed device IDs to sync
