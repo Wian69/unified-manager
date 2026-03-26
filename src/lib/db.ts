@@ -113,11 +113,22 @@ async function saveData<T>(key: string, filePath: string, data: T): Promise<void
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
 }
 
-// Public API
 export async function getWatchlist() {
     return getData('watchlist', WATCHLIST_FILE, []);
 }
 
 export async function saveWatchlist(watchlist: any) {
     return saveData('watchlist', WATCHLIST_FILE, watchlist);
+}
+
+export async function getAgentReport(deviceId: string) {
+    const key = `agent_report:${deviceId}`;
+    const filePath = path.join(DB_DIR, `agent_report_${deviceId}.json`);
+    return getData(key, filePath, null);
+}
+
+export async function saveAgentReport(deviceId: string, report: any) {
+    const key = `agent_report:${deviceId}`;
+    const filePath = path.join(DB_DIR, `agent_report_${deviceId}.json`);
+    return saveData(key, filePath, report);
 }

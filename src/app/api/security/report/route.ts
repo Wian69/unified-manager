@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { saveAgentReport } from '@/lib/db';
 
 /**
  * Endpoint for the Unified Security Agent to report vulnerabilities and 
@@ -18,12 +19,18 @@ export async function POST(req: NextRequest) {
         console.log(`[AGENT-REPORT] Updates Found: ${updateCount}`);
         console.log(`[AGENT-REPORT] Vulnerabilities:`, vulnerabilities);
 
-        // In a real app, we would save this to a database (e.g. Supabase or Redis)
-        // For now, we'll log it to the console which is visible in the Manager's logs.
+        // Persist the report to the database (KV or Supabase)
+        await saveAgentReport(deviceId, {
+            deviceName,
+            vulnerabilities: vulnerabilities || [],
+            updateCount: updateCount || 0,
+            status,
+            timestamp: new Date().toISOString()
+        });
         
         return NextResponse.json({ 
             success: true, 
-            message: "Telemetry received" 
+            message: "Telemetry received and persisted" 
         });
     } catch (error: any) {
         console.error('[AGENT-REPORT] Error:', error.message);

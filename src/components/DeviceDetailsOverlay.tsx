@@ -12,6 +12,7 @@ interface DeviceDetailsOverlayProps {
 
 export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetailsOverlayProps) {
     const [deviceData, setDeviceData] = useState<any>(null);
+    const [agentReport, setAgentReport] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [remediating, setRemediating] = useState(false);
     const [showAgentScript, setShowAgentScript] = useState(false);
@@ -29,8 +30,23 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
         }
     };
 
+    const fetchTelemetry = async () => {
+        try {
+            const res = await fetch(`/api/security/report/${deviceId}`);
+            const data = await res.json();
+            if (data && data.timestamp) {
+                setAgentReport(data);
+            }
+        } catch (e) {}
+    };
+
     useEffect(() => {
-        if (deviceId) fetchDetails();
+        if (deviceId) {
+            fetchDetails();
+            fetchTelemetry();
+            const interval = setInterval(fetchTelemetry, 30000);
+            return () => clearInterval(interval);
+        }
     }, [deviceId]);
 
     const handleRemediate = async () => {
@@ -187,20 +203,40 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
                                     <div className="space-y-2">
                                         <div className="flex justify-between items-center text-[11px] border-b border-slate-900 pb-2">
                                             <span className="text-slate-500">Security Pulse Status:</span>
-                                            <span className="text-emerald-400 font-bold">ACTIVE / LISTENING</span>
+                                            <span className={agentReport ? "text-emerald-400 font-bold" : "text-amber-500 font-bold"}>
+                                                {agentReport ? "ACTIVE / REPORTING" : "WAITING FOR AGENT..."}
+                                            </span>
                                         </div>
                                         
                                         <div className="pt-2">
-                                            <p className="text-[10px] text-slate-500 mb-2 italic">Reported Findings (Last 24h):</p>
+                                            <p className="text-[10px] text-slate-500 mb-2 italic">Reported Findings {agentReport?.timestamp && `(Last seen: ${new Date(agentReport.timestamp).toLocaleTimeString()})`}:</p>
                                             <div className="bg-black/40 p-3 rounded-lg border border-slate-900/50 min-h-[60px] flex flex-col justify-center">
-                                                <p className="text-[11px] text-slate-400 flex items-center gap-2">
-                                                    <CheckCircle size={10} className="text-emerald-500" />
-                                                    System reported: {deviceData.device.deviceName || 'Device'} is communicating with Unified Manager.
-                                                </p>
-                                                <p className="text-[11px] text-amber-500/80 mt-1 flex items-center gap-2">
-                                                    <Info size={10} />
-                                                    Waiting for full vulnerability payload from next Intune Scan...
-                                                </p>
+                                                {agentReport ? (
+                                                    <div className="space-y-1.5">
+                                                        <p className={`text-[11px] flex items-center gap-2 ${agentReport.updateCount > 0 ? 'text-rose-400 font-bold' : 'text-emerald-400'}`}>
+                                                            {agentReport.updateCount > 0 ? <ShieldAlert size={10} /> : <CheckCircle size={10} />}
+                                                            {agentReport.updateCount} Missing Security Patches
+                                                        </p>
+                                                        {agentReport.vulnerabilities?.length > 0 ? (
+                                                            agentReport.vulnerabilities.map((v: string, i: number) => (
+                                                                <p key={i} className="text-[11px] text-amber-500/90 flex items-center gap-2">
+                                                                    <AlertTriangle size={10} />
+                                                                    {v.replace(/-/g, ' ')}
+                                                                </p>
+                                                            ))
+                                                        ) : agentReport.updateCount === 0 ? (
+                                                            <p className="text-[11px] text-slate-400 flex items-center gap-2">
+                                                                <ShieldCheck size={10} className="text-emerald-500" />
+                                                                Endpoint security posture is optimal.
+                                                            </p>
+                                                        ) : null}
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-[11px] text-slate-500 flex items-center gap-2 italic">
+                                                        <Activity size={10} className="animate-pulse" />
+                                                        Deploy the Unified Agent to see real-time vulnerabilities...
+                                                    </p>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
