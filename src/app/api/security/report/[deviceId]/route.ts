@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAgentReportBySerial } from '@/lib/db';
+import { getAgentReportBySerial, getDeviceRemediationStatus } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,14 +15,22 @@ export async function GET(
         }
 
         // The 'deviceId' parameter in this route can now be either the Graph ID or the Serial Number.
-        // We prioritize Serial Number as established in the new mapping logic.
         const report = await getAgentReportBySerial(deviceId);
+        const remediation = await getDeviceRemediationStatus(deviceId);
 
-        return NextResponse.json(report || { 
-            status: "No report found",
-            vulnerabilities: [],
-            updateCount: 0,
-            timestamp: null
+        if (!report) {
+            return NextResponse.json({ 
+                status: "No report found",
+                vulnerabilities: [],
+                updateCount: 0,
+                timestamp: null,
+                remediationActive: remediation?.active || false
+            });
+        }
+
+        return NextResponse.json({
+            ...(report as object),
+            remediationActive: remediation?.active || false
         });
     } catch (error: any) {
         console.error('[AGENT-GET-REPORT] Error:', error.message);

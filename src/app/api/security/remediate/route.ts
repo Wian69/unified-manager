@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getGraphClient } from '@/lib/graph';
+import { setDeviceRemediationStatus } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -89,11 +90,18 @@ try {
 
         await client.api(`/deviceManagement/deviceManagementScripts/${scriptId}/assign`).version('beta').post(assignmentPayload);
 
-        // 4. Trigger Native Remote Actions (Immediate MDM Channel)
-        // Targeted if deviceId is provided, otherwise bulk top 50
+        // 4. Trigger Native Remote Actions & Track Status
         let targetIds = [];
         if (targetDeviceId) {
             targetIds = [targetDeviceId];
+            
+            // Fetch SN to set remediation status in DB
+            try {
+                const device = await client.api(`/deviceManagement/managedDevices/${targetDeviceId}`).select('serialNumber').get();
+                if (device?.serialNumber) {
+                    await setDeviceRemediationStatus(device.serialNumber, true);
+                }
+            } catch (e) {}
         } else {
             const devices = await client.api('/deviceManagement/managedDevices').select('id,deviceName').top(50).get();
             targetIds = (devices.value || []).map((d: any) => d.id);

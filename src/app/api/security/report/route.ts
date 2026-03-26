@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { saveAgentReportBySerial } from '@/lib/db';
+import { saveAgentReportBySerial, setDeviceRemediationStatus } from '@/lib/db';
 
 /**
  * Endpoint for the Unified Security Agent to report vulnerabilities and 
@@ -27,10 +27,14 @@ export async function POST(req: NextRequest) {
             serialNumber,
             deviceName,
             vulnerabilities: vulnerabilities || [],
+            missingUpdates: body.missingUpdates || [],
             updateCount: updateCount || 0,
             status,
             timestamp: new Date().toISOString()
         });
+
+        // Clear remediation status now that we have a fresh report post-remedy
+        await setDeviceRemediationStatus(idToStore, false);
         
         return NextResponse.json({ 
             success: true, 

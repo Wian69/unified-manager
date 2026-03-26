@@ -64,7 +64,10 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
         try {
             const res = await fetch('/api/security/remediate', {
                 method: 'POST',
-                body: JSON.stringify({ deviceId })
+                body: JSON.stringify({ 
+                    deviceId, 
+                    serialNumber: deviceData?.device?.serialNumber 
+                })
             });
             const data = await res.json();
             if (data.success) {
@@ -195,7 +198,14 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
                                         <Cpu className="text-emerald-500" size={18} />
                                     </div>
                                     <div>
-                                        <h3 className="text-lg font-bold text-slate-200">Security Operations</h3>
+                                        <h3 className="text-lg font-bold text-slate-200 flex items-center gap-2">
+                                            Security Operations
+                                            {agentReport?.remediationActive && (
+                                                <span className="text-[9px] px-2 py-0.5 bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-full animate-pulse font-black uppercase tracking-tighter">
+                                                    Remediation in Progress...
+                                                </span>
+                                            )}
+                                        </h3>
                                         <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Targeted Unified Agent</p>
                                     </div>
                                 </div>
@@ -266,20 +276,32 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
                                 <div className="grid grid-cols-2 gap-3 mb-6">
                                     <button 
                                         onClick={handleRemediate}
-                                        disabled={remediating}
-                                        className="flex flex-col items-center justify-center gap-2 p-4 bg-slate-900/60 hover:bg-emerald-500/10 border border-slate-800 hover:border-emerald-500/30 rounded-2xl transition-all group"
+                                        disabled={remediating || agentReport?.remediationActive}
+                                        className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl transition-all group border ${
+                                            remediating || agentReport?.remediationActive
+                                                ? 'bg-slate-900/40 border-slate-800 cursor-not-allowed'
+                                                : 'bg-slate-900/60 hover:bg-emerald-500/10 border-slate-800 hover:border-emerald-500/30'
+                                        }`}
                                     >
-                                        <Zap className={`group-hover:text-emerald-400 ${remediating ? 'animate-pulse text-emerald-500' : 'text-slate-400'}`} size={24} />
-                                        <span className="text-[10px] font-bold text-slate-300 group-hover:text-emerald-200 uppercase tracking-tighter">Deploy Instant Fix</span>
+                                        <Zap className={`group-hover:text-emerald-400 ${remediating || agentReport?.remediationActive ? 'animate-pulse text-emerald-500' : 'text-slate-400'}`} size={24} />
+                                        <span className="text-[10px] font-bold text-slate-300 group-hover:text-emerald-200 uppercase tracking-tighter">
+                                            {agentReport?.remediationActive ? 'Patching Endpoint...' : 'Deploy Instant Fix'}
+                                        </span>
                                     </button>
 
                                     <button 
                                         onClick={handleRemediate}
-                                        disabled={remediating}
-                                        className="flex flex-col items-center justify-center gap-2 p-4 bg-slate-900/60 hover:bg-blue-500/10 border border-slate-800 hover:border-blue-500/30 rounded-2xl transition-all group"
+                                        disabled={remediating || agentReport?.remediationActive}
+                                        className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl transition-all group border ${
+                                            remediating || agentReport?.remediationActive
+                                                ? 'bg-slate-900/40 border-slate-800 cursor-not-allowed'
+                                                : 'bg-slate-900/60 hover:bg-blue-500/10 border-slate-800 hover:border-blue-500/30'
+                                        }`}
                                     >
-                                        <Activity className={`group-hover:text-blue-400 ${remediating ? 'animate-pulse text-blue-500' : 'text-slate-400'}`} size={24} />
-                                        <span className="text-[10px] font-bold text-slate-300 group-hover:text-blue-200 uppercase tracking-tighter">Instant Security Scan</span>
+                                        <Activity className={`group-hover:text-blue-400 ${remediating || agentReport?.remediationActive ? 'animate-pulse text-blue-500' : 'text-slate-400'}`} size={24} />
+                                        <span className="text-[10px] font-bold text-slate-300 group-hover:text-blue-200 uppercase tracking-tighter">
+                                            {agentReport?.remediationActive ? 'Executing Scan...' : 'Instant Security Scan'}
+                                        </span>
                                     </button>
                                 </div>
 

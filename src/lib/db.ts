@@ -132,3 +132,23 @@ export async function saveAgentReportBySerial(serialNumber: string, report: any)
     const filePath = path.join(DB_DIR, `agent_report_sn_${serialNumber}.json`);
     await saveData(key, filePath, report);
 }
+
+export async function setDeviceRemediationStatus(serialNumber: string, active: boolean) {
+    const key = `remediation_active:${serialNumber}`;
+    const filePath = path.join(DB_DIR, `rem_active_${serialNumber}.json`);
+    await saveData(key, filePath, { active, timestamp: new Date().toISOString() });
+}
+
+export async function getDeviceRemediationStatus(serialNumber: string) {
+    const key = `remediation_active:${serialNumber}`;
+    const filePath = path.join(DB_DIR, `rem_active_${serialNumber}.json`);
+    const status = await getData(key, filePath, { active: false }) as { active: boolean, timestamp?: string };
+    
+    // Auto-expire after 30 minutes if agent never reports back
+    if (status.active && status.timestamp) {
+        const diff = Date.now() - new Date(status.timestamp).getTime();
+        if (diff > 30 * 60 * 1000) return { active: false };
+    }
+    
+    return status;
+}
