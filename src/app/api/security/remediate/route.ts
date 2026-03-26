@@ -46,9 +46,11 @@ try {
         // 2. Create the Device Management Script in Intune (MUST USE BETA)
         const timestamp = new Date().toISOString().replace(/[:.-]/g, '');
         const scriptPayload = {
+            "@odata.type": "#microsoft.graph.deviceManagementScript",
             displayName: `Remediation_Pulse_${timestamp}`,
             description: "Automated vulnerability and update remediation (One-Touch)",
             scriptContent: encodedScript,
+            fileName: "remedy.ps1",
             runAsAccount: "system",
             enforceSignatureCheck: false,
             runAs32Bit: false,
@@ -59,6 +61,14 @@ try {
 
         const createdScript = await client.api('/deviceManagement/deviceManagementScripts').version('beta').post(scriptPayload);
         const scriptId = createdScript.id;
+
+        // VERIFICATION: Check if content actually stuck
+        try {
+            const verifiedScript = await client.api(`/deviceManagement/deviceManagementScripts/${scriptId}`).version('beta').get();
+            console.log(`[RemediateAPI] Script created. ID: ${scriptId}, Content Length: ${verifiedScript.scriptContent?.length || 0}`);
+        } catch (vErr: any) {
+            console.warn('[RemediateAPI] Verification fetch failed:', vErr.message);
+        }
 
         // 3. Assign to All Devices (Global Assignment)
         // Adding a small delay to ensure backend consistency before assignment
