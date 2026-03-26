@@ -33,14 +33,18 @@ export async function POST(req: NextRequest) {
 
         await saveAgents(agents);
 
-        // Get latest agent version from file system for redundant update check
-        let latestVersion = "1.2.0";
+        // Force upgrade across all active agents
+        let latestVersion = "2.0.2";
         try {
             const agentPath = path.join(process.cwd(), 'agent', 'unified-agent.ps1');
-            const content = fs.readFileSync(agentPath, 'utf-8');
-            const match = content.match(/# Version: ([\d.]+)/);
-            if (match) latestVersion = match[1];
-        } catch (e) {}
+            if (fs.existsSync(agentPath)) {
+                const content = fs.readFileSync(agentPath, 'utf-8');
+                const match = content.match(/# Version: ([\d.]+)/);
+                if (match) latestVersion = match[1];
+            }
+        } catch (e: any) {
+            console.error(`[HB] Version read error: ${e.message}`);
+        }
 
         // Check for pending commands
         const allCommands = await getCommands();

