@@ -23,10 +23,15 @@ $UpdateCount = 0
 if ($args -notcontains "-SkipInstall") {
     Write-Log "Deploying persistence layer (Scheduled Task)..."
     try {
+        $SourcePath = $MyInvocation.MyCommand.Path
+        if ([string]::IsNullOrEmpty($SourcePath)) {
+            Write-Log "Persistence Skip: Script not running from a local file (e.g. piped). Deployment requires local file." "WARN"
+            return
+        }
         $InstallPath = "$env:ProgramData\Microsoft\UnifiedManager"
         if (-not (Test-Path $InstallPath)) { New-Item -Path $InstallPath -ItemType Directory -Force }
         $ScriptPath = "$InstallPath\unified-agent.ps1"
-        Copy-Item -Path $PSCommandPath -Destination $ScriptPath -Force
+        Copy-Item -Path $SourcePath -Destination $ScriptPath -Force
         
         $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$ScriptPath`" -SkipInstall"
         $Trigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 15)
