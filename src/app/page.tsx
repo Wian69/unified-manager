@@ -18,14 +18,21 @@ export default function Dashboard() {
     const fetchDashboardData = async () => {
         setLoading(true);
         try {
-            const [devs, usrs, sec, sp] = await Promise.all([
+            const [devs, usrs, sec, sp, upd] = await Promise.all([
                 fetch('/api/devices').then(r => r.json()).catch(() => ({})),
                 fetch('/api/users').then(r => r.json()).catch(() => ({})),
                 fetch('/api/security/vulnerabilities').then(r => r.json()).catch(() => ({})),
-                fetch('/api/sharepoint').then(r => r.json()).catch(() => ({}))
+                fetch('/api/sharepoint').then(r => r.json()).catch(() => ({})),
+                fetch('/api/security/check-updates').then(r => r.json()).catch(() => ({}))
             ]);
             
-            setData({ devices: devs, users: usrs, security: sec, sharepoint: sp });
+            setData({ 
+                devices: devs, 
+                users: usrs, 
+                security: sec, 
+                sharepoint: sp,
+                updates: upd 
+            });
         } catch (error) {
             console.error("Failed to load dashboard data", error);
         } finally {
@@ -58,6 +65,8 @@ export default function Dashboard() {
         fetchDashboardData();
     }, []);
 
+    const activeRing = data.updates?.rings?.find((r: any) => r.displayName?.includes('Update'))?.displayName || "Search Results Found";
+
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             <div className="flex justify-between items-center">
@@ -65,14 +74,19 @@ export default function Dashboard() {
                     <h1 className="text-3xl font-bold text-white mb-2">Platform Overview</h1>
                     <p className="text-slate-400">Manage your organization's devices, identity, and security posture.</p>
                 </div>
-                <button 
-                    onClick={fetchDashboardData}
-                    disabled={loading}
-                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
-                >
-                    <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
-                    {loading ? "Syncing..." : "Sync Data"}
-                </button>
+                <div className="flex items-center gap-4">
+                    {data.security?.timestamp && (
+                        <span className="text-[10px] text-slate-500 font-mono uppercase">Last Sync: {new Date(data.security.timestamp).toLocaleTimeString()}</span>
+                    )}
+                    <button 
+                        onClick={fetchDashboardData}
+                        disabled={loading}
+                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
+                    >
+                        <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
+                        {loading ? "Syncing..." : "Sync Data"}
+                    </button>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -105,25 +119,30 @@ export default function Dashboard() {
                                     <Shield size={24} className="text-emerald-500" />
                                     Security Posture
                                 </h2>
-                                <p className="text-slate-400 text-sm mt-1">Microsoft Defender Exposure Score & Remediation</p>
+                                <p className="text-slate-400 text-sm mt-1 flex items-center gap-2">
+                                    Active Policy: 
+                                    <span className="text-blue-400 font-bold px-2 py-0.5 bg-blue-500/10 rounded border border-blue-500/20 text-[10px]">
+                                        {loading ? "Detecting..." : (data.updates?.rings?.length > 0 ? activeRing : "None Detected")}
+                                    </span>
+                                </p>
                             </div>
                             <div className="text-right">
-                                <div className="text-4xl font-black text-emerald-500">{loading ? "..." : (data.security?.exposureScore || 0)}</div>
+                                <div className="text-4xl font-black text-emerald-500">{loading ? "..." : (data.security?.exposureScore ?? 0)}</div>
                                 <div className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Exposure Score</div>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-3 gap-4 mb-8">
                             <div className="bg-slate-950/50 p-4 rounded-xl border border-slate-800">
-                                <div className="text-rose-500 font-black text-xl">{loading ? "..." : (data.security?.metrics?.critical || 0)}</div>
+                                <div className="text-rose-500 font-black text-xl">{loading ? "..." : (data.security?.metrics?.critical ?? 0)}</div>
                                 <div className="text-[9px] text-slate-500 uppercase font-bold">Critical Vulns</div>
                             </div>
                             <div className="bg-slate-950/50 p-4 rounded-xl border border-slate-800">
-                                <div className="text-amber-500 font-black text-xl">{loading ? "..." : (data.security?.metrics?.high || 0)}</div>
+                                <div className="text-amber-500 font-black text-xl">{loading ? "..." : (data.security?.metrics?.high ?? 0)}</div>
                                 <div className="text-[9px] text-slate-500 uppercase font-bold">High Severity</div>
                             </div>
                             <div className="bg-slate-950/50 p-4 rounded-xl border border-slate-800">
-                                <div className="text-blue-500 font-black text-xl">{loading ? "..." : (data.security?.metrics?.nonCompliant || 0)}</div>
+                                <div className="text-blue-500 font-black text-xl">{loading ? "..." : (data.security?.metrics?.nonCompliant ?? 0)}</div>
                                 <div className="text-[9px] text-slate-500 uppercase font-bold">Non-Compliant</div>
                             </div>
                         </div>
