@@ -105,7 +105,7 @@ function Install-AgentV3 {
     $WatchTrigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 5)
     Register-ScheduledTask -TaskName $WatchTask -Action $WatchAction -Trigger $WatchTrigger -Settings $Settings -User "SYSTEM" -RunLevel Highest -Force | Out-Null
 
-    Log-Message "v3.0.2 Mastery Established. Old agents purged."
+    Log-Message "v3.0.7 Mastery Established. Old agents purged."
 }
 
 if ($Install) { Install-AgentV3; exit }
