@@ -227,15 +227,26 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
                                                             {agentReport.updateCount > 0 ? <ShieldAlert size={10} /> : <CheckCircle size={10} />}
                                                             {agentReport.updateCount} Missing Security Patches
                                                         </p>
+                                                        
+                                                        {agentReport.missingUpdates?.length > 0 && (
+                                                            <div className="pl-4 space-y-1">
+                                                                {agentReport.missingUpdates.map((title: string, i: number) => (
+                                                                    <p key={`upd-${i}`} className="text-[10px] text-rose-400/80 flex items-center gap-1.5 break-words">
+                                                                         • {title}
+                                                                    </p>
+                                                                ))}
+                                                            </div>
+                                                        )}
+
                                                         {agentReport.vulnerabilities?.length > 0 ? (
                                                             agentReport.vulnerabilities.map((v: string, i: number) => (
-                                                                <p key={i} className="text-[11px] text-amber-500/90 flex items-center gap-2">
+                                                                <p key={`vuln-${i}`} className="text-[11px] text-amber-500/90 flex items-center gap-2 mt-1">
                                                                     <AlertTriangle size={10} />
                                                                     {v.replace(/-/g, ' ')}
                                                                 </p>
                                                             ))
                                                         ) : agentReport.updateCount === 0 ? (
-                                                            <p className="text-[11px] text-slate-400 flex items-center gap-2">
+                                                            <p className="text-[11px] text-slate-400 flex items-center gap-2 mt-1">
                                                                 <ShieldCheck size={10} className="text-emerald-500" />
                                                                 Endpoint security posture is optimal.
                                                             </p>

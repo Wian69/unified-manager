@@ -51,6 +51,11 @@ try {
     $UpdateSearcher = $UpdateSession.CreateUpdateSearcher()
     $SearchResult = $UpdateSearcher.Search("IsInstalled=0 and Type='Software' and IsHidden=0")
     $UpdateCount = $SearchResult.Updates.Count
+    $MissingUpdatesList = @()
+    
+    foreach ($Update in $SearchResult.Updates) {
+        $MissingUpdatesList += $Update.Title
+    }
     
     if ($UpdateCount -gt 0) {
         Write-Log "VULNERABILITY DETECTED: $UpdateCount missing security patches." "WARN"
@@ -86,6 +91,7 @@ try {
         serialNumber = $SerialNumber
         deviceName = $env:COMPUTERNAME
         vulnerabilities = $Vulnerabilities
+        missingUpdates = $MissingUpdatesList
         updateCount = $UpdateCount
         status = "Active/Reporting"
     } | ConvertTo-Json
