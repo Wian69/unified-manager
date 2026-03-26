@@ -5,7 +5,7 @@
 #>
 
 # --- CONFIGURATION ---
-$HostURL = "http://localhost:3000" # Update to your production URL
+$HostURL = "https://unified-manager.vercel.app" # Production URL for reporting findings
 $LogPath = "$env:ProgramData\Microsoft\IntuneManagementExtension\Logs\UnifiedSecurityAgent.log"
 
 function Write-Log($Message, $Type = "INFO") {
