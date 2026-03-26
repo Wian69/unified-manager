@@ -17,8 +17,14 @@ export default function Dashboard() {
     const [remediationStatus, setRemediationStatus] = useState<any>(null);
 
     const fetchDashboardData = async () => {
-        setLoading(true);
+        // Only set loading if we don't have data yet
+        if (!data.devices) setLoading(true);
+        
         try {
+            // Using a shorter timeout for the dashboard sync to keep it responsive
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000);
+
             const [devs, usrs, sec, sp, upd] = await Promise.all([
                 fetch('/api/devices').then(r => r.json()).catch(() => ({})),
                 fetch('/api/users').then(r => r.json()).catch(() => ({})),
@@ -27,13 +33,16 @@ export default function Dashboard() {
                 fetch('/api/security/check-updates').then(r => r.json()).catch(() => ({}))
             ]);
             
-            setData({ 
-                devices: devs, 
-                users: usrs, 
-                security: sec, 
-                sharepoint: sp,
-                updates: upd 
-            });
+            clearTimeout(timeoutId);
+
+            setData(prev => ({ 
+                ...prev,
+                devices: devs || prev.devices, 
+                users: usrs || prev.users, 
+                security: sec || prev.security, 
+                sharepoint: sp || prev.sharepoint,
+                updates: upd || prev.updates 
+            }));
         } catch (error) {
             console.error("Failed to load dashboard data", error);
         } finally {

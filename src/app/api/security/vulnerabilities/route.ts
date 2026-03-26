@@ -4,6 +4,9 @@ import { getGraphClient } from '@/lib/graph';
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
     try {
         const client = getGraphClient();
 
