@@ -190,97 +190,61 @@ export default function Dashboard() {
                         </div>
                     </div>
 
-                    <div className="flex flex-col gap-4">
-                        <div className="flex items-center gap-4">
-                            <button 
-                                onClick={handleRemediate}
-                                disabled={remediating}
-                                className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-xl font-black uppercase tracking-tighter transition-all shadow-xl active:scale-95 ${
-                                    remediating ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20'
-                                }`}
-                            >
-                                {remediating ? <RefreshCw size={20} className="animate-spin" /> : <Shield size={20} />}
-                                {remediating ? "Deploying Pulse..." : "Remediate All Devices"}
-                            </button>
-                            {remediationMsg && (
-                                <div className="px-4 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs font-bold text-emerald-400 animate-in fade-in slide-in-from-left-2 italic">
-                                    {remediationMsg}
-                                </div>
-                            )}
-                            {remediating && (
-                                <button 
-                                    onClick={() => setRemediating(false)}
-                                    className="px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/20 rounded-lg text-xs font-bold transition-all"
-                                >
-                                    Dismiss
-                                </button>
-                            )}
-                        </div>
-
-                        {(remediating || (remediationStatus && remediationStatus.percent >= 0)) && (
-                            <div className="bg-slate-950/40 border border-slate-800/80 rounded-xl p-6 animate-in slide-in-from-bottom-4 duration-500">
-                                <div className="flex justify-between items-end mb-2">
-                                    <div>
-                                        <div className="text-[10px] text-slate-500 uppercase font-black tracking-widest">Global Remediation Progress</div>
-                                        <div className="text-white font-bold">{remediationStatus?.scriptName || "Initializing Remediation Pulse..."}</div>
-                                    </div>
-                                    <div className="text-right">
-                                        <div className="text-2xl font-black text-emerald-400">{remediationStatus?.percent || 0}%</div>
-                                        <div className="text-[9px] text-slate-500 uppercase font-bold">Devices Responded</div>
-                                    </div>
-                                </div>
-                                <div className="h-3 bg-slate-800 rounded-full overflow-hidden border border-slate-700 p-0.5">
-                                    <div 
-                                        className="h-full bg-gradient-to-r from-emerald-600 to-cyan-500 rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(16,185,129,0.3)]"
-                                        style={{ width: `${remediationStatus?.percent || 0}%` }}
-                                    ></div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-8 mt-6">
-                                    <div className="flex flex-col gap-1">
-                                        <div className="text-[10px] text-slate-500 uppercase font-bold">Vulnerabilities Resolved</div>
-                                        <div className="flex items-baseline gap-2">
-                                            <span className="text-xl font-black text-white">{resolvedEstimate}</span>
-                                            <span className="text-[10px] text-slate-400 tracking-tight">of {baseVulns} Fixed</span>
-                                        </div>
-                                    </div>
-                                    <div className="flex flex-col gap-1 text-right">
-                                        <div className="text-[10px] text-slate-500 uppercase font-bold">Targeted Devices</div>
-                                        <div className="flex items-baseline justify-end gap-2">
-                                            <span className="text-xl font-black text-emerald-500">{remediationStatus?.summary?.success || 0}</span>
-                                            <span className="text-[10px] text-slate-400">/ {remediationStatus?.summary?.total || 0}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                {remediationStatus?.summary?.details?.length > 0 && (
-                                    <div className="mt-6 pt-6 border-t border-slate-800/50">
-                                        <div className="text-[9px] text-slate-500 uppercase font-black mb-3 tracking-widest">Recent Device Activity</div>
-                                        <div className="grid grid-cols-1 gap-2">
-                                            {remediationStatus.summary.details.slice(0, 3).map((d: any) => (
-                                                <div key={d.deviceId} className="flex items-center justify-between text-[11px] bg-slate-900/50 p-2 rounded border border-slate-800/30">
-                                                    <span className="text-slate-300 font-medium">{d.deviceName}</span>
-                                                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
-                                                        d.status === 'success' ? 'bg-emerald-500/10 text-emerald-500' :
-                                                        d.status === 'error' ? 'bg-rose-500/10 text-rose-500' : 'bg-slate-700 text-slate-400'
-                                                    }`}>{d.status}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
                     </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-indigo-900/20 to-blue-900/20 backdrop-blur-md rounded-2xl border border-blue-500/20 p-8 flex flex-col justify-center text-center">
-                    <div className="p-4 bg-blue-500/20 rounded-2xl w-fit mx-auto mb-6 text-blue-400">
-                        <RefreshCw size={32} />
+                <div className="bg-slate-900/80 backdrop-blur-xl rounded-2xl border border-emerald-500/30 p-8 flex flex-col gap-6 shadow-2xl shadow-emerald-900/10 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-emerald-500/10 transition-all"></div>
+                    
+                    <div className="space-y-4">
+                        <div className="p-4 bg-emerald-500/10 rounded-2xl w-fit text-emerald-400 border border-emerald-500/20 group-hover:scale-110 transition-transform duration-500">
+                            <RefreshCw size={32} />
+                        </div>
+                        <div>
+                            <h3 className="text-2xl font-black text-white tracking-tight uppercase">One-Touch Updates</h3>
+                            <p className="text-slate-400 text-xs leading-relaxed mt-2 font-medium">
+                                Pushing remediation forces a global Intune sync and triggers immediate Windows Update scans.
+                            </p>
+                        </div>
                     </div>
-                    <h3 className="text-xl font-bold text-white mb-2">One-Touch Updates</h3>
-                    <p className="text-slate-400 text-xs leading-relaxed">
-                        Pushing remediation forces a global Intune sync. Devices will prioritize Windows Update and security patches immediately.
-                    </p>
+
+                    <div className="flex flex-col gap-4 relative z-10">
+                        <button 
+                            onClick={handleRemediate}
+                            disabled={remediating}
+                            className={`w-full flex items-center justify-center gap-3 py-4 rounded-xl font-black uppercase tracking-tighter transition-all shadow-xl active:scale-95 ${
+                                remediating ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-400 text-white shadow-emerald-600/30'
+                            }`}
+                        >
+                            {remediating ? <RefreshCw size={20} className="animate-spin" /> : <Shield size={20} />}
+                            {remediating ? "Deploying..." : "Remediate All"}
+                        </button>
+                        
+                        {remediationMsg && (
+                            <div className="text-center text-[10px] font-black italic text-emerald-400 animate-pulse">
+                                {remediationMsg}
+                            </div>
+                        )}
+
+                        {(remediating || (remediationStatus && remediationStatus.percent >= 0)) && (
+                            <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-4 animate-in slide-in-from-bottom-2">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-[9px] text-slate-500 uppercase font-black">Progress</span>
+                                    <span className="text-xs font-black text-emerald-400">{remediationStatus?.percent || 0}%</span>
+                                </div>
+                                <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                    <div 
+                                        className="h-full bg-emerald-500 transition-all duration-1000 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                                        style={{ width: `${remediationStatus?.percent || 0}%` }}
+                                    ></div>
+                                </div>
+                                <div className="mt-3 flex justify-between items-center text-[9px]">
+                                    <span className="text-slate-400 font-bold">{remediationStatus?.summary?.success || 0} Fixed</span>
+                                    <span className="text-slate-500 italic">Total: {baseVulns}</span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 
