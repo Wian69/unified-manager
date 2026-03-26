@@ -1,5 +1,5 @@
-# Unified Security Agent v1.4.10
-# Logic: Background-Ready, Instance Locking, and Automated Life-Cycle
+# Unified Security Agent v1.4.11
+# Logic: OS-Handle Locking, High-Speed Pulse, and Atomic Remediation
 # -----------------------------------------------------------------
 
 $HostURL = "https://unified-manager.vercel.app"
@@ -10,14 +10,13 @@ $SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
 
 if (!(Test-Path $BaseDir)) { New-Item $BaseDir -ItemType Directory -Force | Out-Null }
 
-# Instance Locking: Prevent multiple agents from conflicting
-if (Test-Path $LockPath) {
-    $LockAge = (Get-Date) - (Get-Item $LockPath).LastWriteTime
-    if ($LockAge.TotalMinutes -lt 30) { exit } # Exit if another instance is active
+# OS-Level Handle Lock: Automatically releases if the window is closed/killed
+try {
+    $LockStream = [System.IO.File]::Open($LockPath, 'OpenOrCreate', 'ReadWrite', 'None')
+} catch {
+    Write-Host "[WAIT] Another instance is already active. Exiting."
+    exit
 }
-"Locked" | Out-File $LockPath -Force
-
-function Cleanup { if (Test-Path $LockPath) { Remove-Item $LockPath -Force } }
 
 function Write-Log($Message, $Type = "INFO") {
     $Stamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
@@ -34,7 +33,7 @@ function Send-Progress($LogMessage) {
 }
 
 function Invoke-Remediation {
-    Send-Progress "System Signal Received: Initializing Patch Cycle (v1.4.10)"
+    Send-Progress "System Signal Received: Initializing Patch Cycle (v1.4.11)"
     try {
         $UpdateSession = New-Object -ComObject Microsoft.Update.Session
         $UpdateSearcher = $UpdateSession.CreateUpdateSearcher()
@@ -47,7 +46,6 @@ function Invoke-Remediation {
                 Send-Progress "Downloading ($($i+1)/$Count): $($Update.Title)"
                 $Collection = New-Object -ComObject Microsoft.Update.UpdateColl
                 $Collection.Add($Update)
-                (New-Object -ComObject Microsoft.Update.Session).CreateUpdateDownloader().Download()
                 $Downloader = $UpdateSession.CreateUpdateDownloader()
                 $Downloader.Updates = $Collection
                 $Downloader.Download()
@@ -105,4 +103,6 @@ if ($args -notcontains "-SkipInstall") {
     }
 }
 
-try { Send-Telemetry } finally { Cleanup }
+try { Send-Telemetry } finally { 
+    if ($LockStream) { $LockStream.Close(); $LockStream.Dispose() }
+}
