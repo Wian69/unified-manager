@@ -94,7 +94,29 @@ export default function LiveDataDashboard() {
             try {
                 const agentRes = await fetch('/api/agent/list');
                 const agentData = await agentRes.json();
-                setAgents(agentData.agents || []);
+                const newAgents = agentData.agents || [];
+                setAgents(newAgents);
+
+                // AUTO-PROMOTION: If we are currently selected on a legacy agent (or none), 
+                // and a v3 master appears for this device, auto-switch to it!
+                if (devices.length > 0) {
+                    const matchedAgents = newAgents.filter((a: any) => {
+                        const agentSerial = (a.serialNumber || "").trim().toLowerCase();
+                        const agentName = (a.deviceName || "").trim().toLowerCase();
+                        return devices.some((d: any) => {
+                            const deviceSerial = (d.serialNumber || d.hardwareInformation?.serialNumber || "").trim().toLowerCase();
+                            const deviceName = (d.deviceName || "").trim().toLowerCase();
+                            return (agentSerial && deviceSerial && agentSerial === deviceSerial) || 
+                                   (agentName && deviceName && agentName === deviceName);
+                        });
+                    });
+
+                    const bestV3 = matchedAgents.find((a: any) => a.version?.startsWith('3'));
+                    if (bestV3 && (!selectedAgentId || !newAgents.find(a => a.id === selectedAgentId)?.version?.startsWith('3'))) {
+                        console.log("Auto-promoting to Master Agent:", bestV3.id);
+                        setSelectedAgentId(bestV3.id);
+                    }
+                }
             } catch (e) { console.error("Polling error", e); }
         };
 
