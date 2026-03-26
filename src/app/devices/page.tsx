@@ -296,8 +296,41 @@ export default function DevicesPage() {
                                                                     </span>
                                                                 </div>
                                                                 
+                                                                {/* Error Code / Description Fallback (Critical when settingStates is empty) */}
+                                                                {p.state !== 'compliant' && (p.errorCode || p.errorDescription) && (!p.settingStates || p.settingStates.length === 0) && (
+                                                                    <div className="p-4 bg-slate-900/40">
+                                                                        <div className="flex items-start gap-3 p-3 bg-rose-500/5 border border-rose-500/20 rounded-lg">
+                                                                            <AlertTriangle className="text-rose-500 shrink-0" size={16} />
+                                                                            <div className="flex-1">
+                                                                                <p className="text-[11px] text-rose-400 font-bold mb-1">Policy Processing Error</p>
+                                                                                <p className="text-[10px] text-slate-300 leading-tight mb-2">{p.errorDescription || "Intune was unable to evaluate specific settings for this policy."}</p>
+                                                                                
+                                                                                <div className="flex flex-wrap gap-2 mt-2">
+                                                                                    <div className="bg-slate-950 p-1.5 rounded border border-slate-800">
+                                                                                        <p className="text-[8px] text-slate-500 uppercase font-bold">Error Code</p>
+                                                                                        <p className="text-[10px] text-rose-400 font-mono">{p.errorCode || '0x00000000'}</p>
+                                                                                    </div>
+                                                                                    <div className="bg-slate-950 p-1.5 rounded border border-slate-800 flex-1">
+                                                                                        <p className="text-[8px] text-slate-500 uppercase font-bold">Probable Cause</p>
+                                                                                        <p className="text-[10px] text-slate-400">
+                                                                                            {p.displayName?.includes('Default') ? 'Device is marked non-compliant by organizational defaults (e.g. no policies assigned).' : 'The device has not yet reported its security baseline to Intune.'}
+                                                                                        </p>
+                                                                                    </div>
+                                                                                </div>
+
+                                                                                <div className="bg-blue-500/5 border border-blue-500/20 p-2 rounded-lg mt-3">
+                                                                                    <p className="text-[10px] text-blue-400 font-black uppercase mb-1">Recommended Fix:</p>
+                                                                                    <p className="text-slate-400 text-[10px] leading-tight">
+                                                                                        Trigger a manual sync on the device (Settings &gt; Accounts &gt; Access work or school &gt; Info &gt; Sync). If this is a 'Default Policy' error, ensure at least one custom compliance policy is assigned to the 'All Users' group.
+                                                                                    </p>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+
                                                                 {/* Granular Setting states - ONLY show failures to reduce noise */}
-                                                                {p.state !== 'compliant' && (!p.settingStates || p.settingStates.length === 0) && (
+                                                                {p.state !== 'compliant' && (!p.errorCode && !p.errorDescription) && (!p.settingStates || p.settingStates.length === 0) && (
                                                                     <div className="p-4 bg-slate-900/40">
                                                                         <div className="flex items-start gap-3 p-3 bg-amber-500/5 border border-amber-500/20 rounded-lg">
                                                                             <AlertTriangle className="text-amber-500 shrink-0" size={16} />

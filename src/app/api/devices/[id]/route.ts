@@ -11,12 +11,14 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
             .select('id,deviceName,operatingSystem,osVersion,complianceState,lastSyncDateTime,serialNumber,manufacturer,model,userPrincipalName,userDisplayName,enrolledDateTime,isEncrypted,jailBroken,wifiMacAddress,ethernetMacAddress,totalStorageSpaceInBytes,freeStorageSpaceInBytes')
             .get();
 
-        // 2. Fetch device compliance policies (Attempt expansion first)
+        // 2. Fetch device compliance policies (Attempt expansion and error capture)
         let complianceStates = [];
         try {
             const cpResponse = await client.api(`/deviceManagement/managedDevices/${id}/deviceCompliancePolicyStates`)
                 .version('beta')
                 .expand('settingStates')
+                // Capture errorCode and errorDescription which often contain the reason if settingStates is empty
+                .select('id,displayName,state,settingCount,errorCode,errorDescription,settingStates')
                 .get();
             complianceStates = cpResponse.value || [];
 
