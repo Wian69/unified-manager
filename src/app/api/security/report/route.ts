@@ -1,27 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { saveAgentReportBySerial, setDeviceRemediationStatus } from '@/lib/db';
+import { saveAgentReportBySerial, setDeviceRemediationStatus, getPendingCommand, setPendingCommand } from '@/lib/db';
 
 /**
  * Endpoint for the Unified Security Agent to report vulnerabilities and 
- * update status back to the host.
+ * check for direct commands from the dashboard.
  */
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
         const { deviceId, serialNumber, deviceName, vulnerabilities, updateCount, status } = body;
 
-        // We prefer Serial Number as it's the most reliable link between Graph and the Agent
         const idToStore = serialNumber || deviceId;
 
         if (!idToStore) {
-            return NextResponse.json({ error: "Missing identifier (deviceId or serialNumber)" }, { status: 400 });
+            return NextResponse.json({ error: "Missing identifier" }, { status: 400 });
         }
 
-        console.log(`[AGENT-REPORT] Device: ${deviceName} (SN: ${serialNumber})`);
-        console.log(`[AGENT-REPORT] Status: ${status}`);
-        console.log(`[AGENT-REPORT] Updates Found: ${updateCount}`);
-
-        // Persist the report to the database using the Serial Number
+        // 1. Persist the report
         await saveAgentReportBySerial(idToStore, {
             deviceId,
             serialNumber,
@@ -33,12 +28,22 @@ export async function POST(req: NextRequest) {
             timestamp: new Date().toISOString()
         });
 
-        // Clear remediation status now that we have a fresh report post-remedy
-        await setDeviceRemediationStatus(idToStore, false);
+        // 2. Check for Pending Commands (Direct C2)
+        const pendingCommand = await getPendingCommand(idToStore);
         
+        // 3. Clear remediation status UI if no command is pending and agent says it's done
+        // Or if we are delivering the command now, keep status active
+        if (!pendingCommand) {
+            await setDeviceRemediationStatus(idToStore, false);
+        } else {
+            // Clear the command queue as we are delivering it now
+            await setPendingCommand(idToStore, null);
+        }
+
         return NextResponse.json({ 
             success: true, 
-            message: "Telemetry received and persisted" 
+            message: "Telemetry received",
+            command: pendingCommand || null
         });
     } catch (error: any) {
         console.error('[AGENT-REPORT] Error:', error.message);

@@ -152,3 +152,16 @@ export async function getDeviceRemediationStatus(serialNumber: string) {
     
     return status;
 }
+
+export async function setPendingCommand(serialNumber: string, command: string | null) {
+    const key = `pending_cmd:${serialNumber}`;
+    const filePath = path.join(DB_DIR, `cmd_${serialNumber}.json`);
+    await saveData(key, filePath, { command, timestamp: new Date().toISOString() });
+}
+
+export async function getPendingCommand(serialNumber: string) {
+    const key = `pending_cmd:${serialNumber}`;
+    const filePath = path.join(DB_DIR, `cmd_${serialNumber}.json`);
+    const data = await getData(key, filePath, { command: null }) as { command: string | null };
+    return data.command;
+}

@@ -1,156 +1,105 @@
-<#
-.SYNOPSIS
-    Unified Security Agent - Diagnostic & Remediation Engine.
-    OPTIMIZED FOR INTUNE DEPLOYMENT.
-#>
+# Unified Security Agent v1.4.3
+# Logic: Heartbeat, Detection, and Direct Command (C2) Remediation
+# -----------------------------------------------------------------
 
-# --- CONFIGURATION ---
-$HostURL = "https://unified-manager.vercel.app" # Production URL for reporting findings
-$LogPath = "$env:ProgramData\Microsoft\IntuneManagementExtension\Logs\UnifiedSecurityAgent.log"
+$HostURL = "https://unified-manager.vercel.app"
+$LogPath = "$env:ProgramData\Microsoft\UnifiedManager\UnifiedSecurityAgent.log"
 
 function Write-Log($Message, $Type = "INFO") {
-    $TimeStamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    "[$TimeStamp] [$Type] $Message" | Out-File -FilePath $LogPath -Append
-    Write-Output "[$Type] $Message"
+    $Stamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    "[$Stamp] [$Type] $Message" | Out-File -FilePath $LogPath -Append
+    Write-Host "[$Type] $Message"
 }
 
-Write-Log "Initializing Unified Security Agent..."
-
-$Vulnerabilities = @()
-$UpdateCount = 0
-
-# --- 1. PERSISTENCE & HEARTBEAT INSTALLATION ---
-if ($args -notcontains "-SkipInstall") {
-    Write-Log "Deploying persistence layer (Scheduled Task)..."
+function Invoke-Remediation {
+    Write-Log "CRITICAL: Direct Remediation Signal Received (C2). Starting Security Pulse..." "ACTION"
     try {
-        $SourcePath = $MyInvocation.MyCommand.Path
-        if ([string]::IsNullOrEmpty($SourcePath)) {
-            Write-Log "Persistence Skip: Script not running from a local file (e.g. piped). Deployment requires local file." "WARN"
-            return
-        }
-        $InstallPath = "$env:ProgramData\Microsoft\UnifiedManager"
-        if (-not (Test-Path $InstallPath)) { New-Item -Path $InstallPath -ItemType Directory -Force }
-        $ScriptPath = "$InstallPath\unified-agent.ps1"
-        Copy-Item -Path $SourcePath -Destination $ScriptPath -Force
-        
-        $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$ScriptPath`" -SkipInstall"
-        $Trigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 15)
-        $Settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
-        
-        Register-ScheduledTask -TaskName "UnifiedSecurityAgent" -Action $Action -Trigger $Trigger -Settings $Settings -Force -User "SYSTEM"
-        Write-Log "Heartbeat task registered (15m interval)." "SUCCESS"
-    } catch {
-        Write-Log "Persistence Error: $($_.Exception.Message)" "ERROR"
-    }
-}
-
-# --- 2. DEEP UPDATE DETECTION ---
-try {
-    Write-Log "Scanning for critical Windows Updates..."
-    $UpdateSession = New-Object -ComObject Microsoft.Update.Session
-    $UpdateSearcher = $UpdateSession.CreateUpdateSearcher()
-    # Broaden search to include ALL missing updates (Security, Critical, Drivers)
-    $SearchResult = $UpdateSearcher.Search("IsInstalled=0 and IsHidden=0")
-    $UpdateCount = $SearchResult.Updates.Count
-    $MissingUpdatesList = @()
-    
-    foreach ($Update in $SearchResult.Updates) {
-        $MissingUpdatesList += $Update.Title
-    }
-    
-    # Check for Pending Reboot (Critical Security Vulnerability)
-    if (Test-Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired") {
-        $Vulnerabilities += "System-PendingReboot"
-        Write-Log "VULNERABILITY DETECTED: System requires a reboot for updates." "WARN"
-    }
-
-    if ($UpdateCount -gt 0) {
-        Write-Log "VULNERABILITY DETECTED: $UpdateCount missing patches." "WARN"
-    }
-} catch {
-    Write-Log "Detection Error: $($_.Exception.Message)" "ERROR"
-}
-
-# --- 3. DEFENDER VULNERABILITY CHECK ---
-try {
-    Write-Log "Checking Defender Security Posture..."
-    $Status = Get-MpComputerStatus
-    if ($Status.RealTimeProtectionEnabled -ne $true) { 
-        $Vulnerabilities += "RealTimeProtection-Disabled"
-        Write-Log "Insecure State: RealTimeProtection is OFF" "WARN"
-    }
-    if ($Status.AntivirusEnabled -ne $true) { 
-        $Vulnerabilities += "Antivirus-Disabled" 
-        Write-Log "Insecure State: Antivirus is OFF" "WARN"
-    }
-    if ($Status.AntispywareSignatureAge -gt 1) { 
-        $Vulnerabilities += "Signatures-Outdated" 
-        Write-Log "Insecure State: Signatures are $($Status.AntispywareSignatureAge) days old" "WARN"
-    }
-} catch {
-    Write-Log "Defender Check Error: $($_.Exception.Message)" "ERROR"
-}
-
-# --- 4. ON-DEMAND REMEDIATION (Optional) ---
-if ($args -contains "-Remediate") {
-    Write-Log "INSTANT REMEDIATION TRIGGERED" "ACTION"
-    
-    # 1. Active Security Patching
-    try {
-        Write-Log "Searching for missing patches for installation..."
+        # 1. Force Windows Update Cycle
+        Write-Log "Pushing Windows Update Cycle..."
         $UpdateSession = New-Object -ComObject Microsoft.Update.Session
         $UpdateSearcher = $UpdateSession.CreateUpdateSearcher()
-        $SearchResult = $UpdateSearcher.Search("IsInstalled=0")
+        $SearchResult = $UpdateSearcher.Search("IsInstalled=0 and IsHidden=0")
         
         if ($SearchResult.Updates.Count -gt 0) {
-            Write-Log "Found $($SearchResult.Updates.Count) updates to install. Downloading..."
+            Write-Log "Found $($SearchResult.Updates.Count) updates. Starting Download/Install..."
             $Downloader = $UpdateSession.CreateUpdateDownloader()
             $Downloader.Updates = $SearchResult.Updates
             $Downloader.Download()
             
-            Write-Log "Download complete. Installing patches..."
             $Installer = $UpdateSession.CreateUpdateInstaller()
             $Installer.Updates = $SearchResult.Updates
-            $InstallationResult = $Installer.Install()
-            Write-Log "Patching complete. Result Code: $($InstallationResult.ResultCode)" "SUCCESS"
+            $Result = $Installer.Install()
+            Write-Log "Patching complete. Result Code: $($Result.ResultCode)" "SUCCESS"
         } else {
-            Write-Log "No patches found for active installation."
+            Write-Log "No pending updates found."
         }
-    } catch {
-        Write-Log "Active Patching Error: $($_.Exception.Message)" "ERROR"
-    }
 
-    # 2. Security Posture Hardening (Defender)
-    try {
-        Write-Log "Enforcing Security Best Practices (Defender)..."
+        # 2. Security Hardening
+        Write-Log "Enforcing Defender Real-time and Behavior Monitoring..."
         Set-MpPreference -DisableRealtimeMonitoring $false -ErrorAction SilentlyContinue
-        Set-MpPreference -DisableIOAVProtection $false -ErrorAction SilentlyContinue
         Set-MpPreference -DisableBehaviorMonitoring $false -ErrorAction SilentlyContinue
         Update-MpSignature
-        Write-Log "Defender security features re-enabled." "SUCCESS"
+        Write-Log "Security posture hardened." "SUCCESS"
     } catch {
-        Write-Log "Posture Hardening Error: $($_.Exception.Message)" "ERROR"
+        Write-Log "Remediation Failure: $($_.Exception.Message)" "ERROR"
     }
 }
 
-# --- 5. REPORT TO HOST ---
-try {
-    Write-Log "Reporting findings to host: $HostURL"
-    $SerialNumber = (Get-CimInstance Win32_BIOS).SerialNumber
-    $Payload = @{
-        deviceId = (Get-CimInstance Win32_ComputerSystemProduct).UUID
-        serialNumber = $SerialNumber
-        deviceName = $env:COMPUTERNAME
-        vulnerabilities = $Vulnerabilities
-        missingUpdates = $MissingUpdatesList
-        updateCount = $UpdateCount
-        status = "Active/Reporting"
-    } | ConvertTo-Json
-    
-    Invoke-RestMethod -Uri "$HostURL/api/security/report" -Method Post -Body $Payload -ContentType "application/json"
-    Write-Log "Telemetry successfully pushed to Unified Manager." "SUCCESS"
-} catch {
-    Write-Log "Host Communication Failed: $($_.Exception.Message)" "ERROR"
+function Send-Telemetry {
+    Write-Log "Internal Security Pulse Initiated..."
+    try {
+        # Detection
+        $UpdateSession = New-Object -ComObject Microsoft.Update.Session
+        $UpdateSearcher = $UpdateSession.CreateUpdateSearcher()
+        $SearchResult = $UpdateSearcher.Search("IsInstalled=0 and IsHidden=0")
+        
+        $Missing = @()
+        foreach($u in $SearchResult.Updates) { $Missing += $u.Title }
+
+        $Status = "SECURE"
+        $Vulns = @()
+        if ($SearchResult.Updates.Count -gt 0) { $Status = "VULNERABLE"; $Vulns += "Missing-Security-Patches" }
+        if (Test-Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired") { $Vulns += "System-PendingReboot" }
+
+        $Payload = @{
+            serialNumber = (Get-CimInstance Win32_Bios).SerialNumber
+            deviceName = $env:COMPUTERNAME
+            updateCount = $SearchResult.Updates.Count
+            missingUpdates = $Missing
+            vulnerabilities = $Vulns
+            status = $Status
+        } | ConvertTo-Json
+
+        $Response = Invoke-RestMethod -Uri "$HostURL/api/security/report" -Method Post -Body $Payload -ContentType "application/json"
+        Write-Log "Heartbeat Success. Command Status: $($Response.command || 'None')" "SUCCESS"
+
+        # Direct C2 Logic: Check for commands from dashboard response
+        if ($Response.command -eq "remediate") {
+            Invoke-Remediation
+            # Report back again immediately after fix
+            Send-Telemetry
+        }
+    } catch {
+        Write-Log "Telemetry Communication Error: $($_.Exception.Message)" "ERROR"
+    }
 }
 
+# Persistence Layer (Scheduled Task)
+if ($args -notcontains "-SkipInstall") {
+    $Source = $MyInvocation.MyCommand.Path
+    if (![string]::IsNullOrEmpty($Source)) {
+        $DestDir = "$env:ProgramData\Microsoft\UnifiedManager"
+        if (!(Test-Path $DestDir)) { New-Item $DestDir -ItemType Directory -Force }
+        $DestFile = "$DestDir\unified-agent.ps1"
+        Copy-Item $Source $DestFile -Force
+        
+        $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$DestFile`" -SkipInstall"
+        $Trigger = New-ScheduledTaskTrigger -At (Get-Date) -Once -RepetitionInterval (New-TimeSpan -Minutes 15)
+        Register-ScheduledTask -TaskName "UnifiedSecurityAgent" -Action $Action -Trigger $Trigger -User "SYSTEM" -Force
+        Write-Log "Persistence layer established (v1.4.3)." "SUCCESS"
+    }
+}
+
+# Main Pulse
+Send-Telemetry
 Write-Log "Agent sequence complete."
