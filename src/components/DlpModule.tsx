@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldAlert, Usb, Mail, RefreshCw, Calendar, Download, Search, AlertCircle, CircleCheck, Info, Camera, AlertTriangle, FileText } from "lucide-react";
+import { ShieldAlert, Usb, Mail, RefreshCw, Calendar, Download, Search, AlertCircle, CircleCheck, Info, Camera, AlertTriangle, FileText, MessageSquare } from "lucide-react";
 
 interface DlpEvent {
     id: string;
@@ -148,6 +148,16 @@ export default function DlpModule({ userId, userDisplayName, sinceDate }: { user
                             className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
                         >
                             <Search size={14} /> Discovery Scan
+                        </button>
+                        <button 
+                            onClick={() => {
+                                const msg = prompt("Enter message for user:");
+                                if (msg) handleCommand('Message', { text: msg });
+                            }}
+                            disabled={loading}
+                            className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition-all text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
+                        >
+                            <MessageSquare size={14} /> Message
                         </button>
                         <button 
                             onClick={downloadCSV}
