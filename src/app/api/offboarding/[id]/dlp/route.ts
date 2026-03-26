@@ -65,3 +65,42 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
+
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    try {
+        const { id: agentId } = await params;
+        const body = await req.json();
+        const { type, payload, severity = 'high' } = body;
+
+        console.log(`[DLP] Received event from agent ${agentId}: ${type}`);
+
+        const { saveDlpEvents, getDlpEvents } = require('@/lib/db');
+        const events = await getDlpEvents();
+        
+        const newEvent = {
+            id: `dlp_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+            agentId: agentId,
+            type: type || 'GENERAL_EVENT',
+            details: typeof payload === 'string' ? payload : (payload.output || payload.text || JSON.stringify(payload)),
+            severity: severity,
+            timestamp: new Date().toISOString()
+        };
+
+        // Handle specific screenshot payloads for the UI
+        if (type === 'COMMAND_RESULT' && payload.type === 'SCREENSHOT' && payload.output) {
+            newEvent.type = 'security_snapshot';
+            newEvent.details = `Instant Forensic Capture | ${payload.output}`; // UI expects Base64 after |
+        } else if (type === 'COMMAND_RESULT' && payload.type === 'shell') {
+            newEvent.type = 'discovery_result';
+            newEvent.details = payload.output || 'No output.';
+        }
+
+        events.push(newEvent);
+        await saveDlpEvents(events);
+
+        return NextResponse.json({ success: true, eventId: newEvent.id });
+    } catch (error: any) {
+        console.error('[API] DLP Post Error:', error.message);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
