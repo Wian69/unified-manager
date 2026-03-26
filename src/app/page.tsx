@@ -62,7 +62,11 @@ export default function Dashboard() {
             const result = await res.json();
             if (res.ok) {
                 setRemediationMsg("Remediation Pulse Sent Successfully!");
-                // Keep the 'remediating' state true for a while to show the progress bar
+                // Allow button to be clickable again after 2 seconds, but keep progress bar
+                setTimeout(() => {
+                    setRemediating(false);
+                    fetchDashboardData();
+                }, 2000);
             } else {
                 setRemediationMsg(`Error: ${result.error}`);
                 setRemediating(false);

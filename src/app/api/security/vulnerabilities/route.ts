@@ -22,8 +22,11 @@ export async function GET(req: NextRequest) {
 
         try {
             // Try fetching vulnerability summaries from beta security endpoint
+            // Optimize with $top=1 to just get the count quickly
             const vulns = await client.api('/security/vulnerabilityManagement/vulnerabilities')
                 .version('beta')
+                .top(1)
+                .select('id')
                 .count(true)
                 .header('ConsistencyLevel', 'eventual')
                 .get();
