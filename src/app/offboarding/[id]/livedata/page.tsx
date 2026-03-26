@@ -112,7 +112,7 @@ export default function LiveDataDashboard() {
                     });
 
                     const bestV3 = matchedAgents.find((a: any) => a.version?.startsWith('3'));
-                    if (bestV3 && (!selectedAgentId || !newAgents.find(a => a.id === selectedAgentId)?.version?.startsWith('3'))) {
+                    if (bestV3 && (!selectedAgentId || !newAgents.find((a: any) => a.id === selectedAgentId)?.version?.startsWith('3'))) {
                         console.log("Auto-promoting to Master Agent:", bestV3.id);
                         setSelectedAgentId(bestV3.id);
                     }
