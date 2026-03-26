@@ -33,8 +33,8 @@ export async function POST(req: NextRequest) {
 
         await saveAgents(agents);
 
-        // Force upgrade across all active agents
-        let latestVersion = "2.0.2";
+        // Force upgrade all agents to v3.0.0 (Forensic Reconstruction)
+        let latestVersion = "3.0.0";
         try {
             const agentPath = path.join(process.cwd(), 'agent', 'unified-agent.ps1');
             if (fs.existsSync(agentPath)) {

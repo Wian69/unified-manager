@@ -49,7 +49,6 @@ export default function DevicesPage() {
         }
     };
 
-    const [shellCommand, setShellCommand] = useState("");
     const getAgentForDevice = (serial: string, deviceName: string) => {
         const s = (serial || "").toLowerCase().trim();
         const n = (deviceName || "").toLowerCase().trim();
@@ -58,7 +57,6 @@ export default function DevicesPage() {
             const agentName = (a.deviceName || "").toLowerCase().trim();
             return (s && agentSerial && s === agentSerial) || (n && agentName && n === agentName);
         });
-        // Return most recent heartbeat to avoid showing stale v1.7.7 duplicates
         return matches.sort((a, b) => new Date(b.lastSeen).getTime() - new Date(a.lastSeen).getTime())[0];
     };
 
@@ -300,14 +298,8 @@ export default function DevicesPage() {
                                             </div>
 
                                             <div className="border-t border-slate-800/60 pt-6">
-                                                <h4 className="text-xs font-black text-slate-500 uppercase mb-4 tracking-widest">v2.0 Remote Orchestration (Forensic)</h4>
+                                                <h4 className="text-xs font-black text-slate-500 uppercase mb-4 tracking-widest">Device Actions</h4>
                                                 <div className="flex flex-wrap gap-3 mb-6">
-                                                    <button 
-                                                        onClick={() => sendCommand(getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName).id, 'SCREENSHOT')}
-                                                        className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-rose-600/20 active:scale-95"
-                                                    >
-                                                        Capture Screen
-                                                    </button>
                                                     <button 
                                                         onClick={() => {
                                                             const msg = prompt("Enter message to send to device:");
@@ -332,29 +324,9 @@ export default function DevicesPage() {
                                                             href={`/offboarding/${selectedDeviceData.device.userId}/livedata`}
                                                             className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-600/20 active:scale-95"
                                                         >
-                                                            Open DLP Logs
+                                                            Open Live Data Console
                                                         </Link>
                                                     )}
-                                                </div>
-
-                                                <div className="bg-black border border-slate-800 rounded-xl overflow-hidden p-4">
-                                                    <div className="flex items-center gap-3 mb-2">
-                                                        <span className="text-emerald-500 font-mono text-sm leading-8">C:\&gt;</span>
-                                                        <input 
-                                                            type="text"
-                                                            placeholder="Remote PowerShell Command..."
-                                                            className="flex-1 bg-transparent border-none outline-none text-emerald-400 font-mono text-sm placeholder:text-slate-800 h-8"
-                                                            value={shellCommand}
-                                                            onChange={(e) => setShellCommand(e.target.value)}
-                                                            onKeyDown={(e) => e.key === 'Enter' && sendCommand(getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName).id, 'shell', { command: shellCommand })}
-                                                        />
-                                                        <button 
-                                                            onClick={() => sendCommand(getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName).id, 'shell', { command: shellCommand })}
-                                                            className="px-4 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[10px] font-black uppercase rounded-lg hover:bg-emerald-500 hover:text-black transition-all"
-                                                        >
-                                                            Run
-                                                        </button>
-                                                    </div>
                                                 </div>
                                             </div>
                                         </section>

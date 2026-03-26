@@ -129,8 +129,8 @@ export default function DlpModule({ userId, userDisplayName, sinceDate }: { user
                             <ShieldAlert size={24} className="text-rose-500" />
                         </div>
                         <div>
-                            <h3 className="text-xl font-bold text-white uppercase tracking-tight">Data Loss Prevention v2.0</h3>
-                            <p className="text-xs text-slate-500 font-mono tracking-widest uppercase mt-0.5">Forensic Stealth & Remote Orchestration</p>
+                            <h3 className="text-xl font-bold text-white uppercase tracking-tight">Data Loss Prevention v3.0</h3>
+                            <p className="text-xs text-slate-500 font-mono tracking-widest uppercase mt-0.5">Forensic Mastery & Remote Orchestration</p>
                         </div>
                     </div>
 
