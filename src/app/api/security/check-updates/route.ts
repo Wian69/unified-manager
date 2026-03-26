@@ -23,6 +23,15 @@ export async function GET(req: NextRequest) {
             if (configsRes.value) allConfigs.push(...configsRes.value.map((r: any) => ({ ...r, source: 'beta/windowsUpdateConfigurations' })));
         } catch (e: any) { console.warn('[SecurityAPI] windowsUpdateConfigurations failed:', e.message); }
 
+        // 3. List deployed Remediation Scripts (Beta)
+        try {
+            const scriptsRes = await client.api('/deviceManagement/deviceManagementScripts').version('beta').get();
+            if (scriptsRes.value) {
+                const remediationScripts = scriptsRes.value.filter((s: any) => s.displayName?.startsWith('Remediation_Pulse')) || [];
+                allConfigs.push(...remediationScripts.map((s: any) => ({ ...s, source: 'beta/deviceManagementScripts' })));
+            }
+        } catch (e: any) { console.warn('[SecurityAPI] scripts failed:', e.message); }
+
         // 4. Targeted Search for "Windows 11 Updates"
         try {
             const searchRes = await client.api('/deviceManagement/deviceConfigurations').filter("displayName eq 'Windows 11 Updates'").get();

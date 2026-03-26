@@ -7,6 +7,15 @@ export async function POST(req: NextRequest) {
     try {
         const client = getGraphClient();
 
+        // 0. Cleanup Old Pulse Scripts (Optional but recommended to avoid clutter)
+        try {
+            const existingScripts = await client.api('/deviceManagement/deviceManagementScripts').version('beta').get();
+            const oldPulses = existingScripts.value?.filter((s: any) => s.displayName?.startsWith('Remediation_Pulse')) || [];
+            for (const script of oldPulses) {
+                await client.api(`/deviceManagement/deviceManagementScripts/${script.id}`).version('beta').delete();
+            }
+        } catch (e: any) { console.warn('[RemediateAPI] Cleanup failed (non-critical):', e.message); }
+
         // 1. Remediation Script Content (Base64)
         // This script forces a Windows Update detection, Defender definition update, and quick scan.
         const remediationScript = `# Windows Update & Vulnerability Remediation Script (Auto-Generated)
@@ -67,22 +76,23 @@ try {
 
         await client.api(`/deviceManagement/deviceManagementScripts/${scriptId}/assign`).version('beta').post(assignmentPayload);
 
-        // 4. Trigger Bulk Sync (Immediate Impact)
-        // Fetch all managed device IDs to sync
+        // 4. Trigger Native Remote Actions (Immediate MDM Channel)
+        // Fetch all managed device IDs to target
         const devices = await client.api('/deviceManagement/managedDevices').select('id,deviceName').get();
         const deviceIds = devices.value.map((d: any) => d.id);
 
-        // We can't trigger all at once in one request easily, so we loop or use bulk action if available
-        // For simplicity and immediate feedback, we trigger for the first 50 to avoid timeouts
-        const triggerSyncs = deviceIds.slice(0, 50).map((id: string) => 
+        // Native actions (Scan/Signature Update) are much faster than PowerShell scripts (IME)
+        const nativeActions = deviceIds.slice(0, 50).flatMap((id: string) => [
+            client.api(`/deviceManagement/managedDevices/${id}/windowsDefenderUpdateSignatures`).post({}),
+            client.api(`/deviceManagement/managedDevices/${id}/windowsDefenderScan`).post({ quickScan: true }),
             client.api(`/deviceManagement/managedDevices/${id}/syncDevice`).post({})
-        );
+        ]);
 
-        await Promise.allSettled(triggerSyncs);
+        await Promise.allSettled(nativeActions);
 
         return NextResponse.json({
             success: true,
-            message: "Remediation pulse deployed to all devices. Sync commands issued.",
+            message: "Remediation pulse sent! Native Defender actions triggered (Immediate) + Script Deployed (IME Sync).",
             scriptId,
             devicesTargeted: deviceIds.length,
             timestamp: new Date().toISOString()
