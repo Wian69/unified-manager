@@ -5,11 +5,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
 const DB_ROOT = process.cwd();
 const DB_DIR = path.join(DB_ROOT, 'data');
-const AGENTS_FILE = path.join(DB_DIR, 'agents.json');
-const COMMANDS_FILE = path.join(DB_DIR, 'commands.json');
 const WATCHLIST_FILE = path.join(DB_DIR, 'watchlist.json');
-const RESULTS_FILE = path.join(DB_DIR, 'results.json');
-const DLP_FILE = path.join(DB_DIR, 'dlp.json');
 
 // 1. Vercel KV Config
 const rawUrl = process.env.STORAGE_URL || process.env.KV_REST_API_URL || process.env.KV_URL || "";
@@ -42,11 +38,7 @@ if (IS_SUPABASE) {
 
 // Zero-Config Volatile Memory (for when no DB is linked)
 const memoryStore: Record<string, any> = {
-    agents: {},
-    commands: [],
-    watchlist: [],
-    results: {},
-    dlp: []
+    watchlist: []
 };
 
 async function ensureFileSync(file: string, initialData: any) {
@@ -61,8 +53,8 @@ async function ensureFileSync(file: string, initialData: any) {
 }
 
 async function initDB() {
-    if (IS_PROD) return; // Vercel KV handles its own initialization
-    if (IS_VERCEL) return; // Cannot create directories on Vercel FS
+    if (IS_PROD) return; 
+    if (IS_VERCEL) return; 
     if (!fs.existsSync(DB_DIR)) {
         fs.mkdirSync(DB_DIR, { recursive: true });
     }
@@ -77,7 +69,6 @@ async function getData<T>(key: string, filePath: string, defaultValue: T): Promi
             return data?.value || defaultValue;
         } catch (err: any) {
             console.error(`[DB] Supabase Get Error (${key}):`, err.message);
-            // Fallback to KV or logic below if Supabase is misconfigured or table missing
         }
     }
     if (IS_KV && kv) {
@@ -123,42 +114,10 @@ async function saveData<T>(key: string, filePath: string, data: T): Promise<void
 }
 
 // Public API
-export async function getAgents() {
-    return getData('agents', AGENTS_FILE, {});
-}
-
-export async function saveAgents(agents: any) {
-    return saveData('agents', AGENTS_FILE, agents);
-}
-
-export async function getCommands() {
-    return getData('commands', COMMANDS_FILE, []);
-}
-
-export async function saveCommands(commands: any) {
-    return saveData('commands', COMMANDS_FILE, commands);
-}
-
 export async function getWatchlist() {
     return getData('watchlist', WATCHLIST_FILE, []);
 }
 
 export async function saveWatchlist(watchlist: any) {
     return saveData('watchlist', WATCHLIST_FILE, watchlist);
-}
-
-export async function getResults() {
-    return getData('results', RESULTS_FILE, {});
-}
-
-export async function saveResults(results: any) {
-    return saveData('results', RESULTS_FILE, results);
-}
-
-export async function getDlpEvents(): Promise<any[]> {
-    return getData('dlp', DLP_FILE, []);
-}
-
-export async function saveDlpEvents(events: any[]) {
-    return saveData('dlp', DLP_FILE, events);
 }

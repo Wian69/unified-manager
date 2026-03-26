@@ -22,7 +22,6 @@ export default function OffboardingPage() {
 
 function OffboardingContent() {
     const router = useRouter();
-    const [agents, setAgents] = useState<any[]>([]);
     const [devices, setDevices] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [sendingReport, setSendingReport] = useState(false);
@@ -108,17 +107,14 @@ function OffboardingContent() {
     const fetchOffboardingData = async () => {
         setLoading(true);
         try {
-            const [agentRes, deviceRes, watchlistRes] = await Promise.all([
-                fetch('/api/agent/list', { cache: 'no-store' }),
+            const [deviceRes, watchlistRes] = await Promise.all([
                 fetch('/api/devices', { cache: 'no-store' }),
                 fetch(`/api/offboarding/watchlist?t=${Date.now()}`, { cache: 'no-store' })
             ]);
             
-            const agentData = await agentRes.json();
             const deviceData = await deviceRes.json();
             const watchlistData = await watchlistRes.json();
             
-            setAgents(agentData.agents || []);
             setDevices(deviceData.devices || []);
 
             // Handle Watchlist with extreme care to prevent data loss
@@ -212,12 +208,11 @@ function OffboardingContent() {
     const directUser = searchParams.get('user');
 
     useEffect(() => {
-        if (directUser && agents.length > 0) {
-            // Find the agent with this UPN or just audit the UPN directly
-            // This logic is now removed as the audit section is gone.
-            // Keeping the useEffect for now, but it will be empty.
+        if (directUser) {
+            // Logic for direct user audit (if any) could go here, 
+            // but agent-based audit is removed.
         }
-    }, [directUser, agents.length]);
+    }, [directUser]);
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
@@ -351,20 +346,8 @@ function OffboardingContent() {
                                         d.userPrincipalName?.toLowerCase() === u.userPrincipalName?.toLowerCase()
                                     );
 
-                                    // 2. Find UEA Agent matching the serial number or same UPN or Device Name (FUZZY)
-                                    const agent = agents.find(a => {
-                                        const agentSerial = (a.serialNumber || "").trim().toLowerCase();
-                                        const agentName = (a.deviceName || "").trim().toLowerCase();
-                                        const intuneSerial = (intuneDevice?.serialNumber || "").trim().toLowerCase();
-                                        const intuneName = (intuneDevice?.deviceName || "").trim().toLowerCase();
-                                        
-                                        return (agentSerial && intuneSerial && agentSerial === intuneSerial) ||
-                                               (agentName && intuneName && agentName === intuneName) ||
-                                               (a.userPrincipalName?.toLowerCase() === u.userPrincipalName?.toLowerCase());
-                                    });
-
-                                    const deviceName = intuneDevice?.deviceName || agent?.deviceName || "No device found";
-                                    const isOnline = agent?.status === 'online';
+                                    const deviceName = intuneDevice?.deviceName || "No device found";
+                                    const isOnline = false; // Agent is removed
                                     const compliance = intuneDevice?.complianceState || "Unknown";
                                     const status = u.status || "Offboarding in Progress";
                                     const isComplete = status === "Offboarding Complete";
@@ -406,10 +389,7 @@ function OffboardingContent() {
                                             </td>
                                             <td className="px-6 py-5 text-center">
                                                 <div className="flex flex-col items-center gap-1">
-                                                    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
-                                                        isOnline ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-slate-900 text-slate-500 border-slate-800'
-                                                    }`}>
-                                                        {isOnline && <Activity size={10} className="animate-pulse" />}
+                                                    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border bg-slate-900 text-slate-500 border-slate-800`}>
                                                         {deviceName}
                                                     </div>
                                                     {intuneDevice && (

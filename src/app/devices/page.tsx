@@ -6,7 +6,6 @@ import { Laptop, RefreshCw, X, AlertTriangle } from "lucide-react";
 
 export default function DevicesPage() {
     const [devices, setDevices] = useState<any[]>([]);
-    const [agents, setAgents] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [activeStorage, setActiveStorage] = useState<string>("Detecting...");
@@ -19,13 +18,11 @@ export default function DevicesPage() {
     const fetchDevices = async (isInitial = false) => {
         if (isInitial) setLoading(true);
         try {
-            const [intuneRes, agentRes] = await Promise.all([
-                fetch('/api/devices'),
-                fetch('/api/agent/list')
+            const [intuneRes] = await Promise.all([
+                fetch('/api/devices')
             ]);
             
             const intuneData = await intuneRes.json();
-            const agentData = await agentRes.json();
 
             if (intuneData.devices) {
                 const sorted = (intuneData.devices || []).sort((a: any, b: any) => (a.deviceName || "").localeCompare(b.deviceName || ""));
@@ -34,13 +31,6 @@ export default function DevicesPage() {
             } else if (intuneData.error) {
                 setError(intuneData.details || intuneData.error);
             }
-            if (agentData.agents) setAgents(agentData.agents);
-
-            // Fetch Diagnostic for persistence check
-            const diagRes = await fetch('/api/diag');
-            const diagData = await diagRes.json();
-            setIsPersistenceLinked(diagData.diagnostics?.kvConnected || diagData.diagnostics?.supabaseConnected);
-            setActiveStorage(diagData.diagnostics?.activeStorage || "Unknown");
         } catch (err: any) {
             console.error("Failed to fetch devices", err);
             setError(err.message || "An unexpected error occurred while fetching devices.");
@@ -49,40 +39,7 @@ export default function DevicesPage() {
         }
     };
 
-    const getAgentForDevice = (serial: string, deviceName: string) => {
-        const s = (serial || "").toLowerCase().trim();
-        const n = (deviceName || "").toLowerCase().trim();
-        const matches = agents.filter(a => {
-            const agentSerial = (a.serialNumber || "").toLowerCase().trim();
-            const agentName = (a.deviceName || "").toLowerCase().trim();
-            return (s && agentSerial && s === agentSerial) || (n && agentName && n === agentName);
-        });
-        // Prioritize v3.x agents, then sort by most recent heartbeat
-        return matches.sort((a, b) => {
-            const vA = a.version || "0.0.0";
-            const vB = b.version || "0.0.0";
-            if (vB.startsWith('3.') && !vA.startsWith('3.')) return 1;
-            if (vA.startsWith('3.') && !vB.startsWith('3.')) return -1;
-            return new Date(b.lastSeen).getTime() - new Date(a.lastSeen).getTime();
-        })[0];
-    };
-
-    const sendCommand = async (agentId: string, type: string, payload: any = {}) => {
-        try {
-            const res = await fetch('/api/agent/command', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ agentId, type, payload })
-            });
-            const data = await res.json();
-            if (data.success) {
-                alert(`Command ${type} queued successfully!`);
-            }
-        } catch (error) {
-            console.error("Failed to send command", error);
-            alert("Failed to queue command.");
-        }
-    };
+    // Forensic command functions removed.
 
     useEffect(() => {
         fetchDevices(true);
@@ -119,7 +76,7 @@ export default function DevicesPage() {
                     </div>
                     <div>
                         <h1 className="text-2xl font-bold text-white">Device Management</h1>
-                        <p className="text-slate-400">View and manage all Intune enrolled devices. <span className="text-[10px] font-mono text-slate-500 bg-slate-800/50 px-2 py-0.5 rounded ml-2">Storage: {activeStorage}</span></p>
+                        <p className="text-slate-400">View and manage all Intune enrolled devices.</p>
                         <p className="text-[9px] text-slate-500 mt-1 uppercase tracking-widest flex items-center gap-1">
                             <AlertTriangle size={10} className="text-amber-500" />
                             Note: Intune Portal changes may take 10-20 minutes to sync via Graph API.
@@ -136,31 +93,6 @@ export default function DevicesPage() {
                 </button>
             </div>
 
-            {/* Persistence Alert */}
-            {isPersistenceLinked === false && (
-                <div className="bg-amber-500/10 border border-amber-500/20 p-6 rounded-2xl flex items-center justify-between gap-6 animate-pulse">
-                    <div className="flex items-center gap-4">
-                        <div className="p-3 bg-amber-500/20 text-amber-500 rounded-xl">
-                            <AlertTriangle size={24} />
-                        </div>
-                        <div className="text-left">
-                            <h4 className="font-bold text-amber-500 uppercase text-xs tracking-widest mb-1">Inconsistent Heartbeats (Volatile Mode)</h4>
-                            <p className="text-slate-400 text-sm max-w-2xl">
-                                You are currently in "Zero-Config" mode. Heartbeats will only appear intermittently on Vercel. 
-                                <span className="text-amber-400 font-bold ml-1">Link Vercel KV storage to fix this instantly.</span>
-                            </p>
-                        </div>
-                    </div>
-                    <a 
-                        href="https://vercel.com/dashboard" 
-                        target="_blank" 
-                        className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all"
-                    >
-                        Fix Persistence
-                    </a>
-                </div>
-            )}
-
             <div className="bg-slate-900/40 rounded-2xl border border-slate-800/60 overflow-hidden backdrop-blur-md">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm text-slate-300">
@@ -169,7 +101,6 @@ export default function DevicesPage() {
                                 <th className="px-6 py-4">Device Name</th>
                                 <th className="px-6 py-4">OS</th>
                                 <th className="px-6 py-4">Serial Number</th>
-                                <th className="px-6 py-4">Enterprise Agent</th>
                                 <th className="px-6 py-4">Compliance status</th>
                                 <th className="px-6 py-4 text-right">Actions</th>
                             </tr>
@@ -195,7 +126,6 @@ export default function DevicesPage() {
                                 </tr>
                             ) : devices.length > 0 ? (
                                 devices.map((d: any) => {
-                                    const agent = getAgentForDevice(d.serialNumber, d.deviceName);
                                     return (
                                         <tr 
                                             key={d.id} 
@@ -204,20 +134,7 @@ export default function DevicesPage() {
                                         >
                                             <td className="px-6 py-4 font-medium text-slate-200">{d.deviceName || 'Unknown'}</td>
                                             <td className="px-6 py-4">{d.operatingSystem || 'N/A'}</td>
-                                            <td className="px-6 py-4 text-slate-400 font-mono">{d.serialNumber || 'N/A'}</td>
-                                             <td className="px-6 py-4">
-                                                {agent ? (
-                                                    <div className="flex flex-col">
-                                                        <div className={`flex items-center gap-1.5 font-bold text-[10px] uppercase tracking-wider mb-1 ${agent.status === 'online' ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                                            <div className={`w-2 h-2 rounded-full ${agent.status === 'online' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
-                                                            {agent.status === 'online' ? 'Live Agent' : 'Agent Offline'}
-                                                        </div>
-                                                        <div className="text-[11px] text-slate-400">{agent.localIp || agent.publicIp}</div>
-                                                    </div>
-                                                ) : (
-                                                    <span className="text-slate-600 text-[11px]">No Agent</span>
-                                                )}
-                                            </td>
+                                             <td className="px-6 py-4 text-slate-400 font-mono">{d.serialNumber || 'N/A'}</td>
                                             <td className="px-6 py-4">
                                                 <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
                                                     (d.complianceState || "").toLowerCase() === 'compliant' ? 'bg-emerald-500/20 text-emerald-400' : 
@@ -230,11 +147,11 @@ export default function DevicesPage() {
                                             <td className="px-6 py-4 text-right">
                                                 {d.userId && (
                                                     <Link 
-                                                        href={`/offboarding/${d.userId}/livedata`}
+                                                        href={`/offboarding/${d.userId}`}
                                                         onClick={(e) => e.stopPropagation()}
-                                                        className="px-3 py-1.5 bg-emerald-600/10 hover:bg-emerald-600 text-emerald-400 hover:text-white rounded-lg text-[10px] font-black uppercase tracking-widest border border-emerald-600/20 transition-all active:scale-95"
+                                                        className="px-3 py-1.5 bg-blue-600/10 hover:bg-blue-600 text-blue-400 hover:text-white rounded-lg text-[10px] font-black uppercase tracking-widest border border-blue-600/20 transition-all active:scale-95"
                                                     >
-                                                        Live Data
+                                                        Details
                                                     </Link>
                                                 )}
                                             </td>
@@ -272,75 +189,8 @@ export default function DevicesPage() {
                                 </div>
                             ) : selectedDeviceData?.device ? (
                                 <div className="space-y-8 pb-10 w-full px-4">
-                                    {/* Agent Status Card (NEW) */}
-                                    {getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName) && (
-                                        <section className={`${getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName)?.status === 'online' ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-rose-500/5 border-rose-500/20'} border rounded-2xl p-6 mb-8`}>
-                                            <div className="flex justify-between items-start mb-6">
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`w-3 h-3 rounded-full ${getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName)?.status === 'online' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
-                                                    <h3 className={`text-xl font-bold ${getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName)?.status === 'online' ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                                        {getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName)?.status === 'online' ? 'Enterprise Agent Active' : 'Enterprise Agent Offline'}
-                                                    </h3>
-                                                </div>
-                                                <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
-                                                    <span className="text-[10px] text-slate-500 uppercase font-black block mb-1">Agent Version</span>
-                                                    <span className="text-slate-300 font-mono text-xs">{getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName)?.version}</span>
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                                                <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
-                                                    <span className="text-[10px] text-slate-500 uppercase font-bold block mb-1">Internal IPv4</span>
-                                                    <div className="text-slate-200 font-medium">{getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName)?.localIp || getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName)?.publicIp}</div>
-                                                    <div className="text-[10px] text-slate-500">{getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName)?.isp}</div>
-                                                </div>
-                                                <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
-                                                    <span className="text-[10px] text-slate-500 uppercase font-bold block mb-1">Local Network</span>
-                                                    <div className="text-slate-200 font-medium">{getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName)?.localIp}</div>
-                                                </div>
-                                                <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
-                                                    <span className="text-[10px] text-slate-500 uppercase font-bold block mb-1">Last Heartbeat</span>
-                                                    <div className="text-slate-200 font-medium">{new Date(getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName)?.lastSeen).toLocaleTimeString()}</div>
-                                                </div>
-                                            </div>
-
-                                            <div className="border-t border-slate-800/60 pt-6">
-                                                <h4 className="text-xs font-black text-slate-500 uppercase mb-4 tracking-widest">Device Actions</h4>
-                                                <div className="flex flex-wrap gap-3 mb-6">
-                                                    <button 
-                                                        onClick={() => {
-                                                            const msg = prompt("Enter message to send to device:");
-                                                            if (msg) sendCommand(getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName).id, 'Message', { text: msg });
-                                                        }}
-                                                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors active:scale-95"
-                                                    >
-                                                        Send Message
-                                                    </button>
-                                                    <button 
-                                                        onClick={() => {
-                                                            if (confirm("Are you sure you want to RESTART this device?")) {
-                                                                sendCommand(getAgentForDevice(selectedDeviceData.device.serialNumber, selectedDeviceData.device.deviceName).id, 'Restart');
-                                                            }
-                                                        }}
-                                                        className="px-4 py-2 bg-slate-800 hover:bg-rose-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
-                                                    >
-                                                        Restart
-                                                    </button>
-                                                    {selectedDeviceData.device.userId && (
-                                                        <Link 
-                                                            href={`/offboarding/${selectedDeviceData.device.userId}/livedata`}
-                                                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-600/20 active:scale-95"
-                                                        >
-                                                            Open Live Data Console
-                                                        </Link>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </section>
-                                    )}
-
-                                    {/* Overview Section */}
-                                    <section>
+            {/* Overview Section */}
+            <section>
                                         <h3 className="text-lg font-bold text-slate-200 mb-4 border-b border-slate-800 pb-2">Overview</h3>
                                         <div className="grid grid-cols-2 gap-y-4 gap-x-6 text-sm">
                                             <div>

@@ -6,8 +6,6 @@ import Link from "next/link";
 import SharePointDeletionsModule from "@/components/SharePointDeletionsModule";
 import EmailTraceModule from "@/components/EmailTraceModule";
 import TeamsChatModule from "@/components/TeamsChatModule";
-import DlpModule from "@/components/DlpModule";
-import ActivityCard from "@/components/ActivityCard";
 import dynamic from "next/dynamic";
 
 const DigitalOffboardingWizard = dynamic(
@@ -344,12 +342,7 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
                                     <FileText size={12} /> Manual Upload
                                 </button>
                             )}
-                            <Link 
-                                href={`/offboarding/${id}/livedata`}
-                                className="flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-600/20 active:scale-95 border border-emerald-500/20"
-                            >
-                                <Activity size={12} /> Live Data
-                            </Link>
+                            <div className="col-span-2" />
                         </div>
 
                         {uploadStatus && (
@@ -406,21 +399,12 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
                             oneDriveUrl={user.oneDriveUrl}
                         />
                     </section>
-
                     <section>
                         <TeamsChatModule 
                             userId={id}
                             userDisplayName={user.displayName}
                             sinceDate={sinceDate}
                             oneDriveUrl={user.oneDriveUrl}
-                        />
-                    </section>
-
-                    <section>
-                        <DlpModule 
-                            userId={id}
-                            userDisplayName={user.displayName}
-                            sinceDate={sinceDate}
                         />
                     </section>
 
@@ -442,35 +426,7 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
                     </section>
                 </div>
 
-                {/* Sidebar Details */}
                 <div className="space-y-12">
-                    <section className="bg-slate-900/40 rounded-3xl border border-slate-800/60 p-8 backdrop-blur-md">
-                        <h3 className="text-lg font-black text-white mb-8 flex items-center gap-3 uppercase tracking-tighter">
-                            <Activity size={20} className="text-blue-400" />
-                            Live Telemetry Feed
-                        </h3>
-                        <div className="space-y-6">
-                            <ActivityCard 
-                                title="Bulk File Encryption/ZIP" 
-                                device="MACBOOK-PRO-M3" 
-                                time="Today, 10:45 AM" 
-                                severity="critical" 
-                            />
-                            <ActivityCard 
-                                title="Removable Storage Detected" 
-                                device="MACBOOK-PRO-M3" 
-                                time="Today, 09:12 AM" 
-                                severity="high" 
-                            />
-                            <ActivityCard 
-                                title="Cloud Storage Sync (External)" 
-                                device="MACBOOK-PRO-M3" 
-                                time="Yesterday, 4:30 PM" 
-                                severity="high" 
-                            />
-                        </div>
-                    </section>
-
                     <section className="bg-slate-900/50 rounded-3xl border border-slate-800 p-8">
                          <h3 className="text-lg font-black text-white mb-6 uppercase tracking-tighter">System Notes</h3>
                          <div className="space-y-4">
