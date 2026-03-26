@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { Laptop, RefreshCw, X, AlertTriangle } from "lucide-react";
+import { Laptop, RefreshCw, X, AlertTriangle, ShieldCheck, ShieldAlert, CheckCircle, Info } from "lucide-react";
+import { getComplianceInsight } from "@/lib/compliance-utils";
 
 export default function DevicesPage() {
     const [devices, setDevices] = useState<any[]>([]);
@@ -282,16 +283,52 @@ export default function DevicesPage() {
                                             <div>
                                                 <h4 className="text-sm font-semibold text-slate-400 mb-2">Compliance Policies</h4>
                                                 {selectedDeviceData.compliancePolicies?.length > 0 ? (
-                                                    <ul className="space-y-2">
+                                                    <div className="space-y-3">
                                                         {selectedDeviceData.compliancePolicies.map((p: any) => (
-                                                            <li key={p.id} className="bg-slate-800/30 p-3 rounded-lg flex justify-between items-center border border-slate-700/50">
-                                                                <span className="text-slate-200 text-sm font-medium">{p.displayName || p.id}</span>
-                                                                <span className={`px-2 py-0.5 text-[10px] uppercase font-bold rounded-md ${p.state === 'compliant' ? 'bg-emerald-500/20 text-emerald-400' : p.state === 'notCompliant' ? 'bg-rose-500/20 text-rose-400' : 'bg-slate-700 text-slate-300'}`}>
-                                                                    {p.state}
-                                                                </span>
-                                                            </li>
+                                                            <div key={p.id} className="bg-slate-800/20 rounded-xl border border-slate-700/50 overflow-hidden">
+                                                                <div className="p-4 flex justify-between items-center border-b border-slate-700/30">
+                                                                    <div className="flex items-center gap-3">
+                                                                        {p.state === 'compliant' ? <ShieldCheck className="text-emerald-500" size={18} /> : <ShieldAlert className="text-rose-500" size={18} />}
+                                                                        <span className="text-slate-200 text-sm font-bold">{p.displayName || "Compliance Policy"}</span>
+                                                                    </div>
+                                                                    <span className={`px-2 py-0.5 text-[10px] uppercase font-black rounded ${p.state === 'compliant' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                                                                        {p.state}
+                                                                    </span>
+                                                                </div>
+                                                                
+                                                                {/* Granular Setting states - ONLY show failures to reduce noise */}
+                                                                {p.settingStates?.filter((s: any) => s.state !== 'compliant' && s.state !== 'notApplicable').length > 0 && (
+                                                                    <div className="p-4 bg-slate-900/40 space-y-4">
+                                                                        <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mb-2 italic">Non-Compliant Settings Detected:</p>
+                                                                        {p.settingStates.filter((s: any) => s.state !== 'compliant' && s.state !== 'notApplicable').map((s: any, idx: number) => {
+                                                                            const insight = getComplianceInsight(s.settingName);
+                                                                            return (
+                                                                                <div key={idx} className="border-l-2 border-rose-500/50 pl-4 py-1">
+                                                                                    <div className="flex items-center gap-2 text-rose-400 font-bold text-xs mb-1">
+                                                                                        <Info size={12} />
+                                                                                        {s.settingName}
+                                                                                    </div>
+                                                                                    <p className="text-slate-300 text-xs mb-2 leading-relaxed">
+                                                                                        <span className="text-slate-500 font-medium">Issue:</span> {insight.reason}
+                                                                                    </p>
+                                                                                    <div className="bg-blue-500/5 border border-blue-500/20 p-2 rounded-lg">
+                                                                                        <p className="text-[10px] text-blue-400 font-black uppercase mb-1">How to Fix:</p>
+                                                                                        <p className="text-slate-400 text-[11px] leading-tight">{insight.remediation}</p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                )}
+                                                                {p.state === 'compliant' && (
+                                                                    <div className="px-4 py-2 bg-emerald-500/5 flex items-center gap-2 text-[10px] text-emerald-500/70 font-medium">
+                                                                        <CheckCircle size={10} />
+                                                                        All security rules in this policy are meeting requirements.
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         ))}
-                                                    </ul>
+                                                    </div>
                                                 ) : (
                                                     <p className="text-sm text-slate-500 italic">No compliance policies found.</p>
                                                 )}

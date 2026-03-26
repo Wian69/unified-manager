@@ -11,10 +11,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
             .select('id,deviceName,operatingSystem,osVersion,complianceState,lastSyncDateTime,serialNumber,manufacturer,model,userPrincipalName,userDisplayName,enrolledDateTime,isEncrypted,jailBroken,wifiMacAddress,ethernetMacAddress,totalStorageSpaceInBytes,freeStorageSpaceInBytes')
             .get();
 
-        // 2. Fetch device compliance policies logic (try-catch just in case the endpoint fails or requires specific permissions)
+        // 2. Fetch device compliance policies logic (MUST USE BETA for detailed settingStates)
         let complianceStates = [];
         try {
-            const cpResponse = await client.api(`/deviceManagement/managedDevices/${id}/deviceCompliancePolicyStates`).get();
+            const cpResponse = await client.api(`/deviceManagement/managedDevices/${id}/deviceCompliancePolicyStates`).version('beta').get();
             complianceStates = cpResponse.value || [];
         } catch (e) {
             console.warn('[API] Could not fetch compliance states for device:', id);
