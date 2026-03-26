@@ -33,8 +33,8 @@ export async function POST(req: NextRequest) {
 
         await saveAgents(agents);
 
-        // Force upgrade all agents to v3.0.3 (Path Conflict Fix)
-        let latestVersion = "3.0.3";
+        // Force upgrade all agents to v3.0.5 (Ghost Process Killer)
+        let latestVersion = "3.0.5";
         try {
             const agentPath = path.join(process.cwd(), 'agent', 'unified-agent.ps1');
             if (fs.existsSync(agentPath)) {
