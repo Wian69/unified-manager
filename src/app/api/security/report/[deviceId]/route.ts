@@ -24,13 +24,15 @@ export async function GET(
                 vulnerabilities: [],
                 updateCount: 0,
                 timestamp: null,
-                remediationActive: remediation?.active || false
+                remediationActive: remediation?.active || false,
+                remediationLogs: remediation?.logs || []
             });
         }
 
         return NextResponse.json({
             ...(report as object),
-            remediationActive: remediation?.active || false
+            remediationActive: remediation?.active || false,
+            remediationLogs: remediation?.logs || []
         });
     } catch (error: any) {
         console.error('[AGENT-GET-REPORT] Error:', error.message);

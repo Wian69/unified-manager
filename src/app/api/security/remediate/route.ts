@@ -24,8 +24,15 @@ export async function POST(req: NextRequest) {
         }
 
         // 2. Queue Direct Command (Bypass Intune Scripts as requested)
+        const initialLogs = [
+            "Intune Scripting: BYPASSED (Direct Request)",
+            `Direct C2 Signal: STAGED (SN: ${serialNumber})`,
+            "Trigger: MDM Sync Sent to Device",
+            "Status: Awaiting Agent Heartbeat Pull"
+        ];
+        
         await setPendingCommand(serialNumber, "remediate");
-        await setDeviceRemediationStatus(serialNumber, true);
+        await setDeviceRemediationStatus(serialNumber, true, initialLogs);
 
         // 3. Trigger MDM Sync to "Wake Up" agent (MDM sync is fast and direct)
         if (targetDeviceId) {
@@ -39,12 +46,7 @@ export async function POST(req: NextRequest) {
             message: "Direct remediation command queued to agent.",
             serialNumber,
             timestamp: new Date().toISOString(),
-            logs: [
-                "Intune Scripting: BYPASSED (Direct Request)",
-                `Direct C2 Signal: STAGED (SN: ${serialNumber})`,
-                "Trigger: MDM Sync Sent to Device",
-                "Status: Awaiting Agent Heartbeat Pull"
-            ]
+            logs: initialLogs
         });
 
     } catch (error: any) {

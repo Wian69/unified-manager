@@ -39,8 +39,9 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
         try {
             const res = await fetch(`/api/security/report/${identifier}`);
             const data = await res.json();
-            if (data && data.timestamp) {
+            if (data) {
                 setAgentReport(data);
+                if (data.remediationLogs) setRemediationLogs(data.remediationLogs);
             }
         } catch (e) {}
     };
