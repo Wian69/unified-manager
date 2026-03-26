@@ -169,3 +169,19 @@ export async function getPendingCommand(serialNumber: string) {
     const data = await getData(key, filePath, { command: null }) as { command: string | null };
     return data.command;
 }
+
+export async function appendRemediationLog(serialNumber: string, log: string) {
+    const key = `remediation_active:${serialNumber}`;
+    const filePath = path.join(DB_DIR, `rem_active_${serialNumber}.json`);
+    const status = await getData(key, filePath, { active: false, logs: [] }) as { active: boolean, logs: string[], timestamp?: string };
+    
+    const newLogs = [...(status.logs || [])];
+    newLogs.push(log);
+    if (newLogs.length > 15) newLogs.shift();
+    
+    await saveData(key, filePath, { 
+        ...status, 
+        logs: newLogs,
+        timestamp: new Date().toISOString() 
+    });
+}

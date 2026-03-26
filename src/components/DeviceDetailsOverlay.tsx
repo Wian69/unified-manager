@@ -52,14 +52,16 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
         }
     }, [deviceId]);
 
-    // Fetch telemetry once device data (and serial number) is available
+    // Fetch telemetry with adaptive polling frequency
     useEffect(() => {
         if (deviceData?.device) {
             fetchTelemetry();
-            const interval = setInterval(fetchTelemetry, 30000);
+            // Poll faster (3s) during active remediation to show live patch progress
+            const intervalTime = agentReport?.remediationActive ? 3000 : 30000;
+            const interval = setInterval(fetchTelemetry, intervalTime);
             return () => clearInterval(interval);
         }
-    }, [deviceData]);
+    }, [deviceData, agentReport?.remediationActive]);
 
     const handleRemediate = async () => {
         setRemediating(true);

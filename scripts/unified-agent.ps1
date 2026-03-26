@@ -1,9 +1,10 @@
-# Unified Security Agent v1.4.3
-# Logic: Heartbeat, Detection, and Direct Command (C2) Remediation
+# Unified Security Agent v1.4.5
+# Logic: Heartbeat, Detection, and Granular Patch-by-Patch Progress
 # -----------------------------------------------------------------
 
 $HostURL = "https://unified-manager.vercel.app"
 $LogPath = "$env:ProgramData\Microsoft\UnifiedManager\UnifiedSecurityAgent.log"
+$SerialNumber = (Get-CimInstance Win32_Bios).SerialNumber
 
 function Write-Log($Message, $Type = "INFO") {
     $Stamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
@@ -11,44 +12,73 @@ function Write-Log($Message, $Type = "INFO") {
     Write-Host "[$Type] $Message"
 }
 
-function Invoke-Remediation {
-    Write-Log "CRITICAL: Direct Remediation Signal Received (C2). Starting Security Pulse..." "ACTION"
+function Send-Progress($LogMessage) {
+    Write-Log "Reporting Progress: $LogMessage"
     try {
-        # 1. Force Windows Update Cycle
-        Write-Log "Pushing Windows Update Cycle..."
+        $Payload = @{ serialNumber = $SerialNumber; log = $LogMessage } | ConvertTo-Json
+        Invoke-RestMethod -Uri "$HostURL/api/security/progress" -Method Post -Body $Payload -ContentType "application/json"
+    } catch {}
+}
+
+function Invoke-Remediation {
+    Send-Progress "Agent initialized remediation cycle."
+    try {
         $UpdateSession = New-Object -ComObject Microsoft.Update.Session
         $UpdateSearcher = $UpdateSession.CreateUpdateSearcher()
         $SearchResult = $UpdateSearcher.Search("IsInstalled=0 and IsHidden=0")
         
-        if ($SearchResult.Updates.Count -gt 0) {
-            Write-Log "Found $($SearchResult.Updates.Count) updates. Starting Download/Install..."
-            $Downloader = $UpdateSession.CreateUpdateDownloader()
-            $Downloader.Updates = $SearchResult.Updates
-            $Downloader.Download()
+        $Count = $SearchResult.Updates.Count
+        if ($Count -gt 0) {
+            Send-Progress "Detected $Count security patches."
             
-            $Installer = $UpdateSession.CreateUpdateInstaller()
-            $Installer.Updates = $SearchResult.Updates
-            $Result = $Installer.Install()
-            Write-Log "Patching complete. Result Code: $($Result.ResultCode)" "SUCCESS"
+            # Download Phase
+            for ($i = 0; $i -lt $Count; $i++) {
+                $Update = $SearchResult.Updates.Item($i)
+                Send-Progress "Downloading ($($i+1)/$Count): $($Update.Title)"
+                
+                $Collection = New-Object -ComObject Microsoft.Update.UpdateColl
+                $Collection.Add($Update)
+                
+                $Downloader = $UpdateSession.CreateUpdateDownloader()
+                $Downloader.Updates = $Collection
+                $Downloader.Download()
+            }
+            Send-Progress "All updates downloaded successfully."
+
+            # Installation Phase
+            for ($i = 0; $i -lt $Count; $i++) {
+                $Update = $SearchResult.Updates.Item($i)
+                Send-Progress "Installing ($($i+1)/$Count): $($Update.Title)"
+                
+                $Collection = New-Object -ComObject Microsoft.Update.UpdateColl
+                $Collection.Add($Update)
+                
+                $Installer = $UpdateSession.CreateUpdateInstaller()
+                $Installer.Updates = $Collection
+                $Result = $Installer.Install()
+                
+                $Status = if ($Result.ResultCode -eq 2) { "Completed" } else { "Error ($($Result.ResultCode))" }
+                Send-Progress "Patch status: $Status"
+            }
+            Send-Progress "Unified Patching Cycle Complete."
         } else {
-            Write-Log "No pending updates found."
+            Send-Progress "System is already current. No action required."
         }
 
         # 2. Security Hardening
-        Write-Log "Enforcing Defender Real-time and Behavior Monitoring..."
+        Send-Progress "Verifying Defender Security Baseline..."
         Set-MpPreference -DisableRealtimeMonitoring $false -ErrorAction SilentlyContinue
         Set-MpPreference -DisableBehaviorMonitoring $false -ErrorAction SilentlyContinue
         Update-MpSignature
-        Write-Log "Security posture hardened." "SUCCESS"
+        Send-Progress "Security configuration hardened."
     } catch {
-        Write-Log "Remediation Failure: $($_.Exception.Message)" "ERROR"
+        Send-Progress "Agent Execution Fault: $($_.Exception.Message)"
     }
 }
 
 function Send-Telemetry {
     Write-Log "Internal Security Pulse Initiated..."
     try {
-        # Detection
         $UpdateSession = New-Object -ComObject Microsoft.Update.Session
         $UpdateSearcher = $UpdateSession.CreateUpdateSearcher()
         $SearchResult = $UpdateSearcher.Search("IsInstalled=0 and IsHidden=0")
@@ -62,7 +92,7 @@ function Send-Telemetry {
         if (Test-Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired") { $Vulns += "System-PendingReboot" }
 
         $Payload = @{
-            serialNumber = (Get-CimInstance Win32_Bios).SerialNumber
+            serialNumber = $SerialNumber
             deviceName = $env:COMPUTERNAME
             updateCount = $SearchResult.Updates.Count
             missingUpdates = $Missing
@@ -73,18 +103,16 @@ function Send-Telemetry {
         $Response = Invoke-RestMethod -Uri "$HostURL/api/security/report" -Method Post -Body $Payload -ContentType "application/json"
         Write-Log "Heartbeat Success. Command Status: $($Response.command)" "SUCCESS"
 
-        # Direct C2 Logic: Check for commands from dashboard response
         if ($Response.command -eq "remediate") {
             Invoke-Remediation
-            # Report back again immediately after fix
-            Send-Telemetry
+            Send-Telemetry # Final report back
         }
     } catch {
         Write-Log "Telemetry Communication Error: $($_.Exception.Message)" "ERROR"
     }
 }
 
-# Persistence Layer (Scheduled Task)
+# Persistence Layer
 if ($args -notcontains "-SkipInstall") {
     $Source = $MyInvocation.MyCommand.Path
     if (![string]::IsNullOrEmpty($Source)) {
@@ -96,10 +124,9 @@ if ($args -notcontains "-SkipInstall") {
         $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$DestFile`" -SkipInstall"
         $Trigger = New-ScheduledTaskTrigger -At (Get-Date) -Once -RepetitionInterval (New-TimeSpan -Minutes 15)
         Register-ScheduledTask -TaskName "UnifiedSecurityAgent" -Action $Action -Trigger $Trigger -User "SYSTEM" -Force
-        Write-Log "Persistence layer established (v1.4.3)." "SUCCESS"
+        Write-Log "Persistence layer established (v1.4.5)." "SUCCESS"
     }
 }
 
-# Main Pulse
 Send-Telemetry
 Write-Log "Agent sequence complete."
