@@ -7,10 +7,13 @@ export async function POST(req: NextRequest) {
     try {
         const client = getGraphClient();
 
+        const body = await req.json().catch(() => ({}));
+        const targetDeviceId = body.deviceId;
+
         // 0. Cleanup Old Pulse Scripts (Optional but recommended to avoid clutter)
         try {
             const existingScripts = await client.api('/deviceManagement/deviceManagementScripts').version('beta').get();
-            const oldPulses = existingScripts.value?.filter((s: any) => s.displayName?.startsWith('Remediation_Pulse')) || [];
+            const oldPulses = (existingScripts.value || []).filter((s: any) => s.displayName?.startsWith('Remediation_Pulse') || s.displayName?.startsWith('Single_Remedy_'));
             for (const script of oldPulses) {
                 await client.api(`/deviceManagement/deviceManagementScripts/${script.id}`).version('beta').delete();
             }
@@ -47,8 +50,8 @@ try {
         const timestamp = new Date().toISOString().replace(/[:.-]/g, '');
         const scriptPayload = {
             "@odata.type": "#microsoft.graph.deviceManagementScript",
-            displayName: `Remediation_Pulse_${timestamp}`,
-            description: "Automated vulnerability and update remediation (One-Touch)",
+            displayName: targetDeviceId ? `Single_Remedy_${targetDeviceId.substring(0,8)}` : `Remediation_Pulse_${timestamp}`,
+            description: "Targeted vulnerability and update remediation",
             scriptContent: encodedScript,
             fileName: "remedy.ps1",
             runAsAccount: "system",
@@ -87,24 +90,28 @@ try {
         await client.api(`/deviceManagement/deviceManagementScripts/${scriptId}/assign`).version('beta').post(assignmentPayload);
 
         // 4. Trigger Native Remote Actions (Immediate MDM Channel)
-        // Fetch all managed device IDs to target
-        const devices = await client.api('/deviceManagement/managedDevices').select('id,deviceName').get();
-        const deviceIds = devices.value.map((d: any) => d.id);
+        // Targeted if deviceId is provided, otherwise bulk top 50
+        let targetIds = [];
+        if (targetDeviceId) {
+            targetIds = [targetDeviceId];
+        } else {
+            const devices = await client.api('/deviceManagement/managedDevices').select('id,deviceName').top(50).get();
+            targetIds = (devices.value || []).map((d: any) => d.id);
+        }
 
-        // Native actions (Scan/Signature Update) are much faster than PowerShell scripts (IME)
-        const nativeActions = deviceIds.slice(0, 50).flatMap((id: string) => [
+        const nativeActions = targetIds.map((id: string) => [
             client.api(`/deviceManagement/managedDevices/${id}/windowsDefenderUpdateSignatures`).post({}),
             client.api(`/deviceManagement/managedDevices/${id}/windowsDefenderScan`).post({ quickScan: true }),
             client.api(`/deviceManagement/managedDevices/${id}/syncDevice`).post({})
-        ]);
+        ]).flat();
 
         await Promise.allSettled(nativeActions);
 
         return NextResponse.json({
             success: true,
-            message: "Remediation pulse sent! Native Defender actions triggered (Immediate) + Script Deployed (IME Sync).",
+            message: targetDeviceId ? "Instant remediation triggered for device." : "Global remediation pulse sent!",
             scriptId,
-            devicesTargeted: deviceIds.length,
+            devicesTargeted: targetIds.length,
             timestamp: new Date().toISOString()
         });
 

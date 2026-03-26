@@ -13,6 +13,16 @@ export async function GET(req: NextRequest) {
             ?.filter((s: any) => s.displayName?.startsWith('Remediation_Pulse'))
             ?.sort((a: any, b: any) => new Date(b.createdDateTime).getTime() - new Date(a.createdDateTime).getTime())[0];
 
+        if (!latestPulse) {
+            return NextResponse.json({
+                status: 'idle',
+                scriptName: null,
+                percent: 0,
+                summary: { total: 0, success: 0, error: 0, pending: 0, details: [] },
+                timestamp: new Date().toISOString()
+            });
+        }
+
         // 2. Fetch device run states for this script
         const runStatesRes = await client.api(`/deviceManagement/deviceManagementScripts/${latestPulse.id}/deviceRunStates`).version('beta').get();
         const runStates = runStatesRes.value || [];
