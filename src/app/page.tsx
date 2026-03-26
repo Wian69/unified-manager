@@ -194,7 +194,7 @@ export default function Dashboard() {
                         <div className="flex items-center gap-4">
                             <button 
                                 onClick={handleRemediate}
-                                disabled={remediating || loading}
+                                disabled={remediating}
                                 className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-xl font-black uppercase tracking-tighter transition-all shadow-xl active:scale-95 ${
                                     remediating ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20'
                                 }`}

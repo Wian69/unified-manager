@@ -13,24 +13,30 @@ export async function GET(req: NextRequest) {
             ?.filter((s: any) => s.displayName?.startsWith('Remediation_Pulse'))
             ?.sort((a: any, b: any) => new Date(b.createdDateTime).getTime() - new Date(a.createdDateTime).getTime())[0];
 
-        if (!latestPulse) {
-            return NextResponse.json({
-                status: 'idle',
-                percent: -1, // Hidden
-                message: 'No active remediation pulse found.'
-            });
-        }
-
         // 2. Fetch device run states for this script
-        const runStates = await client.api(`/deviceManagement/deviceManagementScripts/${latestPulse.id}/deviceRunStates`).version('beta').get();
+        const runStatesRes = await client.api(`/deviceManagement/deviceManagementScripts/${latestPulse.id}/deviceRunStates`).version('beta').get();
+        const runStates = runStatesRes.value || [];
         
         const summary = {
-            total: runStates.value?.length || 0,
+            total: runStates.length,
             success: 0,
             error: 0,
             pending: 0,
             details: [] as any[]
         };
+
+        runStates.forEach((state: any) => {
+            if (state.runState === 'success') summary.success++;
+            else if (state.runState === 'error') summary.error++;
+            else summary.pending++;
+
+            summary.details.push({
+                deviceId: state.managedDeviceId,
+                deviceName: state.deviceName || 'Unknown Device',
+                status: state.runState,
+                lastUpdate: state.lastStateUpdateDateTime
+            });
+        });
 
         // If no devices have checked in yet but the script is brand new (< 5 mins), show 1% instead of 0% to force UI visibility
         const isNew = (new Date().getTime() - new Date(latestPulse.createdDateTime).getTime()) < 5 * 60 * 1000;
