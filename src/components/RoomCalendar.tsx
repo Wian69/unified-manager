@@ -10,6 +10,7 @@ export default function RoomCalendar() {
     const [schedules, setSchedules] = useState<Record<string, any[]>>({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [scheduleError, setScheduleError] = useState<string | null>(null);
     const [isDemo, setIsDemo] = useState(false);
     const [demoReason, setDemoReason] = useState<string | null>(null);
     const [viewDate, setViewDate] = useState(new Date());
@@ -30,6 +31,7 @@ export default function RoomCalendar() {
 
             // 2. Fetch Schedules
             if (roomsData.data && roomsData.data.length > 0) {
+                setScheduleError(null);
                 const emails = roomsData.data.map((r: any) => r.emailAddress);
                 const scheduleRes = await fetch('/api/rooms/schedule', {
                     method: 'POST',
@@ -38,11 +40,15 @@ export default function RoomCalendar() {
                 });
                 const scheduleData = await scheduleRes.json();
                 
-                const scheduleMap: Record<string, any[]> = {};
-                scheduleData.data.forEach((s: any) => {
-                    scheduleMap[s.scheduleId] = s.scheduleItems || [];
-                });
-                setSchedules(scheduleMap);
+                if (!scheduleRes.ok || !scheduleData.success) {
+                    setScheduleError(scheduleData.error || "Failed to sync calendar blocks");
+                } else {
+                    const scheduleMap: Record<string, any[]> = {};
+                    (scheduleData.data || []).forEach((s: any) => {
+                        scheduleMap[s.scheduleId] = s.scheduleItems || [];
+                    });
+                    setSchedules(scheduleMap);
+                }
             }
         } catch (err: any) {
             setError(err.message);
@@ -106,21 +112,26 @@ export default function RoomCalendar() {
                 </button>
             </div>
 
-            {/* Permission Warning (if in Demo Mode) */}
-            {isDemo && (
-                <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl flex items-center gap-4 animate-pulse">
+            {/* Permission or Schedule Warning */}
+            {(isDemo || scheduleError) && (
+                <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl flex items-center gap-4 animate-in fade-in slide-in-from-top-2">
                     <div className="p-2 bg-amber-500/20 rounded-lg text-amber-500">
                         <ShieldAlert size={18} />
                     </div>
                     <div className="flex-1">
-                        <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest">Permission Alert: Limited Visibility</p>
-                        <p className="text-[11px] text-slate-400 mt-0.5">
-                            Could not access organizational room resources. Showing simulated demo data. Please ensure <code className="bg-slate-800 px-1.5 py-0.5 rounded text-blue-400">Place.Read.All</code> is granted in your tenant.
+                        <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest">
+                            {scheduleError ? 'Calendar Sync Restricted' : 'Room Discovery Alert'}
                         </p>
-                        {demoReason && (
+                        <p className="text-[11px] text-slate-400 mt-0.5">
+                            {scheduleError 
+                                ? `Access to room schedules was denied. Please ensure 'Calendars.Read.Shared' is granted.` 
+                                : `Could not access organizational room metadata. Showing demo rooms.`
+                            }
+                        </p>
+                        {(demoReason || scheduleError) && (
                             <div className="mt-2 p-2 bg-slate-900/50 rounded-lg border border-slate-800">
                                 <p className="text-[9px] font-mono text-rose-400 leading-tight">
-                                    Graph Error: {demoReason}
+                                    Status: {scheduleError || demoReason}
                                 </p>
                             </div>
                         )}

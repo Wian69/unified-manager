@@ -13,16 +13,18 @@ export async function POST(request: Request) {
 
         const client = getGraphClient();
         
-        // Define time window (Today, 8:00 AM to 6:00 PM)
+        // Define time window (24 hours from start of day)
         const start = new Date();
-        start.setHours(8, 0, 0, 0);
+        start.setHours(0, 0, 0, 0);
         
         const end = new Date();
-        end.setHours(18, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
 
         // Fetch Schedule
         // Requires Calendars.Read.Shared or Calendars.Read
+        console.log(`[API] Fetching schedule for ${roomEmails.length} rooms...`);
         const response = await client.api('/me/calendar/getSchedule')
+            .header('Prefer', 'outlook.timezone="UTC"') // Force UTC for consistent parsing
             .post({
                 schedules: roomEmails,
                 startTime: {
@@ -33,34 +35,22 @@ export async function POST(request: Request) {
                     dateTime: end.toISOString(),
                     timeZone: 'UTC'
                 },
-                availabilityViewInterval: 60 // 1 hour slots for simplified vista
+                availabilityViewInterval: 60
             });
 
         return NextResponse.json({
             data: response.value || [],
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            success: true
         });
 
     } catch (error: any) {
         console.error('[API] Schedule Fetch Error:', error.message);
-        
-        // Fallback for demo
-        const { roomEmails } = await request.json().catch(() => ({ roomEmails: [] }));
         return NextResponse.json({
-            data: roomEmails.map((email: string) => ({
-                scheduleId: email,
-                availabilityView: "00000111000", // Busy from 1PM to 4PM (simplified)
-                scheduleItems: [
-                    {
-                        start: { dateTime: new Date().toISOString().split('T')[0] + 'T13:00:00Z' },
-                        end: { dateTime: new Date().toISOString().split('T')[0] + 'T16:00:00Z' },
-                        status: 'busy',
-                        subject: 'Strategic Planning',
-                        organizer: 'Wian Du Randt'
-                    }
-                ]
-            })),
-            isFallback: true
+            error: error.message,
+            statusCode: error.statusCode || 500,
+            success: false,
+            tip: "Requires Calendars.Read.Shared permissions."
         });
     }
 }
