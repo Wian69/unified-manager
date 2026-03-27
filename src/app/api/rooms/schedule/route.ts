@@ -20,26 +20,39 @@ export async function POST(request: Request) {
         const end = new Date();
         end.setHours(23, 59, 59, 999);
 
-        // Fetch Schedule
-        // Requires Calendars.Read.Shared or Calendars.Read
-        console.log(`[API] Fetching schedule for ${roomEmails.length} rooms...`);
-        const response = await client.api('/me/calendar/getSchedule')
-            .header('Prefer', 'outlook.timezone="UTC"') // Force UTC for consistent parsing
-            .post({
-                schedules: roomEmails,
-                startTime: {
-                    dateTime: start.toISOString(),
-                    timeZone: 'UTC'
-                },
-                endTime: {
-                    dateTime: end.toISOString(),
-                    timeZone: 'UTC'
-                },
-                availabilityViewInterval: 60
-            });
+        // Fetch individual schedules in parallel using Application permissions
+        // getSchedule on /me is only for Delegated auth. For App auth, we query room calendars directly.
+        console.log(`[API] Querying ${roomEmails.length} calendars directly...`);
+        
+        const schedulePromises = roomEmails.map(async (email) => {
+            try {
+                const calView = await client.api(`/users/${email}/calendar/calendarView`)
+                    .query({
+                        startDateTime: start.toISOString(),
+                        endDateTime: end.toISOString()
+                    })
+                    .select('subject,start,end,organizer')
+                    .get();
+                
+                return {
+                    scheduleId: email,
+                    scheduleItems: calView.value.map((item: any) => ({
+                        subject: item.subject,
+                        start: item.start,
+                        end: item.end,
+                        organizer: item.organizer?.emailAddress?.displayName || "Unknown"
+                    }))
+                };
+            } catch (err: any) {
+                console.warn(`[API] Failed to fetch for ${email}:`, err.message);
+                return { scheduleId: email, scheduleItems: [], error: err.message };
+            }
+        });
+
+        const results = await Promise.all(schedulePromises);
 
         return NextResponse.json({
-            data: response.value || [],
+            data: results,
             timestamp: new Date().toISOString(),
             success: true
         });
