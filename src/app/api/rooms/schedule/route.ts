@@ -31,7 +31,7 @@ export async function POST(request: Request) {
                         startDateTime: start.toISOString(),
                         endDateTime: end.toISOString()
                     })
-                    .select('subject,start,end,organizer')
+                    .select('subject,start,end,organizer,attendees,bodyPreview,location')
                     .get();
                 
                 return {
@@ -40,7 +40,14 @@ export async function POST(request: Request) {
                         subject: item.subject,
                         start: item.start,
                         end: item.end,
-                        organizer: item.organizer?.emailAddress?.displayName || "Unknown"
+                        organizer: item.organizer?.emailAddress?.displayName || item.organizer?.emailAddress?.address || "Internal Meeting",
+                        organizerEmail: item.organizer?.emailAddress?.address,
+                        attendees: item.attendees?.map((a: any) => ({
+                            name: a.emailAddress?.displayName || a.emailAddress?.address,
+                            type: a.type
+                        })) || [],
+                        description: item.bodyPreview,
+                        location: item.location?.displayName
                     }))
                 };
             } catch (err: any) {
