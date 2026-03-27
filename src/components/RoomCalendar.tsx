@@ -35,8 +35,12 @@ export default function RoomCalendar() {
             if (fetchedRooms.length > 0) {
                 setScheduleError(null);
                 const emails = fetchedRooms.map((r: any) => r.emailAddress);
-                const startDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
-                const endDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0, 23, 59, 59);
+                
+                // Calculate the full 42-day range shown in the grid
+                const days = getDaysInMonth(viewDate);
+                const startDate = days[0].date;
+                const endDate = new Date(days[days.length - 1].date);
+                endDate.setHours(23, 59, 59, 999);
 
                 const scheduleRes = await fetch('/api/rooms/schedule', {
                     method: 'POST',

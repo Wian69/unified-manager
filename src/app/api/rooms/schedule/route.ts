@@ -31,6 +31,7 @@ export async function POST(request: Request) {
                         startDateTime: start.toISOString(),
                         endDateTime: end.toISOString()
                     })
+                    .top(999)
                     .select('subject,start,end,organizer,attendees,bodyPreview,location')
                     .get();
                 
