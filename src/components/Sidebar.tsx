@@ -12,7 +12,8 @@ import {
     Trash2,
     Settings,
     X,
-    Menu
+    Menu,
+    Calendar
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -29,6 +30,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         { name: 'Offboarding', icon: UserMinus, path: '/offboarding' },
         { name: 'Users', icon: Users, path: '/users' },
         { name: 'SharePoint', icon: HardDrive, path: '/sharepoint' },
+        { name: 'Meeting Rooms', icon: Calendar, path: '/rooms' },
         { name: 'Settings', icon: Settings, path: '/settings' },
     ];
 
