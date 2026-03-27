@@ -11,6 +11,8 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate, on
     const [expandedChatId, setExpandedChatId] = useState<string | null>(null);
     const [messages, setMessages] = useState<Record<string, any[]>>({});
     const [loadingMessages, setLoadingMessages] = useState<string | null>(null);
+    const [presence, setPresence] = useState<any>(null);
+    const [meeting, setMeeting] = useState<any>(null);
 
     const fetchChats = async () => {
         setLoading(true);
@@ -49,8 +51,28 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate, on
         }
     };
 
+    const fetchPresence = async () => {
+        try {
+            const res = await fetch(`/api/teams/presence?userId=${userId}`);
+            const data = await res.json();
+            if (!data.error) {
+                setPresence(data.presence);
+                setMeeting(data.meeting);
+            }
+        } catch (err) {
+            console.error("Failed to fetch presence:", err);
+        }
+    };
+
     useEffect(() => {
-        if (userId) fetchChats();
+        if (userId) {
+            fetchChats();
+            fetchPresence();
+            
+            // Poll presence every 45 seconds for live updates
+            const interval = setInterval(fetchPresence, 45000);
+            return () => clearInterval(interval);
+        }
     }, [userId, sinceDate]);
 
     const handleExpand = (chatId: string) => {
@@ -113,13 +135,72 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate, on
                         <Download size={14} /> Export Audit
                     </button>
                     <button 
-                        onClick={fetchChats}
+                        onClick={() => { fetchChats(); fetchPresence(); }}
                         className="p-2 text-slate-500 hover:text-white transition-colors"
                     >
                         <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
                     </button>
                 </div>
             </div>
+            
+            {/* Live Presence & Meeting Alert */}
+            {presence && (
+                <div className={`flex flex-col md:flex-row items-center justify-between gap-6 p-6 rounded-2xl border transition-all duration-700 animate-in slide-in-from-top-4 ${
+                    meeting 
+                    ? 'bg-rose-500/10 border-rose-500/20 shadow-lg shadow-rose-500/5' 
+                    : 'bg-slate-900 border-slate-800'
+                }`}>
+                    <div className="flex items-center gap-5">
+                        <div className="relative">
+                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border ${
+                                meeting ? 'bg-rose-500/20 border-rose-500/30' : 'bg-slate-800 border-slate-700'
+                            }`}>
+                                <User size={24} className={meeting ? 'text-rose-500' : 'text-slate-400'} />
+                            </div>
+                            <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-slate-950 ${
+                                presence.availability === 'Available' ? 'bg-emerald-500' :
+                                presence.availability === 'Busy' ? 'bg-rose-500' :
+                                presence.availability === 'Away' ? 'bg-amber-500' : 'bg-slate-500'
+                            }`} />
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <h4 className="text-sm font-black text-white uppercase tracking-widest">{userDisplayName}</h4>
+                                <span className={`text-[9px] font-black px-2 py-0.5 rounded uppercase ${
+                                    presence.availability === 'Available' ? 'bg-emerald-500/10 text-emerald-500' :
+                                    presence.availability === 'Busy' ? 'bg-rose-500/10 text-rose-500' : 'text-slate-500 bg-slate-800'
+                                }`}>
+                                    {presence.activity}
+                                </span>
+                            </div>
+                            <p className="text-[10px] text-slate-500 font-mono mt-0.5 italic">
+                                {meeting ? `In meeting: ${meeting.subject}` : 'Not currently in a scheduled session'}
+                            </p>
+                        </div>
+                    </div>
+
+                    {meeting && (
+                        <div className="flex flex-col md:flex-row items-center gap-6">
+                            <div className="flex -space-x-2">
+                                {meeting.attendees.slice(0, 4).map((att: any, idx: number) => (
+                                    <div key={idx} title={att.name || att.email} className="w-8 h-8 rounded-full bg-slate-900 border-2 border-slate-950 flex items-center justify-center text-[10px] font-black text-slate-400">
+                                        {att.name ? att.name[0] : '?'}
+                                    </div>
+                                ))}
+                                {meeting.attendees.length > 4 && (
+                                    <div className="w-8 h-8 rounded-full bg-slate-800 border-2 border-slate-950 flex items-center justify-center text-[8px] font-black text-slate-500">
+                                        +{meeting.attendees.length - 4}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="px-4 py-2 bg-rose-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 animate-pulse">
+                                <Activity size={12} />
+                                Meeting Active
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {loading ? (
                 <div className="flex flex-col items-center justify-center py-20 text-slate-500 gap-4">
