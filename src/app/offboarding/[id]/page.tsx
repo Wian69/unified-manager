@@ -7,6 +7,7 @@ import SharePointDeletionsModule from "@/components/SharePointDeletionsModule";
 import EmailTraceModule from "@/components/EmailTraceModule";
 import TeamsChatModule from "@/components/TeamsChatModule";
 import dynamic from "next/dynamic";
+import SecurityAuditModule from "@/components/SecurityAuditModule";
 
 const DigitalOffboardingWizard = dynamic(
     () => import("@/components/DigitalOffboardingWizard"),
@@ -408,22 +409,11 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
                         />
                     </section>
 
-                    <section className="bg-slate-900/50 p-10 rounded-3xl border border-slate-800 text-left">
-                        <h3 className="text-xl font-bold text-white mb-8">Data Exfiltration Risk Context</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="bg-slate-900/50 p-8 rounded-3xl border border-slate-800 hover:border-blue-500/30 transition-all">
-                                <p className="text-xs text-slate-500 uppercase font-black tracking-widest mb-3">Access Anomalies</p>
-                                <p className="text-slate-200 text-sm leading-relaxed">System flag: High volume of data synchronization detected across personal OneDrive folders outside business hours.</p>
-                            </div>
-                            <div className="bg-slate-900/50 p-8 rounded-3xl border border-slate-800 hover:border-emerald-500/30 transition-all">
-                                <p className="text-xs text-slate-500 uppercase font-black tracking-widest mb-3">Endpoint Compliance</p>
-                                <p className="text-emerald-400 font-bold flex items-center gap-2">
-                                    <ShieldAlert size={16} /> Fully Compliant
-                                </p>
-                                <p className="text-slate-500 text-[10px] mt-2 italic">Last security check: 4 minutes ago</p>
-                            </div>
-                        </div>
-                    </section>
+                    <SecurityAuditModule 
+                        userId={id} 
+                        employeeName={user.displayName} 
+                        sinceDate={sinceDate} 
+                    />
                 </div>
 
                 <div className="space-y-12">
