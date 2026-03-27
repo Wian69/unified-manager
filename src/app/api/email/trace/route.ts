@@ -8,6 +8,7 @@ export async function GET(request: Request) {
     const userId = searchParams.get('userId');
     const startDate = searchParams.get('startDate'); // ISO format
     const endDate = searchParams.get('endDate');   // ISO format
+    const folder = searchParams.get('folder') || 'sentitems'; // 'inbox' or 'sentitems'
 
     if (!userId) {
         return NextResponse.json({ error: "Missing userId" }, { status: 400 });
@@ -16,17 +17,20 @@ export async function GET(request: Request) {
     try {
         const client = getGraphClient();
         
+        // Use receivedDateTime for inbox, sentDateTime for sent items
+        const timeField = folder === 'inbox' ? 'receivedDateTime' : 'sentDateTime';
+        
         let filter = "";
         if (startDate && endDate) {
-            filter = `sentDateTime ge ${startDate} and sentDateTime le ${endDate}`;
+            filter = `${timeField} ge ${startDate} and ${timeField} le ${endDate}`;
         }
 
-        const response = await client.api(`/users/${userId}/mailFolders('sentitems')/messages`)
-            .select('id,subject,sentDateTime,bodyPreview,hasAttachments')
+        const response = await client.api(`/users/${userId}/mailFolders('${folder}')/messages`)
+            .select(`id,subject,sentDateTime,receivedDateTime,bodyPreview,hasAttachments`)
             .expand('attachments($select=name,contentType,size)')
             .filter(filter)
             .top(100)
-            .orderby('sentDateTime desc')
+            .orderby(`${timeField} desc`)
             .get();
 
         return NextResponse.json({

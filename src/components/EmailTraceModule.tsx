@@ -7,6 +7,7 @@ export default function EmailTraceModule({ userId, userDisplayName, sinceDate, o
     const [emails, setEmails] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [folder, setFolder] = useState<'inbox' | 'sentitems'>('sentitems');
     
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
@@ -44,7 +45,7 @@ export default function EmailTraceModule({ userId, userDisplayName, sinceDate, o
         setLoading(true);
         setError(null);
         try {
-            let url = `/api/email/trace?userId=${userId}`;
+            let url = `/api/email/trace?userId=${userId}&folder=${folder}`;
             
             const effectiveSince = sinceDate || startDate;
             if (effectiveSince) {
@@ -67,7 +68,7 @@ export default function EmailTraceModule({ userId, userDisplayName, sinceDate, o
 
     useEffect(() => {
         if (userId) fetchEmails();
-    }, [userId, sinceDate]);
+    }, [userId, sinceDate, folder]);
 
     const handleSearch = () => {
         fetchEmails();
@@ -89,13 +90,17 @@ export default function EmailTraceModule({ userId, userDisplayName, sinceDate, o
             email.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             email.bodyPreview?.toLowerCase().includes(searchQuery.toLowerCase())
         )
-        .sort((a: any, b: any) => new Date(b.sentDateTime).getTime() - new Date(a.sentDateTime).getTime());
+        .sort((a: any, b: any) => {
+            const dateA = new Date(a.receivedDateTime || a.sentDateTime).getTime();
+            const dateB = new Date(b.receivedDateTime || b.sentDateTime).getTime();
+            return dateB - dateA;
+        });
 
     const downloadCSV = () => {
         const headers = ["Subject", "Date", "Attachments", "Preview"];
         const rows = filteredEmails.map(email => [
             `"${email.subject || 'No Subject'}"`,
-            `"${formatDate(email.sentDateTime)}"`,
+            `"${formatDate(email.receivedDateTime || email.sentDateTime)}"`,
             email.attachments?.length || 0,
             `"${(email.bodyPreview || '').replace(/"/g, '""')}"`
         ]);
@@ -104,7 +109,7 @@ export default function EmailTraceModule({ userId, userDisplayName, sinceDate, o
         const link = document.createElement("a");
         const url = URL.createObjectURL(blob);
         link.setAttribute("href", url);
-        link.setAttribute("download", `Email_Trace_${userDisplayName.replace(/\s+/g, '_')}.csv`);
+        link.setAttribute("download", `${folder === 'inbox' ? 'Inbox' : 'Sent'}_Trace_${userDisplayName.replace(/\s+/g, '_')}.csv`);
         link.click();
     };
 
@@ -117,12 +122,32 @@ export default function EmailTraceModule({ userId, userDisplayName, sinceDate, o
                         <Mail size={24} className="text-blue-500" />
                     </div>
                     <div>
-                        <h3 className="text-xl font-bold text-white uppercase tracking-tight">Email Sent Trace</h3>
-                        <p className="text-xs text-slate-500 font-mono tracking-widest uppercase mt-0.5">Auditing Outlook Sent Items</p>
+                        <h3 className="text-xl font-bold text-white uppercase tracking-tight">Email Trace - {folder === 'inbox' ? 'Inbox' : 'Sent Items'}</h3>
+                        <p className="text-xs text-slate-500 font-mono tracking-widest uppercase mt-0.5">Auditing Outlook {folder === 'inbox' ? 'Received' : 'Sent'} Items</p>
                     </div>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-4">
+                    {/* Folder Toggle */}
+                    <div className="flex p-1 bg-slate-900 rounded-xl border border-slate-800">
+                        <button 
+                            onClick={() => setFolder('sentitems')}
+                            className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${
+                                folder === 'sentitems' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'
+                            }`}
+                        >
+                            Sent
+                        </button>
+                        <button 
+                            onClick={() => setFolder('inbox')}
+                            className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${
+                                folder === 'inbox' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'
+                            }`}
+                        >
+                            Inbox
+                        </button>
+                    </div>
+
                     <div className="flex items-center gap-2 bg-slate-900 p-2 rounded-xl border border-slate-800">
                         <Calendar size={14} className="text-blue-400" />
                         <input 
@@ -178,7 +203,7 @@ export default function EmailTraceModule({ userId, userDisplayName, sinceDate, o
                             <h4 className="font-bold text-slate-300 text-sm">Messages Discovered ({filteredEmails.length})</h4>
                             <div className="h-4 w-[1px] bg-slate-800" />
                             <p className="text-[10px] text-slate-500 font-mono uppercase tracking-widest">
-                                Sent Items History
+                                {folder === 'inbox' ? 'Inbox' : 'Sent Items'} History
                             </p>
                         </div>
                         <div className="relative">
@@ -199,7 +224,7 @@ export default function EmailTraceModule({ userId, userDisplayName, sinceDate, o
                                 <tr>
                                     <th className="px-8 py-5 border-b border-slate-800">Email Title & Preview</th>
                                     <th className="px-8 py-5 border-b border-slate-800 text-center">Attachments</th>
-                                    <th className="px-8 py-5 border-b border-slate-800 text-right">Sent Date</th>
+                                    <th className="px-8 py-5 border-b border-slate-800 text-right">{folder === 'inbox' ? 'Received' : 'Sent'} Date</th>
                                     <th className="w-12 border-b border-slate-800"></th>
                                 </tr>
                             </thead>
@@ -231,8 +256,8 @@ export default function EmailTraceModule({ userId, userDisplayName, sinceDate, o
                                                 )}
                                             </td>
                                             <td className="px-8 py-6 text-right whitespace-nowrap">
-                                                <div className="text-xs font-bold text-slate-300">{formatDate(email.sentDateTime).split(',')[0]}</div>
-                                                <div className="text-[10px] text-slate-500 font-mono mt-0.5">{formatDate(email.sentDateTime).split(',')[1]}</div>
+                                                <div className="text-xs font-bold text-slate-300">{formatDate(email.receivedDateTime || email.sentDateTime).split(',')[0]}</div>
+                                                <div className="text-[10px] text-slate-500 font-mono mt-0.5">{formatDate(email.receivedDateTime || email.sentDateTime).split(',')[1]}</div>
                                             </td>
                                             <td className="pr-6 text-slate-600 group-hover:text-slate-400 transition-colors">
                                                 {expandedEmailId === email.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -252,11 +277,17 @@ export default function EmailTraceModule({ userId, userDisplayName, sinceDate, o
                                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-900/50 p-6 rounded-2xl border border-slate-800">
                                                                 <div className="space-y-3">
                                                                     <div>
-                                                                        <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">To Recipients</p>
+                                                                        <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">{folder === 'inbox' ? 'From' : 'To Recipients'}</p>
                                                                         <div className="flex flex-wrap gap-2">
-                                                                            {fullMessages[email.id].toRecipients?.map((r: any, idx: number) => (
-                                                                                <span key={idx} className="px-2 py-1 bg-slate-800 text-slate-300 text-[11px] rounded border border-slate-700">{r.emailAddress.name || r.emailAddress.address}</span>
-                                                                            ))}
+                                                                            {folder === 'inbox' ? (
+                                                                                <span className="px-2 py-1 bg-slate-800 text-slate-300 text-[11px] rounded border border-slate-700">
+                                                                                    {fullMessages[email.id].from?.emailAddress.name || fullMessages[email.id].from?.emailAddress.address}
+                                                                                </span>
+                                                                            ) : (
+                                                                                fullMessages[email.id].toRecipients?.map((r: any, idx: number) => (
+                                                                                    <span key={idx} className="px-2 py-1 bg-slate-800 text-slate-300 text-[11px] rounded border border-slate-700">{r.emailAddress.name || r.emailAddress.address}</span>
+                                                                                ))
+                                                                            )}
                                                                         </div>
                                                                     </div>
                                                                     {fullMessages[email.id].ccRecipients?.length > 0 && (
@@ -276,8 +307,8 @@ export default function EmailTraceModule({ userId, userDisplayName, sinceDate, o
                                                                         <p className="text-sm font-bold text-white">{fullMessages[email.id].subject}</p>
                                                                     </div>
                                                                     <div>
-                                                                        <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">Sent Date</p>
-                                                                        <p className="text-sm text-slate-300">{formatDate(fullMessages[email.id].sentDateTime)}</p>
+                                                                        <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">{folder === 'inbox' ? 'Received' : 'Sent'} Date</p>
+                                                                        <p className="text-sm text-slate-300">{formatDate(fullMessages[email.id].receivedDateTime || fullMessages[email.id].sentDateTime)}</p>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -338,7 +369,7 @@ export default function EmailTraceModule({ userId, userDisplayName, sinceDate, o
                                     <tr>
                                         <td colSpan={4} className="px-8 py-20 text-center">
                                             <Mail size={32} className="mx-auto text-slate-800 mb-4 opacity-50" />
-                                            <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest">No sent items found for this range.</p>
+                                            <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest">No emails found in this folder for the selected range.</p>
                                         </td>
                                     </tr>
                                 )}
