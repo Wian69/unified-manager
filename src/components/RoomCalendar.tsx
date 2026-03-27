@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Calendar, Users, Clock, MapPin, RefreshCw, ChevronLeft, ChevronRight, Info, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Calendar, Users, Clock, MapPin, RefreshCw, ChevronLeft, ChevronRight, Info, AlertCircle, CheckCircle2, ShieldAlert } from "lucide-react";
 
 const HOURS = Array.from({ length: 11 }, (_, i) => i + 8); // 8 AM to 6 PM
 
@@ -10,6 +10,7 @@ export default function RoomCalendar() {
     const [schedules, setSchedules] = useState<Record<string, any[]>>({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isDemo, setIsDemo] = useState(false);
     const [viewDate, setViewDate] = useState(new Date());
 
     const fetchData = async () => {
@@ -19,8 +20,11 @@ export default function RoomCalendar() {
             // 1. Fetch Rooms
             const roomsRes = await fetch('/api/rooms');
             const roomsData = await roomsRes.json();
-            if (roomsData.error) throw new Error(roomsData.details || roomsData.error);
+            
+            if (!roomsRes.ok && !roomsData.success) throw new Error(roomsData.details || roomsData.error);
+            
             setRooms(roomsData.data || []);
+            setIsDemo(!!roomsData.isDemo);
 
             // 2. Fetch Schedules
             if (roomsData.data && roomsData.data.length > 0) {
@@ -99,6 +103,21 @@ export default function RoomCalendar() {
                     {loading ? 'Syncing...' : 'Sync Schedule'}
                 </button>
             </div>
+
+            {/* Permission Warning (if in Demo Mode) */}
+            {isDemo && (
+                <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl flex items-center gap-4 animate-pulse">
+                    <div className="p-2 bg-amber-500/20 rounded-lg text-amber-500">
+                        <ShieldAlert size={18} />
+                    </div>
+                    <div className="flex-1">
+                        <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest">Permission Alert: Limited Visibility</p>
+                        <p className="text-[11px] text-slate-400 mt-0.5">
+                            Could not access organizational room resources. Showing simulated demo data. Please ensure <code className="bg-slate-800 px-1.5 py-0.5 rounded text-blue-400">Place.Read.All</code> is granted in your tenant.
+                        </p>
+                    </div>
+                </div>
+            )}
 
             {loading && rooms.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-40 gap-4">
