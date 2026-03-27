@@ -27,6 +27,7 @@ export async function POST(request: Request) {
         const schedulePromises = roomEmails.map(async (email) => {
             try {
                 const calView = await client.api(`/users/${email}/calendar/calendarView`)
+                    .header('Prefer', 'outlook.timezone="UTC"')
                     .query({
                         startDateTime: start.toISOString(),
                         endDateTime: end.toISOString()
@@ -39,8 +40,14 @@ export async function POST(request: Request) {
                     scheduleId: email,
                     scheduleItems: calView.value.map((item: any) => ({
                         subject: item.subject,
-                        start: item.start,
-                        end: item.end,
+                        start: { 
+                            dateTime: item.start.dateTime + 'Z',
+                            timeZone: 'UTC'
+                        },
+                        end: { 
+                            dateTime: item.end.dateTime + 'Z',
+                            timeZone: 'UTC'
+                        },
                         organizer: item.organizer?.emailAddress?.displayName || item.organizer?.emailAddress?.address || "Internal Meeting",
                         organizerEmail: item.organizer?.emailAddress?.address,
                         attendees: item.attendees?.map((a: any) => ({
