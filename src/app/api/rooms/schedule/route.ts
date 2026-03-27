@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
     try {
-        const { roomEmails } = await request.json();
+        const { roomEmails, startDate, endDate } = await request.json();
         
         if (!roomEmails || !Array.isArray(roomEmails)) {
             return NextResponse.json({ error: "Missing or invalid roomEmails" }, { status: 400 });
@@ -13,12 +13,12 @@ export async function POST(request: Request) {
 
         const client = getGraphClient();
         
-        // Define time window (24 hours from start of day)
-        const start = new Date();
-        start.setHours(0, 0, 0, 0);
+        // Use provided dates or fallback to today
+        const start = startDate ? new Date(startDate) : new Date();
+        if (!startDate) start.setHours(0, 0, 0, 0);
         
-        const end = new Date();
-        end.setHours(23, 59, 59, 999);
+        const end = endDate ? new Date(endDate) : new Date();
+        if (!endDate) end.setHours(23, 59, 59, 999);
 
         // Fetch individual schedules in parallel using Application permissions
         // getSchedule on /me is only for Delegated auth. For App auth, we query room calendars directly.
