@@ -247,19 +247,28 @@ export default function RoomCalendar() {
                                         <span className={`text-sm font-black tracking-tighter ${isToday ? 'text-blue-500' : dayObj.currentMonth ? 'text-slate-300' : 'text-slate-600'}`}>{dayObj.day.toString().padStart(2, '0')}</span>
                                         {bookings.length > 0 && dayObj.currentMonth && <span className="text-[9px] font-black text-slate-500 uppercase bg-slate-800 px-2 py-0.5 rounded-full">{bookings.length} Ev</span>}
                                     </div>
-                                    <div className="space-y-1.5 overflow-hidden flex-1 no-scrollbar pb-2">
+                                    <div className="space-y-2 overflow-hidden flex-1 no-scrollbar pb-2">
                                         {bookings.map((booking, bIdx) => (
-                                            <div key={bIdx} onClick={() => setSelectedEvent({ ...booking, room: selectedRoom })} className="group/item flex flex-col p-2.5 rounded-xl bg-blue-600/90 hover:bg-blue-500 border border-blue-400/20 cursor-pointer shadow-lg shadow-blue-900/30 transition-all hover:scale-[1.03] active:scale-95 translate-y-0 hover:-translate-y-0.5">
-                                                <div className="flex justify-between items-start gap-2">
-                                                    <p className="text-[10px] font-black text-white uppercase tracking-tight truncate leading-none">{new Date(booking.start.dateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}</p>
-                                                    <Info size={10} className="text-white/40 group-hover/item:text-white transition-colors" />
-                                                </div>
-                                                <p className="text-[10px] font-bold text-blue-100 truncate mt-1.5 leading-none">{booking.subject || 'Internal'}</p>
-                                                <div className="mt-2 flex items-center justify-between">
-                                                    <div className="flex items-center gap-1">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50" />
-                                                        <p className="text-[9px] font-black text-white/70 uppercase tracking-tighter truncate max-w-[80px]">{booking.organizer}</p>
+                                            <div key={bIdx} onClick={() => setSelectedEvent({ ...booking, room: selectedRoom })} className="group/item flex flex-col p-3 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 border border-white/10 cursor-pointer shadow-lg shadow-black/20 transition-all hover:scale-[1.02] active:scale-95 translate-y-0 hover:-translate-y-0.5">
+                                                <div className="flex justify-between items-center gap-2 mb-1.5">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <Clock size={10} className="text-blue-200/60" />
+                                                        <p className="text-[10px] font-bold text-white tracking-tight leading-none">
+                                                            {new Date(booking.start.dateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                                        </p>
                                                     </div>
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
+                                                </div>
+                                                <p className="text-[11px] font-semibold text-white/95 truncate leading-tight mb-2">
+                                                    {booking.subject || 'Internal Session'}
+                                                </p>
+                                                <div className="flex items-center gap-2 mt-auto">
+                                                    <div className="w-4 h-4 rounded-full bg-white/10 flex items-center justify-center border border-white/5">
+                                                        <Users size={8} className="text-blue-100" />
+                                                    </div>
+                                                    <p className="text-[9px] font-medium text-blue-100/80 truncate tracking-tight">
+                                                        {booking.organizer}
+                                                    </p>
                                                 </div>
                                             </div>
                                         ))}
