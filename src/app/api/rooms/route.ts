@@ -10,29 +10,38 @@ export async function GET() {
         // Fetch all meeting rooms
         // Note: Requires Place.Read.All
         const response = await client.api('/places/microsoft.graph.room')
-            .select('id,displayName,emailAddress,capacity,building,floorNumber,isWheelChairAccessible')
+            .select('id,displayName,emailAddress,capacity,building,floorNumber')
             .get();
 
+        let rooms = response.value || [];
+
+        // 2. If no rooms found via Places API, try searching for Resource-type mailboxes
+        if (rooms.length === 0) {
+            console.log('[API] No rooms via Places API, trying Users filter...');
+            const resourceResponse = await client.api('/users')
+                .filter("userType eq 'Resource' or contains(displayName, 'Room')")
+                .select('id,displayName,userPrincipalName')
+                .get();
+            
+            rooms = (resourceResponse.value || []).map((u: any) => ({
+                id: u.id,
+                displayName: u.displayName,
+                emailAddress: u.userPrincipalName,
+                capacity: 10, // Default for placeholders
+                floorNumber: 1
+            }));
+        }
+
         return NextResponse.json({
-            data: response.value || [],
-            count: response.value?.length || 0
+            data: rooms,
+            count: rooms.length,
+            source: rooms.length > response.value?.length ? 'directory-search' : 'places-api'
         });
 
     } catch (error: any) {
         console.error('[API] Rooms Fetch Error:', error.message);
         
-        // Fallback for demo/dev if API fails due to permissions in sandbox
-        if (error.statusCode === 403 || error.statusCode === 401) {
-             return NextResponse.json({
-                 data: [
-                     { id: 'room1', displayName: 'Boardroom (Alpha)', emailAddress: 'alpha@example.com', capacity: 20 },
-                     { id: 'room2', displayName: 'Focus Room (Beta)', emailAddress: 'beta@example.com', capacity: 4 },
-                     { id: 'room3', displayName: 'Innovation Hub', emailAddress: 'hub@example.com', capacity: 12 }
-                 ],
-                 isFallback: true
-             });
-        }
-
+        // Final fallback only if everything fails
         return NextResponse.json(
             { error: "Failed to fetch meeting rooms", details: error.message },
             { status: 500 }
