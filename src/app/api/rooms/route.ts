@@ -52,8 +52,9 @@ export async function GET() {
             ],
             success: true,
             isDemo: true,
-            error: error.message,
-            tip: "Requires Place.Read.All or Directory.Read.All"
+            detailedError: error.message,
+            statusCode: error.statusCode || 500,
+            tip: "Requires Place.Read.All or Directory.Read.All. If just granted, wait 5-10 mins for propagation."
         });
     }
 }

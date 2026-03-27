@@ -11,6 +11,7 @@ export default function RoomCalendar() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isDemo, setIsDemo] = useState(false);
+    const [demoReason, setDemoReason] = useState<string | null>(null);
     const [viewDate, setViewDate] = useState(new Date());
 
     const fetchData = async () => {
@@ -25,6 +26,7 @@ export default function RoomCalendar() {
             
             setRooms(roomsData.data || []);
             setIsDemo(!!roomsData.isDemo);
+            setDemoReason(roomsData.detailedError || null);
 
             // 2. Fetch Schedules
             if (roomsData.data && roomsData.data.length > 0) {
@@ -115,6 +117,13 @@ export default function RoomCalendar() {
                         <p className="text-[11px] text-slate-400 mt-0.5">
                             Could not access organizational room resources. Showing simulated demo data. Please ensure <code className="bg-slate-800 px-1.5 py-0.5 rounded text-blue-400">Place.Read.All</code> is granted in your tenant.
                         </p>
+                        {demoReason && (
+                            <div className="mt-2 p-2 bg-slate-900/50 rounded-lg border border-slate-800">
+                                <p className="text-[9px] font-mono text-rose-400 leading-tight">
+                                    Graph Error: {demoReason}
+                                </p>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
