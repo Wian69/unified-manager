@@ -36,6 +36,19 @@ const formatRelativeTime = (dateString: string | null | undefined) => {
     }
 };
 
+const getStatusColor = (availability: string | undefined) => {
+    switch (availability) {
+        case 'Available': return 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]';
+        case 'Busy':
+        case 'DoNotDisturb': return 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]';
+        case 'Away':
+        case 'BeRightBack': return 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]';
+        case 'Offline':
+        default: return 'bg-slate-600';
+    }
+};
+
+
 
 const InputField = ({ label, field, value, onChange, readOnly = false }: { label: string, field: string, value: string, onChange?: (val: string) => void, readOnly?: boolean }) => (
     <div>
@@ -334,11 +347,18 @@ export default function UsersPage() {
                                                         <td className="px-6 py-4">{u.jobTitle || 'N/A'}</td>
                                                         <td className="px-6 py-4 text-slate-400 italic">{u.officeLocation || 'N/A'}</td>
                                                         <td className="px-6 py-4 text-center">
-                                                            <div className="flex items-center justify-center gap-2">
-                                                                <Clock size={14} className={u.signInActivity?.lastSignInDateTime ? "text-blue-400" : "text-slate-600"} />
-                                                                <span className={u.signInActivity?.lastSignInDateTime ? "text-slate-300" : "text-slate-500 font-normal italic"}>
-                                                                    {formatRelativeTime(u.signInActivity?.lastSignInDateTime)}
-                                                                </span>
+                                                            <div className="flex flex-col items-center gap-1">
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className={`w-2 h-2 rounded-full ${getStatusColor(u.presence?.availability)}`} title={u.presence?.availability || 'Offline'} />
+                                                                    <span className={u.signInActivity?.lastSignInDateTime ? "text-slate-200 font-medium" : "text-slate-500 italic"}>
+                                                                        {formatRelativeTime(u.signInActivity?.lastSignInDateTime)}
+                                                                    </span>
+                                                                </div>
+                                                                {u.presence?.availability && (
+                                                                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">
+                                                                        {u.presence.availability.replace(/([A-Z])/g, ' $1').trim()}
+                                                                    </span>
+                                                                )}
                                                             </div>
                                                         </td>
                                                         <td className="px-6 py-4">
@@ -391,6 +411,16 @@ export default function UsersPage() {
                                             <InputField label="Object ID" field="id" value={selectedUser?.id} readOnly />
                                             <InputField label="User Type" field="userType" value={selectedUser?.userType} readOnly />
                                             <InputField label="Created Date Time" field="createdDateTime" value={selectedUser?.createdDateTime} readOnly />
+                                            <div className="flex flex-col gap-1">
+                                                <label className="block text-xs font-semibold text-slate-400 uppercase">Live Presence Status</label>
+                                                <div className="flex items-center gap-2 bg-slate-900 border border-slate-700/50 rounded-lg px-4 py-2.5">
+                                                    <div className={`w-3 h-3 rounded-full ${getStatusColor(selectedUser?.presence?.availability)}`} />
+                                                    <span className="text-white font-medium">{selectedUser?.presence?.availability || 'Offline'}</span>
+                                                    {selectedUser?.presence?.activity && (
+                                                        <span className="text-slate-500 text-xs">- {selectedUser.presence.activity.replace(/([A-Z])/g, ' $1').trim()}</span>
+                                                    )}
+                                                </div>
+                                            </div>
                                             <InputField label="Last Sign In" field="lastSignIn" value={selectedUser?.signInActivity?.lastSignInDateTime ? `${selectedUser.signInActivity.lastSignInDateTime} (${formatRelativeTime(selectedUser.signInActivity.lastSignInDateTime)})` : 'Never'} readOnly />
                                             <InputField label="Mail Nickname" field="mailNickname" value={selectedUser?.mailNickname} readOnly />
                                         </div>

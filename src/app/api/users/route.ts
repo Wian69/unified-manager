@@ -31,11 +31,34 @@ export async function GET(request: Request) {
             );
         }
 
-        // Sort alphabetically by displayName
+        // Sort alphabetically by displayName before presence fetch
         users.sort((a: any, b: any) => (a.displayName || '').localeCompare(b.displayName || ''));
 
+        // Batch fetch presences (up to 650 users supported by this endpoint)
+        const userIds = users.map(u => u.id);
+        let usersWithPresence = users;
+        
+        if (userIds.length > 0) {
+            try {
+                // Presence.Read.All required
+                const presenceResponse = await client.api('/communications/getPresencesByUserId')
+                    .post({ ids: userIds });
+                
+                const presences = presenceResponse.value || [];
+                const presenceMap = new Map(presences.map((p: any) => [p.id, p]));
+                
+                usersWithPresence = users.map(u => ({
+                    ...u,
+                    presence: presenceMap.get(u.id) || null
+                }));
+            } catch (error: any) {
+                console.warn('[API] Presence batch fetch failed:', error.message);
+                // Continue without presence rather than failing the whole user list
+            }
+        }
+
         return new NextResponse(JSON.stringify({
-            users: users,
+            users: usersWithPresence,
             activeUsers: users.filter((u: any) => u.accountEnabled).length,
         }), {
             status: 200,

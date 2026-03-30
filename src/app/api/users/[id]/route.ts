@@ -25,7 +25,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
             oneDriveUrl = driveRes.webUrl;
         } catch (e) {}
 
-        return NextResponse.json({ ...userResponse, oneDriveUrl });
+        // Fetch Presence
+        let presence = null;
+        try {
+            presence = await client.api(`/users/${id}/presence`).get();
+        } catch (e) {}
+        
+        return NextResponse.json({ ...userResponse, oneDriveUrl, presence });
     } catch (error: any) {
         console.error('[API] Graph API Error (Get User):', error.message);
         return NextResponse.json(
