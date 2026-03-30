@@ -58,6 +58,8 @@ export default function UsersPage() {
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
     const [selectedUser, setSelectedUser] = useState<any>(null);
     const [loadingDetails, setLoadingDetails] = useState(false);
+    const [signInFilter, setSignInFilter] = useState('all');
+
     const [saving, setSaving] = useState(false);
     const [editForm, setEditForm] = useState<any>({});
 
@@ -169,7 +171,29 @@ export default function UsersPage() {
         }
     };
 
-    const groupedUsers = users.reduce((acc: any, user: any) => {
+    const filteredUsers = users.filter(user => {
+        if (signInFilter === 'all') return true;
+        
+        const lastSignIn = user.signInActivity?.lastSignInDateTime;
+        if (!lastSignIn) return true; // Include "Never" in all inactivity filters
+
+        const date = new Date(lastSignIn);
+        const diffInDays = (new Date().getTime() - date.getTime()) / (1000 * 3600 * 24);
+        
+        if (signInFilter === '30') return diffInDays > 30;
+        if (signInFilter === '60') return diffInDays > 60;
+        if (signInFilter === '90') return diffInDays > 90;
+        if (signInFilter === 'never') return !lastSignIn; // This line is technically redundant because of !lastSignIn check above, but logically specific
+        
+        return true;
+    }).filter(user => {
+        // Double check for "Never" specific filter
+        if (signInFilter === 'never') return !user.signInActivity?.lastSignInDateTime;
+        return true;
+    });
+
+    const groupedUsers = filteredUsers.reduce((acc: any, user: any) => {
+
         let location;
 
         // Priority 1: Disabled Users (always grouped together)
@@ -233,6 +257,22 @@ export default function UsersPage() {
                     >
                         {collapsedLocations.size === sortedLocations.length ? 'Expand All' : 'Collapse All'}
                     </button>
+
+                    <div className="flex items-center gap-2 bg-slate-800/50 border border-slate-700/50 rounded-lg px-3 py-1.5 ml-4">
+                        <Clock size={14} className="text-slate-400" />
+                        <select 
+                            value={signInFilter}
+                            onChange={(e) => setSignInFilter(e.target.value)}
+                            className="bg-transparent text-slate-300 text-xs font-bold focus:outline-none cursor-pointer"
+                        >
+                            <option value="all" className="bg-slate-900">All Activity</option>
+                            <option value="30" className="bg-slate-900">Inactive &gt; 30 Days</option>
+                            <option value="60" className="bg-slate-900">Inactive &gt; 60 Days</option>
+                            <option value="90" className="bg-slate-900">Inactive &gt; 90 Days</option>
+                            <option value="never" className="bg-slate-900">Never Signed In</option>
+                        </select>
+                    </div>
+
                     <button 
                         onClick={fetchUsers}
                         disabled={loading}
