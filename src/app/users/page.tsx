@@ -1,7 +1,41 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Users, RefreshCw, X, Save, ChevronDown, ChevronRight } from "lucide-react";
+import { Users, RefreshCw, X, Save, ChevronDown, ChevronRight, Clock } from "lucide-react";
+
+/**
+ * Formats an ISO date string into a compact relative time string.
+ */
+const formatRelativeTime = (dateString: string | null | undefined) => {
+    if (!dateString) return 'Never';
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return 'Never';
+        
+        const now = new Date();
+        const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+        
+        if (diffInSeconds < 60) return 'Just now';
+        
+        const diffInMinutes = Math.floor(diffInSeconds / 60);
+        if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+        
+        const diffInHours = Math.floor(diffInMinutes / 60);
+        if (diffInHours < 24) return `${diffInHours}h ago`;
+        
+        const diffInDays = Math.floor(diffInHours / 24);
+        if (diffInDays < 30) return `${diffInDays}d ago`;
+        
+        const diffInMonths = Math.floor(diffInDays / 30);
+        if (diffInMonths < 12) return `${diffInMonths}mo ago`;
+        
+        const diffInYears = Math.floor(diffInMonths / 12);
+        return `${diffInYears}y ago`;
+    } catch (e) {
+        return 'Never';
+    }
+};
+
 
 const InputField = ({ label, field, value, onChange, readOnly = false }: { label: string, field: string, value: string, onChange?: (val: string) => void, readOnly?: boolean }) => (
     <div>
@@ -244,6 +278,7 @@ export default function UsersPage() {
                                                     <th className="px-6 py-4">Principal Name</th>
                                                     <th className="px-6 py-4">Job Title</th>
                                                     <th className="px-6 py-4">Office</th>
+                                                    <th className="px-6 py-4 text-center">Last Signed In</th>
                                                     <th className="px-6 py-4">Status</th>
                                                 </tr>
                                             </thead>
@@ -258,6 +293,14 @@ export default function UsersPage() {
                                                         <td className="px-6 py-4 text-slate-400">{u.userPrincipalName || 'N/A'}</td>
                                                         <td className="px-6 py-4">{u.jobTitle || 'N/A'}</td>
                                                         <td className="px-6 py-4 text-slate-400 italic">{u.officeLocation || 'N/A'}</td>
+                                                        <td className="px-6 py-4 text-center">
+                                                            <div className="flex items-center justify-center gap-2">
+                                                                <Clock size={14} className={u.signInActivity?.lastSignInDateTime ? "text-blue-400" : "text-slate-600"} />
+                                                                <span className={u.signInActivity?.lastSignInDateTime ? "text-slate-300" : "text-slate-500 font-normal italic"}>
+                                                                    {formatRelativeTime(u.signInActivity?.lastSignInDateTime)}
+                                                                </span>
+                                                            </div>
+                                                        </td>
                                                         <td className="px-6 py-4">
                                                             <span className={`px-2 py-1 text-xs font-semibold rounded-full ${u.accountEnabled ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
                                                                 {u.accountEnabled ? 'Active' : 'Disabled'}
@@ -308,6 +351,7 @@ export default function UsersPage() {
                                             <InputField label="Object ID" field="id" value={selectedUser?.id} readOnly />
                                             <InputField label="User Type" field="userType" value={selectedUser?.userType} readOnly />
                                             <InputField label="Created Date Time" field="createdDateTime" value={selectedUser?.createdDateTime} readOnly />
+                                            <InputField label="Last Sign In" field="lastSignIn" value={selectedUser?.signInActivity?.lastSignInDateTime ? `${selectedUser.signInActivity.lastSignInDateTime} (${formatRelativeTime(selectedUser.signInActivity.lastSignInDateTime)})` : 'Never'} readOnly />
                                             <InputField label="Mail Nickname" field="mailNickname" value={selectedUser?.mailNickname} readOnly />
                                         </div>
                                     </section>

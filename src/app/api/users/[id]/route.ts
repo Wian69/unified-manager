@@ -11,7 +11,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
             'jobTitle','companyName','department','employeeId','employeeType','employeeHireDate',
             'employeeLeaveDateTime',
             'officeLocation','streetAddress','city','state','postalCode','country',
-            'businessPhones','mobilePhone','mail','mailNickname','accountEnabled'
+            'businessPhones','mobilePhone','mail','mailNickname','accountEnabled','signInActivity'
         ].join(',');
 
         const userResponse = await client.api(`/users/${id}`)
