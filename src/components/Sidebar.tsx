@@ -13,7 +13,8 @@ import {
     Settings,
     X,
     Menu,
-    Calendar
+    Calendar,
+    ClipboardList
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -27,6 +28,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const navItems = [
         { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
         { name: 'Devices', icon: Laptop, path: '/devices' },
+        { name: 'Forms & Flows', icon: ClipboardList, path: '/forms' },
         { name: 'Offboarding', icon: UserMinus, path: '/offboarding' },
         { name: 'Users', icon: Users, path: '/users' },
         { name: 'SharePoint', icon: HardDrive, path: '/sharepoint' },
