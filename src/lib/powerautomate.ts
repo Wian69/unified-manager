@@ -19,8 +19,8 @@ export async function getPowerAutomateToken() {
 
     const credential = new ClientSecretCredential(tenantId, clientId, clientSecret);
     
-    // Scopes for Power Automate Management API
-    const response = await credential.getToken('https://service.powerautomate.com/.default');
+    // Scopes for Dataverse API (Flows are stored in Dataverse)
+    const response = await credential.getToken('https://eqnoutsourcedservicessaptyltddef.api.crm4.dynamics.com/.default');
     
     paToken = response.token;
     paTokenExpiry = response.expiresOnTimestamp;
