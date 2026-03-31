@@ -14,7 +14,8 @@ import {
     X,
     Menu,
     Calendar,
-    ClipboardList
+    ClipboardList,
+    Zap
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -28,7 +29,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const navItems = [
         { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
         { name: 'Devices', icon: Laptop, path: '/devices' },
-        { name: 'Forms & Flows', icon: ClipboardList, path: '/forms' },
+        { name: 'Forms', icon: ClipboardList, path: '/forms' },
+        { name: 'Cloud Flows', icon: Zap, path: '/flows' },
         { name: 'Offboarding', icon: UserMinus, path: '/offboarding' },
         { name: 'Users', icon: Users, path: '/users' },
         { name: 'SharePoint', icon: HardDrive, path: '/sharepoint' },
