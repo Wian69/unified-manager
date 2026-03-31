@@ -13,7 +13,8 @@ import {
     Code2, 
     History,
     Play,
-    Square
+    Square,
+    Activity
 } from 'lucide-react';
 import Link from 'next/link';
 import { clsx, type ClassValue } from 'clsx';
