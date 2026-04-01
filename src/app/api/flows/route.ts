@@ -10,7 +10,9 @@ export async function GET() {
         const token = await getPowerAutomateToken();
         
         // Query Dataverse for Modern Flows (category 5)
-        const url = `${DATAVERSE_URL}/api/data/v9.2/workflows?$filter=category eq 5&$select=name,statecode,workflowid,modifiedon,createdon,description`;
+        // We filter for statecode 1 (Activated) or 0 (Draft)
+        // We also order by modifiedon desc to find the most relevant ones
+        const url = `${DATAVERSE_URL}/api/data/v9.2/workflows?$filter=category eq 5 and type eq 1&$select=name,statecode,workflowid,modifiedon,createdon,description&$orderby=modifiedon desc`;
         
         const response = await fetch(url, {
             headers: {
@@ -29,17 +31,20 @@ export async function GET() {
         const data = await response.json();
         
         // Map Dataverse format to the App's expected Flow format
-        const flows = (data.value || []).map((f: any) => ({
-            id: f.workflowid,
-            name: f.name,
-            properties: {
-                displayName: f.name,
-                state: f.statecode === 1 ? 'Started' : 'Stopped',
-                createdTime: f.createdon,
-                lastModifiedTime: f.modifiedon,
-                description: f.description
-            }
-        }));
+        // We also filter out any system-level flows that might still be showing up
+        const flows = (data.value || [])
+            .filter((f: any) => !f.name.startsWith('Dynamics 365') && !f.name.includes('MSCRM_'))
+            .map((f: any) => ({
+                id: f.workflowid,
+                name: f.name,
+                properties: {
+                    displayName: f.name,
+                    state: f.statecode === 1 ? 'Started' : 'Stopped',
+                    createdTime: f.createdon,
+                    lastModifiedTime: f.modifiedon,
+                    description: f.description
+                }
+            }));
         
         return NextResponse.json({ flows });
     } catch (error: any) {
