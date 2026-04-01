@@ -185,3 +185,18 @@ export async function appendRemediationLog(serialNumber: string, log: string) {
         timestamp: new Date().toISOString() 
     });
 }
+
+export async function getSignatureConfig() {
+    return getData('signature_config', path.join(DB_DIR, 'signature_config.json'), {
+        html: '',
+        name: 'Corporate_Standard',
+        selectedUserIds: []
+    });
+}
+
+export async function saveSignatureConfig(config: any) {
+    return saveData('signature_config', path.join(DB_DIR, 'signature_config.json'), {
+        ...config,
+        updatedAt: new Date().toISOString()
+    });
+}
