@@ -214,23 +214,41 @@ export default function OOOManagementPage() {
         document.execCommand(command, false, value);
     };
 
+    // Helper to strip outlook garbage for the editor
+    const sanitizeOOO = (html: string) => {
+        if (!html) return '';
+        // If it looks like a full document, try to extract the body content
+        if (html.includes('<body')) {
+            const match = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+            if (match) return match[1];
+        }
+        return html;
+    };
+
     const RichTextToolbar = ({ onCommand }: { onCommand: (cmd: string, val: string) => void }) => (
-        <div className="flex items-center gap-4 p-2 bg-slate-900/50 border-b border-slate-800 rounded-t-2xl">
-            <div className="flex items-center gap-2 border-r border-slate-800 pr-4">
+        <div className="flex items-center gap-4 p-3 bg-slate-900 border-b border-slate-800 rounded-t-2xl shadow-inner group">
+            <div className="flex items-center gap-2 border-r border-slate-700 pr-4">
+                <div className="p-1 px-2 bg-blue-600/10 rounded-md text-blue-400">
+                    <Type size={14} />
+                </div>
                 <select 
                     onChange={(e) => onCommand('fontName', e.target.value)}
-                    className="bg-slate-950 border border-slate-800 text-slate-300 text-[10px] font-bold uppercase py-1 px-2 rounded-lg outline-none focus:border-blue-500"
+                    className="bg-slate-950 border border-slate-700 text-slate-300 text-[10px] font-black uppercase py-1.5 px-3 rounded-lg outline-none focus:border-blue-500 hover:border-slate-500 transition-all cursor-pointer"
                 >
-                    <option value="">Font</option>
+                    <option value="">Font Family</option>
                     {fonts.map(f => (
                         <option key={f} value={f} style={{ fontFamily: f }}>{f.split(',')[0]}</option>
                     ))}
                 </select>
             </div>
-            <div className="flex items-center gap-2">
+            
+            <div className="flex items-center gap-2 border-r border-slate-700 pr-4">
+                <div className="p-1 px-2 bg-emerald-600/10 rounded-md text-emerald-400">
+                    <FontSizeIcon size={14} />
+                </div>
                 <select 
                     onChange={(e) => onCommand('fontSize', e.target.value)}
-                    className="bg-slate-950 border border-slate-800 text-slate-300 text-[10px] font-bold uppercase py-1 px-2 rounded-lg outline-none focus:border-blue-500"
+                    className="bg-slate-950 border border-slate-700 text-slate-300 text-[10px] font-black uppercase py-1.5 px-3 rounded-lg outline-none focus:border-blue-500 hover:border-slate-500 transition-all cursor-pointer"
                 >
                     <option value="">Size</option>
                     {fontSizes.map(s => (
@@ -238,10 +256,33 @@ export default function OOOManagementPage() {
                     ))}
                 </select>
             </div>
-            <div className="flex items-center gap-1 border-l border-slate-800 pl-4">
-                <button onClick={() => onCommand('bold', '')} className="p-1 px-2 text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-800 rounded-md">B</button>
-                <button onClick={() => onCommand('italic', '')} className="p-1 px-2 text-xs italic font-serif text-slate-400 hover:text-white hover:bg-slate-800 rounded-md">I</button>
-                <button onClick={() => onCommand('underline', '')} className="p-1 px-2 text-xs underline text-slate-400 hover:text-white hover:bg-slate-800 rounded-md">U</button>
+            
+            <div className="flex items-center gap-1">
+                <button 
+                    onClick={() => onCommand('bold', '')} 
+                    className="p-2 px-3 text-xs font-black text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg border border-transparent hover:border-slate-700 transition-all"
+                    title="Bold"
+                >
+                    B
+                </button>
+                <button 
+                    onClick={() => onCommand('italic', '')} 
+                    className="p-2 px-3 text-xs italic font-serif text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg border border-transparent hover:border-slate-700 transition-all"
+                    title="Italic"
+                >
+                    I
+                </button>
+                <button 
+                    onClick={() => onCommand('underline', '')} 
+                    className="p-2 px-3 text-xs underline text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg border border-transparent hover:border-slate-700 transition-all"
+                    title="Underline"
+                >
+                    U
+                </button>
+            </div>
+            
+            <div className="ml-auto text-[8px] font-black uppercase tracking-widest text-slate-600 group-hover:text-blue-500/50 transition-colors">
+                Rich Editor Active
             </div>
         </div>
     );
@@ -532,55 +573,41 @@ export default function OOOManagementPage() {
                                                 <h3 className="text-lg font-bold text-white uppercase tracking-tight">Message Management</h3>
                                             </div>
 
-                                            <div className="space-y-6">
+                                            <div className="space-y-8">
                                                 <div className="space-y-3">
                                                     <label className="text-xs font-black uppercase tracking-widest text-slate-500 ml-1">Internal Message (Colleagues)</label>
-                                                    <div className="border border-slate-800 rounded-2xl overflow-hidden focus-within:border-blue-600 transition-all">
+                                                    <div className="border border-slate-800 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-600/50 focus-within:border-blue-600 transition-all bg-slate-950">
                                                         <RichTextToolbar onCommand={applyCommand} />
                                                         <div 
                                                             contentEditable
-                                                            onInput={(e) => setMailboxSettings({
-                                                                ...mailboxSettings,
+                                                            onBlur={(e) => setMailboxSettings((prev: any) => ({
+                                                                ...prev,
                                                                 automaticRepliesSetting: {
-                                                                    ...mailboxSettings.automaticRepliesSetting,
+                                                                    ...prev.automaticRepliesSetting,
                                                                     internalReplyMessage: e.currentTarget.innerHTML
                                                                 }
-                                                            })}
-                                                            onBlur={(e) => setMailboxSettings({
-                                                                ...mailboxSettings,
-                                                                automaticRepliesSetting: {
-                                                                    ...mailboxSettings.automaticRepliesSetting,
-                                                                    internalReplyMessage: e.currentTarget.innerHTML
-                                                                }
-                                                            })}
-                                                            dangerouslySetInnerHTML={{ __html: mailboxSettings.automaticRepliesSetting?.internalReplyMessage || '' }}
-                                                            className="w-full h-40 bg-slate-950 text-slate-200 text-sm p-4 outline-none overflow-y-auto"
+                                                            }))}
+                                                            dangerouslySetInnerHTML={{ __html: sanitizeOOO(mailboxSettings.automaticRepliesSetting?.internalReplyMessage || '') }}
+                                                            className="w-full min-h-[160px] max-h-[300px] bg-slate-950 text-slate-200 text-sm p-6 outline-none overflow-y-auto prose prose-invert prose-sm"
                                                         />
                                                     </div>
                                                 </div>
 
                                                 <div className="space-y-3">
                                                     <label className="text-xs font-black uppercase tracking-widest text-slate-500 ml-1">External Message (Public)</label>
-                                                    <div className="border border-slate-800 rounded-2xl overflow-hidden focus-within:border-blue-600 transition-all">
+                                                    <div className="border border-slate-800 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-600/50 focus-within:border-blue-600 transition-all bg-slate-950">
                                                         <RichTextToolbar onCommand={applyCommand} />
                                                         <div 
                                                             contentEditable
-                                                            onInput={(e) => setMailboxSettings({
-                                                                ...mailboxSettings,
+                                                            onBlur={(e) => setMailboxSettings((prev: any) => ({
+                                                                ...prev,
                                                                 automaticRepliesSetting: {
-                                                                    ...mailboxSettings.automaticRepliesSetting,
+                                                                    ...prev.automaticRepliesSetting,
                                                                     externalReplyMessage: e.currentTarget.innerHTML
                                                                 }
-                                                            })}
-                                                            onBlur={(e) => setMailboxSettings({
-                                                                ...mailboxSettings,
-                                                                automaticRepliesSetting: {
-                                                                    ...mailboxSettings.automaticRepliesSetting,
-                                                                    externalReplyMessage: e.currentTarget.innerHTML
-                                                                }
-                                                            })}
-                                                            dangerouslySetInnerHTML={{ __html: mailboxSettings.automaticRepliesSetting?.externalReplyMessage || '' }}
-                                                            className="w-full h-40 bg-slate-950 text-slate-200 text-sm p-4 outline-none overflow-y-auto"
+                                                            }))}
+                                                            dangerouslySetInnerHTML={{ __html: sanitizeOOO(mailboxSettings.automaticRepliesSetting?.externalReplyMessage || '') }}
+                                                            className="w-full min-h-[160px] max-h-[300px] bg-slate-950 text-slate-200 text-sm p-6 outline-none overflow-y-auto prose prose-invert prose-sm"
                                                         />
                                                     </div>
                                                 </div>
@@ -598,6 +625,11 @@ export default function OOOManagementPage() {
                 .custom-scrollbar::-webkit-scrollbar { width: 4px; }
                 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
                 .custom-scrollbar::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 20px; }
+                [contenteditable]:empty:before{
+                    content: attr(data-placeholder);
+                    color: #475569;
+                    font-style: italic;
+                }
             `}</style>
         </div>
     );
