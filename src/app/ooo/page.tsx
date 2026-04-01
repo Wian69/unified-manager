@@ -132,6 +132,12 @@ export default function OOOManagementPage() {
         }
     }, [mailboxSettings, activeUserId]);
 
+    const toggleUserSelection = (id: string) => {
+        setSelectedUserIds(prev => 
+            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+        );
+    };
+
     const handleSaveOOO = async () => {
         if (selectedUserIds.length === 0 || !mailboxSettings) return;
         const internalHtml = internalEditorRef.current?.innerHTML || '';
@@ -181,7 +187,7 @@ export default function OOOManagementPage() {
 
     return (
         <div className="flex h-[calc(100vh-8rem)] -m-8 bg-slate-950 overflow-hidden relative">
-            <div className="absolute top-2 right-2 text-[8px] font-black text-slate-800 pointer-events-none z-50">VER-1.4.0-DYNAMIC-STABILITY</div>
+            <div className="absolute top-2 right-2 text-[8px] font-black text-slate-800 pointer-events-none z-50">VER-1.4.1-BUILD-FIX</div>
 
             {/* Sidebar */}
             <div className="w-80 border-r border-slate-900 bg-slate-950 flex flex-col shrink-0">
