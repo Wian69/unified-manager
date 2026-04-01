@@ -15,6 +15,7 @@ import {
     Menu,
     Calendar,
     ClipboardList,
+    Clock,
     Zap
 } from 'lucide-react';
 
@@ -35,6 +36,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         { name: 'Users', icon: Users, path: '/users' },
         { name: 'SharePoint', icon: HardDrive, path: '/sharepoint' },
         { name: 'Meeting Rooms', icon: Calendar, path: '/rooms' },
+        { name: 'Out of Office', icon: Clock, path: '/ooo' },
         { name: 'Settings', icon: Settings, path: '/settings' },
     ];
 
