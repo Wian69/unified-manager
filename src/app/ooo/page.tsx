@@ -44,7 +44,7 @@ export default function OOOManagementPage() {
 
     // Fetch Users
     useEffect(() => {
-        fetch('/api/users')
+        fetch('/api/users?onlyLicensed=true')
             .then(res => res.json())
             .then(data => {
                 if (data.users) setUsers(data.users);

@@ -6,12 +6,13 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search')?.toLowerCase() || "";
+    const onlyLicensed = searchParams.get('onlyLicensed') === "true";
     try {
         const client = getGraphClient();
         
         let allUsers: any[] = [];
         let response = await client.api('/users')
-            .select('id,displayName,userPrincipalName,jobTitle,department,officeLocation,accountEnabled,signInActivity')
+            .select('id,displayName,userPrincipalName,jobTitle,department,officeLocation,accountEnabled,signInActivity,assignedLicenses')
             .top(999)
             .get();
             
@@ -28,6 +29,12 @@ export async function GET(request: Request) {
             users = users.filter((u: any) => 
                 (u.displayName || '').toLowerCase().includes(search) || 
                 (u.userPrincipalName || '').toLowerCase().includes(search)
+            );
+        }
+
+        if (onlyLicensed) {
+            users = users.filter((u: any) => 
+                u.assignedLicenses && u.assignedLicenses.length > 0
             );
         }
 
