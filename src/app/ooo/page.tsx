@@ -37,6 +37,8 @@ export default function OOOManagementPage() {
     const [filterRegion, setFilterRegion] = useState('All');
     
     const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+    const [oooStatusMap, setOooStatusMap] = useState<Record<string, string>>({});
+    const [fetchingStatuses, setFetchingStatuses] = useState(false);
     const [mailboxSettings, setMailboxSettings] = useState<any>(null);
     const [loadingMailbox, setLoadingMailbox] = useState(false);
     const [savingMailbox, setSavingMailbox] = useState(false);
@@ -66,6 +68,32 @@ export default function OOOManagementPage() {
             return matchesSearch && matchesRegion;
         }).sort((a, b) => a.displayName.localeCompare(b.displayName));
     }, [users, searchQuery, filterRegion]);
+
+    // Background fetch OOO statuses for the visible list
+    useEffect(() => {
+        if (filteredUsers.length === 0 || fetchingStatuses) return;
+
+        const idsToFetch = filteredUsers
+            .map(u => u.id)
+            .filter(id => !oooStatusMap[id]);
+
+        if (idsToFetch.length === 0) return;
+
+        setFetchingStatuses(true);
+        fetch('/api/batch/ooo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userIds: idsToFetch.slice(0, 40) }) // Fetch up to 40 at a time (2 batches)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.statusMap) {
+                setOooStatusMap(prev => ({ ...prev, ...data.statusMap }));
+            }
+        })
+        .catch(console.error)
+        .finally(() => setFetchingStatuses(false));
+    }, [filteredUsers, oooStatusMap, fetchingStatuses]);
 
     const isBulkMode = selectedUserIds.length > 1;
     const activeUserId = selectedUserIds.length === 1 ? selectedUserIds[0] : null;
@@ -142,7 +170,14 @@ export default function OOOManagementPage() {
                         automaticRepliesSetting: mailboxSettings.automaticRepliesSetting
                     }),
                 });
-                if (res.ok) successCount++;
+                if (res.ok) {
+                    successCount++;
+                    // Update local status map
+                    setOooStatusMap(prev => ({
+                        ...prev,
+                        [id]: mailboxSettings.automaticRepliesSetting.status
+                    }));
+                }
                 else failCount++;
             } catch (err) {
                 failCount++;
@@ -239,8 +274,15 @@ export default function OOOManagementPage() {
                                 onClick={() => setSelectedUserIds([user.id])}
                                 className="flex-1 min-w-0 text-left"
                             >
-                                <div className={`text-sm font-bold truncate ${selectedUserIds.includes(user.id) ? 'text-white' : 'text-slate-200'}`}>
-                                    {user.displayName}
+                                <div className="flex items-center justify-between gap-2">
+                                    <div className={`text-sm font-bold truncate ${selectedUserIds.includes(user.id) ? 'text-white' : 'text-slate-200'}`}>
+                                        {user.displayName}
+                                    </div>
+                                    {oooStatusMap[user.id] && oooStatusMap[user.id] !== 'disabled' && (
+                                        <span className="shrink-0 bg-emerald-500/10 text-emerald-500 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md border border-emerald-500/20 animate-pulse">
+                                            Active
+                                        </span>
+                                    )}
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <div className="text-[9px] truncate uppercase tracking-tight font-black text-slate-500">
