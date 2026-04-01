@@ -69,6 +69,11 @@ export default function OOOManagementPage() {
         }).sort((a, b) => a.displayName.localeCompare(b.displayName));
     }, [users, searchQuery, filterRegion]);
 
+    // Reset selection when filters change to avoid "hidden" selections
+    useEffect(() => {
+        setSelectedUserIds([]);
+    }, [filterRegion, searchQuery]);
+
     // Background fetch OOO statuses for the visible list
     useEffect(() => {
         if (filteredUsers.length === 0 || fetchingStatuses) return;
@@ -352,12 +357,17 @@ export default function OOOManagementPage() {
                                 
                                 <div className="flex flex-col items-end gap-2">
                                     <button
-                                        onClick={handleSaveOOO}
-                                        disabled={savingMailbox || loadingMailbox}
-                                        className="flex items-center gap-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-black uppercase text-xs tracking-widest px-8 py-4 rounded-2xl transition-all shadow-xl shadow-emerald-900/20 active:scale-95"
+                                        onClick={() => {
+                                            if (selectedUserIds.length > 5) {
+                                                if (!confirm(`Are you sure you want to apply these OOO settings to ${selectedUserIds.length} users?`)) return;
+                                            }
+                                            handleSaveOOO();
+                                        }}
+                                        disabled={savingMailbox || loadingMailbox || selectedUserIds.length === 0}
+                                        className="flex items-center gap-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-30 disabled:hover:bg-emerald-600 text-white font-black uppercase text-xs tracking-widest px-8 py-4 rounded-2xl transition-all shadow-xl shadow-emerald-900/20 active:scale-95"
                                     >
                                         {savingMailbox ? <RefreshCw className="animate-spin" size={18} /> : <Save size={18} />}
-                                        {isBulkMode ? 'Apply to Group' : 'Sync to Outlook'}
+                                        {isBulkMode ? `Apply to ${selectedUserIds.length} Users` : 'Sync to Outlook'}
                                     </button>
                                     
                                     {syncProgress && (
