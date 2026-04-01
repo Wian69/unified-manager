@@ -27,10 +27,12 @@ import {
     RefreshCw,
     FileText,
     Share2,
-    Check
+    Check,
+    UserPlus,
+    Home,
+    Globe
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { jsPDF } from 'jspdf';
 
 const STEPS = [
     { id: 1, title: 'Selection', icon: Search, description: 'Select User' },
@@ -177,6 +179,7 @@ export default function OnboardingAuditWizard() {
         setError(null);
         
         try {
+            const { jsPDF } = await import('jspdf');
             const doc = new jsPDF();
             const dateStr = new Date().toLocaleDateString();
             
