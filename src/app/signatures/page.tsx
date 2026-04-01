@@ -273,21 +273,44 @@ New-TransportRule -Name "${signatureName}" \`
                                         <div className="space-y-4">
                                             <div className="flex items-center gap-2 text-sm font-bold text-slate-200">
                                                 <Smartphone size={18} className="text-indigo-400" />
-                                                Mobile Outlook Preview
+                                                Mobile Preview (iPhone/iPad)
                                             </div>
-                                            <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xl h-fit w-[300px] mx-auto overflow-hidden">
-                                                <div className="bg-slate-100 h-4 w-20 rounded-full mb-4 animate-pulse" />
-                                                <div className="bg-slate-50 p-4 rounded-xl">
-                                                    <div 
-                                                        className="scale-[0.85] origin-top-left"
-                                                        dangerouslySetInnerHTML={{ 
-                                                            __html: html.replace(/%%DisplayName%%/g, 'Sarah Jenkins')
-                                                                        .replace(/%%Title%%/g, 'Senior VP Sales')
-                                                                        .replace(/%%Department%%/g, 'Enterprise Division')
-                                                                        .replace(/%%Company%%/g, 'Unified Global Solutions')
-                                                        }} 
-                                                    />
+                                            <div className="relative mx-auto w-[280px] h-[500px] bg-slate-900 rounded-[3rem] border-[8px] border-slate-800 shadow-2xl overflow-hidden ring-1 ring-slate-700">
+                                                {/* Notch */}
+                                                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-800 rounded-b-2xl z-20" />
+                                                
+                                                {/* Screen Content */}
+                                                <div className="absolute inset-0 bg-white overflow-y-auto custom-scrollbar pt-12 pb-8 px-4">
+                                                    {/* Email Header Simulation */}
+                                                    <div className="border-b border-slate-100 pb-4 mb-6 space-y-2">
+                                                        <div className="flex justify-between items-center">
+                                                            <div className="h-3 w-24 bg-slate-100 rounded-full" />
+                                                            <div className="h-3 w-12 bg-slate-50 rounded-full" />
+                                                        </div>
+                                                        <div className="h-4 w-40 bg-slate-100 rounded-full" />
+                                                    </div>
+
+                                                    {/* The Signature */}
+                                                    <div className="w-full break-words">
+                                                        <div 
+                                                            className="text-[12px] leading-normal origin-top-left"
+                                                            dangerouslySetInnerHTML={{ 
+                                                                __html: html.replace(/%%DisplayName%%/g, 'Sarah Jenkins')
+                                                                            .replace(/%%Title%%/g, 'Senior VP Sales')
+                                                                            .replace(/%%Department%%/g, 'Enterprise Division')
+                                                                            .replace(/%%Company%%/g, 'Unified Global Solutions')
+                                                            }} 
+                                                        />
+                                                    </div>
+
+                                                    {/* Keyboard Bottom Simulation */}
+                                                    <div className="mt-12 h-20 w-full bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-center">
+                                                        <div className="h-1 w-20 bg-slate-200 rounded-full" />
+                                                    </div>
                                                 </div>
+
+                                                {/* Home Indicator */}
+                                                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-24 h-1 bg-slate-200 rounded-full z-20" />
                                             </div>
                                         </div>
                                     </div>
