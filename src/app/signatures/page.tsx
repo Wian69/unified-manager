@@ -84,21 +84,28 @@ export default function SignatureManagementPage() {
 # This ensures the signature only applies to specific staff members.`;
 
         return `# Run this in Exchange Online PowerShell V3
-# This rule appends your branded signature to every email automatically.
+# This script deploys your Universal Signature to both the SENT email (Server-Side) 
+# and the COMPOSE window (Client-Side - so users see it while typing).
 
 $SignatureHTML = @'
 ${html}
 '@
 
-# 1. CLEANUP: Clear current signatures for selected users to prevent "Double Signatures"
-# This works for Web (OWA) and New Outlook immediately.
 $targetUsers = @("${selectedUpns.join('","')}")
+
+Write-Host "--- DEPLOYING UNIVERSAL SIGNATURES ---" -ForegroundColor Yellow
+
 foreach ($user in $targetUsers) {
-    Write-Host "Clearing existing cloud signature for: $user" -ForegroundColor Cyan
-    Set-MailboxMessageConfiguration -Identity $user -SignatureHtml $null -AutoAddSignature $false -AutoAddSignatureOnReply $false
+    Write-Host "Updating Client-Side Signature for: $user (Visible while typing)" -ForegroundColor Cyan
+    # This sets the signature for Outlook Web and New Outlook immédiatement.
+    Set-MailboxMessageConfiguration -Identity $user \`
+        -SignatureHtml $SignatureHTML \`
+        -AutoAddSignature $true \`
+        -AutoAddSignatureOnReply $true \`
+        -DefaultTextFormat 'Html'
 }
 
-# 2. DEPLOY: Create/Update the Server-Side Branding Rule
+Write-Host "Updating Server-Side Branding (Rule: ${signatureName})" -ForegroundColor Yellow
 Remove-TransportRule -Identity "${signatureName}" -Confirm:$false -ErrorAction SilentlyContinue
 
 New-TransportRule -Name "${signatureName}" \`
@@ -108,7 +115,9 @@ New-TransportRule -Name "${signatureName}" \`
     -ApplyHtmlDisclaimerText $SignatureHTML \`
     -ApplyHtmlDisclaimerFallbackAction 'Wrap' \`
     -ApplyHtmlDisclaimerLocation 'Append' \`
-    -StopRuleProcessing $false`;
+    -StopRuleProcessing $false
+
+Write-Host "Deployment Complete. Users may need to restart Outlook to see the change in the compose window." -ForegroundColor Green`;
     }, [html, signatureName, selectedUserIds, users]);
 
     const saveSignature = async () => {
