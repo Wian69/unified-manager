@@ -63,7 +63,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
                     'OData-MaxVersion': '4.0',
-                    'OData-Version': '4.0'
+                    'OData-Version': '4.0',
+                    'If-Match': '*'
                 },
                 body: JSON.stringify(patchBody)
             });
@@ -80,7 +81,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
                     'OData-MaxVersion': '4.0',
-                    'OData-Version': '4.0'
+                    'OData-Version': '4.0',
+                    'If-Match': '*'
                 },
                 body: JSON.stringify({
                     clientdata: JSON.stringify(body.properties.definition)
