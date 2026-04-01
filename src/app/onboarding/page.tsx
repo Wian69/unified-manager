@@ -383,7 +383,7 @@ export default function OnboardingAuditWizard() {
                                                                 <CreditCard size={20} />
                                                             </div>
                                                             <div className="text-left font-black uppercase tracking-tight">
-                                                                <div className="text-sm text-white">{sku.skuPartNumber.replace(/_/g, ' ')}</div>
+                                                                <div className="text-sm text-white">{sku.friendlyName || sku.skuPartNumber.replace(/_/g, ' ')}</div>
                                                                 <div className={hasLicense ? 'text-emerald-500 text-[10px]' : 'text-slate-700 text-[10px]'}>
                                                                     {hasLicense ? 'Active' : 'Unassigned'}
                                                                 </div>
