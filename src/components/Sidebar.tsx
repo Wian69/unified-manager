@@ -16,7 +16,9 @@ import {
     Calendar,
     ClipboardList,
     Clock,
-    Zap
+    Zap,
+    Signature,
+    Mail,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -37,6 +39,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         { name: 'SharePoint', icon: HardDrive, path: '/sharepoint' },
         { name: 'Meeting Rooms', icon: Calendar, path: '/rooms' },
         { name: 'Out of Office', icon: Clock, path: '/ooo' },
+        { name: 'Email Signatures', icon: Signature, path: '/signatures' },
+        { name: 'Email Trace', icon: Mail, path: '/email/trace' },
         { name: 'Settings', icon: Settings, path: '/settings' },
     ];
 
