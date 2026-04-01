@@ -52,6 +52,20 @@ export async function POST(request: Request) {
             updatedAt: new Date().toISOString()
         };
 
+        // Ensure the _Config folder exists first if possible
+        try {
+            await client.api('/sites/root/drive/root/children').post({
+                "name": "_Config",
+                "folder": { },
+                "@microsoft.graph.conflictBehavior": "replace" // Or ignore if exists
+            });
+        } catch (folderError: any) {
+            // Ignore "name already exists" errors
+            if (folderError.code !== 'nameAlreadyExists') {
+                console.warn('[API] Folder Creation Warning (may already exist):', folderError.message);
+            }
+        }
+
         // Upload the JSON configuration to SharePoint
         // Using PUT on the content path to create or update the file
         await client.api(CONTENT_PATH)
@@ -59,7 +73,11 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ success: true });
     } catch (error: any) {
-        console.error('[API] Signature Save Error:', error.message);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        // Log the full error for better debugging
+        console.error('[API] Signature Save Error (Full Body):', error.body || error);
+        return NextResponse.json({ 
+            error: error.message, 
+            details: error.body || 'No detailed error available' 
+        }, { status: 500 });
     }
 }
