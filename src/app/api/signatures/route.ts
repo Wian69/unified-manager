@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getGraphClient } from '@/lib/graph';
 
 const CONFIG_PATH = '/sites/root/drive/root:/_Config/signatures.json';
+const CONTENT_PATH = `${CONFIG_PATH}:/content`;
 
 export async function GET() {
     try {
@@ -9,21 +10,25 @@ export async function GET() {
         
         // Attempt to fetch the configuration file from SharePoint
         try {
-            const fileResponse = await client.api(CONFIG_PATH).content().get();
-            // Graph content() returns a readable stream or buffer. 
-            // In Next.js/Node environment, we'll convert it to a string.
+            const fileResponse = await client.api(CONTENT_PATH).get();
+            // In Node.js/Graph SDK environment, file content response is usually a buffer or stream
             let content = '';
-            if (typeof fileResponse.text === 'function') {
+            
+            if (fileResponse instanceof Buffer) {
+                content = fileResponse.toString('utf8');
+            } else if (typeof fileResponse.text === 'function') {
                 content = await fileResponse.text();
+            } else if (typeof fileResponse === 'string') {
+                content = fileResponse;
             } else {
-                // If it's a buffer or similar
-                content = fileResponse.toString();
+                // Handle as object if already parsed or stream
+                content = JSON.stringify(fileResponse);
             }
             
             return NextResponse.json(JSON.parse(content));
         } catch (fileError: any) {
             // If file doesn't exist, return null
-            if (fileError.code === 'itemNotFound') {
+            if (fileError.code === 'itemNotFound' || fileError.status === 404) {
                 return NextResponse.json({ signature: null });
             }
             throw fileError;
@@ -48,9 +53,8 @@ export async function POST(request: Request) {
         };
 
         // Upload the JSON configuration to SharePoint
-        // Using PUT with .content() to create or update the file
-        await client.api(CONFIG_PATH)
-            .content()
+        // Using PUT on the content path to create or update the file
+        await client.api(CONTENT_PATH)
             .put(JSON.stringify(data, null, 2));
 
         return NextResponse.json({ success: true });
