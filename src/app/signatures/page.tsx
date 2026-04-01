@@ -90,7 +90,15 @@ $SignatureHTML = @'
 ${html}
 '@
 
-# Delete existing rule if it exists to allow for updates
+# 1. CLEANUP: Clear current signatures for selected users to prevent "Double Signatures"
+# This works for Web (OWA) and New Outlook immediately.
+$targetUsers = @("${selectedUpns.join('","')}")
+foreach ($user in $targetUsers) {
+    Write-Host "Clearing existing cloud signature for: $user" -ForegroundColor Cyan
+    Set-MailboxMessageConfiguration -Identity $user -SignatureHtml $null -AutoAddSignature $false -AutoAddSignatureOnReply $false
+}
+
+# 2. DEPLOY: Create/Update the Server-Side Branding Rule
 Remove-TransportRule -Identity "${signatureName}" -Confirm:$false -ErrorAction SilentlyContinue
 
 New-TransportRule -Name "${signatureName}" \`
