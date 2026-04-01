@@ -78,7 +78,10 @@ export default function SignatureManagementPage() {
 
         const targetCondition = selectedUpns.length > 0 
             ? `-From "${selectedUpns.join('","')}"`
-            : '';
+            : null;
+
+        if (!targetCondition) return `# ⚠️ STOP: PLEASE SELECT USERS IN THE TARGET AUDIENCE TAB FIRST.
+# This ensures the signature only applies to specific staff members.`;
 
         return `# Run this in Exchange Online PowerShell V3
 # This rule appends your branded signature to every email automatically.
