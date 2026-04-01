@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
     LayoutDashboard, 
+    UserPlus,
     Laptop, 
     Users, 
     HardDrive, 
@@ -31,6 +32,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
     const navItems = [
         { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
+        { name: 'Onboarding', icon: UserPlus, path: '/onboarding' },
         { name: 'Devices', icon: Laptop, path: '/devices' },
         { name: 'Forms', icon: ClipboardList, path: '/forms' },
         { name: 'Cloud Flows', icon: Zap, path: '/flows' },
