@@ -21,15 +21,25 @@ import {
     AlertCircle,
     Phone,
     Globe,
-    Home
+    Home,
+    Plus,
+    Trash2,
+    Save,
+    Search,
+    Users,
+    ChevronDown,
+    ChevronUp,
+    AppWindow,
+    Layout
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const STEPS = [
-    { id: 1, title: 'Identity', icon: UserCircle, description: 'Profile & Contact' },
-    { id: 2, title: 'Licensing', icon: CreditCard, description: 'M365 Access' },
-    { id: 3, title: 'Setup', icon: ListChecks, description: 'Tasks & Hardware' },
-    { id: 4, title: 'Review', icon: Zap, description: 'Provisioning' }
+    { id: 1, title: 'Identity', icon: UserCircle, description: 'Profile' },
+    { id: 2, title: 'Groups', icon: Users, description: 'Memberships' },
+    { id: 3, title: 'Licensing', icon: CreditCard, description: 'M365 Access' },
+    { id: 4, title: 'Checklist', icon: ListChecks, description: 'Setup Tasks' },
+    { id: 5, title: 'Provision', icon: Zap, description: 'Final Sync' }
 ];
 
 const REGIONS = ['Southern', 'Western', 'Northern', 'Eastern', 'Head Office'];
@@ -51,8 +61,18 @@ const OnboardingInput = ({ label, icon: Icon, value, onChange, placeholder, type
 
 export default function OnboardingWizard() {
     const [step, setStep] = useState(1);
-    const [loadingSkus, setLoadingSkus] = useState(true);
+    const [isEditingTemplate, setIsEditingTemplate] = useState(false);
+    const [template, setTemplate] = useState<any[]>([]);
+    const [loadingTemplate, setLoadingTemplate] = useState(true);
+    const [savingTemplate, setSavingTemplate] = useState(false);
+
+    const [availableGroups, setAvailableGroups] = useState<any[]>([]);
+    const [loadingGroups, setLoadingGroups] = useState(false);
+    const [groupSearch, setGroupSearch] = useState('');
+
+    const [loadingSkus, setLoadingSkus] = useState(false);
     const [availableSkus, setAvailableSkus] = useState<any[]>([]);
+
     const [provisioning, setProvisioning] = useState(false);
     const [provisionResult, setProvisionResult] = useState<any>(null);
     const [error, setError] = useState<string | null>(null);
@@ -76,17 +96,44 @@ export default function OnboardingWizard() {
         country: 'South Africa',
         tempPassword: `Eqn!${Math.floor(100000 + Math.random() * 900000)}`,
         licenseSkus: [] as string[],
-        checklist: {
-            laptopIssued: false,
-            securityBadge: false,
-            welcomeEmail: true,
-            introMeeting: false
-        }
+        groupIds: [] as string[],
+        checklist: {} as Record<string, boolean>
     });
 
-    // Fetch Licenses
+    // Initial Load: Checklist Template
     useEffect(() => {
-        if (step === 2 && availableSkus.length === 0) {
+        fetch('/api/onboarding/template')
+            .then(res => res.json())
+            .then(data => {
+                setTemplate(data.template || []);
+                // Initialize form checklist state from template
+                const initialChecklist: Record<string, boolean> = {};
+                (data.template || []).forEach((item: any) => {
+                    initialChecklist[item.id] = item.checked || false;
+                });
+                setFormData(prev => ({ ...prev, checklist: initialChecklist }));
+                setLoadingTemplate(false);
+            })
+            .catch(() => setLoadingTemplate(false));
+    }, []);
+
+    // Step 2: Fetch Groups
+    useEffect(() => {
+        if (step === 2 && availableGroups.length === 0) {
+            setLoadingGroups(true);
+            fetch('/api/groups')
+                .then(res => res.json())
+                .then(data => {
+                    setAvailableGroups(data.groups || []);
+                    setLoadingGroups(false);
+                })
+                .catch(() => setLoadingGroups(false));
+        }
+    }, [step]);
+
+    // Step 3: Fetch Licenses
+    useEffect(() => {
+        if (step === 3 && availableSkus.length === 0) {
             setLoadingSkus(true);
             fetch('/api/onboarding/skus')
                 .then(res => res.json())
@@ -98,8 +145,17 @@ export default function OnboardingWizard() {
         }
     }, [step]);
 
-    const handleNext = () => setStep(s => Math.min(s + 1, 4));
+    const handleNext = () => setStep(s => Math.min(s + 1, 5));
     const handleBack = () => setStep(s => Math.max(s - 1, 1));
+
+    const toggleGroup = (groupId: string) => {
+        setFormData(prev => ({
+            ...prev,
+            groupIds: prev.groupIds.includes(groupId) 
+                ? prev.groupIds.filter(id => id !== groupId)
+                : [...prev.groupIds, groupId]
+        }));
+    };
 
     const toggleLicense = (skuId: string) => {
         setFormData(prev => ({
@@ -108,6 +164,22 @@ export default function OnboardingWizard() {
                 ? prev.licenseSkus.filter(id => id !== skuId)
                 : [...prev.licenseSkus, skuId]
         }));
+    };
+
+    const handleSaveTemplate = async () => {
+        setSavingTemplate(true);
+        try {
+            await fetch('/api/onboarding/template', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ template })
+            });
+            setIsEditingTemplate(false);
+        } catch (err) {
+            console.error("Failed to save template", err);
+        } finally {
+            setSavingTemplate(false);
+        }
     };
 
     const handleProvision = async () => {
@@ -126,7 +198,7 @@ export default function OnboardingWizard() {
             const data = await res.json();
             if (res.ok) {
                 setProvisionResult(data);
-                setStep(5); // Success state
+                setStep(6); // Success state
             } else {
                 setError(data.error || "Provisioning failed.");
             }
@@ -137,27 +209,36 @@ export default function OnboardingWizard() {
         }
     };
 
+    const categories = ['General', 'Enrollment', 'Applications', 'Configuration'];
+
     return (
         <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-700 pb-20">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                <div>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-slate-900/40 p-10 rounded-[3rem] border border-white/5 backdrop-blur-3xl shadow-2xl relative">
+                <div className="absolute top-0 right-0 p-8 opacity-[0.03]">
+                    <Zap size={140} className="text-blue-500" />
+                </div>
+
+                <div className="relative z-10">
                     <h1 className="text-4xl font-black text-white tracking-tighter uppercase mb-2">
                         Digital <span className="text-blue-500">Onboarding</span>
                     </h1>
-                    <p className="text-slate-500 font-medium tracking-tight">Provisioning new talent with full Entra ID profile synchronization.</p>
+                    <p className="text-slate-500 font-medium tracking-tight max-w-md italic">Master provisioning workflow with persistent checklist management.</p>
                 </div>
                 
                 {/* Progress Indicators */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 relative z-10">
                     {STEPS.map(s => (
                         <div key={s.id} className="flex items-center">
-                            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${
-                                step >= s.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-slate-900 text-slate-600'
+                            <div className={`w-12 h-12 rounded-[1.25rem] flex flex-col items-center justify-center transition-all group relative ${
+                                step >= s.id ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/30' : 'bg-slate-950/50 text-slate-700 border border-slate-800'
                             }`}>
                                 <s.icon size={20} />
+                                <div className="absolute -bottom-10 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                                    <div className="bg-slate-800 text-[10px] font-black uppercase px-2 py-1 rounded text-white tracking-widest">{s.title}</div>
+                                </div>
                             </div>
-                            {s.id < 4 && <div className={`w-8 h-1 transition-all ${step > s.id ? 'bg-blue-600' : 'bg-slate-900 opacity-20'}`} />}
+                            {s.id < 5 && <div className={`w-6 h-1 transition-all ${step > s.id ? 'bg-blue-600' : 'bg-slate-900 opacity-20'}`} />}
                         </div>
                     ))}
                 </div>
@@ -165,41 +246,47 @@ export default function OnboardingWizard() {
 
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
                 {/* Main Wizard Card */}
-                <div className="xl:col-span-9 bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-8 opacity-5">
-                        <UserPlus size={120} className="text-white" />
-                    </div>
+                <div className="xl:col-span-9 bg-slate-900/50 backdrop-blur-2xl border border-white/5 rounded-[3rem] shadow-3xl relative overflow-hidden flex flex-col">
+                    
+                    {/* Template Editor Toggle */}
+                    {step === 4 && (
+                        <div className="absolute top-8 right-8 z-20">
+                            <button 
+                                onClick={() => setIsEditingTemplate(!isEditingTemplate)}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                                    isEditingTemplate ? 'bg-emerald-600 text-white shadow-lg' : 'bg-slate-800 text-slate-400 border border-slate-700 hover:text-white'
+                                }`}
+                            >
+                                <Settings size={14} className={isEditingTemplate ? 'animate-spin' : ''} />
+                                {isEditingTemplate ? 'EXIT EDITOR' : 'ORGANIZE TEMPLATE'}
+                            </button>
+                        </div>
+                    )}
 
-                    <div className="p-10 relative z-10">
+                    <div className="p-12 relative z-10 flex-1">
                         <AnimatePresence mode="wait">
-                            {/* Step 1: Identity & Profile (EXPANDED) */}
+                            {/* Step 1: Identity & Profile */}
                             {step === 1 && (
                                 <motion.div 
                                     key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
                                     className="space-y-10"
                                 >
                                     <div className="space-y-1">
-                                        <h2 className="text-2xl font-black text-white uppercase tracking-tight">Identity & Profile</h2>
-                                        <p className="text-slate-500 text-sm">Capture advanced Entra ID details for the new account.</p>
+                                        <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Identity Profile</h2>
+                                        <p className="text-slate-500 font-medium italic">Synchronizing 15+ standard profile fields with Entra ID.</p>
                                     </div>
 
-                                    {/* SECTION: IDENTITY */}
-                                    <div className="space-y-6">
-                                        <h3 className="text-xs font-black text-blue-500 uppercase tracking-[0.3em] border-b border-slate-800 pb-3">Identity</h3>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+                                        <div className="space-y-6">
+                                            <h3 className="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em] mb-4">Core Identity</h3>
                                             <OnboardingInput label="Full Display Name" icon={UserCircle} value={formData.displayName} onChange={(v:any) => setFormData({...formData, displayName: v})} placeholder="e.g. Johnathan Smith" />
                                             <OnboardingInput label="Work Email (UPN)" icon={Mail} value={formData.userPrincipalName} onChange={(v:any) => setFormData({...formData, userPrincipalName: v})} placeholder="john.smith@domain.com" />
                                             <OnboardingInput label="First Name" icon={UserCircle} value={formData.givenName} onChange={(v:any) => setFormData({...formData, givenName: v})} placeholder="Johnathan" />
                                             <OnboardingInput label="Last Name" icon={UserCircle} value={formData.surname} onChange={(v:any) => setFormData({...formData, surname: v})} placeholder="Smith" />
                                         </div>
-                                    </div>
-
-                                    {/* SECTION: JOB INFORMATION */}
-                                    <div className="space-y-6">
-                                        <h3 className="text-xs font-black text-blue-500 uppercase tracking-[0.3em] border-b border-slate-800 pb-3">Job Information</h3>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                                            <OnboardingInput label="Job Title" icon={Zap} value={formData.jobTitle} onChange={(v:any) => setFormData({...formData, jobTitle: v})} placeholder="Senior Systems Architect" />
-                                            <OnboardingInput label="Company Name" icon={Globe} value={formData.companyName} onChange={(v:any) => setFormData({...formData, companyName: v})} placeholder="Equinox Group Holdings" />
+                                        <div className="space-y-6">
+                                            <h3 className="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em] mb-4">Role & Location</h3>
+                                            <OnboardingInput label="Job Title" icon={Zap} value={formData.jobTitle} onChange={(v:any) => setFormData({...formData, jobTitle: v})} placeholder="Senior Administrator" />
                                             <OnboardingInput label="Department" icon={Building2} value={formData.department} onChange={(v:any) => setFormData({...formData, department: v})} placeholder="Engineering" />
                                             <div className="space-y-2">
                                                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Office Location</label>
@@ -211,72 +298,101 @@ export default function OnboardingWizard() {
                                                     {REGIONS.map(r => <option key={r} value={r} className="bg-slate-900">{r}</option>)}
                                                 </select>
                                             </div>
-                                        </div>
-                                    </div>
-
-                                    {/* SECTION: CONTACT & ADDRESS */}
-                                    <div className="space-y-6">
-                                        <h3 className="text-xs font-black text-blue-500 uppercase tracking-[0.3em] border-b border-slate-800 pb-3">Contact & Address</h3>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                                            <OnboardingInput label="Mobile Phone" icon={Phone} value={formData.mobilePhone} onChange={(v:any) => setFormData({...formData, mobilePhone: v})} placeholder="+27 82 000 0000" />
                                             <OnboardingInput label="Business Phone" icon={Phone} value={formData.businessPhones} onChange={(v:any) => setFormData({...formData, businessPhones: v})} placeholder="+27 11 000 0000" />
-                                            <div className="col-span-full">
-                                                <OnboardingInput label="Street Address" icon={Home} value={formData.streetAddress} onChange={(v:any) => setFormData({...formData, streetAddress: v})} placeholder="123 Example Street, Sandton" />
-                                            </div>
-                                            <OnboardingInput label="City" icon={MapPin} value={formData.city} onChange={(v:any) => setFormData({...formData, city: v})} placeholder="Johannesburg" />
-                                            <OnboardingInput label="State / Province" icon={MapPin} value={formData.state} onChange={(v:any) => setFormData({...formData, state: v})} placeholder="Gauteng" />
-                                            <OnboardingInput label="Postal Code" icon={Settings} value={formData.postalCode} onChange={(v:any) => setFormData({...formData, postalCode: v})} placeholder="2196" />
-                                            <OnboardingInput label="Country" icon={Globe} value={formData.country} onChange={(v:any) => setFormData({...formData, country: v})} placeholder="South Africa" />
                                         </div>
                                     </div>
                                 </motion.div>
                             )}
 
-                            {/* Step 2: Licensing */}
+                            {/* Step 2: Group Assignment */}
                             {step === 2 && (
                                 <motion.div 
                                     key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
                                     className="space-y-8"
                                 >
                                     <div className="space-y-1">
-                                        <h2 className="text-2xl font-black text-white uppercase tracking-tight">Access & Licensing</h2>
-                                        <p className="text-slate-500 text-sm">Assign Microsoft 365 cloud services.</p>
+                                        <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Security Groups</h2>
+                                        <p className="text-slate-500 font-medium italic">Assigning memberships in Microsoft Entra Security Groups.</p>
+                                    </div>
+
+                                    <div className="relative group mb-4">
+                                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" size={18} />
+                                        <input 
+                                            type="text" value={groupSearch} onChange={e => setGroupSearch(e.target.value)}
+                                            placeholder="Search Intune, Engineering, Default Groups..."
+                                            className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-slate-700 focus:outline-none focus:border-blue-600 transition-all"
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[400px] overflow-y-auto custom-scrollbar pr-4">
+                                        {loadingGroups ? (
+                                            <div className="col-span-full py-20 flex flex-col items-center">
+                                                <Loader2 size={32} className="animate-spin text-blue-500" />
+                                                <p className="text-xs font-mono uppercase text-slate-500 tracking-widest mt-4">Consulting Directory Operations...</p>
+                                            </div>
+                                        ) : availableGroups.filter(g => g.displayName.toLowerCase().includes(groupSearch.toLowerCase())).map(group => (
+                                            <div 
+                                                key={group.id} onClick={() => toggleGroup(group.id)}
+                                                className={`p-5 rounded-[2rem] border transition-all cursor-pointer group ${
+                                                    formData.groupIds.includes(group.id) ? 'bg-blue-600/10 border-blue-600 shadow-xl' : 'bg-slate-950/20 border-slate-800'
+                                                }`}
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+                                                        formData.groupIds.includes(group.id) ? 'bg-blue-600 text-white' : 'bg-slate-900 text-slate-600 border border-slate-800'
+                                                    }`}>
+                                                        <Shield size={18} />
+                                                    </div>
+                                                    <div className="text-left flex-1 min-w-0">
+                                                        <div className="text-sm font-bold text-white truncate uppercase tracking-tight">{group.displayName}</div>
+                                                        <div className="text-[10px] text-slate-500 font-mono truncate">{group.id.split('-')[0]}...</div>
+                                                    </div>
+                                                    {formData.groupIds.includes(group.id) && <CheckCircle2 className="text-blue-500" size={20} />}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {/* Step 3: Licensing */}
+                            {step === 3 && (
+                                <motion.div 
+                                    key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+                                    className="space-y-8"
+                                >
+                                    <div className="space-y-1">
+                                        <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Access & Licensing</h2>
+                                        <p className="text-slate-500 font-medium italic">Targeting Microsoft 365 cloud service units.</p>
                                     </div>
 
                                     {loadingSkus ? (
-                                        <div className="py-20 flex flex-col items-center justify-center space-y-4">
-                                            <Loader2 size={40} className="animate-spin text-blue-500" />
-                                            <p className="font-mono text-xs text-slate-500 uppercase tracking-widest">Querying Cloud SKUs...</p>
+                                        <div className="py-20 flex flex-col items-center">
+                                            <Loader2 size={32} className="animate-spin text-blue-500" />
+                                            <p className="text-xs font-mono uppercase text-slate-500 tracking-widest mt-4">Consulting SKU Subscriptions...</p>
                                         </div>
                                     ) : (
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             {availableSkus.map(sku => (
                                                 <div 
-                                                    key={sku.skuId}
-                                                    onClick={() => toggleLicense(sku.skuId)}
-                                                    className={`p-6 rounded-[2rem] border transition-all cursor-pointer relative group ${
-                                                        formData.licenseSkus.includes(sku.skuId)
-                                                            ? 'bg-blue-600/10 border-blue-600 shadow-xl'
-                                                            : 'bg-slate-950/50 border-slate-800 hover:border-slate-700'
+                                                    key={sku.skuId} onClick={() => toggleLicense(sku.skuId)}
+                                                    className={`p-6 rounded-[2rem] border transition-all cursor-pointer group ${
+                                                        formData.licenseSkus.includes(sku.skuId) ? 'bg-emerald-600/10 border-emerald-600 shadow-xl' : 'bg-slate-950/20 border-slate-800'
                                                     }`}
                                                 >
                                                     <div className="flex items-center justify-between gap-4">
                                                         <div className="flex items-center gap-4">
-                                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                                                                formData.licenseSkus.includes(sku.skuId) ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-500'
+                                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
+                                                                formData.licenseSkus.includes(sku.skuId) ? 'bg-emerald-600 text-white' : 'bg-slate-900 border border-slate-800 text-slate-600'
                                                             }`}>
-                                                                <CreditCard size={18} />
+                                                                <CreditCard size={20} />
                                                             </div>
-                                                            <div className="text-left">
-                                                                <div className="text-sm font-bold text-white tracking-tight">{sku.skuPartNumber.replace(/_/g, ' ')}</div>
-                                                                <div className="text-[10px] text-slate-500 uppercase font-black tracking-tighter">Available: {sku.prepaidUnits.enabled - sku.consumedUnits}</div>
+                                                            <div className="text-left font-black uppercase tracking-tight">
+                                                                <div className="text-sm text-white">{sku.skuPartNumber.replace(/_/g, ' ')}</div>
+                                                                <div className="text-[10px] text-slate-500 tracking-widest italic">{sku.prepaidUnits.enabled - sku.consumedUnits} Available</div>
                                                             </div>
                                                         </div>
-                                                        <div className={`w-6 h-6 rounded-full border transition-all flex items-center justify-center ${
-                                                            formData.licenseSkus.includes(sku.skuId) ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-700'
-                                                        }`}>
-                                                            <CheckCircle2 size={14} />
-                                                        </div>
+                                                        {formData.licenseSkus.includes(sku.skuId) && <CheckCircle2 className="text-emerald-500" size={24} strokeWidth={3} />}
                                                     </div>
                                                 </div>
                                             ))}
@@ -285,217 +401,330 @@ export default function OnboardingWizard() {
                                 </motion.div>
                             )}
 
-                            {/* Step 3: Setup Checklist */}
-                            {step === 3 && (
-                                <motion.div 
-                                    key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-                                    className="space-y-8"
-                                >
-                                    <div className="space-y-1">
-                                        <h2 className="text-2xl font-black text-white uppercase tracking-tight">Onboarding Tasks</h2>
-                                        <p className="text-slate-500 text-sm">Physical assets and manual administrative items.</p>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        {[
-                                            { key: 'laptopIssued', title: 'Issue Laptop & Equipment', icon: HardDrive, detail: 'Verify serial numbers & compliance' },
-                                            { key: 'securityBadge', title: 'Security Token / Pass', icon: Key, detail: 'Issue credentials for Head Office' },
-                                            { key: 'welcomeEmail', title: 'Automated Welcome Pack', icon: Mail, detail: 'Company policy & IT Guide' },
-                                            { key: 'introMeeting', title: 'Schedule Intro Meeting', icon: MapPin, detail: 'Team introduction via Teams' }
-                                        ].map(item => (
-                                            <div 
-                                                key={item.key}
-                                                onClick={() => setFormData({...formData, checklist: {...formData.checklist, [item.key]: !formData.checklist[item.key as keyof typeof formData.checklist]}})}
-                                                className={`p-6 rounded-[2rem] border transition-all cursor-pointer flex items-center justify-between ${
-                                                    formData.checklist[item.key as keyof typeof formData.checklist]
-                                                        ? 'bg-emerald-600/10 border-emerald-600/30'
-                                                        : 'bg-slate-950/50 border-slate-800'
-                                                }`}
-                                            >
-                                                <div className="flex items-center gap-6">
-                                                    <div className={`p-4 rounded-2xl ${formData.checklist[item.key as keyof typeof formData.checklist] ? 'bg-emerald-600 text-white' : 'bg-slate-900 border border-slate-800 text-slate-500'}`}>
-                                                        <item.icon size={20} />
-                                                    </div>
-                                                    <div className="text-left">
-                                                        <div className="text-lg font-bold text-white tracking-tight">{item.title}</div>
-                                                        <div className="text-xs text-slate-500 font-medium">{item.detail}</div>
-                                                    </div>
-                                                </div>
-                                                <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all ${
-                                                    formData.checklist[item.key as keyof typeof formData.checklist] ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-slate-800 bg-slate-900 text-transparent'
-                                                }`}>
-                                                    <CheckCircle2 size={20} strokeWidth={3} />
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </motion.div>
-                            )}
-
-                            {/* Step 4: Summary & Provision */}
+                            {/* Step 4: The Master Checklist (Dynamic) */}
                             {step === 4 && (
                                 <motion.div 
                                     key="step4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+                                    className="space-y-10 h-full"
+                                >
+                                    <div className="space-y-1">
+                                        <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Operational Checklist</h2>
+                                        <p className="text-slate-500 font-medium italic">Standardized workflow items for the Equipment & Config phase.</p>
+                                    </div>
+
+                                    {loadingTemplate ? (
+                                         <div className="py-20 flex flex-col items-center">
+                                            <Loader2 size={32} className="animate-spin text-blue-500" />
+                                            <p className="text-xs font-mono uppercase text-slate-500 tracking-widest mt-4">Syncing Supabase Template...</p>
+                                         </div>
+                                    ) : isEditingTemplate ? (
+                                        <div className="space-y-8 animate-in slide-in-from-bottom-5 duration-300">
+                                            {categories.map(cat => (
+                                                <div key={cat} className="space-y-4">
+                                                    <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                                                        <h3 className="text-xs font-black text-blue-500 uppercase tracking-[0.4em]">{cat} Phase</h3>
+                                                        <button 
+                                                            onClick={() => setTemplate([...template, { id: Math.random().toString(36).substr(2, 9), category: cat, title: 'New Task', detail: 'Done', checked: true }])}
+                                                            className="p-2 bg-blue-600/10 text-blue-400 hover:bg-blue-600 hover:text-white rounded-lg transition-all"
+                                                        >
+                                                            <Plus size={14} />
+                                                        </button>
+                                                    </div>
+                                                    <div className="grid grid-cols-1 gap-3">
+                                                        {template.filter(t => t.category === cat).map((item, idx) => (
+                                                            <div key={item.id} className="flex items-center gap-4 bg-slate-950/20 p-2 rounded-2xl border border-white/5 group">
+                                                                <input 
+                                                                    type="text" value={item.title} 
+                                                                    onChange={e => {
+                                                                        const next = [...template];
+                                                                        next.find(i => i.id === item.id).title = e.target.value;
+                                                                        setTemplate(next);
+                                                                    }}
+                                                                    className="flex-1 bg-transparent border-none text-white text-sm font-bold focus:ring-0 px-4"
+                                                                />
+                                                                <input 
+                                                                    type="text" value={item.detail || ''} 
+                                                                    onChange={e => {
+                                                                        const next = [...template];
+                                                                        next.find(i => i.id === item.id).detail = e.target.value;
+                                                                        setTemplate(next);
+                                                                    }}
+                                                                    placeholder="Detail"
+                                                                    className="w-32 bg-slate-900/50 border border-white/5 rounded-lg py-1 px-3 text-[10px] text-slate-400 focus:outline-none"
+                                                                />
+                                                                <button 
+                                                                    onClick={() => setTemplate(template.filter(i => i.id !== item.id))}
+                                                                    className="p-2 text-slate-600 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all"
+                                                                >
+                                                                    <Trash2 size={16} />
+                                                                </button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            <button 
+                                                onClick={handleSaveTemplate}
+                                                disabled={savingTemplate}
+                                                className="w-full bg-blue-600 py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-white shadow-xl shadow-blue-600/20 flex items-center justify-center gap-3 transition-colors hover:bg-blue-500"
+                                            >
+                                                {savingTemplate ? <Loader2 className="animate-spin" /> : <Save size={18} />}
+                                                Commit Template Changes
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-10 max-h-[500px] overflow-y-auto custom-scrollbar pr-6">
+                                            {categories.map(cat => (
+                                                <div key={cat} className="space-y-4">
+                                                    <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] ml-1">{cat} Status</h3>
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                        {template.filter(t => t.category === cat).map(item => {
+                                                            const isChecked = formData.checklist[item.id];
+                                                            return (
+                                                                <div 
+                                                                    key={item.id}
+                                                                    onClick={() => setFormData({...formData, checklist: {...formData.checklist, [item.id]: !isChecked}})}
+                                                                    className={`p-4 rounded-[1.5rem] border transition-all cursor-pointer flex items-center justify-between group ${
+                                                                        isChecked ? 'bg-blue-600/5 border-blue-600/30' : 'bg-slate-950/20 border-white/5'
+                                                                    }`}
+                                                                >
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+                                                                            isChecked ? 'bg-blue-600 text-white' : 'bg-slate-900 text-slate-700'
+                                                                        }`}>
+                                                                            <CheckCircle2 size={16} />
+                                                                        </div>
+                                                                        <div className="text-left font-bold text-[13px] tracking-tight uppercase leading-none">
+                                                                            <div className={isChecked ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'}>{item.title}</div>
+                                                                            {item.detail && <div className="text-[10px] text-blue-500/50 mt-1 italic font-medium">{item.detail}</div>}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </motion.div>
+                            )}
+
+                            {/* Step 5: Provision Summary */}
+                            {step === 5 && (
+                                <motion.div 
+                                    key="step5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
                                     className="space-y-8"
                                 >
                                     <div className="space-y-1">
-                                        <h2 className="text-2xl font-black text-white uppercase tracking-tight">Provisioning Summary</h2>
-                                        <p className="text-slate-500 text-sm">Review the setup before pushing to Entra ID.</p>
+                                        <h2 className="text-3xl font-black text-white uppercase tracking-tighter text-center">Provisioning Review</h2>
+                                        <p className="text-slate-500 font-medium italic text-center">Finalizing digital identity and asset footprint.</p>
                                     </div>
 
-                                    <div className="bg-slate-950/80 rounded-3xl border border-slate-800 p-8 space-y-6">
-                                        <div className="flex items-center gap-6 pb-6 border-b border-slate-900">
-                                            <div className="w-16 h-16 bg-blue-600/10 rounded-2xl flex items-center justify-center text-blue-500 font-black text-2xl">
-                                                {formData.displayName.charAt(0)}
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                        <div className="bg-slate-950/50 p-8 rounded-[2.5rem] border border-white/5 space-y-6">
+                                            <h3 className="text-xs font-black text-blue-500 uppercase tracking-widest border-b border-white/5 pb-4">Identity Signature</h3>
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-16 h-16 bg-blue-600/20 text-blue-500 rounded-2xl flex items-center justify-center font-black text-2xl uppercase italic border border-blue-600/30">
+                                                    {formData.displayName.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <div className="text-2xl font-black text-white uppercase tracking-tighter">{formData.displayName}</div>
+                                                    <div className="text-xs font-mono text-slate-500 lowercase select-all">{formData.userPrincipalName}</div>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <div className="text-2xl font-black text-white">{formData.displayName || 'Unnamed User'}</div>
-                                                <div className="text-sm font-mono text-slate-500 italic">{formData.userPrincipalName || 'no-email@equinox.com'}</div>
+                                            <div className="grid grid-cols-2 gap-6 pt-4">
+                                                <div>
+                                                    <div className="text-[10px] text-slate-600 font-black uppercase mb-1">Assigned Licenses</div>
+                                                    <div className="text-sm text-white font-bold">{formData.licenseSkus.length} Active SKUs</div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-[10px] text-slate-600 font-black uppercase mb-1">Group Overlays</div>
+                                                    <div className="text-sm text-white font-bold">{formData.groupIds.length} Direct Memberships</div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-[10px] text-slate-600 font-black uppercase mb-1">Temporary PIN</div>
+                                                    <div className="text-sm text-emerald-500 font-mono font-black select-all tracking-wider">{formData.tempPassword}</div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-[10px] text-slate-600 font-black uppercase mb-1">Location</div>
+                                                    <div className="text-sm text-white font-bold uppercase tracking-tight">{formData.officeLocation}</div>
+                                                </div>
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-8 text-left">
-                                            <div>
-                                                <div className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-2">Legal Identity</div>
-                                                <div className="text-sm text-slate-300 font-medium">{formData.givenName} {formData.surname}</div>
-                                            </div>
-                                            <div>
-                                                <div className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-2">Role & Org</div>
-                                                <div className="text-sm text-slate-300 font-medium">{formData.jobTitle} • {formData.department}</div>
-                                            </div>
-                                            <div>
-                                                <div className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-2">Contact</div>
-                                                <div className="text-sm text-slate-300 font-medium">{formData.mobilePhone || 'No Phone Set'}</div>
-                                            </div>
-                                            <div>
-                                                <div className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-2">Password (Temporary)</div>
-                                                <div className="text-sm font-mono text-emerald-500 select-all cursor-help" title="Click to copy">{formData.tempPassword}</div>
-                                            </div>
-                                            <div>
-                                                <div className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-2">Licenses Assigned</div>
-                                                <div className="text-sm text-slate-300 font-medium">{formData.licenseSkus.length} cloud licenses</div>
-                                            </div>
-                                            <div>
-                                                <div className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-2">Location</div>
-                                                <div className="text-sm text-slate-300 font-medium">{formData.officeLocation} ({formData.city})</div>
+                                        <div className="bg-slate-950/50 p-8 rounded-[2.5rem] border border-white/5 space-y-4">
+                                            <h3 className="text-xs font-black text-emerald-500 uppercase tracking-widest border-b border-white/5 pb-4">Checklist Compliance</h3>
+                                            <div className="space-y-2 max-h-[250px] overflow-y-auto pr-4 custom-scrollbar">
+                                                {template.map(t => (
+                                                    <div key={t.id} className="flex items-center justify-between gap-4 py-1 text-[11px] font-bold border-b border-white/5">
+                                                        <span className={formData.checklist[t.id] ? 'text-slate-300' : 'text-slate-700 italic'}>{t.title}</span>
+                                                        {formData.checklist[t.id] ? <CheckCircle2 className="text-emerald-500" size={14} /> : <AlertCircle className="text-slate-800" size={14} />}
+                                                    </div>
+                                                ))}
                                             </div>
                                         </div>
-
-                                        {error && (
-                                            <div className="p-4 bg-rose-600/10 border border-rose-500/20 rounded-2xl flex items-center gap-4 animate-bounce">
-                                                <AlertCircle size={20} className="text-rose-500 shrink-0" />
-                                                <div className="text-xs text-rose-500 font-bold uppercase tracking-tight">{error}</div>
-                                            </div>
-                                        )}
                                     </div>
+
+                                    {error && (
+                                        <div className="p-6 bg-rose-600/10 border border-rose-500/30 rounded-3xl flex items-center gap-4 animate-shake">
+                                            <div className="p-3 bg-rose-600 text-white rounded-xl shadow-lg shadow-rose-600/20">
+                                                <AlertCircle size={20} />
+                                            </div>
+                                            <div>
+                                                <div className="text-xs font-black text-rose-500 uppercase tracking-[0.2em] mb-1">Directory Error Sync</div>
+                                                <div className="text-sm text-slate-300 font-medium">{error}</div>
+                                            </div>
+                                        </div>
+                                    )}
 
                                     <button 
                                         onClick={handleProvision}
                                         disabled={provisioning || !formData.displayName || !formData.userPrincipalName}
-                                        className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-30 text-white font-black uppercase text-xs tracking-[0.2em] py-6 rounded-2xl transition-all shadow-2xl shadow-blue-600/30 flex items-center justify-center gap-3"
+                                        className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-20 text-white font-black uppercase text-xs tracking-[0.3em] py-8 rounded-[2rem] transition-all shadow-3xl shadow-blue-600/30 flex items-center justify-center gap-4 group"
                                     >
-                                        {provisioning ? <Loader2 className="animate-spin" size={20} /> : <Zap size={20} fill="currentColor" />}
-                                        {provisioning ? 'Building Digital Identity...' : 'PROVISION USER'}
+                                        {provisioning ? <Loader2 className="animate-spin" size={24} /> : <Zap size={24} fill="currentColor" />}
+                                        {provisioning ? 'FINALIZING ENTRA ID DEPLOYMENT...' : 'EXECUTE PROVISIONING SEQUENCE'}
                                     </button>
                                 </motion.div>
                             )}
 
-                            {/* Step 5: Success */}
-                            {step === 5 && (
+                            {/* Step 6: Full Success State */}
+                            {step === 6 && (
                                 <motion.div 
-                                    key="step5" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-                                    className="py-12 flex flex-col items-center justify-center space-y-8"
+                                    key="step6" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+                                    className="py-12 flex flex-col items-center space-y-10"
                                 >
-                                    <div className="w-24 h-24 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-500 shadow-3xl shadow-emerald-500/10 border border-emerald-500/20 animate-pulse">
-                                        <CheckCircle2 size={48} />
+                                    <div className="w-32 h-32 bg-emerald-500/10 rounded-[3rem] flex items-center justify-center text-emerald-500 shadow-[0_0_100px_rgba(16,185,129,0.1)] border border-emerald-500/20 animate-pulse relative">
+                                        <div className="absolute inset-0 bg-emerald-500/20 rounded-[3rem] blur-3xl" />
+                                        <CheckCircle2 size={64} className="relative z-10" />
                                     </div>
-                                    <div className="text-center space-y-2">
-                                        <h2 className="text-4xl font-black text-white uppercase tracking-tighter">Success</h2>
-                                        <p className="text-slate-500 font-medium italic">User has been provisioned successfully.</p>
+                                    <div className="text-center space-y-3">
+                                        <h2 className="text-5xl font-black text-white uppercase tracking-tighter">Identity Live</h2>
+                                        <p className="text-slate-500 font-medium italic text-lg">New employee provisioned with full profile & group clusters.</p>
                                     </div>
-                                    <div className="bg-slate-950 p-6 rounded-3xl border border-slate-900 text-left w-full space-y-4">
-                                        <div className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-700 text-center border-b border-slate-900 pb-4">Internal Provisioning Log</div>
-                                        <div className="space-y-3 font-mono text-[10px]">
-                                            <div className="flex justify-between border-b border-slate-900 pb-3">
-                                                <span className="text-slate-600">Entra Object ID:</span>
-                                                <span className="text-blue-500">{provisionResult?.userId}</span>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl text-left">
+                                        <div className="bg-slate-950 p-8 rounded-[2.5rem] border border-white/5 space-y-4">
+                                            <div className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-700 text-center border-b border-white/5 pb-4 mb-4">M365 Provisioning Log</div>
+                                            <div className="space-y-4 font-mono text-[11px] font-bold">
+                                                <div className="flex justify-between items-center text-slate-500 uppercase tracking-tighter">
+                                                    <span>Entra ID Object</span>
+                                                    <span className="text-blue-500 truncate ml-4">{provisionResult?.userId}</span>
+                                                </div>
+                                                <div className="flex justify-between items-center text-slate-500 uppercase tracking-tighter">
+                                                    <span>License SKU Sync</span>
+                                                    <span className="text-emerald-500 italic">Confirmed (v1.0)</span>
+                                                </div>
+                                                <div className="flex justify-between items-center text-slate-500 uppercase tracking-tighter">
+                                                    <span>Group Injection</span>
+                                                    <span className="text-emerald-500 italic">Succeeded</span>
+                                                </div>
                                             </div>
-                                            <div className="flex justify-between border-b border-slate-900 pb-3">
-                                                <span className="text-slate-600">M365 Licensing Status:</span>
-                                                <span className="text-emerald-500 italic">Confirmed</span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span className="text-slate-600">Security Group Injection:</span>
-                                                <span className="text-emerald-500 italic">Pending Auto-Sync</span>
+                                        </div>
+                                        <div className="bg-blue-600 p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden flex flex-col justify-center">
+                                            <Key size={80} className="absolute top-0 right-0 p-4 opacity-10" />
+                                            <div className="relative z-10 space-y-2">
+                                                <div className="text-[10px] font-black text-blue-100 uppercase tracking-tighter italic">Handover Credential</div>
+                                                <div className="text-4xl font-black text-white font-mono tracking-wider select-all">{formData.tempPassword}</div>
+                                                <p className="text-blue-200 text-[10px] font-bold uppercase leading-tight">Must be changed upon initial MFA registration.</p>
                                             </div>
                                         </div>
                                     </div>
+                                    
                                     <button 
                                         onClick={() => window.location.reload()}
-                                        className="text-xs font-black uppercase tracking-widest text-slate-500 hover:text-blue-400 transition-colors"
+                                        className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-600 hover:text-blue-400 transition-all py-4 px-10 rounded-2xl border border-white/5 hover:border-blue-400/30"
                                     >
-                                        Start New Onboarding
+                                        Execute New Onboarding Flow
                                     </button>
                                 </motion.div>
                             )}
                         </AnimatePresence>
                     </div>
 
-                    {/* Navigation Bar */}
+                    {/* Desktop Navigation Control Bar */}
                     {step < 5 && (
-                        <div className="border-t border-slate-800 p-8 flex justify-between items-center bg-slate-950/20">
+                        <div className="border-t border-white/5 p-10 flex justify-between items-center bg-slate-950/20 backdrop-blur-3xl shrink-0">
                             <button 
                                 onClick={handleBack}
-                                disabled={step === 1}
-                                className="flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest text-slate-500 hover:text-white transition-all disabled:opacity-0"
+                                disabled={step === 1 || isEditingTemplate}
+                                className={`flex items-center gap-3 px-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                                    step === 1 || isEditingTemplate ? 'opacity-0 pointer-events-none' : 'text-slate-600 hover:text-blue-400 border border-transparent hover:border-blue-400/20'
+                                }`}
                             >
-                                <ArrowLeft size={16} /> Back
+                                <ArrowLeft size={16} /> Back Sequence
                             </button>
-                            {step < 4 && (
+                            {step < 5 && (
                                 <button 
                                     onClick={handleNext}
-                                    className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all"
+                                    disabled={isEditingTemplate}
+                                    className={`flex items-center gap-4 bg-slate-900 hover:bg-slate-800 text-white px-10 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/5 shadow-2xl ${
+                                        isEditingTemplate ? 'opacity-20 pointer-events-none' : ''
+                                    }`}
                                 >
-                                    Next <ArrowRight size={16} />
+                                    Proceed <ArrowRight size={18} />
                                 </button>
                             )}
                         </div>
                     )}
                 </div>
 
-                {/* Right Sidebar: Context Panel */}
-                <div className="xl:col-span-3 space-y-6">
-                    <div className="bg-blue-600 p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
+                {/* Right Sidebar: Dynamic Context Panel */}
+                <div className="xl:col-span-3 flex flex-col gap-8">
+                    <div className="bg-blue-600 p-10 rounded-[3rem] shadow-3xl relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform duration-500">
-                            <Shield size={64} className="text-white" />
+                            <Shield size={80} className="text-white" />
                         </div>
-                        <div className="relative z-10 space-y-4">
-                            <h3 className="text-xl font-black text-white uppercase tracking-tighter italic">Enterprise Security</h3>
-                            <p className="text-blue-100 text-sm font-medium leading-relaxed">By default, all new users are created with <span className="underline decoration-wavy">Double-Auth</span> forced on next sign-in.</p>
-                            <div className="flex items-center gap-3 bg-blue-700/50 p-4 rounded-2xl border border-blue-400/20">
-                                <Key size={20} className="text-blue-200" />
-                                <div className="text-[10px] text-blue-100 font-bold uppercase tracking-tight leading-4">Temporary PIN will be valid for 48 hours only.</div>
+                        <div className="relative z-10 space-y-6">
+                            <h3 className="text-2xl font-black text-white uppercase tracking-tighter italic">Policy Ops</h3>
+                            <p className="text-blue-100 text-sm font-medium leading-relaxed">
+                                Deploying with <span className="underline decoration-wavy">Baseline Security</span> protocols.
+                            </p>
+                            <div className="space-y-4">
+                                {[
+                                    { icon: Key, title: 'Identity Protection', desc: 'MFA Required' },
+                                    { icon: ListChecks, title: 'Compliance Check', desc: 'Active' },
+                                    { icon: AppWindow, title: 'App Deployment', desc: 'Dynamic List' }
+                                ].map((item, i) => (
+                                    <div key={i} className="flex items-center gap-4 bg-black/10 p-4 rounded-2xl border border-white/5">
+                                        <item.icon size={18} className="text-blue-200" />
+                                        <div className="flex flex-col">
+                                            <span className="text-[10px] font-black text-white uppercase tracking-tight leading-3 mb-1">{item.title}</span>
+                                            <span className="text-[10px] text-blue-200 font-bold uppercase tracking-widest">{item.desc}</span>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800 p-8 rounded-[2.5rem] space-y-6">
-                        <h3 className="text-lg font-black text-white uppercase tracking-tight flex items-center gap-2">
-                             <Settings size={20} className="text-slate-600" />
-                             Configuration
+                    <div className="bg-slate-900 border border-white/5 p-10 rounded-[3rem] shadow-2xl flex-1 flex flex-col">
+                        <h3 className="text-lg font-black text-white uppercase tracking-tighter flex items-center gap-3 mb-8">
+                             <Layout size={20} className="text-slate-700" />
+                             Environment
                         </h3>
-                        <div className="space-y-6">
-                            <div className="flex items-center justify-between">
-                                <div className="text-xs text-slate-500 font-bold uppercase tracking-widest">Global Admin</div>
-                                <div className="text-xs text-emerald-500 font-black uppercase tracking-widest bg-emerald-500/10 px-3 py-1 rounded-lg">Active</div>
+                        <div className="space-y-8 flex-1">
+                            <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                                <div className="text-[11px] text-slate-500 font-black uppercase tracking-[0.2em]">Graph API</div>
+                                <div className="text-[11px] text-emerald-500 font-black uppercase tracking-widest flex items-center gap-2">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                    Live
+                                </div>
                             </div>
-                            <div className="flex items-center justify-between">
-                                <div className="text-xs text-slate-500 font-bold uppercase tracking-widest">Graph Endpoint</div>
-                                <div className="text-[10px] text-slate-400 font-mono">v1.0 (Production)</div>
+                            <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                                <div className="text-[11px] text-slate-500 font-black uppercase tracking-[0.2em]">Supabase KV</div>
+                                <div className="text-[11px] text-blue-500 font-black uppercase tracking-widest">Active</div>
                             </div>
-                            <div className="flex items-center justify-between">
-                                <div className="text-xs text-slate-500 font-bold uppercase tracking-widest">Identity Sync</div>
-                                <div className="text-xs text-blue-500 font-black uppercase tracking-widest bg-blue-500/10 px-3 py-1 rounded-lg">Real-Time</div>
+                            <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                                <div className="text-[11px] text-slate-500 font-black uppercase tracking-[0.2em]">Sync Latency</div>
+                                <div className="text-[11px] text-slate-300 font-bold"><span className="text-xs italic">~2.4s</span></div>
+                            </div>
+                        </div>
+                        
+                        <div className="mt-auto pt-6 border-t border-white/5">
+                            <div className="text-[9px] font-mono text-slate-700 uppercase tracking-widest">
+                                Version: B-2026.04.01-EXP
                             </div>
                         </div>
                     </div>
@@ -503,14 +732,16 @@ export default function OnboardingWizard() {
             </div>
 
             <style jsx global>{`
-                input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-                    filter: invert(1);
-                }
+                .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+                .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
+                input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert(1); }
                 select {
                     appearance: none;
                     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23475569'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
                     background-repeat: no-repeat;
-                    background-position: right 1rem center;
+                    background-position: right 1.5rem center;
                     background-size: 1.25rem;
                 }
             `}</style>

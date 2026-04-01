@@ -24,7 +24,8 @@ export async function POST(request: Request) {
             state,
             postalCode,
             country,
-            licenseSkus 
+            licenseSkus,
+            groupIds 
         } = body;
 
         if (!displayName || !userPrincipalName || !password) {
@@ -39,7 +40,7 @@ export async function POST(request: Request) {
             displayName,
             givenName: givenName || '',
             surname: surname || '',
-            mailNickname,
+            mailNickname: mailNickname || userPrincipalName.split('@')[0],
             userPrincipalName,
             jobTitle: jobTitle || '',
             companyName: companyName || '',
@@ -71,6 +72,20 @@ export async function POST(request: Request) {
                 addLicenses,
                 removeLicenses: []
             });
+        }
+
+        // 3. Assign Group Memberships (if any)
+        if (groupIds && Array.isArray(groupIds) && groupIds.length > 0) {
+            for (const groupId of groupIds) {
+                try {
+                    await client.api(`/groups/${groupId}/members/$ref`).post({
+                        "@odata.id": `https://graph.microsoft.com/v1.0/directoryObjects/${userId}`
+                    });
+                } catch (grpErr: any) {
+                    console.error(`[API] Failed to add user to group ${groupId}:`, grpErr.message);
+                    // Continue with other groups even if one fails
+                }
+            }
         }
 
         return NextResponse.json({ 
