@@ -16,7 +16,9 @@ import {
     MapPin,
     Filter,
     ShieldAlert,
-    Check
+    Check,
+    Type,
+    Type as FontSizeIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -194,6 +196,55 @@ export default function OOOManagementPage() {
         alert(`OOO Sync Complete!\n✅ ${successCount} updated\n❌ ${failCount} failed`);
         if (selectedUserIds.length === 1) setSelectedUserIds([]);
     };
+
+    const fonts = [
+        'Inter, sans-serif',
+        'Roboto, sans-serif',
+        'Arial, sans-serif',
+        'Times New Roman, serif',
+        'Courier New, monospace',
+        'Georgia, serif'
+    ];
+
+    const fontSizes = [
+        '10pt', '11pt', '12pt', '14pt', '16pt', '18pt', '20pt'
+    ];
+
+    const applyCommand = (command: string, value: string) => {
+        document.execCommand(command, false, value);
+    };
+
+    const RichTextToolbar = ({ onCommand }: { onCommand: (cmd: string, val: string) => void }) => (
+        <div className="flex items-center gap-4 p-2 bg-slate-900/50 border-b border-slate-800 rounded-t-2xl">
+            <div className="flex items-center gap-2 border-r border-slate-800 pr-4">
+                <select 
+                    onChange={(e) => onCommand('fontName', e.target.value)}
+                    className="bg-slate-950 border border-slate-800 text-slate-300 text-[10px] font-bold uppercase py-1 px-2 rounded-lg outline-none focus:border-blue-500"
+                >
+                    <option value="">Font</option>
+                    {fonts.map(f => (
+                        <option key={f} value={f} style={{ fontFamily: f }}>{f.split(',')[0]}</option>
+                    ))}
+                </select>
+            </div>
+            <div className="flex items-center gap-2">
+                <select 
+                    onChange={(e) => onCommand('fontSize', e.target.value)}
+                    className="bg-slate-950 border border-slate-800 text-slate-300 text-[10px] font-bold uppercase py-1 px-2 rounded-lg outline-none focus:border-blue-500"
+                >
+                    <option value="">Size</option>
+                    {fontSizes.map(s => (
+                        <option key={s} value={s}>{s}</option>
+                    ))}
+                </select>
+            </div>
+            <div className="flex items-center gap-1 border-l border-slate-800 pl-4">
+                <button onClick={() => onCommand('bold', '')} className="p-1 px-2 text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-800 rounded-md">B</button>
+                <button onClick={() => onCommand('italic', '')} className="p-1 px-2 text-xs italic font-serif text-slate-400 hover:text-white hover:bg-slate-800 rounded-md">I</button>
+                <button onClick={() => onCommand('underline', '')} className="p-1 px-2 text-xs underline text-slate-400 hover:text-white hover:bg-slate-800 rounded-md">U</button>
+            </div>
+        </div>
+    );
 
     return (
         <div className="flex h-[calc(100vh-8rem)] -m-8 bg-slate-950 overflow-hidden">
@@ -484,34 +535,54 @@ export default function OOOManagementPage() {
                                             <div className="space-y-6">
                                                 <div className="space-y-3">
                                                     <label className="text-xs font-black uppercase tracking-widest text-slate-500 ml-1">Internal Message (Colleagues)</label>
-                                                    <textarea 
-                                                        value={mailboxSettings.automaticRepliesSetting?.internalReplyMessage || ''}
-                                                        onChange={(e) => setMailboxSettings({
-                                                            ...mailboxSettings,
-                                                            automaticRepliesSetting: {
-                                                                ...mailboxSettings.automaticRepliesSetting,
-                                                                internalReplyMessage: e.target.value
-                                                            }
-                                                        })}
-                                                        className="w-full h-40 bg-slate-950 border border-slate-800 text-slate-200 text-sm p-4 rounded-2xl focus:border-blue-600 outline-none resize-none"
-                                                        placeholder="Write the internal reply..."
-                                                    />
+                                                    <div className="border border-slate-800 rounded-2xl overflow-hidden focus-within:border-blue-600 transition-all">
+                                                        <RichTextToolbar onCommand={applyCommand} />
+                                                        <div 
+                                                            contentEditable
+                                                            onInput={(e) => setMailboxSettings({
+                                                                ...mailboxSettings,
+                                                                automaticRepliesSetting: {
+                                                                    ...mailboxSettings.automaticRepliesSetting,
+                                                                    internalReplyMessage: e.currentTarget.innerHTML
+                                                                }
+                                                            })}
+                                                            onBlur={(e) => setMailboxSettings({
+                                                                ...mailboxSettings,
+                                                                automaticRepliesSetting: {
+                                                                    ...mailboxSettings.automaticRepliesSetting,
+                                                                    internalReplyMessage: e.currentTarget.innerHTML
+                                                                }
+                                                            })}
+                                                            dangerouslySetInnerHTML={{ __html: mailboxSettings.automaticRepliesSetting?.internalReplyMessage || '' }}
+                                                            className="w-full h-40 bg-slate-950 text-slate-200 text-sm p-4 outline-none overflow-y-auto"
+                                                        />
+                                                    </div>
                                                 </div>
 
                                                 <div className="space-y-3">
                                                     <label className="text-xs font-black uppercase tracking-widest text-slate-500 ml-1">External Message (Public)</label>
-                                                    <textarea 
-                                                        value={mailboxSettings.automaticRepliesSetting?.externalReplyMessage || ''}
-                                                        onChange={(e) => setMailboxSettings({
-                                                            ...mailboxSettings,
-                                                            automaticRepliesSetting: {
-                                                                ...mailboxSettings.automaticRepliesSetting,
-                                                                externalReplyMessage: e.target.value
-                                                            }
-                                                        })}
-                                                        className="w-full h-40 bg-slate-950 border border-slate-800 text-slate-200 text-sm p-4 rounded-2xl focus:border-blue-600 outline-none resize-none"
-                                                        placeholder="Write the public reply..."
-                                                    />
+                                                    <div className="border border-slate-800 rounded-2xl overflow-hidden focus-within:border-blue-600 transition-all">
+                                                        <RichTextToolbar onCommand={applyCommand} />
+                                                        <div 
+                                                            contentEditable
+                                                            onInput={(e) => setMailboxSettings({
+                                                                ...mailboxSettings,
+                                                                automaticRepliesSetting: {
+                                                                    ...mailboxSettings.automaticRepliesSetting,
+                                                                    externalReplyMessage: e.currentTarget.innerHTML
+                                                                }
+                                                            })}
+                                                            onBlur={(e) => setMailboxSettings({
+                                                                ...mailboxSettings,
+                                                                automaticRepliesSetting: {
+                                                                    ...mailboxSettings.automaticRepliesSetting,
+                                                                    externalReplyMessage: e.currentTarget.innerHTML
+                                                                }
+                                                            })}
+                                                            dangerouslySetInnerHTML={{ __html: mailboxSettings.automaticRepliesSetting?.externalReplyMessage || '' }}
+                                                            className="w-full h-40 bg-slate-950 text-slate-200 text-sm p-4 outline-none overflow-y-auto"
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
