@@ -31,34 +31,39 @@ const BASE_TEMPLATE = `<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verd
 export default function SignatureManagementPage() {
     const [html, setHtml] = useState(BASE_TEMPLATE);
     const [signatureName, setSignatureName] = useState('Corporate_Standard');
-    const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
+    const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
-    const [groups, setGroups] = useState<any[]>([]);
-    const [loadingGroups, setLoadingGroups] = useState(true);
+    const [users, setUsers] = useState<any[]>([]);
+    const [loadingUsers, setLoadingUsers] = useState(true);
     const [activeTab, setActiveTab] = useState<'design' | 'deploy'>('design');
 
     useEffect(() => {
-        // Fetch groups for targeting
-        setLoadingGroups(true);
-        fetch('/api/users') // Using existing user list as a proxy for groups if needed, but ideally /api/groups
+        setLoadingUsers(true);
+        fetch('/api/users?onlyLicensed=true')
             .then(res => res.json())
             .then(data => {
-                // In a real app, we'd fetch actual groups. For now, we'll simulate group options based on departments
-                const deps = Array.from(new Set(data.users.map((u: any) => u.department).filter(Boolean)));
-                setGroups(deps.map(d => ({ id: d, displayName: d + ' Department' })));
-                setLoadingGroups(false);
+                if (data.users) setUsers(data.users);
+                setLoadingUsers(false);
             })
-            .catch(() => setLoadingGroups(false));
+            .catch(() => setLoadingUsers(false));
     }, []);
 
-    const filteredGroups = groups.filter(g => 
-        g.displayName.toLowerCase().includes(searchQuery.toLowerCase())
+    const filteredUsers = users.filter(u => 
+        u.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.userPrincipalName.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const powershellScript = useMemo(() => {
         const escapedHtml = html.replace(/'/g, "''");
-        const targetCondition = selectedGroups.length > 0 
-            ? `-FromMemberOf "${selectedGroups.join('","')}"`
+        
+        // Convert selected IDs to their UPNs (Email addresses) for the PowerShell -From parameter
+        const selectedUpns = selectedUserIds.map(id => {
+            const user = users.find(u => u.id === id);
+            return user ? user.userPrincipalName : null;
+        }).filter(Boolean);
+
+        const targetCondition = selectedUpns.length > 0 
+            ? `-From "${selectedUpns.join('","')}"`
             : '';
 
         return `# Run this in Exchange Online PowerShell V3
@@ -75,7 +80,7 @@ New-TransportRule -Name "${signatureName}" \`
     -ApplyHtmlDisclaimerText $SignatureHTML \`
     -ApplyHtmlDisclaimerFallbackAction 'Wrap' \`
     -ApplyHtmlDisclaimerLocation 'Append'`;
-    }, [html, signatureName, selectedGroups]);
+    }, [html, signatureName, selectedUserIds, users]);
 
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
@@ -133,30 +138,30 @@ New-TransportRule -Name "${signatureName}" \`
                                 />
                             </div>
                             <div className="space-y-1">
-                                {loadingGroups ? (
+                                {loadingUsers ? (
                                     <RefreshCw className="animate-spin text-slate-700 mx-auto" size={20} />
                                 ) : (
                                     <>
                                         <button 
-                                            onClick={() => setSelectedGroups([])}
-                                            className={`w-full flex items-center justify-between p-3 rounded-xl border text-[10px] font-black uppercase tracking-tight transition-all ${selectedGroups.length === 0 ? 'bg-indigo-600/10 border-indigo-500/30 text-indigo-400' : 'bg-slate-950 border-slate-800 text-slate-500 hover:border-slate-700'}`}
+                                            onClick={() => setSelectedUserIds([])}
+                                            className={`w-full flex items-center justify-between p-3 rounded-xl border text-[10px] font-black uppercase tracking-tight transition-all ${selectedUserIds.length === 0 ? 'bg-indigo-600/10 border-indigo-500/30 text-indigo-400' : 'bg-slate-950 border-slate-800 text-slate-500 hover:border-slate-700'}`}
                                         >
                                             Apply to All Staff
-                                            {selectedGroups.length === 0 && <Check size={12} />}
+                                            {selectedUserIds.length === 0 && <Check size={12} />}
                                         </button>
-                                        <div className="pt-2 pb-1 text-[10px] font-black text-slate-600 uppercase tracking-widest">Or Specific Units</div>
-                                        {filteredGroups.map(group => (
+                                        <div className="pt-2 pb-1 text-[10px] font-black text-slate-600 uppercase tracking-widest">Or Specific Staff</div>
+                                        {filteredUsers.map(user => (
                                             <button
-                                                key={group.id}
+                                                key={user.id}
                                                 onClick={() => {
-                                                    setSelectedGroups(prev => 
-                                                        prev.includes(group.id) ? prev.filter(i => i !== group.id) : [...prev, group.id]
+                                                    setSelectedUserIds(prev => 
+                                                        prev.includes(user.id) ? prev.filter(i => i !== user.id) : [...prev, user.id]
                                                     );
                                                 }}
-                                                className={`w-full flex items-center justify-between p-3 rounded-xl border text-[10px] font-black uppercase tracking-tight transition-all ${selectedGroups.includes(group.id) ? 'bg-indigo-600/10 border-indigo-500/30 text-indigo-400' : 'bg-slate-950 border-slate-800 text-slate-500 hover:border-slate-700'}`}
+                                                className={`w-full flex items-center justify-between p-3 rounded-xl border text-[10px] font-black uppercase tracking-tight transition-all ${selectedUserIds.includes(user.id) ? 'bg-indigo-600/10 border-indigo-500/30 text-indigo-400' : 'bg-slate-950 border-slate-800 text-slate-500 hover:border-slate-700'}`}
                                             >
-                                                {group.displayName}
-                                                {selectedGroups.includes(group.id) && <Check size={12} />}
+                                                {user.displayName}
+                                                {selectedUserIds.includes(user.id) && <Check size={12} />}
                                             </button>
                                         ))}
                                     </>
@@ -279,7 +284,7 @@ New-TransportRule -Name "${signatureName}" \`
                                         </div>
                                         <div>
                                             <h3 className="text-xl font-black text-white uppercase tracking-tight">Deployment Script</h3>
-                                            <p className="text-indigo-300 text-sm">Targeting: {selectedGroups.length === 0 ? 'Entire Organization' : `${selectedGroups.length} Selected Groups`}</p>
+                                            <p className="text-indigo-300 text-sm">Targeting: {selectedUserIds.length === 0 ? 'Entire Organization' : `${selectedUserIds.length} Selected Users`}</p>
                                         </div>
                                     </div>
                                     
