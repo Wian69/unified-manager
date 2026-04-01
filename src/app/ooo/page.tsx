@@ -288,7 +288,11 @@ export default function OOOManagementPage() {
     );
 
     return (
-        <div className="flex h-[calc(100vh-8rem)] -m-8 bg-slate-950 overflow-hidden">
+        <div className="flex h-[calc(100vh-8rem)] -m-8 bg-slate-950 overflow-hidden relative">
+            {/* Version Marker for Vercel Sync */}
+            <div className="absolute top-2 right-2 text-[8px] font-black text-slate-800 pointer-events-none z-50">
+                VER-1.2.0-RICH-TEXT-SYNC
+            </div>
             {/* Left Sidebar: User List */}
             <div className="w-80 border-r border-slate-900 bg-slate-950 flex flex-col shrink-0">
                 <div className="p-6 border-b border-slate-900 space-y-4">
