@@ -73,13 +73,17 @@ $SignatureHTML = @'
 ${html}
 '@
 
+# Delete existing rule if it exists to allow for updates
+Remove-TransportRule -Identity "${signatureName}" -Confirm:$false -ErrorAction SilentlyContinue
+
 New-TransportRule -Name "${signatureName}" \`
     -Enabled $true \`
-    -SentToScope 'NotInOrganization' \`
+    -Priority 0 \`
     ${targetCondition} \`
     -ApplyHtmlDisclaimerText $SignatureHTML \`
     -ApplyHtmlDisclaimerFallbackAction 'Wrap' \`
-    -ApplyHtmlDisclaimerLocation 'Append'`;
+    -ApplyHtmlDisclaimerLocation 'Append' \`
+    -StopRuleProcessing $false`;
     }, [html, signatureName, selectedUserIds, users]);
 
     const copyToClipboard = (text: string) => {
@@ -348,18 +352,26 @@ New-TransportRule -Name "${signatureName}" \`
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="p-4 bg-slate-900 rounded-2xl flex gap-3 text-xs text-slate-400 leading-relaxed border border-slate-800">
-                                            <CheckCircle2 size={32} className="text-emerald-500 shrink-0" />
-                                            <div>
-                                                <span className="text-white font-bold block mb-1">Universal Compatibility</span>
-                                                Signature is added at the server, meaning it will appear on New Outlook, iPad, and iPhone automatically.
+                                        <div className="p-6 bg-slate-900 rounded-3xl space-y-4 border border-slate-800">
+                                            <div className="flex items-center gap-3 text-indigo-400 font-bold text-sm">
+                                                <Info size={18} /> Why don't I see my signature?
+                                            </div>
+                                            <div className="space-y-3 text-[11px] text-slate-400 leading-relaxed">
+                                                <p><span className="text-white font-bold">1. It is Server-Side:</span> You will NOT see the signature while typing. It is added by Microsoft AFTER you click Send.</p>
+                                                <p><span className="text-white font-bold">2. Check your Inbox:</span> Send an email to an external address (like Gmail) or yourself and check the received message.</p>
+                                                <p><span className="text-white font-bold">3. Rule Propagation:</span> It can take up to 30-60 minutes for a new Exchange rule to activate across all Microsoft servers.</p>
                                             </div>
                                         </div>
-                                        <div className="p-4 bg-slate-900 rounded-2xl flex gap-3 text-xs text-slate-400 leading-relaxed border border-slate-800">
-                                            <AlertTriangle size={32} className="text-amber-500 shrink-0" />
-                                            <div>
-                                                <span className="text-white font-bold block mb-1">Visibility Note</span>
-                                                Users will not see this signature while typing, as it is appended by Exchange after the Send button is clicked.
+                                        
+                                        <div className="p-6 bg-slate-900 rounded-3xl space-y-4 border border-slate-800">
+                                            <div className="flex items-center gap-3 text-emerald-400 font-bold text-sm">
+                                                <CheckCircle2 size={18} /> Verified Features
+                                            </div>
+                                            <div className="space-y-3 text-[11px] text-slate-400 leading-relaxed">
+                                                <p>✓ Works on <span className="text-white underline">iPhone/iPad</span> native mail app.</p>
+                                                <p>✓ Works on <span className="text-white underline">Old & New Outlook</span> desktop.</p>
+                                                <p>✓ Pulls data (Name, Job Title) <span className="text-white underline">Automatically</span> from Entra ID.</p>
+                                                <p>✓ Agentless: No software needed on user devices.</p>
                                             </div>
                                         </div>
                                     </div>
