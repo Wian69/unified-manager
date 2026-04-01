@@ -123,8 +123,12 @@ New-TransportRule -Name "${signatureName}" \`
                     selectedUserIds
                 })
             });
-            if (res.ok) alert('Signature design saved successfully!');
-            else alert('Failed to save signature design.');
+            const data = await res.json();
+            if (res.ok) {
+                alert('Signature design saved successfully!');
+            } else {
+                alert(`Failed to save: ${data.error}\n\nDetails: ${typeof data.details === 'object' ? JSON.stringify(data.details, null, 2) : data.details}`);
+            }
         } catch (err) {
             console.error(err);
             alert('Error saving signature.');
