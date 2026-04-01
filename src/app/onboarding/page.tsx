@@ -181,7 +181,7 @@ export default function OnboardingAuditWizard() {
     const categories = ['General', 'Enrollment', 'Applications', 'Configuration'];
 
     return (
-        <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-700 pb-20">
+        <div className="w-full space-y-8 animate-in fade-in duration-700 pb-20">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-slate-900/40 p-10 rounded-[3rem] border border-white/5 backdrop-blur-3xl shadow-2xl relative">
                 <div className="absolute top-0 right-0 p-8 opacity-[0.03]">
