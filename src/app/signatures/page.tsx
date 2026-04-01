@@ -210,13 +210,37 @@ New-TransportRule -Name "${signatureName}" \`
                                                 <Code size={18} className="text-indigo-400" />
                                                 HTML Template
                                             </div>
-                                            <input 
-                                                type="text" 
-                                                value={signatureName}
-                                                onChange={(e) => setSignatureName(e.target.value)}
-                                                className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-1 text-[10px] font-black text-indigo-400 uppercase tracking-widest focus:outline-none focus:border-indigo-600"
-                                                placeholder="Signature Name"
-                                            />
+                                            <div className="flex items-center gap-2">
+                                                <button 
+                                                    onClick={() => {
+                                                        const pasteBox = document.createElement('div');
+                                                        pasteBox.contentEditable = 'true';
+                                                        pasteBox.style.position = 'fixed';
+                                                        pasteBox.style.opacity = '0';
+                                                        document.body.appendChild(pasteBox);
+                                                        pasteBox.focus();
+                                                        
+                                                        // Wait for paste
+                                                        setTimeout(() => {
+                                                            if (pasteBox.innerHTML) {
+                                                                setHtml(pasteBox.innerHTML);
+                                                                alert('Signature imported from clipboard!');
+                                                            }
+                                                            document.body.removeChild(pasteBox);
+                                                        }, 100);
+                                                    }}
+                                                    className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-[10px] font-black text-indigo-400 uppercase tracking-widest rounded-lg border border-slate-700 transition-all active:scale-95"
+                                                >
+                                                    Import from Clipboard
+                                                </button>
+                                                <input 
+                                                    type="text" 
+                                                    value={signatureName}
+                                                    onChange={(e) => setSignatureName(e.target.value)}
+                                                    className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-1 text-[10px] font-black text-indigo-400 uppercase tracking-widest focus:outline-none focus:border-indigo-600"
+                                                    placeholder="Signature Name"
+                                                />
+                                            </div>
                                         </div>
                                         <textarea
                                             value={html}
