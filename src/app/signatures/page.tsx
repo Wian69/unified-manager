@@ -15,7 +15,8 @@ import {
     RefreshCw,
     Search,
     Monitor,
-    Smartphone
+    Smartphone,
+    Save
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -36,6 +37,19 @@ export default function SignatureManagementPage() {
     const [users, setUsers] = useState<any[]>([]);
     const [loadingUsers, setLoadingUsers] = useState(true);
     const [activeTab, setActiveTab] = useState<'design' | 'deploy'>('design');
+    const [saving, setSaving] = useState(false);
+
+    // Load saved signature design
+    useEffect(() => {
+        fetch('/api/signatures')
+            .then(res => res.json())
+            .then(data => {
+                if (data.html) setHtml(data.html);
+                if (data.name) setSignatureName(data.name);
+                if (data.selectedUserIds) setSelectedUserIds(data.selectedUserIds);
+            })
+            .catch(console.error);
+    }, []);
 
     useEffect(() => {
         setLoadingUsers(true);
@@ -86,6 +100,28 @@ New-TransportRule -Name "${signatureName}" \`
     -StopRuleProcessing $false`;
     }, [html, signatureName, selectedUserIds, users]);
 
+    const saveSignature = async () => {
+        setSaving(true);
+        try {
+            const res = await fetch('/api/signatures', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    html,
+                    name: signatureName,
+                    selectedUserIds
+                })
+            });
+            if (res.ok) alert('Signature design saved successfully!');
+            else alert('Failed to save signature design.');
+        } catch (err) {
+            console.error(err);
+            alert('Error saving signature.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
         alert('Copied to clipboard!');
@@ -106,7 +142,15 @@ New-TransportRule -Name "${signatureName}" \`
                         </div>
                     </div>
                     
-                    <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-800">
+                    <div className="flex items-center gap-3 bg-slate-950 p-1 rounded-xl border border-slate-800">
+                        <button 
+                            onClick={saveSignature}
+                            disabled={saving}
+                            className="px-6 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all bg-emerald-600/10 text-emerald-500 hover:bg-emerald-600/20 disabled:opacity-30 border border-emerald-500/20 mr-2"
+                        >
+                            {saving ? <RefreshCw className="animate-spin inline-block mr-2" size={14} /> : <Save className="inline-block mr-2" size={14} />}
+                            Save Design
+                        </button>
                         <button 
                             onClick={() => setActiveTab('design')}
                             className={`px-6 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'design' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/40' : 'text-slate-500 hover:text-slate-300'}`}
