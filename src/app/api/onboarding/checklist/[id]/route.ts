@@ -10,9 +10,9 @@ const supabase = createClient(
 
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
-    const userId = params.id;
+    const { id: userId } = await params;
     try {
         const { data, error } = await supabase
             .from('kv')
@@ -30,9 +30,9 @@ export async function GET(
 
 export async function POST(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
-    const userId = params.id;
+    const { id: userId } = await params;
     try {
         const { checklist } = await request.json();
         const { error } = await supabase
