@@ -144,28 +144,68 @@ export default function UsersPage() {
     };
 
     const handleSave = async () => {
-        // ... (existing handleSave logic unchanged)
-    };
+        if (!selectedUserId) return;
+        setSaving(true);
+        const diff: any = {};
+        Object.keys(editForm).forEach(key => {
+            let currentValue = selectedUser[key];
+            let newValue = editForm[key];
+            
+            // Normalize businessPhones for comparison (array vs string)
+            if (key === 'businessPhones') {
+                currentValue = (selectedUser.businessPhones && selectedUser.businessPhones.length > 0) ? selectedUser.businessPhones[0] : '';
+            }
+            
+            if (newValue !== currentValue) {
+                diff[key] = newValue;
+            }
+        });
 
-    const handleSaveMailbox = async () => {
-        if (!selectedUserId || !mailboxSettings) return;
-        setMailboxSaving(true);
         try {
-            const res = await fetch(`/api/users/${selectedUserId}/mailbox`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    automaticRepliesSetting: mailboxSettings.automaticRepliesSetting
-                }),
-            });
-            if (!res.ok) throw new Error("Failed to update OOO settings");
-            alert("Out of Office settings updated successfully!");
+            // 1. Profile Update (Entra ID)
+            if (Object.keys(diff).length > 0) {
+                const res = await fetch(`/api/users/${selectedUserId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(diff),
+                });
+                if (!res.ok) throw new Error("Graph API Sync failed for profile changes.");
+            }
+
+            // 2. Mailbox Update (OOO)
+            if (mailboxSettings && mailboxSettings.automaticRepliesSetting) {
+                const mailRes = await fetch(`/api/users/${selectedUserId}/mailbox`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        automaticRepliesSetting: mailboxSettings.automaticRepliesSetting
+                    }),
+                });
+                if (!mailRes.ok) throw new Error("Mailbox Sync failed for OOO changes.");
+            }
+            
+            // Update local state immediately for instant grouping feedback
+            setUsers(prevUsers => prevUsers.map(u => 
+                u.id === selectedUserId 
+                    ? { ...u, ...editForm, officeLocation: editForm.officeLocation?.trim() } 
+                    : u
+            ));
+            
+            setSelectedUserId(null);
+            
+            // Delay background refresh to let Graph consistency catch up
+            setTimeout(() => fetchUsers(), 3000);
+            
+            alert("Profile and Out of Office settings saved successfully!");
         } catch (error: any) {
-            alert(error.message);
+            console.error("Failed to update user", error);
+            alert("Error saving: " + error.message);
         } finally {
-            setMailboxSaving(false);
+            setSaving(false);
         }
     };
+
+    // removed handleSaveMailbox as it's merged into handleSave
 
     const filteredUsers = users.filter(user => {
         if (signInFilter === 'all') return true;
@@ -426,14 +466,6 @@ export default function UsersPage() {
                                     <section>
                                         <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-2">
                                             <h3 className="text-lg font-bold text-slate-200">Mailbox & Out of Office</h3>
-                                            <button 
-                                                onClick={handleSaveMailbox}
-                                                disabled={mailboxSaving || mailboxLoading}
-                                                className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg transition-all flex items-center gap-2 disabled:opacity-50"
-                                            >
-                                                {mailboxSaving ? <RefreshCw className="animate-spin" size={14} /> : <Save size={14} />}
-                                                Save OOO
-                                            </button>
                                         </div>
                                         
                                         {mailboxLoading ? (
