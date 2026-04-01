@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { 
     Users, 
     Search, 
@@ -45,6 +45,10 @@ export default function OOOManagementPage() {
     const [loadingMailbox, setLoadingMailbox] = useState(false);
     const [savingMailbox, setSavingMailbox] = useState(false);
     const [syncProgress, setSyncProgress] = useState<{ current: number, total: number } | null>(null);
+    
+    // Editor Refs to prevent re-render crashes during typing
+    const internalEditorRef = useRef<HTMLDivElement>(null);
+    const externalEditorRef = useRef<HTMLDivElement>(null);
 
     // Fetch Users
     useEffect(() => {
@@ -109,7 +113,6 @@ export default function OOOManagementPage() {
     // Fetch Mailbox Settings when a SINGLE user is selected
     useEffect(() => {
         if (!activeUserId) {
-            // In bulk mode or no selection, we start with an empty template if mailboxSettings is null
             if (!isBulkMode) setMailboxSettings(null);
             return;
         }
@@ -159,6 +162,10 @@ export default function OOOManagementPage() {
     const handleSaveOOO = async () => {
         if (selectedUserIds.length === 0 || !mailboxSettings) return;
         
+        // Grab values from refs before saving
+        const internalHtml = internalEditorRef.current?.innerHTML || '';
+        const externalHtml = externalEditorRef.current?.innerHTML || '';
+        
         setSavingMailbox(true);
         setSyncProgress({ current: 0, total: selectedUserIds.length });
 
@@ -174,7 +181,11 @@ export default function OOOManagementPage() {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        automaticRepliesSetting: mailboxSettings.automaticRepliesSetting
+                        automaticRepliesSetting: {
+                            ...mailboxSettings.automaticRepliesSetting,
+                            internalReplyMessage: internalHtml,
+                            externalReplyMessage: externalHtml
+                        }
                     }),
                 });
                 if (res.ok) {
@@ -211,12 +222,16 @@ export default function OOOManagementPage() {
     ];
 
     const applyCommand = (command: string, value: string) => {
-        document.execCommand(command, false, value);
+        try {
+            document.execCommand(command, false, value);
+        } catch (e) {
+            console.error('Editor Command Error:', e);
+        }
     };
 
     // Helper to strip outlook garbage for the editor
-    const sanitizeOOO = (html: string) => {
-        if (!html) return '';
+    const sanitizeOOO = (html: any) => {
+        if (!html || typeof html !== 'string') return '';
         // If it looks like a full document, try to extract the body content
         if (html.includes('<body')) {
             const match = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
@@ -258,27 +273,9 @@ export default function OOOManagementPage() {
             </div>
             
             <div className="flex items-center gap-1">
-                <button 
-                    onClick={() => onCommand('bold', '')} 
-                    className="p-2 px-3 text-xs font-black text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg border border-transparent hover:border-slate-700 transition-all"
-                    title="Bold"
-                >
-                    B
-                </button>
-                <button 
-                    onClick={() => onCommand('italic', '')} 
-                    className="p-2 px-3 text-xs italic font-serif text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg border border-transparent hover:border-slate-700 transition-all"
-                    title="Italic"
-                >
-                    I
-                </button>
-                <button 
-                    onClick={() => onCommand('underline', '')} 
-                    className="p-2 px-3 text-xs underline text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg border border-transparent hover:border-slate-700 transition-all"
-                    title="Underline"
-                >
-                    U
-                </button>
+                <button onClick={() => onCommand('bold', '')} className="p-2 px-3 text-xs font-black text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg border border-transparent hover:border-slate-700 transition-all">B</button>
+                <button onClick={() => onCommand('italic', '')} className="p-2 px-3 text-xs italic font-serif text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg border border-transparent hover:border-slate-700 transition-all">I</button>
+                <button onClick={() => onCommand('underline', '')} className="p-2 px-3 text-xs underline text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg border border-transparent hover:border-slate-700 transition-all">U</button>
             </div>
             
             <div className="ml-auto text-[8px] font-black uppercase tracking-widest text-slate-600 group-hover:text-blue-500/50 transition-colors">
@@ -291,7 +288,7 @@ export default function OOOManagementPage() {
         <div className="flex h-[calc(100vh-8rem)] -m-8 bg-slate-950 overflow-hidden relative">
             {/* Version Marker for Vercel Sync */}
             <div className="absolute top-2 right-2 text-[8px] font-black text-slate-800 pointer-events-none z-50">
-                VER-1.2.0-RICH-TEXT-SYNC
+                VER-1.2.1-STABILITY-FIX
             </div>
             {/* Left Sidebar: User List */}
             <div className="w-80 border-r border-slate-900 bg-slate-950 flex flex-col shrink-0">
@@ -354,51 +351,37 @@ export default function OOOManagementPage() {
                     ) : filteredUsers.map(user => (
                         <div
                             key={user.id}
-                            className={`group relative flex items-center gap-3 p-3 rounded-xl transition-all ${
+                            onClick={() => toggleUserSelection(user.id)}
+                            className={`group relative flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer ${
                                 selectedUserIds.includes(user.id)
                                 ? 'bg-blue-600/10 border border-blue-600/30' 
                                 : 'hover:bg-slate-900 border border-transparent'
                             }`}
                         >
-                            <button 
-                                onClick={() => toggleUserSelection(user.id)}
-                                className={`shrink-0 w-5 h-5 rounded-md border flex items-center justify-center transition-all ${
+                            <div className={`shrink-0 w-5 h-5 rounded-md border flex items-center justify-center transition-all ${
                                     selectedUserIds.includes(user.id)
                                     ? 'bg-blue-600 border-blue-600 text-white'
-                                    : 'bg-slate-950 border-slate-800 text-transparent group-hover:border-slate-600'
+                                    : 'bg-slate-950 border-slate-800 text-transparent'
                                 }`}
                             >
                                 <Check size={12} strokeWidth={4} />
-                            </button>
+                            </div>
                             
-                            <button 
-                                onClick={() => setSelectedUserIds([user.id])}
-                                className="flex-1 min-w-0 text-left"
-                            >
+                            <div className="flex-1 min-w-0 text-left">
                                 <div className="flex items-center justify-between gap-2">
                                     <div className={`text-sm font-bold truncate ${selectedUserIds.includes(user.id) ? 'text-white' : 'text-slate-200'}`}>
                                         {user.displayName}
                                     </div>
                                     {oooStatusMap[user.id] && oooStatusMap[user.id] !== 'disabled' && (
-                                        <span className="shrink-0 bg-emerald-500/10 text-emerald-500 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md border border-emerald-500/20 animate-pulse">
+                                        <span className="shrink-0 bg-emerald-500/10 text-emerald-500 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md border border-emerald-500/20">
                                             Active
                                         </span>
                                     )}
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="text-[9px] truncate uppercase tracking-tight font-black text-slate-500">
-                                        {user.jobTitle || 'No Title'}
-                                    </div>
-                                    {user.officeLocation && (
-                                        <>
-                                            <span className="w-1 h-1 bg-slate-800 rounded-full" />
-                                            <div className="flex items-center gap-1 text-[9px] font-bold text-slate-600">
-                                                <MapPin size={8} /> {user.officeLocation}
-                                            </div>
-                                        </>
-                                    )}
+                                <div className="text-[9px] truncate uppercase tracking-tight font-black text-slate-500">
+                                    {user.jobTitle || 'No Title'}
                                 </div>
-                            </button>
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -416,14 +399,11 @@ export default function OOOManagementPage() {
                             <div className="p-6 bg-slate-900 rounded-full">
                                 <Clock size={48} className="text-slate-700" />
                             </div>
-                            <div className="text-center">
-                                <h3 className="text-xl font-bold text-slate-300 uppercase tracking-tight">Select Users to Begin</h3>
-                                <p className="max-w-[280px] text-sm mt-2">Choose users from the left panel to update their Outlook auto-replies.</p>
-                            </div>
+                            <h3 className="text-xl font-bold text-slate-300 uppercase tracking-tight">Select Users to Begin</h3>
                         </motion.div>
                     ) : (
                         <motion.div 
-                            key={isBulkMode ? 'bulk' : activeUserId}
+                            key={activeUserId || 'bulk'}
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             className="flex-1 flex flex-col p-8 overflow-y-auto"
@@ -437,61 +417,34 @@ export default function OOOManagementPage() {
                                         <h2 className="text-3xl font-black text-white tracking-tight uppercase">
                                             {isBulkMode ? `Bulk Update: ${selectedUserIds.length} Users` : activeUser?.displayName}
                                         </h2>
-                                        <div className="flex items-center gap-3 mt-1">
-                                            {isBulkMode ? (
-                                                <span className="text-blue-500 font-black text-[10px] uppercase tracking-widest bg-blue-600/10 px-3 py-1 rounded-full">Multi-Selection Active</span>
-                                            ) : (
-                                                <>
-                                                    <span className="text-slate-400 font-medium">{activeUser?.userPrincipalName}</span>
-                                                    <span className="w-1 h-1 bg-slate-800 rounded-full" />
-                                                    <span className="text-blue-500 font-black text-[10px] uppercase tracking-widest">{activeUser?.officeLocation || 'Remote'}</span>
-                                                </>
-                                            )}
-                                        </div>
+                                        <p className="text-slate-400 font-medium text-sm">{isBulkMode ? 'Multi-Selection Active' : activeUser?.userPrincipalName}</p>
                                     </div>
                                 </div>
                                 
                                 <div className="flex flex-col items-end gap-2">
                                     <button
-                                        onClick={() => {
-                                            if (selectedUserIds.length > 5) {
-                                                if (!confirm(`Are you sure you want to apply these OOO settings to ${selectedUserIds.length} users?`)) return;
-                                            }
-                                            handleSaveOOO();
-                                        }}
-                                        disabled={savingMailbox || loadingMailbox || selectedUserIds.length === 0}
-                                        className="flex items-center gap-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-30 disabled:hover:bg-emerald-600 text-white font-black uppercase text-xs tracking-widest px-8 py-4 rounded-2xl transition-all shadow-xl shadow-emerald-900/20 active:scale-95"
+                                        onClick={handleSaveOOO}
+                                        disabled={savingMailbox || loadingMailbox}
+                                        className="flex items-center gap-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-30 text-white font-black uppercase text-xs tracking-widest px-8 py-4 rounded-2xl transition-all shadow-xl shadow-emerald-900/20"
                                     >
                                         {savingMailbox ? <RefreshCw className="animate-spin" size={18} /> : <Save size={18} />}
                                         {isBulkMode ? `Apply to ${selectedUserIds.length} Users` : 'Sync to Outlook'}
                                     </button>
-                                    
-                                    {syncProgress && (
-                                        <div className="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden mt-2 border border-slate-800">
-                                            <motion.div 
-                                                className="bg-emerald-500 h-full"
-                                                initial={{ width: 0 }}
-                                                animate={{ width: `${(syncProgress.current / syncProgress.total) * 100}%` }}
-                                            />
-                                        </div>
-                                    )}
                                 </div>
                             </header>
 
                             {loadingMailbox ? (
                                 <div className="flex-1 flex flex-col items-center justify-center p-20 space-y-4">
                                     <Loader2 className="animate-spin text-blue-600" size={32} />
-                                    <p className="text-slate-500 animate-pulse font-medium">Fetching Exchange Data...</p>
+                                    <p className="text-slate-500">Fetching Exchange Data...</p>
                                 </div>
                             ) : mailboxSettings ? (
                                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
                                     <div className="space-y-8">
                                         <div className="p-8 bg-slate-900 border border-slate-800 rounded-3xl shadow-xl space-y-6">
-                                            <div className="flex items-center gap-3">
-                                                <div className="p-2 bg-blue-600/10 rounded-lg">
-                                                    <RefreshCw size={20} className="text-blue-500" />
-                                                </div>
-                                                <h3 className="text-lg font-bold text-white uppercase tracking-tight">Auto-Reply Configuration</h3>
+                                            <div className="flex items-center gap-3 text-lg font-bold text-white uppercase tracking-tight">
+                                                <RefreshCw size={20} className="text-blue-500" />
+                                                Auto-Reply Configuration
                                             </div>
                                             
                                             <div className="space-y-4">
@@ -499,14 +452,8 @@ export default function OOOManagementPage() {
                                                     <span className="text-sm font-bold text-slate-300">Reply Status</span>
                                                     <select 
                                                         value={mailboxSettings.automaticRepliesSetting?.status || 'disabled'}
-                                                        onChange={(e) => setMailboxSettings({
-                                                            ...mailboxSettings,
-                                                            automaticRepliesSetting: {
-                                                                ...mailboxSettings.automaticRepliesSetting,
-                                                                status: e.target.value
-                                                            }
-                                                        })}
-                                                        className="bg-slate-900 border border-slate-800 text-white text-xs font-black uppercase tracking-widest px-4 py-2 rounded-xl focus:outline-none focus:border-blue-600"
+                                                        onChange={(e) => setMailboxSettings({...mailboxSettings, automaticRepliesSetting: {...mailboxSettings.automaticRepliesSetting, status: e.target.value}})}
+                                                        className="bg-slate-900 border border-slate-800 text-white text-xs font-black uppercase tracking-widest px-4 py-2 rounded-xl"
                                                     >
                                                         <option value="disabled">Disabled</option>
                                                         <option value="alwaysEnabled">Always Enabled</option>
@@ -515,103 +462,61 @@ export default function OOOManagementPage() {
                                                 </div>
 
                                                 {mailboxSettings.automaticRepliesSetting?.status === 'scheduled' && (
-                                                    <div className="p-6 bg-slate-950 border border-slate-800 rounded-2xl space-y-6">
-                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                                            <div className="space-y-2">
-                                                                <label className="text-xs font-bold text-slate-500 ml-1 uppercase tracking-widest">Start Date</label>
-                                                                <input 
-                                                                    type="datetime-local"
-                                                                    value={mailboxSettings.automaticRepliesSetting?.scheduledStartDateTime?.dateTime?.split('.')[0] || ''}
-                                                                    onChange={(e) => setMailboxSettings({
-                                                                        ...mailboxSettings,
-                                                                        automaticRepliesSetting: {
-                                                                            ...mailboxSettings.automaticRepliesSetting,
-                                                                            scheduledStartDateTime: { dateTime: e.target.value, timeZone: 'UTC' }
-                                                                        }
-                                                                    })}
-                                                                    className="w-full bg-slate-900 border border-slate-800 text-white text-sm p-3 rounded-xl"
-                                                                />
-                                                            </div>
-                                                            <div className="space-y-2">
-                                                                <label className="text-xs font-bold text-slate-500 ml-1 uppercase tracking-widest">End Date</label>
-                                                                <input 
-                                                                    type="datetime-local"
-                                                                    value={mailboxSettings.automaticRepliesSetting?.scheduledEndDateTime?.dateTime?.split('.')[0] || ''}
-                                                                    onChange={(e) => setMailboxSettings({
-                                                                        ...mailboxSettings,
-                                                                        automaticRepliesSetting: {
-                                                                            ...mailboxSettings.automaticRepliesSetting,
-                                                                            scheduledEndDateTime: { dateTime: e.target.value, timeZone: 'UTC' }
-                                                                        }
-                                                                    })}
-                                                                    className="w-full bg-slate-900 border border-slate-800 text-white text-sm p-3 rounded-xl"
-                                                                />
-                                                            </div>
+                                                    <div className="p-6 bg-slate-950 border border-slate-800 rounded-2xl grid grid-cols-2 gap-6">
+                                                        <div className="space-y-2">
+                                                            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Start Date</label>
+                                                            <input 
+                                                                type="datetime-local"
+                                                                value={mailboxSettings.automaticRepliesSetting?.scheduledStartDateTime?.dateTime?.split('.')[0] || ''}
+                                                                onChange={(e) => setMailboxSettings({...mailboxSettings, automaticRepliesSetting: {...mailboxSettings.automaticRepliesSetting, scheduledStartDateTime: {dateTime: e.target.value, timeZone: 'UTC'}}})}
+                                                                className="w-full bg-slate-900 border border-slate-800 text-white text-sm p-3 rounded-xl"
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">End Date</label>
+                                                            <input 
+                                                                type="datetime-local"
+                                                                value={mailboxSettings.automaticRepliesSetting?.scheduledEndDateTime?.dateTime?.split('.')[0] || ''}
+                                                                onChange={(e) => setMailboxSettings({...mailboxSettings, automaticRepliesSetting: {...mailboxSettings.automaticRepliesSetting, scheduledEndDateTime: {dateTime: e.target.value, timeZone: 'UTC'}}})}
+                                                                className="w-full bg-slate-900 border border-slate-800 text-white text-sm p-3 rounded-xl"
+                                                            />
                                                         </div>
                                                     </div>
                                                 )}
                                             </div>
                                         </div>
-                                        
-                                        {isBulkMode && (
-                                            <div className="p-6 bg-blue-600/5 border border-blue-600/20 rounded-3xl flex gap-4">
-                                                <div className="shrink-0 p-3 bg-blue-600/10 rounded-2xl h-fit text-blue-500 font-black text-xl">
-                                                    !
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <h4 className="text-sm font-bold text-white uppercase tracking-tight">Bulk Mode Active</h4>
-                                                    <p className="text-xs text-slate-400 leading-relaxed text-balance">
-                                                        You are about to overwrite the Out of Office settings for <strong>{selectedUserIds.length} users</strong>. This will replace their current messages and schedules immediately.
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        )}
                                     </div>
 
                                     <div className="space-y-6">
                                         <div className="p-8 bg-slate-900 border border-slate-800 rounded-3xl shadow-xl space-y-6">
-                                            <div className="flex items-center gap-3">
-                                                <div className="p-2 bg-emerald-600/10 rounded-lg">
-                                                    <Mail size={20} className="text-emerald-500" />
-                                                </div>
-                                                <h3 className="text-lg font-bold text-white uppercase tracking-tight">Message Management</h3>
+                                            <div className="flex items-center gap-3 text-lg font-bold text-white uppercase tracking-tight">
+                                                <Mail size={20} className="text-emerald-500" />
+                                                Message Management
                                             </div>
 
                                             <div className="space-y-8">
                                                 <div className="space-y-3">
-                                                    <label className="text-xs font-black uppercase tracking-widest text-slate-500 ml-1">Internal Message (Colleagues)</label>
-                                                    <div className="border border-slate-800 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-600/50 focus-within:border-blue-600 transition-all bg-slate-950">
+                                                    <label className="text-xs font-black uppercase tracking-widest text-slate-500">Internal Message</label>
+                                                    <div className="border border-slate-800 rounded-2xl overflow-hidden bg-slate-950">
                                                         <RichTextToolbar onCommand={applyCommand} />
                                                         <div 
+                                                            ref={internalEditorRef}
                                                             contentEditable
-                                                            onBlur={(e) => setMailboxSettings((prev: any) => ({
-                                                                ...prev,
-                                                                automaticRepliesSetting: {
-                                                                    ...prev.automaticRepliesSetting,
-                                                                    internalReplyMessage: e.currentTarget.innerHTML
-                                                                }
-                                                            }))}
                                                             dangerouslySetInnerHTML={{ __html: sanitizeOOO(mailboxSettings.automaticRepliesSetting?.internalReplyMessage || '') }}
-                                                            className="w-full min-h-[160px] max-h-[300px] bg-slate-950 text-slate-200 text-sm p-6 outline-none overflow-y-auto prose prose-invert prose-sm"
+                                                            className="w-full min-h-[160px] text-slate-200 text-sm p-6 outline-none overflow-y-auto prose prose-invert prose-sm"
                                                         />
                                                     </div>
                                                 </div>
 
                                                 <div className="space-y-3">
-                                                    <label className="text-xs font-black uppercase tracking-widest text-slate-500 ml-1">External Message (Public)</label>
-                                                    <div className="border border-slate-800 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-600/50 focus-within:border-blue-600 transition-all bg-slate-950">
+                                                    <label className="text-xs font-black uppercase tracking-widest text-slate-500">External Message</label>
+                                                    <div className="border border-slate-800 rounded-2xl overflow-hidden bg-slate-950">
                                                         <RichTextToolbar onCommand={applyCommand} />
                                                         <div 
+                                                            ref={externalEditorRef}
                                                             contentEditable
-                                                            onBlur={(e) => setMailboxSettings((prev: any) => ({
-                                                                ...prev,
-                                                                automaticRepliesSetting: {
-                                                                    ...prev.automaticRepliesSetting,
-                                                                    externalReplyMessage: e.currentTarget.innerHTML
-                                                                }
-                                                            }))}
                                                             dangerouslySetInnerHTML={{ __html: sanitizeOOO(mailboxSettings.automaticRepliesSetting?.externalReplyMessage || '') }}
-                                                            className="w-full min-h-[160px] max-h-[300px] bg-slate-950 text-slate-200 text-sm p-6 outline-none overflow-y-auto prose prose-invert prose-sm"
+                                                            className="w-full min-h-[160px] text-slate-200 text-sm p-6 outline-none overflow-y-auto prose prose-invert prose-sm"
                                                         />
                                                     </div>
                                                 </div>
@@ -629,11 +534,6 @@ export default function OOOManagementPage() {
                 .custom-scrollbar::-webkit-scrollbar { width: 4px; }
                 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
                 .custom-scrollbar::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 20px; }
-                [contenteditable]:empty:before{
-                    content: attr(data-placeholder);
-                    color: #475569;
-                    font-style: italic;
-                }
             `}</style>
         </div>
     );
