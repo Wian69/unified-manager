@@ -6,7 +6,26 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { displayName, mailNickname, userPrincipalName, password, jobTitle, department, officeLocation, licenseSkus } = body;
+        const { 
+            displayName, 
+            givenName,
+            surname,
+            mailNickname, 
+            userPrincipalName, 
+            password, 
+            jobTitle, 
+            companyName,
+            department, 
+            officeLocation,
+            mobilePhone,
+            businessPhones,
+            streetAddress,
+            city,
+            state,
+            postalCode,
+            country,
+            licenseSkus 
+        } = body;
 
         if (!displayName || !userPrincipalName || !password) {
             return NextResponse.json({ error: "Missing required fields (displayName, UPN, password)" }, { status: 400 });
@@ -18,11 +37,21 @@ export async function POST(request: Request) {
         const newUser = await client.api('/users').post({
             accountEnabled: true,
             displayName,
+            givenName: givenName || '',
+            surname: surname || '',
             mailNickname,
             userPrincipalName,
             jobTitle: jobTitle || '',
+            companyName: companyName || '',
             department: department || '',
             officeLocation: officeLocation || '',
+            mobilePhone: mobilePhone || '',
+            businessPhones: businessPhones ? [businessPhones] : [],
+            streetAddress: streetAddress || '',
+            city: city || '',
+            state: state || '',
+            postalCode: postalCode || '',
+            country: country || '',
             passwordProfile: {
                 forceChangePasswordNextSignIn: true,
                 password: password

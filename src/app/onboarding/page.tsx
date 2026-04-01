@@ -18,18 +18,36 @@ import {
     MapPin,
     CreditCard,
     Key,
-    AlertCircle
+    AlertCircle,
+    Phone,
+    Globe,
+    Home
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const STEPS = [
-    { id: 1, title: 'Identity', icon: UserCircle, description: 'Basic Profile' },
+    { id: 1, title: 'Identity', icon: UserCircle, description: 'Profile & Contact' },
     { id: 2, title: 'Licensing', icon: CreditCard, description: 'M365 Access' },
     { id: 3, title: 'Setup', icon: ListChecks, description: 'Tasks & Hardware' },
     { id: 4, title: 'Review', icon: Zap, description: 'Provisioning' }
 ];
 
 const REGIONS = ['Southern', 'Western', 'Northern', 'Eastern', 'Head Office'];
+
+const OnboardingInput = ({ label, icon: Icon, value, onChange, placeholder, type = "text" }: any) => (
+    <div className="space-y-2">
+        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">{label}</label>
+        <div className="relative group">
+            <Icon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-blue-500 transition-colors" size={18} />
+            <input 
+                type={type} value={value} 
+                onChange={e => onChange(e.target.value)}
+                placeholder={placeholder} 
+                className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl py-3.5 pl-12 pr-4 text-white placeholder:text-slate-700 focus:outline-none focus:border-blue-600 transition-all font-medium text-sm"
+            />
+        </div>
+    </div>
+);
 
 export default function OnboardingWizard() {
     const [step, setStep] = useState(1);
@@ -42,11 +60,21 @@ export default function OnboardingWizard() {
     // Form State
     const [formData, setFormData] = useState({
         displayName: '',
+        givenName: '',
+        surname: '',
         userPrincipalName: '',
         jobTitle: '',
+        companyName: 'Equinox Group Holdings, Inc.',
         department: '',
         officeLocation: 'Head Office',
-        tempPassword: `Welcome!${Math.floor(Math.random() * 1000)}`,
+        mobilePhone: '',
+        businessPhones: '',
+        streetAddress: '',
+        city: '',
+        state: '',
+        postalCode: '',
+        country: 'South Africa',
+        tempPassword: `Eqn!${Math.floor(100000 + Math.random() * 900000)}`,
         licenseSkus: [] as string[],
         checklist: {
             laptopIssued: false,
@@ -110,14 +138,14 @@ export default function OnboardingWizard() {
     };
 
     return (
-        <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-700">
+        <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-700 pb-20">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <h1 className="text-4xl font-black text-white tracking-tighter uppercase mb-2">
                         Digital <span className="text-blue-500">Onboarding</span>
                     </h1>
-                    <p className="text-slate-500 font-medium tracking-tight">Provisioning new talent to Microsoft Entra ID & Equinox Group Holdings.</p>
+                    <p className="text-slate-500 font-medium tracking-tight">Provisioning new talent with full Entra ID profile synchronization.</p>
                 </div>
                 
                 {/* Progress Indicators */}
@@ -135,93 +163,70 @@ export default function OnboardingWizard() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
                 {/* Main Wizard Card */}
-                <div className="lg:col-span-8 bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+                <div className="xl:col-span-9 bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-8 opacity-5">
                         <UserPlus size={120} className="text-white" />
                     </div>
 
                     <div className="p-10 relative z-10">
                         <AnimatePresence mode="wait">
-                            {/* Step 1: Identity */}
+                            {/* Step 1: Identity & Profile (EXPANDED) */}
                             {step === 1 && (
                                 <motion.div 
                                     key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-                                    className="space-y-8"
+                                    className="space-y-10"
                                 >
                                     <div className="space-y-1">
-                                        <h2 className="text-2xl font-black text-white uppercase tracking-tight">Identity Profile</h2>
-                                        <p className="text-slate-500 text-sm">Capture the base Entra ID credentials.</p>
+                                        <h2 className="text-2xl font-black text-white uppercase tracking-tight">Identity & Profile</h2>
+                                        <p className="text-slate-500 text-sm">Capture advanced Entra ID details for the new account.</p>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Full Name</label>
-                                            <div className="relative group">
-                                                <UserCircle className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-blue-500 transition-colors" size={20} />
-                                                <input 
-                                                    type="text" value={formData.displayName} 
-                                                    onChange={e => setFormData({...formData, displayName: e.target.value})}
-                                                    placeholder="John Smith" 
-                                                    className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-slate-700 focus:outline-none focus:border-blue-600 transition-all font-medium"
-                                                />
-                                            </div>
+                                    {/* SECTION: IDENTITY */}
+                                    <div className="space-y-6">
+                                        <h3 className="text-xs font-black text-blue-500 uppercase tracking-[0.3em] border-b border-slate-800 pb-3">Identity</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                                            <OnboardingInput label="Full Display Name" icon={UserCircle} value={formData.displayName} onChange={(v:any) => setFormData({...formData, displayName: v})} placeholder="e.g. Johnathan Smith" />
+                                            <OnboardingInput label="Work Email (UPN)" icon={Mail} value={formData.userPrincipalName} onChange={(v:any) => setFormData({...formData, userPrincipalName: v})} placeholder="john.smith@domain.com" />
+                                            <OnboardingInput label="First Name" icon={UserCircle} value={formData.givenName} onChange={(v:any) => setFormData({...formData, givenName: v})} placeholder="Johnathan" />
+                                            <OnboardingInput label="Last Name" icon={UserCircle} value={formData.surname} onChange={(v:any) => setFormData({...formData, surname: v})} placeholder="Smith" />
                                         </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Work Email (UPN)</label>
-                                            <div className="relative group">
-                                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-blue-500 transition-colors" size={20} />
-                                                <input 
-                                                    type="email" value={formData.userPrincipalName} 
-                                                    onChange={e => setFormData({...formData, userPrincipalName: e.target.value})}
-                                                    placeholder="john.smith@equinox.com" 
-                                                    className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-slate-700 focus:outline-none focus:border-blue-600 transition-all font-medium"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Job Title</label>
-                                            <div className="relative group">
-                                                <Zap className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-blue-500 transition-colors" size={20} />
-                                                <input 
-                                                    type="text" value={formData.jobTitle} 
-                                                    onChange={e => setFormData({...formData, jobTitle: e.target.value})}
-                                                    placeholder="Senior Engineer" 
-                                                    className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-slate-700 focus:outline-none focus:border-blue-600 transition-all font-medium"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Department</label>
-                                            <div className="relative group">
-                                                <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-blue-500 transition-colors" size={20} />
-                                                <input 
-                                                    type="text" value={formData.department} 
-                                                    onChange={e => setFormData({...formData, department: e.target.value})}
-                                                    placeholder="Information Technology" 
-                                                    className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-slate-700 focus:outline-none focus:border-blue-600 transition-all font-medium"
-                                                />
+                                    </div>
+
+                                    {/* SECTION: JOB INFORMATION */}
+                                    <div className="space-y-6">
+                                        <h3 className="text-xs font-black text-blue-500 uppercase tracking-[0.3em] border-b border-slate-800 pb-3">Job Information</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                                            <OnboardingInput label="Job Title" icon={Zap} value={formData.jobTitle} onChange={(v:any) => setFormData({...formData, jobTitle: v})} placeholder="Senior Systems Architect" />
+                                            <OnboardingInput label="Company Name" icon={Globe} value={formData.companyName} onChange={(v:any) => setFormData({...formData, companyName: v})} placeholder="Equinox Group Holdings" />
+                                            <OnboardingInput label="Department" icon={Building2} value={formData.department} onChange={(v:any) => setFormData({...formData, department: v})} placeholder="Engineering" />
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Office Location</label>
+                                                <select 
+                                                    value={formData.officeLocation} 
+                                                    onChange={e => setFormData({...formData, officeLocation: e.target.value})}
+                                                    className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl py-3.5 px-4 text-white focus:outline-none focus:border-blue-600 transition-all font-medium text-sm appearance-none"
+                                                >
+                                                    {REGIONS.map(r => <option key={r} value={r} className="bg-slate-900">{r}</option>)}
+                                                </select>
                                             </div>
                                         </div>
                                     </div>
-                                    
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Region / Office Location</label>
-                                        <div className="flex flex-wrap gap-4">
-                                            {REGIONS.map(r => (
-                                                <button 
-                                                    key={r}
-                                                    onClick={() => setFormData({...formData, officeLocation: r})}
-                                                    className={`px-6 py-3 rounded-xl border text-xs font-black uppercase tracking-tight transition-all ${
-                                                        formData.officeLocation === r 
-                                                            ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-900/20' 
-                                                            : 'bg-slate-950/50 border-slate-800 text-slate-500 hover:border-slate-700'
-                                                    }`}
-                                                >
-                                                    {r}
-                                                </button>
-                                            ))}
+
+                                    {/* SECTION: CONTACT & ADDRESS */}
+                                    <div className="space-y-6">
+                                        <h3 className="text-xs font-black text-blue-500 uppercase tracking-[0.3em] border-b border-slate-800 pb-3">Contact & Address</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                                            <OnboardingInput label="Mobile Phone" icon={Phone} value={formData.mobilePhone} onChange={(v:any) => setFormData({...formData, mobilePhone: v})} placeholder="+27 82 000 0000" />
+                                            <OnboardingInput label="Business Phone" icon={Phone} value={formData.businessPhones} onChange={(v:any) => setFormData({...formData, businessPhones: v})} placeholder="+27 11 000 0000" />
+                                            <div className="col-span-full">
+                                                <OnboardingInput label="Street Address" icon={Home} value={formData.streetAddress} onChange={(v:any) => setFormData({...formData, streetAddress: v})} placeholder="123 Example Street, Sandton" />
+                                            </div>
+                                            <OnboardingInput label="City" icon={MapPin} value={formData.city} onChange={(v:any) => setFormData({...formData, city: v})} placeholder="Johannesburg" />
+                                            <OnboardingInput label="State / Province" icon={MapPin} value={formData.state} onChange={(v:any) => setFormData({...formData, state: v})} placeholder="Gauteng" />
+                                            <OnboardingInput label="Postal Code" icon={Settings} value={formData.postalCode} onChange={(v:any) => setFormData({...formData, postalCode: v})} placeholder="2196" />
+                                            <OnboardingInput label="Country" icon={Globe} value={formData.country} onChange={(v:any) => setFormData({...formData, country: v})} placeholder="South Africa" />
                                         </div>
                                     </div>
                                 </motion.div>
@@ -349,10 +354,18 @@ export default function OnboardingWizard() {
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-8 text-left">
+                                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-8 text-left">
                                             <div>
-                                                <div className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-2">Role Detail</div>
+                                                <div className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-2">Legal Identity</div>
+                                                <div className="text-sm text-slate-300 font-medium">{formData.givenName} {formData.surname}</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-2">Role & Org</div>
                                                 <div className="text-sm text-slate-300 font-medium">{formData.jobTitle} • {formData.department}</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-2">Contact</div>
+                                                <div className="text-sm text-slate-300 font-medium">{formData.mobilePhone || 'No Phone Set'}</div>
                                             </div>
                                             <div>
                                                 <div className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-2">Password (Temporary)</div>
@@ -364,7 +377,7 @@ export default function OnboardingWizard() {
                                             </div>
                                             <div>
                                                 <div className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-2">Location</div>
-                                                <div className="text-sm text-slate-300 font-medium">{formData.officeLocation}</div>
+                                                <div className="text-sm text-slate-300 font-medium">{formData.officeLocation} ({formData.city})</div>
                                             </div>
                                         </div>
 
@@ -451,7 +464,7 @@ export default function OnboardingWizard() {
                 </div>
 
                 {/* Right Sidebar: Context Panel */}
-                <div className="lg:col-span-4 space-y-6">
+                <div className="xl:col-span-3 space-y-6">
                     <div className="bg-blue-600 p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform duration-500">
                             <Shield size={64} className="text-white" />
@@ -492,6 +505,13 @@ export default function OnboardingWizard() {
             <style jsx global>{`
                 input[type="datetime-local"]::-webkit-calendar-picker-indicator {
                     filter: invert(1);
+                }
+                select {
+                    appearance: none;
+                    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23475569'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+                    background-repeat: no-repeat;
+                    background-position: right 1rem center;
+                    background-size: 1.25rem;
                 }
             `}</style>
         </div>
