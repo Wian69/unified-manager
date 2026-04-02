@@ -161,6 +161,28 @@ export default function OOOManagementPage() {
         localStorage.removeItem('ooo_bulk_draft');
     };
 
+    const updateInternalMessage = (html: string) => {
+        if (!mailboxSettings) return;
+        setMailboxSettings({
+            ...mailboxSettings,
+            automaticRepliesSetting: {
+                ...mailboxSettings.automaticRepliesSetting,
+                internalReplyMessage: html
+            }
+        });
+    };
+
+    const updateExternalMessage = (html: string) => {
+        if (!mailboxSettings) return;
+        setMailboxSettings({
+            ...mailboxSettings,
+            automaticRepliesSetting: {
+                ...mailboxSettings.automaticRepliesSetting,
+                externalReplyMessage: html
+            }
+        });
+    };
+
     // Persistence - Save Draft in Bulk Mode
     useEffect(() => {
         if (isBulkMode && mailboxSettings?.automaticRepliesSetting) {
@@ -237,8 +259,16 @@ export default function OOOManagementPage() {
 
     const handleSaveOOO = async () => {
         if (selectedUserIds.length === 0 || !mailboxSettings) return;
-        const internalHtml = internalEditorRef.current?.innerHTML || '';
-        const externalHtml = externalEditorRef.current?.innerHTML || '';
+        
+        // Use the state-driven messages as the base for the sync (prevents race conditions)
+        let internalHtml = mailboxSettings.automaticRepliesSetting.internalReplyMessage || '';
+        let externalHtml = mailboxSettings.automaticRepliesSetting.externalReplyMessage || '';
+        
+        // AUTO-REPAIR: If in Bulk Mode, automatically convert any accidental 'Amanda Law' back to tokens
+        if (isBulkMode) {
+            internalHtml = internalHtml.replace(/Amanda Law/gi, '{Name}');
+            externalHtml = externalHtml.replace(/Amanda Law/gi, '{Name}');
+        }
         
         // Date Validation for Scheduling
         if (mailboxSettings.automaticRepliesSetting.status === 'scheduled') {
@@ -251,13 +281,6 @@ export default function OOOManagementPage() {
         }
 
         setSavingMailbox(true);
-        
-        // Safety Check: Detect 'Amanda Law' in Bulk Mode Template
-        if (isBulkMode && (internalHtml.toLowerCase().includes('amanda') || externalHtml.toLowerCase().includes('amanda'))) {
-            setSavingMailbox(false);
-            alert("SAFETY ALERT: We detected 'Amanda Law' in your current message while in Bulk Mode. This would sync her name to everyone. \n\nPlease use the '{Name}' token instead. Clicking 'Safety Reset' will fix this for you.");
-            return;
-        }
 
         setSyncProgress({ current: 0, total: selectedUserIds.length });
         let successCount = 0;
@@ -317,7 +340,7 @@ export default function OOOManagementPage() {
 
     return (
         <div className="flex h-[calc(100vh-8rem)] -m-8 bg-slate-950 overflow-hidden relative">
-            <div className="absolute top-2 right-2 text-[8px] font-black text-slate-500 pointer-events-none z-50">VER-1.4.3-DEPLOY-STABLE</div>
+            <div className="absolute top-2 right-2 text-[8px] font-black text-slate-500 pointer-events-none z-50">VER-1.4.3-STABLE</div>
 
             {/* Sidebar */}
             <div className="w-80 border-r border-slate-900 bg-slate-950 flex flex-col shrink-0">
@@ -449,6 +472,7 @@ export default function OOOManagementPage() {
                                             id="internal"
                                             label="Internal Message"
                                             onCommand={applyCommand}
+                                            onChange={updateInternalMessage}
                                             ref={internalEditorRef}
                                         />
                                         {isBulkMode && (
@@ -469,6 +493,7 @@ export default function OOOManagementPage() {
                                             id="external"
                                             label="External Message"
                                             onCommand={applyCommand}
+                                            onChange={updateExternalMessage}
                                             ref={externalEditorRef}
                                         />
                                         {isBulkMode && (

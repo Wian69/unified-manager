@@ -7,6 +7,7 @@ interface RichEditorProps {
     id: string;
     label: string;
     onCommand: (cmd: string, val: string) => void;
+    onChange?: (html: string) => void;
 }
 
 const fonts = ['Calibre, sans-serif', 'Inter, sans-serif', 'Roboto, sans-serif', 'Arial, sans-serif', 'Times New Roman, serif', 'Courier New, monospace'];
@@ -22,7 +23,7 @@ const ToolbarButton = ({ onClick, children }: any) => (
     </button>
 );
 
-const RichEditor = forwardRef<HTMLDivElement, RichEditorProps>(({ id, label, onCommand }, ref) => {
+const RichEditor = forwardRef<HTMLDivElement, RichEditorProps>(({ id, label, onCommand, onChange }, ref) => {
     return (
         <div className="space-y-3">
             <label className="text-xs font-black uppercase tracking-widest text-slate-500 ml-1">{label}</label>
@@ -61,6 +62,7 @@ const RichEditor = forwardRef<HTMLDivElement, RichEditorProps>(({ id, label, onC
                     ref={ref}
                     contentEditable
                     suppressContentEditableWarning
+                    onInput={(e) => onChange?.(e.currentTarget.innerHTML)}
                     onPaste={(e) => e.stopPropagation()}
                     className="w-full min-h-[180px] max-h-[400px] text-slate-200 text-sm p-6 outline-none overflow-y-auto prose prose-invert prose-sm"
                 />
