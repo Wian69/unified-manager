@@ -241,7 +241,15 @@ export default function OOOManagementPage() {
                         <div key={user.id} onClick={() => toggleUserSelection(user.id)} className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer ${selectedUserIds.includes(user.id) ? 'bg-blue-600/10 border border-blue-600/30' : 'hover:bg-slate-900 border border-transparent'}`}>
                              <div className={`shrink-0 w-5 h-5 rounded-md border flex items-center justify-center ${selectedUserIds.includes(user.id) ? 'bg-blue-600 border-blue-600 text-white' : 'bg-slate-950 border-slate-800 text-transparent'}`}><Check size={12} strokeWidth={4} /></div>
                              <div className="flex-1 min-w-0">
-                                <div className="text-sm font-bold truncate text-slate-200">{user.displayName}</div>
+                                <div className="flex items-center justify-between">
+                                    <div className="text-sm font-bold truncate text-slate-200">{user.displayName}</div>
+                                    {oooStatusMap[user.id] && oooStatusMap[user.id] !== 'disabled' && (
+                                        <div className="flex items-center gap-1">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                            <span className="text-[7px] font-black uppercase text-emerald-500 tracking-tighter">Active</span>
+                                        </div>
+                                    )}
+                                </div>
                                 <div className="text-[9px] uppercase tracking-tight font-black text-slate-500">{user.jobTitle || 'No Title'}</div>
                              </div>
                         </div>
