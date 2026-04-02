@@ -108,6 +108,25 @@ export default function OOOManagementPage() {
             .catch(() => setLoadingMailbox(false));
     }, [activeUserId, isBulkMode]);
 
+    const getWindowsTimeZone = () => {
+        const iana = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const mapping: Record<string, string> = {
+            'Africa/Johannesburg': 'South Africa Standard Time',
+            'Europe/London': 'GMT Standard Time',
+            'Europe/Dublin': 'GMT Standard Time',
+            'Europe/Paris': 'Romance Standard Time',
+            'Europe/Berlin': 'W. Europe Standard Time',
+            'Europe/Amsterdam': 'W. Europe Standard Time',
+            'America/New_York': 'Eastern Standard Time',
+            'America/Chicago': 'Central Standard Time',
+            'America/Denver': 'Mountain Standard Time',
+            'America/Los_Angeles': 'Pacific Standard Time',
+            'Australia/Sydney': 'AUS Eastern Standard Time',
+            'Asia/Dubai': 'Arabian Standard Time'
+        };
+        return mapping[iana] || 'UTC';
+    };
+
     useEffect(() => {
         if (isBulkMode) {
             // If we just entered bulk mode, or were in single mode, provide a template
@@ -119,14 +138,16 @@ export default function OOOManagementPage() {
                 // NEW: Clear the draft when entering bulk mode for the first time
                 localStorage.removeItem('ooo_bulk_draft');
 
+                const tz = getWindowsTimeZone();
+
                 return {
                     isTemplate: true,
                     automaticRepliesSetting: {
                         status: 'disabled',
                         internalReplyMessage: 'I am currently out of the office and will return shortly.\n\nRegards,\n{Name}',
                         externalReplyMessage: 'Thank you for your email. I am currently out of the office with limited access to email.\n\nFor urgent matters, please contact {Name} at {Mobile}.\n\nKind regards,\n{Name}',
-                        scheduledStartDateTime: { dateTime: new Date().toISOString().split('.')[0] + '.0000000', timeZone: 'UTC' },
-                        scheduledEndDateTime: { dateTime: new Date(Date.now() + 86400000).toISOString().split('.')[0] + '.0000000', timeZone: 'UTC' }
+                        scheduledStartDateTime: { dateTime: new Date().toISOString().split('.')[0] + '.0000000', timeZone: tz },
+                        scheduledEndDateTime: { dateTime: new Date(Date.now() + 86400000).toISOString().split('.')[0] + '.0000000', timeZone: tz }
                     }
                 };
             });
@@ -229,6 +250,7 @@ export default function OOOManagementPage() {
         
         if (config.status === 'scheduled') {
             const now = new Date().getTime();
+            // Important: We're comparing epoch, so it's mostly safe regardless of tz
             const start = new Date(config.scheduledStartDateTime?.dateTime).getTime();
             const end = new Date(config.scheduledEndDateTime?.dateTime).getTime();
             
@@ -302,6 +324,7 @@ export default function OOOManagementPage() {
                 .replace(/{Mobile( Phone)?}/gi, mobile);
 
             // Construct the exact OOO payload
+            const tz = getWindowsTimeZone();
             const oooPayload = {
                 automaticRepliesSetting: {
                     status: mailboxSettings.automaticRepliesSetting.status,
@@ -309,11 +332,11 @@ export default function OOOManagementPage() {
                     externalReplyMessage: personalizedExternal,
                     scheduledStartDateTime: {
                         dateTime: mailboxSettings.automaticRepliesSetting.scheduledStartDateTime?.dateTime?.split('.')[0] + '.0000000',
-                        timeZone: 'UTC'
+                        timeZone: tz
                     },
                     scheduledEndDateTime: {
                         dateTime: mailboxSettings.automaticRepliesSetting.scheduledEndDateTime?.dateTime?.split('.')[0] + '.0000000',
-                        timeZone: 'UTC'
+                        timeZone: tz
                     }
                 }
             };
@@ -459,7 +482,7 @@ export default function OOOManagementPage() {
                                                 <input 
                                                     type="datetime-local" 
                                                     value={mailboxSettings.automaticRepliesSetting?.scheduledStartDateTime?.dateTime?.slice(0, 16) || ''} 
-                                                    onChange={(e) => setMailboxSettings({...mailboxSettings, automaticRepliesSetting: {...mailboxSettings.automaticRepliesSetting, scheduledStartDateTime: {dateTime: e.target.value + ':00.0000000', timeZone: 'UTC'}}})} 
+                                                    onChange={(e) => setMailboxSettings({...mailboxSettings, automaticRepliesSetting: {...mailboxSettings.automaticRepliesSetting, scheduledStartDateTime: {dateTime: e.target.value + ':00.0000000', timeZone: getWindowsTimeZone()}}})} 
                                                     className="w-full bg-slate-900 border border-slate-800 text-white text-sm p-3 rounded-xl" 
                                                 />
                                             </div>
@@ -468,7 +491,7 @@ export default function OOOManagementPage() {
                                                 <input 
                                                     type="datetime-local" 
                                                     value={mailboxSettings.automaticRepliesSetting?.scheduledEndDateTime?.dateTime?.slice(0, 16) || ''} 
-                                                    onChange={(e) => setMailboxSettings({...mailboxSettings, automaticRepliesSetting: {...mailboxSettings.automaticRepliesSetting, scheduledEndDateTime: {dateTime: e.target.value + ':00.0000000', timeZone: 'UTC'}}})} 
+                                                    onChange={(e) => setMailboxSettings({...mailboxSettings, automaticRepliesSetting: {...mailboxSettings.automaticRepliesSetting, scheduledEndDateTime: {dateTime: e.target.value + ':00.0000000', timeZone: getWindowsTimeZone()}}})} 
                                                     className="w-full bg-slate-900 border border-slate-800 text-white text-sm p-3 rounded-xl" 
                                                 />
                                             </div>
