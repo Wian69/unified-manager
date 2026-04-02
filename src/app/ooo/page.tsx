@@ -116,6 +116,9 @@ export default function OOOManagementPage() {
                 if (prev && !isBulkMode) return prev; // Should not happen with logic above
                 if (prev && prev.isTemplate) return prev; // Already a template
 
+                // NEW: Clear the draft when entering bulk mode for the first time
+                localStorage.removeItem('ooo_bulk_draft');
+
                 return {
                     isTemplate: true,
                     automaticRepliesSetting: {
@@ -198,6 +201,18 @@ export default function OOOManagementPage() {
         }
         
         return config.status; // already 'alwaysEnabled'
+    };
+
+    const insertToken = (target: 'internal' | 'external', token: string) => {
+        const ref = target === 'internal' ? internalEditorRef : externalEditorRef;
+        if (!ref.current) return;
+        ref.current.focus();
+        try {
+            document.execCommand('insertText', false, token);
+        } catch {
+            // Fallback for older browsers or complex ranges
+            ref.current.innerHTML += token;
+        }
     };
 
     const toggleUserSelection = (id: string) => {
@@ -401,23 +416,45 @@ export default function OOOManagementPage() {
                                 </div>
 
                                 <div className="space-y-10">
-                                    {/* INTERNAL EDITOR - DYNAMICALLY MOUNTED CLIENT-SIDE ONLY */}
-                                    <OOORichEditor 
-                                        key={`int-${activeUserId || 'bulk'}`}
-                                        id="internal"
-                                        label="Internal Message"
-                                        onCommand={applyCommand}
-                                        ref={internalEditorRef}
-                                    />
+                                    <div className="space-y-2">
+                                        <OOORichEditor 
+                                            key={`int-${activeUserId || 'bulk'}`}
+                                            id="internal"
+                                            label="Internal Message"
+                                            onCommand={applyCommand}
+                                            ref={internalEditorRef}
+                                        />
+                                        {isBulkMode && (
+                                            <div className="flex gap-4 ml-2">
+                                                <button onClick={() => insertToken('internal', '{Name}')} className="text-[9px] font-black uppercase text-blue-500 hover:text-white transition-colors flex items-center gap-1 bg-blue-500/10 px-2 py-1 rounded-md border border-blue-500/20">
+                                                    <UserCircle size={10} /> Insert {'{Name}'}
+                                                </button>
+                                                <button onClick={() => insertToken('internal', '{Mobile}')} className="text-[9px] font-black uppercase text-emerald-500 hover:text-white transition-colors flex items-center gap-1 bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/20">
+                                                    <Smartphone size={10} /> Insert {'{Mobile}'}
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
                                     
-                                    {/* EXTERNAL EDITOR - DYNAMICALLY MOUNTED CLIENT-SIDE ONLY */}
-                                    <OOORichEditor 
-                                        key={`ext-${activeUserId || 'bulk'}`}
-                                        id="external"
-                                        label="External Message"
-                                        onCommand={applyCommand}
-                                        ref={externalEditorRef}
-                                    />
+                                    <div className="space-y-2">
+                                        <OOORichEditor 
+                                            key={`ext-${activeUserId || 'bulk'}`}
+                                            id="external"
+                                            label="External Message"
+                                            onCommand={applyCommand}
+                                            ref={externalEditorRef}
+                                        />
+                                        {isBulkMode && (
+                                            <div className="flex gap-4 ml-2">
+                                                <button onClick={() => insertToken('external', '{Name}')} className="text-[9px] font-black uppercase text-blue-500 hover:text-white transition-colors flex items-center gap-1 bg-blue-500/10 px-2 py-1 rounded-md border border-blue-500/20">
+                                                    <UserCircle size={10} /> Insert {'{Name}'}
+                                                </button>
+                                                <button onClick={() => insertToken('external', '{Mobile}')} className="text-[9px] font-black uppercase text-emerald-500 hover:text-white transition-colors flex items-center gap-1 bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/20">
+                                                    <Smartphone size={10} /> Insert {'{Mobile}'}
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         ) : null}
