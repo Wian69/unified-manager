@@ -109,9 +109,13 @@ export default function SignaturePad({ onSave, label }: SignaturePadProps) {
                 <button 
                     onClick={clear}
                     disabled={isEmpty}
-                    className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${isEmpty ? 'text-slate-700 cursor-not-allowed' : 'text-rose-500 hover:bg-rose-500/10'}`}
+                    className={`px-4 py-2 text-[10px] sm:text-[11px] font-black uppercase tracking-widest rounded-xl transition-all border ${
+                        isEmpty 
+                        ? 'text-slate-700 bg-slate-900/50 border-slate-800 cursor-not-allowed' 
+                        : 'text-rose-500 bg-rose-500/5 border-rose-500/20 hover:bg-rose-500/10 active:scale-95'
+                    }`}
                 >
-                    Clear
+                    Clear Signature
                 </button>
             </div>
             <div className="relative group">

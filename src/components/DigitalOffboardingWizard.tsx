@@ -531,7 +531,7 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
             </div>
 
             {/* Content Area */}
-            <div className="flex-1 overflow-y-auto px-4 md:px-12 py-8 pb-32">
+            <div className="flex-1 overflow-y-auto px-4 md:px-12 py-8 pb-40 md:pb-32">
                 <div className="max-w-2xl mx-auto space-y-10">
                     
                     {/* STEP 1: POLICY REVIEW */}
@@ -544,7 +544,8 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                                 <p className="text-xs text-blue-300/60 leading-relaxed italic">Review the core offboarding requirements with the employee.</p>
                             </div>
                             
-                            <div className="bg-white p-12 rounded-2xl shadow-xl text-slate-900 text-[11pt] space-y-8 leading-relaxed font-sans max-h-[70vh] overflow-y-auto">
+                            
+                            <div className="bg-white p-6 sm:p-10 md:p-12 rounded-2xl shadow-xl text-slate-900 text-[11pt] space-y-8 leading-relaxed font-sans max-h-[70vh] overflow-y-auto">
                                 <div className="flex justify-between items-start border-b-2 border-slate-900 pb-6 mb-8">
                                     <img src="/Equinox-Logo-Transparent.png" alt="Logo" className="h-16 w-auto" />
                                     <h4 className="text-xl font-bold uppercase tracking-tight">IT Offboarding Policy</h4>
@@ -803,7 +804,7 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                                 </h4>
                                 
                                 <div className="space-y-4">
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="space-y-1">
                                             <label className="text-[10px] text-slate-500 font-bold uppercase">Shared Mailbox Created</label>
                                             <input 
@@ -824,7 +825,7 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="space-y-1">
                                             <label className="text-[10px] text-slate-500 font-bold uppercase">Device Login PIN</label>
                                             <input 
