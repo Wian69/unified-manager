@@ -301,17 +301,28 @@ export default function OOOManagementPage() {
                 .replace(/{Name}/gi, name)
                 .replace(/{Mobile( Phone)?}/gi, mobile);
 
+            // Construct the exact OOO payload
+            const oooPayload = {
+                automaticRepliesSetting: {
+                    status: mailboxSettings.automaticRepliesSetting.status,
+                    internalReplyMessage: personalizedInternal,
+                    externalReplyMessage: personalizedExternal,
+                    scheduledStartDateTime: {
+                        dateTime: mailboxSettings.automaticRepliesSetting.scheduledStartDateTime?.dateTime?.split('.')[0] + '.0000000',
+                        timeZone: 'UTC'
+                    },
+                    scheduledEndDateTime: {
+                        dateTime: mailboxSettings.automaticRepliesSetting.scheduledEndDateTime?.dateTime?.split('.')[0] + '.0000000',
+                        timeZone: 'UTC'
+                    }
+                }
+            };
+
             try {
                 const res = await fetch(`/api/users/${id}/mailbox`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        automaticRepliesSetting: {
-                            ...mailboxSettings.automaticRepliesSetting,
-                            internalReplyMessage: personalizedInternal,
-                            externalReplyMessage: personalizedExternal
-                        }
-                    }),
+                    body: JSON.stringify(oooPayload),
                 });
                 if (res.ok) {
                     successCount++;
@@ -447,7 +458,7 @@ export default function OOOManagementPage() {
                                                 <label className="text-xs font-bold text-slate-500 uppercase">Start</label>
                                                 <input 
                                                     type="datetime-local" 
-                                                    value={mailboxSettings.automaticRepliesSetting?.scheduledStartDateTime?.dateTime?.split('.')[0]?.slice(0, 16) || ''} 
+                                                    value={mailboxSettings.automaticRepliesSetting?.scheduledStartDateTime?.dateTime?.slice(0, 16) || ''} 
                                                     onChange={(e) => setMailboxSettings({...mailboxSettings, automaticRepliesSetting: {...mailboxSettings.automaticRepliesSetting, scheduledStartDateTime: {dateTime: e.target.value + ':00.0000000', timeZone: 'UTC'}}})} 
                                                     className="w-full bg-slate-900 border border-slate-800 text-white text-sm p-3 rounded-xl" 
                                                 />
@@ -456,7 +467,7 @@ export default function OOOManagementPage() {
                                                 <label className="text-xs font-bold text-slate-500 uppercase">End</label>
                                                 <input 
                                                     type="datetime-local" 
-                                                    value={mailboxSettings.automaticRepliesSetting?.scheduledEndDateTime?.dateTime?.split('.')[0]?.slice(0, 16) || ''} 
+                                                    value={mailboxSettings.automaticRepliesSetting?.scheduledEndDateTime?.dateTime?.slice(0, 16) || ''} 
                                                     onChange={(e) => setMailboxSettings({...mailboxSettings, automaticRepliesSetting: {...mailboxSettings.automaticRepliesSetting, scheduledEndDateTime: {dateTime: e.target.value + ':00.0000000', timeZone: 'UTC'}}})} 
                                                     className="w-full bg-slate-900 border border-slate-800 text-white text-sm p-3 rounded-xl" 
                                                 />

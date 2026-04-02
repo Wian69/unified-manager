@@ -31,6 +31,7 @@ export async function PATCH(
     const { id } = await params;
     try {
         const body = await request.json();
+        console.log(`[API] Updating Mailbox Settings for ${id}:`, JSON.stringify(body, null, 2));
         const client = getGraphClient();
         
         // Update automaticRepliesSetting
