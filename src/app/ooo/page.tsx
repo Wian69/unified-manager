@@ -159,12 +159,12 @@ export default function OOOManagementPage() {
             const mobile = u?.mobilePhone || (u?.businessPhones && u.businessPhones[0]) || 'No Mobile Registered';
             
             const personalizedInternal = internalHtml
-                .replace(/{Name}/g, name)
-                .replace(/{Mobile}/g, mobile);
+                .replace(/{Name}/gi, name)
+                .replace(/{Mobile( Phone)?}/gi, mobile);
                 
             const personalizedExternal = externalHtml
-                .replace(/{Name}/g, name)
-                .replace(/{Mobile}/g, mobile);
+                .replace(/{Name}/gi, name)
+                .replace(/{Mobile( Phone)?}/gi, mobile);
 
             try {
                 const res = await fetch(`/api/users/${id}/mailbox`, {
