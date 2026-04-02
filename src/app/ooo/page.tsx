@@ -146,6 +146,17 @@ export default function OOOManagementPage() {
         if (selectedUserIds.length === 0 || !mailboxSettings) return;
         const internalHtml = internalEditorRef.current?.innerHTML || '';
         const externalHtml = externalEditorRef.current?.innerHTML || '';
+        
+        // Date Validation for Scheduling
+        if (mailboxSettings.automaticRepliesSetting.status === 'scheduled') {
+            const start = new Date(mailboxSettings.automaticRepliesSetting.scheduledStartDateTime.dateTime).getTime();
+            const end = new Date(mailboxSettings.automaticRepliesSetting.scheduledEndDateTime.dateTime).getTime();
+            if (end <= start) {
+                alert("Error: Scheduled End Date must be after the Start Date.");
+                return;
+            }
+        }
+
         setSavingMailbox(true);
         setSyncProgress({ current: 0, total: selectedUserIds.length });
         let successCount = 0;
@@ -245,8 +256,10 @@ export default function OOOManagementPage() {
                                     <div className="text-sm font-bold truncate text-slate-200">{user.displayName}</div>
                                     {oooStatusMap[user.id] && oooStatusMap[user.id] !== 'disabled' && (
                                         <div className="flex items-center gap-1">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                            <span className="text-[7px] font-black uppercase text-emerald-500 tracking-tighter">Active</span>
+                                            <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${oooStatusMap[user.id] === 'scheduled' ? 'bg-indigo-500' : 'bg-emerald-500'}`} />
+                                            <span className={`text-[7px] font-black uppercase tracking-tighter ${oooStatusMap[user.id] === 'scheduled' ? 'text-indigo-400' : 'text-emerald-500'}`}>
+                                                {oooStatusMap[user.id] === 'scheduled' ? 'Scheduled' : 'Active'}
+                                            </span>
                                         </div>
                                     )}
                                 </div>
@@ -301,8 +314,24 @@ export default function OOOManagementPage() {
                                     </div>
                                     {mailboxSettings.automaticRepliesSetting?.status === 'scheduled' && (
                                         <div className="p-6 bg-slate-950 border border-slate-800 rounded-2xl grid grid-cols-2 gap-6">
-                                            <div className="space-y-2"><label className="text-xs font-bold text-slate-500 uppercase">Start</label><input type="datetime-local" value={mailboxSettings.automaticRepliesSetting?.scheduledStartDateTime?.dateTime?.split('.')[0] || ''} onChange={(e) => setMailboxSettings({...mailboxSettings, automaticRepliesSetting: {...mailboxSettings.automaticRepliesSetting, scheduledStartDateTime: {dateTime: e.target.value, timeZone: 'UTC'}}})} className="w-full bg-slate-900 border border-slate-800 text-white text-sm p-3 rounded-xl" /></div>
-                                            <div className="space-y-2"><label className="text-xs font-bold text-slate-500 uppercase">End</label><input type="datetime-local" value={mailboxSettings.automaticRepliesSetting?.scheduledEndDateTime?.dateTime?.split('.')[0] || ''} onChange={(e) => setMailboxSettings({...mailboxSettings, automaticRepliesSetting: {...mailboxSettings.automaticRepliesSetting, scheduledEndDateTime: {dateTime: e.target.value, timeZone: 'UTC'}}})} className="w-full bg-slate-900 border border-slate-800 text-white text-sm p-3 rounded-xl" /></div>
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-bold text-slate-500 uppercase">Start</label>
+                                                <input 
+                                                    type="datetime-local" 
+                                                    value={mailboxSettings.automaticRepliesSetting?.scheduledStartDateTime?.dateTime?.split('.')[0]?.slice(0, 16) || ''} 
+                                                    onChange={(e) => setMailboxSettings({...mailboxSettings, automaticRepliesSetting: {...mailboxSettings.automaticRepliesSetting, scheduledStartDateTime: {dateTime: e.target.value + ':00.0000000', timeZone: 'UTC'}}})} 
+                                                    className="w-full bg-slate-900 border border-slate-800 text-white text-sm p-3 rounded-xl" 
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-bold text-slate-500 uppercase">End</label>
+                                                <input 
+                                                    type="datetime-local" 
+                                                    value={mailboxSettings.automaticRepliesSetting?.scheduledEndDateTime?.dateTime?.split('.')[0]?.slice(0, 16) || ''} 
+                                                    onChange={(e) => setMailboxSettings({...mailboxSettings, automaticRepliesSetting: {...mailboxSettings.automaticRepliesSetting, scheduledEndDateTime: {dateTime: e.target.value + ':00.0000000', timeZone: 'UTC'}}})} 
+                                                    className="w-full bg-slate-900 border border-slate-800 text-white text-sm p-3 rounded-xl" 
+                                                />
+                                            </div>
                                         </div>
                                     )}
                                 </div>
