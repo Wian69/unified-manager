@@ -28,6 +28,7 @@ interface User {
     userPrincipalName: string;
     jobTitle?: string;
     officeLocation?: string;
+    mobilePhone?: string;
 }
 
 const REGIONS = ['All', 'Southern', 'Western', 'Northern', 'Eastern'];
@@ -148,7 +149,21 @@ export default function OOOManagementPage() {
         let successCount = 0;
         for (let i = 0; i < selectedUserIds.length; i++) {
             const id = selectedUserIds[i];
+            const u = users.find(user => user.id === id);
             setSyncProgress({ current: i + 1, total: selectedUserIds.length });
+            
+            // Token Replacement Logic
+            const name = u?.displayName || '';
+            const mobile = u?.mobilePhone || 'N/A';
+            
+            const personalizedInternal = internalHtml
+                .replace(/{Name}/g, name)
+                .replace(/{Mobile}/g, mobile);
+                
+            const personalizedExternal = externalHtml
+                .replace(/{Name}/g, name)
+                .replace(/{Mobile}/g, mobile);
+
             try {
                 const res = await fetch(`/api/users/${id}/mailbox`, {
                     method: 'PATCH',
@@ -156,8 +171,8 @@ export default function OOOManagementPage() {
                     body: JSON.stringify({
                         automaticRepliesSetting: {
                             ...mailboxSettings.automaticRepliesSetting,
-                            internalReplyMessage: internalHtml,
-                            externalReplyMessage: externalHtml
+                            internalReplyMessage: personalizedInternal,
+                            externalReplyMessage: personalizedExternal
                         }
                     }),
                 });
