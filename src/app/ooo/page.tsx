@@ -109,18 +109,26 @@ export default function OOOManagementPage() {
     }, [activeUserId, isBulkMode]);
 
     useEffect(() => {
-        if (isBulkMode && !mailboxSettings) {
-            setMailboxSettings({
-                automaticRepliesSetting: {
-                    status: 'disabled',
-                    internalReplyMessage: '',
-                    externalReplyMessage: '',
-                    scheduledStartDateTime: { dateTime: new Date().toISOString(), timeZone: 'UTC' },
-                    scheduledEndDateTime: { dateTime: new Date(Date.now() + 86400000).toISOString(), timeZone: 'UTC' }
-                }
+        if (isBulkMode) {
+            // If we just entered bulk mode, or were in single mode, provide a template
+            // We only reset if the status matches a new session or is empty
+            setMailboxSettings((prev: any) => {
+                if (prev && !isBulkMode) return prev; // Should not happen with logic above
+                if (prev && prev.isTemplate) return prev; // Already a template
+
+                return {
+                    isTemplate: true,
+                    automaticRepliesSetting: {
+                        status: 'disabled',
+                        internalReplyMessage: 'I am currently out of the office and will return shortly.\n\nRegards,\n{Name}',
+                        externalReplyMessage: 'Thank you for your email. I am currently out of the office with limited access to email.\n\nFor urgent matters, please contact {Name} at {Mobile}.\n\nKind regards,\n{Name}',
+                        scheduledStartDateTime: { dateTime: new Date().toISOString().split('.')[0] + '.0000000', timeZone: 'UTC' },
+                        scheduledEndDateTime: { dateTime: new Date(Date.now() + 86400000).toISOString().split('.')[0] + '.0000000', timeZone: 'UTC' }
+                    }
+                };
             });
         }
-    }, [isBulkMode, mailboxSettings]);
+    }, [isBulkMode]);
 
     // Content Initialization (Client-Side Only)
     useEffect(() => {
