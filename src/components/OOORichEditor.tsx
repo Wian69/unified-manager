@@ -9,7 +9,7 @@ interface RichEditorProps {
     onCommand: (cmd: string, val: string) => void;
 }
 
-const fonts = ['Inter, sans-serif', 'Roboto, sans-serif', 'Arial, sans-serif', 'Times New Roman, serif', 'Courier New, monospace'];
+const fonts = ['Calibre, sans-serif', 'Inter, sans-serif', 'Roboto, sans-serif', 'Arial, sans-serif', 'Times New Roman, serif', 'Courier New, monospace'];
 const fontSizes = ['10pt', '11pt', '12pt', '14pt', '16pt', '18pt', '20pt'];
 
 const ToolbarButton = ({ onClick, children }: any) => (
