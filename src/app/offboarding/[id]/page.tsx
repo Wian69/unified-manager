@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, use, useRef } from "react";
-import { ArrowLeft, RefreshCw, ShieldAlert, FileText, Activity, Trash2, User, ExternalLink, UploadCloud, ClipboardList, Smartphone, ChevronRight } from "lucide-react";
+import { ArrowLeft, RefreshCw, ShieldAlert, FileText, Activity, Trash2, User, ExternalLink, UploadCloud, ClipboardList, Smartphone, ChevronRight, Printer, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import SharePointDeletionsModule from "@/components/SharePointDeletionsModule";
 import EmailTraceModule from "@/components/EmailTraceModule";
@@ -232,6 +232,27 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
                                 * Both documents are required to continue archival.
                             </p>
 
+                            {/* Print Helpers */}
+                            <div className="flex flex-col gap-2 p-4 bg-slate-950/50 rounded-2xl border border-slate-800">
+                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center mb-1">Need the documents?</p>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <Link 
+                                        href={`/offboarding/policy?user=${id}`} 
+                                        target="_blank"
+                                        className="flex items-center justify-center gap-2 py-2 bg-slate-900 hover:bg-slate-800 text-[9px] font-black uppercase text-slate-400 rounded-lg border border-slate-800 transition-all"
+                                    >
+                                        <Printer size={12} /> Policy
+                                    </Link>
+                                    <Link 
+                                        href={`/offboarding/checklist?user=${id}`} 
+                                        target="_blank"
+                                        className="flex items-center justify-center gap-2 py-2 bg-slate-900 hover:bg-slate-800 text-[9px] font-black uppercase text-slate-400 rounded-lg border border-slate-800 transition-all"
+                                    >
+                                        <Printer size={12} /> Checklist
+                                    </Link>
+                                </div>
+                            </div>
+
                             <div className="flex gap-4 pt-4">
                                 <button 
                                     onClick={() => setShowModal(false)}
@@ -343,7 +364,31 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
                                     <FileText size={12} /> Manual Upload
                                 </button>
                             )}
-                            <div className="col-span-2" />
+                            <div className="col-span-2 space-y-3 pt-2">
+                                <div className="h-px bg-slate-800/50 w-full" />
+                                <div className="flex items-center justify-between px-1">
+                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Manual Documents</p>
+                                    <Printer size={12} className="text-slate-600" />
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <Link 
+                                        href={`/offboarding/policy?user=${id}`} 
+                                        target="_blank"
+                                        className="flex items-center justify-center gap-2 px-4 py-3 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl text-[9px] font-black uppercase tracking-widest border border-slate-800 transition-all active:scale-95"
+                                    >
+                                        <ShieldCheck size={12} className="text-indigo-500" />
+                                        Print Policy
+                                    </Link>
+                                    <Link 
+                                        href={`/offboarding/checklist?user=${id}`} 
+                                        target="_blank"
+                                        className="flex items-center justify-center gap-2 px-4 py-3 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl text-[9px] font-black uppercase tracking-widest border border-slate-800 transition-all active:scale-95"
+                                    >
+                                        <ClipboardList size={12} className="text-emerald-500" />
+                                        Print Checklist
+                                    </Link>
+                                </div>
+                            </div>
                         </div>
 
                         {uploadStatus && (
