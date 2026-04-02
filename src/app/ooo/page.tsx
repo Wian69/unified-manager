@@ -12,7 +12,8 @@ import {
     Clock,
     UserCircle,
     Check,
-    MapPin
+    MapPin,
+    Smartphone
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -29,6 +30,7 @@ interface User {
     jobTitle?: string;
     officeLocation?: string;
     mobilePhone?: string;
+    businessPhones?: string[];
 }
 
 const REGIONS = ['All', 'Southern', 'Western', 'Northern', 'Eastern'];
@@ -154,7 +156,7 @@ export default function OOOManagementPage() {
             
             // Token Replacement Logic
             const name = u?.displayName || '';
-            const mobile = u?.mobilePhone || 'N/A';
+            const mobile = u?.mobilePhone || (u?.businessPhones && u.businessPhones[0]) || 'No Mobile Registered';
             
             const personalizedInternal = internalHtml
                 .replace(/{Name}/g, name)
@@ -257,7 +259,22 @@ export default function OOOManagementPage() {
                         <header className="flex items-start justify-between mb-12">
                             <div className="flex items-center gap-6">
                                 <div className="p-4 bg-slate-900 rounded-2xl border border-slate-800">{isBulkMode ? <Users size={40} className="text-white" /> : <UserCircle size={40} className="text-blue-500" />}</div>
-                                <div><h2 className="text-3xl font-black text-white uppercase tracking-tight">{isBulkMode ? `Bulk Update: ${selectedUserIds.length} Users` : activeUser?.displayName}</h2><p className="text-slate-400 font-medium text-sm">{activeUser?.userPrincipalName}</p></div>
+                                <div>
+                                    <div className="flex items-center gap-3">
+                                        <h2 className="text-3xl font-black text-white uppercase tracking-tight">{isBulkMode ? `Bulk Update: ${selectedUserIds.length} Users` : activeUser?.displayName}</h2>
+                                        {!isBulkMode && activeUser?.mobilePhone && (
+                                            <div className="px-2 py-0.5 bg-emerald-600/10 border border-emerald-500/20 rounded text-[10px] font-black text-emerald-400 uppercase tracking-widest flex items-center gap-1">
+                                                <Smartphone size={8} /> {activeUser.mobilePhone}
+                                            </div>
+                                        )}
+                                        {!isBulkMode && !activeUser?.mobilePhone && activeUser?.businessPhones?.[0] && (
+                                            <div className="px-2 py-0.5 bg-blue-600/10 border border-blue-500/20 rounded text-[10px] font-black text-blue-400 uppercase tracking-widest flex items-center gap-1">
+                                                <Smartphone size={8} /> {activeUser.businessPhones[0]}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <p className="text-slate-400 font-medium text-sm">{activeUser?.userPrincipalName}</p>
+                                </div>
                             </div>
                             <button onClick={handleSaveOOO} disabled={savingMailbox || loadingMailbox} className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-30 text-white font-black uppercase text-xs px-8 py-4 rounded-2xl transition-all shadow-xl shadow-emerald-900/20">{savingMailbox ? <RefreshCw className="animate-spin mr-2 inline" /> : <Save className="mr-2 inline" />} Sync to Outlook</button>
                         </header>
