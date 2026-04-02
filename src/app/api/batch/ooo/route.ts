@@ -29,7 +29,7 @@ export async function POST(request: Request) {
             response.responses.forEach((res: any) => {
                 const userId = chunk[parseInt(res.id) - i];
                 if (res.status === 200) {
-                    statusMap[userId] = res.body?.automaticRepliesSetting?.status || 'disabled';
+                    statusMap[userId] = res.body?.automaticRepliesSetting || { status: 'disabled' };
                 } else {
                     statusMap[userId] = 'unknown';
                 }

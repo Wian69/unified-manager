@@ -42,7 +42,7 @@ export default function OOOManagementPage() {
     const [filterRegion, setFilterRegion] = useState('All');
     
     const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
-    const [oooStatusMap, setOooStatusMap] = useState<Record<string, string>>({});
+    const [oooStatusMap, setOooStatusMap] = useState<Record<string, any>>({});
     const [fetchingStatuses, setFetchingStatuses] = useState(false);
     const [mailboxSettings, setMailboxSettings] = useState<any>(null);
     const [loadingMailbox, setLoadingMailbox] = useState(false);
@@ -144,6 +144,62 @@ export default function OOOManagementPage() {
         }
     }, [mailboxSettings, activeUserId]);
 
+    // Persistence - Save Draft in Bulk Mode
+    useEffect(() => {
+        if (isBulkMode && mailboxSettings?.automaticRepliesSetting) {
+            const draft = {
+                internal: internalEditorRef.current?.innerHTML || '',
+                external: externalEditorRef.current?.innerHTML || ''
+            };
+            if (draft.internal || draft.external) {
+                localStorage.setItem('ooo_bulk_draft', JSON.stringify(draft));
+            }
+        }
+    }, [isBulkMode, savingMailbox]); // Save on significant events or would need a timer
+
+    // Periodically save draft while typing if in bulk mode
+    useEffect(() => {
+        if (!isBulkMode) return;
+        const interval = setInterval(() => {
+            const draft = {
+                internal: internalEditorRef.current?.innerHTML || '',
+                external: externalEditorRef.current?.innerHTML || ''
+            };
+            localStorage.setItem('ooo_bulk_draft', JSON.stringify(draft));
+        }, 5000);
+        return () => clearInterval(interval);
+    }, [isBulkMode]);
+
+    // Restore Draft on Mount
+    useEffect(() => {
+        const saved = localStorage.getItem('ooo_bulk_draft');
+        if (saved && isBulkMode) {
+            try {
+                const draft = JSON.parse(saved);
+                setTimeout(() => {
+                    if (internalEditorRef.current) internalEditorRef.current.innerHTML = draft.internal;
+                    if (externalEditorRef.current) externalEditorRef.current.innerHTML = draft.external;
+                }, 100);
+            } catch {}
+        }
+    }, [isBulkMode]);
+
+    const getOOODisplayStatus = (userId: string) => {
+        const config = oooStatusMap[userId];
+        if (!config || config === 'unknown' || config === 'disabled' || config.status === 'disabled') return 'disabled';
+        
+        if (config.status === 'scheduled') {
+            const now = new Date().getTime();
+            const start = new Date(config.scheduledStartDateTime?.dateTime).getTime();
+            const end = new Date(config.scheduledEndDateTime?.dateTime).getTime();
+            
+            if (now >= start && now <= end) return 'alwaysEnabled'; // Logic: Scheduled is active NOW
+            return 'scheduled';
+        }
+        
+        return config.status; // already 'alwaysEnabled'
+    };
+
     const toggleUserSelection = (id: string) => {
         setSelectedUserIds(prev => 
             prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
@@ -199,7 +255,7 @@ export default function OOOManagementPage() {
                 });
                 if (res.ok) {
                     successCount++;
-                    setOooStatusMap(prev => ({ ...prev, [id]: mailboxSettings.automaticRepliesSetting.status }));
+                    setOooStatusMap(prev => ({ ...prev, [id]: mailboxSettings.automaticRepliesSetting }));
                 }
             } catch {}
         }
@@ -262,11 +318,11 @@ export default function OOOManagementPage() {
                              <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between">
                                     <div className="text-sm font-bold truncate text-slate-200">{user.displayName}</div>
-                                    {oooStatusMap[user.id] && oooStatusMap[user.id] !== 'disabled' && (
+                                    {getOOODisplayStatus(user.id) !== 'disabled' && (
                                         <div className="flex items-center gap-1">
-                                            <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${oooStatusMap[user.id] === 'scheduled' ? 'bg-indigo-500' : 'bg-emerald-500'}`} />
-                                            <span className={`text-[7px] font-black uppercase tracking-tighter ${oooStatusMap[user.id] === 'scheduled' ? 'text-indigo-400' : 'text-emerald-500'}`}>
-                                                {oooStatusMap[user.id] === 'scheduled' ? 'Scheduled' : 'Active'}
+                                            <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${getOOODisplayStatus(user.id) === 'scheduled' ? 'bg-indigo-500' : 'bg-emerald-500'}`} />
+                                            <span className={`text-[7px] font-black uppercase tracking-tighter ${getOOODisplayStatus(user.id) === 'scheduled' ? 'text-indigo-400' : 'text-emerald-500'}`}>
+                                                {getOOODisplayStatus(user.id) === 'scheduled' ? 'Scheduled' : 'Active'}
                                             </span>
                                         </div>
                                     )}
