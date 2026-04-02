@@ -143,9 +143,23 @@ export default function OOOManagementPage() {
             setTimeout(() => {
                 if (internalEditorRef.current) internalEditorRef.current.innerHTML = intMsg;
                 if (externalEditorRef.current) externalEditorRef.current.innerHTML = extMsg;
-            }, 50);
+            }, 10); // Reduced delay for faster reset
         }
     }, [mailboxSettings, activeUserId]);
+
+    const handleSafetyReset = () => {
+        setMailboxSettings({
+            isTemplate: true,
+            automaticRepliesSetting: {
+                status: 'disabled',
+                internalReplyMessage: 'I am currently out of the office and will return shortly.\n\nRegards,\n{Name}',
+                externalReplyMessage: 'Thank you for your email. I am currently out of the office with limited access to email.\n\nFor urgent matters, please contact {Name} at {Mobile}.\n\nKind regards,\n{Name}',
+                scheduledStartDateTime: { dateTime: new Date().toISOString().split('.')[0] + '.0000000', timeZone: 'UTC' },
+                scheduledEndDateTime: { dateTime: new Date(Date.now() + 86400000).toISOString().split('.')[0] + '.0000000', timeZone: 'UTC' }
+            }
+        });
+        localStorage.removeItem('ooo_bulk_draft');
+    };
 
     // Persistence - Save Draft in Bulk Mode
     useEffect(() => {
@@ -237,6 +251,14 @@ export default function OOOManagementPage() {
         }
 
         setSavingMailbox(true);
+        
+        // Safety Check: Detect 'Amanda Law' in Bulk Mode Template
+        if (isBulkMode && (internalHtml.toLowerCase().includes('amanda') || externalHtml.toLowerCase().includes('amanda'))) {
+            setSavingMailbox(false);
+            alert("SAFETY ALERT: We detected 'Amanda Law' in your current message while in Bulk Mode. This would sync her name to everyone. \n\nPlease use the '{Name}' token instead. Clicking 'Safety Reset' will fix this for you.");
+            return;
+        }
+
         setSyncProgress({ current: 0, total: selectedUserIds.length });
         let successCount = 0;
         for (let i = 0; i < selectedUserIds.length; i++) {
@@ -295,7 +317,7 @@ export default function OOOManagementPage() {
 
     return (
         <div className="flex h-[calc(100vh-8rem)] -m-8 bg-slate-950 overflow-hidden relative">
-            <div className="absolute top-2 right-2 text-[8px] font-black text-slate-800 pointer-events-none z-50">VER-1.4.1-BUILD-FIX</div>
+            <div className="absolute top-2 right-2 text-[8px] font-black text-slate-500 pointer-events-none z-50">VER-1.4.3-DEPLOY-STABLE</div>
 
             {/* Sidebar */}
             <div className="w-80 border-r border-slate-900 bg-slate-950 flex flex-col shrink-0">
@@ -376,7 +398,12 @@ export default function OOOManagementPage() {
                                     <p className="text-slate-400 font-medium text-sm">{activeUser?.userPrincipalName}</p>
                                 </div>
                             </div>
-                            <button onClick={handleSaveOOO} disabled={savingMailbox || loadingMailbox} className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-30 text-white font-black uppercase text-xs px-8 py-4 rounded-2xl transition-all shadow-xl shadow-emerald-900/20">{savingMailbox ? <RefreshCw className="animate-spin mr-2 inline" /> : <Save className="mr-2 inline" />} Sync to Outlook</button>
+                                <div className="flex items-center gap-3">
+                                    <button onClick={handleSaveOOO} disabled={savingMailbox || loadingMailbox} className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-30 text-white font-black uppercase text-xs px-8 py-4 rounded-2xl transition-all shadow-xl shadow-emerald-900/20">{savingMailbox ? <RefreshCw className="animate-spin mr-2 inline" /> : <Save className="mr-2 inline" />} Sync to Outlook</button>
+                                    {isBulkMode && (
+                                        <button onClick={handleSafetyReset} className="bg-slate-900 hover:bg-slate-800 text-slate-400 font-bold uppercase text-[9px] px-4 py-4 rounded-2xl border border-slate-800 transition-all">Safety Reset</button>
+                                    )}
+                                </div>
                         </header>
 
                         {loadingMailbox ? (
