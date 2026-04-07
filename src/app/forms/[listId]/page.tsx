@@ -14,7 +14,8 @@ import {
     Filter, 
     ExternalLink,
     ChevronRight,
-    CircleCheck
+    CircleCheck,
+    Plus
 } from 'lucide-react';
 import Link from 'next/link';
 import { clsx, type ClassValue } from 'clsx';
@@ -87,20 +88,38 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
         setSaveStatus('idle');
     };
 
+    const handleAddNew = () => {
+        setSelectedItem({ id: '', fields: {} });
+        setEditData({});
+        setSaveStatus('idle');
+    };
+
     const handleSave = async () => {
         setSaving(true);
         setSaveStatus('idle');
         try {
-            const res = await fetch(`/api/forms/items?listId=${listId}&itemId=${selectedItem?.id}`, {
-                method: 'PATCH',
+            const isNew = !selectedItem?.id;
+            const url = isNew 
+                ? `/api/forms/items?listId=${listId}` 
+                : `/api/forms/items?listId=${listId}&itemId=${selectedItem?.id}`;
+            const method = isNew ? 'POST' : 'PATCH';
+
+            const res = await fetch(url, {
+                method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ fields: editData })
             });
 
             if (!res.ok) throw new Error('Save failed');
+            const data = await res.json();
 
             // Refresh local items
-            setItems(prev => prev.map(item => item.id === selectedItem?.id ? { ...item, fields: editData } : item));
+            if (isNew) {
+                setItems(prev => [data.item, ...prev]);
+            } else {
+                setItems(prev => prev.map(item => item.id === selectedItem?.id ? { ...item, fields: editData } : item));
+            }
+            
             setSaveStatus('success');
             setTimeout(() => {
                 setSelectedItem(null);
@@ -131,6 +150,12 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
                 </div>
 
                 <div className="flex items-center gap-4">
+                    <button 
+                        onClick={handleAddNew}
+                        className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all shadow-lg shadow-blue-600/20 active:scale-95"
+                    >
+                        <Plus size={16} /> New Response
+                    </button>
                     <div className="relative group">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-500 transition-colors" size={18} />
                         <input 

@@ -62,3 +62,33 @@ export async function PATCH(request: Request) {
         );
     }
 }
+export async function POST(request: Request) {
+    const { searchParams } = new URL(request.url);
+    const listId = searchParams.get('listId');
+
+    if (!listId) {
+        return NextResponse.json({ error: "Missing listId" }, { status: 400 });
+    }
+
+    try {
+        const body = await request.json();
+        const client = getGraphClient();
+
+        // Create the new item
+        const response = await client.api(`/sites/${SITE_ID}/lists/${listId}/items`)
+            .post({
+                fields: body.fields
+            });
+
+        return NextResponse.json({
+            success: true,
+            item: response
+        });
+    } catch (error: any) {
+        console.error('[API] Form Creation Error:', error.message);
+        return NextResponse.json(
+            { error: "Failed to create form item", details: error.message },
+            { status: 500 }
+        );
+    }
+}
