@@ -26,7 +26,7 @@ export async function GET(request: Request) {
         }
 
         const response = await client.api(`/users/${userId}/mailFolders('${folder}')/messages`)
-            .select(`id,subject,sentDateTime,receivedDateTime,bodyPreview,hasAttachments`)
+            .select(`id,subject,sentDateTime,receivedDateTime,bodyPreview,hasAttachments,from,toRecipients`)
             .expand('attachments($select=name,contentType,size)')
             .filter(filter)
             .top(100)

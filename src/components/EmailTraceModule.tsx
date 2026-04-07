@@ -97,13 +97,20 @@ export default function EmailTraceModule({ userId, userDisplayName, sinceDate, o
         });
 
     const downloadCSV = () => {
-        const headers = ["Subject", "Date", "Attachments", "Preview"];
-        const rows = filteredEmails.map(email => [
-            `"${email.subject || 'No Subject'}"`,
-            `"${formatDate(email.receivedDateTime || email.sentDateTime)}"`,
-            email.attachments?.length || 0,
-            `"${(email.bodyPreview || '').replace(/"/g, '""')}"`
-        ]);
+        const headers = ["Subject", folder === 'inbox' ? "Sender" : "Recipient", "Date", "Attachments", "Preview"];
+        const rows = filteredEmails.map(email => {
+            const contact = folder === 'inbox' 
+                ? (email.from?.emailAddress?.name || email.from?.emailAddress?.address || 'Unknown')
+                : (email.toRecipients?.[0]?.emailAddress?.name || email.toRecipients?.[0]?.emailAddress?.address || 'Unknown');
+            
+            return [
+                `"${email.subject || 'No Subject'}"`,
+                `"${contact}"`,
+                `"${formatDate(email.receivedDateTime || email.sentDateTime)}"`,
+                email.attachments?.length || 0,
+                `"${(email.bodyPreview || '').replace(/"/g, '""')}"`
+            ];
+        });
         const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
@@ -223,6 +230,7 @@ export default function EmailTraceModule({ userId, userDisplayName, sinceDate, o
                             <thead className="bg-slate-900/50 text-slate-500 uppercase text-[10px] font-black tracking-widest sticky top-0 z-20 backdrop-blur-md">
                                 <tr>
                                     <th className="px-8 py-5 border-b border-slate-800">Email Title & Preview</th>
+                                    <th className="px-8 py-5 border-b border-slate-800">{folder === 'inbox' ? 'Sender' : 'Recipient'}</th>
                                     <th className="px-8 py-5 border-b border-slate-800 text-center">Attachments</th>
                                     <th className="px-8 py-5 border-b border-slate-800 text-right">{folder === 'inbox' ? 'Received' : 'Sent'} Date</th>
                                     <th className="w-12 border-b border-slate-800"></th>
@@ -243,6 +251,18 @@ export default function EmailTraceModule({ userId, userDisplayName, sinceDate, o
                                                     <div className="text-[11px] text-slate-500 line-clamp-1 italic font-light">
                                                         {email.bodyPreview}
                                                     </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-6">
+                                                <div className="text-[11px] font-bold text-slate-300">
+                                                    {folder === 'inbox' 
+                                                        ? (email.from?.emailAddress?.name || email.from?.emailAddress?.address || 'Unknown Sender')
+                                                        : (email.toRecipients?.[0]?.emailAddress?.name || email.toRecipients?.[0]?.emailAddress?.address || 'Unknown Recipient')}
+                                                </div>
+                                                <div className="text-[9px] text-slate-500 truncate max-w-[150px]">
+                                                    {folder === 'inbox' 
+                                                        ? (email.from?.emailAddress?.address || '')
+                                                        : (email.toRecipients?.[0]?.emailAddress?.address || '')}
                                                 </div>
                                             </td>
                                             <td className="px-8 py-6 text-center">
