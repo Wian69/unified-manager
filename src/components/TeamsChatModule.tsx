@@ -292,13 +292,13 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate, on
                         </div>
                     </div>
                     
-                    <div className="max-h-[600px] overflow-y-auto custom-scrollbar">
-                        <table className="w-full text-left text-sm border-separate border-spacing-0">
+                    <div className="max-h-[600px] overflow-y-auto custom-scrollbar overflow-x-hidden">
+                        <table className="w-full text-left text-sm border-separate border-spacing-0 table-fixed">
                             <thead className="bg-slate-900/50 text-slate-500 uppercase text-[10px] font-black tracking-widest sticky top-0 z-20 backdrop-blur-md">
                                 <tr>
-                                    <th className="px-8 py-5 border-b border-slate-800">Conversation Topic</th>
-                                    <th className="px-8 py-5 border-b border-slate-800 text-center">Type</th>
-                                    <th className="px-8 py-5 border-b border-slate-800 text-center">Risk Factor</th>
+                                    <th className="px-8 py-5 border-b border-slate-800 w-[50%]">Conversation Topic</th>
+                                    <th className="px-8 py-5 border-b border-slate-800 text-center w-[20%]">Type</th>
+                                    <th className="px-8 py-5 border-b border-slate-800 text-center w-[20%]">Risk Factor</th>
                                     <th className="w-12 border-b border-slate-800"></th>
                                 </tr>
                             </thead>
@@ -397,12 +397,15 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate, on
                                                                                 <span className="text-[9px] font-bold text-slate-400">{msg.from?.user?.displayName || 'Unknown'}</span>
                                                                                 <span className="text-[8px] text-slate-600">{new Date(msg.createdDateTime).toLocaleString()}</span>
                                                                             </div>
-                                                                            <div className={`p-4 rounded-2xl max-w-[80%] text-sm shadow-xl ${
+                                                                            <div className={`p-4 rounded-2xl max-w-[85%] text-sm shadow-xl break-words overflow-hidden ${
                                                                                 msg.from?.user?.id === userId 
                                                                                     ? 'bg-blue-600 text-white rounded-tr-none' 
                                                                                     : 'bg-slate-800 text-slate-200 rounded-tl-none border border-slate-700'
                                                                             }`}>
-                                                                                <div dangerouslySetInnerHTML={{ __html: msg.body?.content }} />
+                                                                                <div 
+                                                                                    className="prose prose-invert prose-sm max-w-none [&_img]:max-w-full [&_table]:max-w-full [&_table]:overflow-x-auto"
+                                                                                    dangerouslySetInnerHTML={{ __html: msg.body?.content }} 
+                                                                                />
                                                                                 {msg.attachments?.length > 0 && (
                                                                                     <div className="mt-3 pt-3 border-t border-white/10 space-y-2">
                                                                                         {msg.attachments.map((at: any) => (
