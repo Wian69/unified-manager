@@ -14,6 +14,10 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate, on
     const [presence, setPresence] = useState<any>(null);
     const [meeting, setMeeting] = useState<any>(null);
 
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
+    const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
+
     const fetchChats = async () => {
         setLoading(true);
         setError(null);
@@ -85,14 +89,32 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate, on
     };
 
     const filteredChats = chats
-        .filter(chat => 
-            chat.topic?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            chat.lastMessage?.body?.content?.toLowerCase().includes(searchQuery.toLowerCase())
-        )
+        .filter(chat => {
+            const topicMatch = chat.topic?.toLowerCase().includes(searchQuery.toLowerCase());
+            const contentMatch = chat.lastMessage?.body?.content?.toLowerCase().includes(searchQuery.toLowerCase());
+            
+            // Date filtering
+            const messageDate = chat.lastMessage?.createdDateTime ? new Date(chat.lastMessage.createdDateTime) : null;
+            let dateMatch = true;
+            if (messageDate) {
+                if (startDate) {
+                    const start = new Date(startDate + "T00:00:00");
+                    if (messageDate < start) dateMatch = false;
+                }
+                if (endDate) {
+                    const end = new Date(endDate + "T23:59:59");
+                    if (messageDate > end) dateMatch = false;
+                }
+            } else if (startDate || endDate) {
+                dateMatch = false; // If no date and we're filtering, exclude
+            }
+
+            return (topicMatch || contentMatch) && dateMatch;
+        })
         .sort((a: any, b: any) => {
             const dateA = new Date(a.lastMessage?.createdDateTime || 0).getTime();
             const dateB = new Date(b.lastMessage?.createdDateTime || 0).getTime();
-            return dateB - dateA;
+            return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
         });
 
     const downloadCSV = () => {
@@ -127,7 +149,36 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate, on
                     </div>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-4">
+                    <div className="flex items-center gap-2 bg-slate-900 p-2 rounded-xl border border-slate-800">
+                        <Globe size={14} className="text-blue-400" />
+                        <input 
+                            type="date" 
+                            value={startDate} 
+                            onChange={(e) => setStartDate(e.target.value)}
+                            className="bg-transparent border-none focus:ring-0 text-[10px] text-white p-0 w-24 [color-scheme:dark]"
+                        />
+                        <span className="text-slate-600 text-xs">-</span>
+                        <input 
+                            type="date" 
+                            value={endDate} 
+                            onChange={(e) => setEndDate(e.target.value)}
+                            className="bg-transparent border-none focus:ring-0 text-[10px] text-white p-0 w-24 [color-scheme:dark]"
+                        />
+                    </div>
+
+                    <div className="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800">
+                        <ChevronDown size={14} className="text-slate-500" />
+                        <select 
+                            value={sortOrder}
+                            onChange={(e) => setSortOrder(e.target.value as any)}
+                            className="bg-transparent text-slate-300 text-[10px] font-black uppercase tracking-widest focus:outline-none cursor-pointer"
+                        >
+                            <option value="desc" className="bg-slate-900">Newest First</option>
+                            <option value="asc" className="bg-slate-900">Oldest First</option>
+                        </select>
+                    </div>
+
                     <button 
                         onClick={downloadCSV}
                         className="flex items-center gap-2 px-4 py-2 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-500 border border-emerald-500/20 rounded-xl transition-all text-[10px] font-black uppercase tracking-widest"
