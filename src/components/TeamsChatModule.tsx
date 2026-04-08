@@ -304,7 +304,7 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate, on
                                                         <div className="flex items-center justify-between">
                                                             <p className="text-[10px] text-indigo-400 uppercase font-black tracking-widest flex items-center gap-2">
                                                                 <Activity size={10} />
-                                                                Conversation History (Last 20 messages)
+                                                                Full Conversation History
                                                             </p>
                                                             {chat.isExternal && (
                                                                 <div className="flex items-center gap-2">

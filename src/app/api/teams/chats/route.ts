@@ -23,13 +23,22 @@ export async function GET(req: Request) {
 
             try {
                 // Using the user-relative endpoint for reliability
-                const messagesResponse = await client.api(`/users/${userId}/chats/${chatId}/messages`)
+                const allMessages: any[] = [];
+                let messagesResponse = await client.api(`/users/${userId}/chats/${chatId}/messages`)
                     .top(50)
                     .get();
                 
+                allMessages.push(...(messagesResponse.value || []));
+
+                // Follow nextLink to get ALL messages
+                while (messagesResponse['@odata.nextLink']) {
+                    messagesResponse = await client.api(messagesResponse['@odata.nextLink']).get();
+                    allMessages.push(...(messagesResponse.value || []));
+                }
+                
                 return NextResponse.json({ 
                     success: true, 
-                    data: messagesResponse.value || [] 
+                    data: allMessages 
                 });
             } catch (err: any) {
                 console.error(`[Teams API] History Error:`, err.message);
