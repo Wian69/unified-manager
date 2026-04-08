@@ -404,74 +404,74 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
                 </div>
             </div>
 
-            {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-                {/* Audit and Activity Section */}
-                <div className="lg:col-span-2 space-y-12">
-                    <section>
-                        <div className="flex items-center justify-between mb-8">
-                            <h2 className="text-2xl font-black text-white uppercase tracking-tight flex items-center gap-3 text-left">
-                                <Trash2 size={24} className="text-blue-500" />
-                                SharePoint Data Recovery
-                            </h2>
-                            {user.oneDriveUrl && (
-                                <a 
-                                    href={user.oneDriveUrl} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-2 text-[10px] text-blue-400 font-black uppercase tracking-widest bg-blue-500/10 hover:bg-blue-500/20 px-4 py-2 rounded-xl border border-blue-500/20 transition-all"
-                                >
-                                    <ExternalLink size={12} />
-                                    OneDrive Link
-                                </a>
-                            )}
-                        </div>
-                        <div className="bg-slate-900/40 rounded-2xl border border-slate-800/60 p-2 backdrop-blur-md text-left">
-                            <SharePointDeletionsModule 
-                                selectedUser={user} 
-                                recycleBinItems={recycleBinItems}
-                                loadingDetails={loadingSP}
-                                error={spError}
-                                oneDriveUrl={user.oneDriveUrl}
-                            />
-                        </div>
-                    </section>
-
-                    <section>
-                        <EmailTraceModule 
-                            userId={id}
-                            userDisplayName={user.displayName}
-                            sinceDate={sinceDate}
+            {/* Audit and Activity Section - Full Width */}
+            <div className="space-y-12">
+                <section>
+                    <div className="flex items-center justify-between mb-8">
+                        <h2 className="text-2xl font-black text-white uppercase tracking-tight flex items-center gap-3 text-left">
+                            <Trash2 size={24} className="text-blue-500" />
+                            SharePoint Data Recovery
+                        </h2>
+                        {user.oneDriveUrl && (
+                            <a 
+                                href={user.oneDriveUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 text-[10px] text-blue-400 font-black uppercase tracking-widest bg-blue-500/10 hover:bg-blue-500/20 px-4 py-2 rounded-xl border border-blue-500/20 transition-all"
+                            >
+                                <ExternalLink size={12} />
+                                OneDrive Link
+                            </a>
+                        )}
+                    </div>
+                    <div className="bg-slate-900/40 rounded-2xl border border-slate-800/60 p-2 backdrop-blur-md text-left">
+                        <SharePointDeletionsModule 
+                            selectedUser={user} 
+                            recycleBinItems={recycleBinItems}
+                            loadingDetails={loadingSP}
+                            error={spError}
                             oneDriveUrl={user.oneDriveUrl}
                         />
-                    </section>
-                    <section>
-                        <TeamsChatModule 
-                            userId={id}
-                            userDisplayName={user.displayName}
-                            sinceDate={sinceDate}
-                            oneDriveUrl={user.oneDriveUrl}
-                        />
-                    </section>
+                    </div>
+                </section>
 
-                    <SecurityAuditModule 
-                        userId={id} 
-                        employeeName={user.displayName} 
-                        sinceDate={sinceDate} 
+                <section>
+                    <EmailTraceModule 
+                        userId={id}
+                        userDisplayName={user.displayName}
+                        sinceDate={sinceDate}
+                        oneDriveUrl={user.oneDriveUrl}
                     />
-                </div>
+                </section>
+                
+                <section>
+                    <TeamsChatModule 
+                        userId={id}
+                        userDisplayName={user.displayName}
+                        sinceDate={sinceDate}
+                        oneDriveUrl={user.oneDriveUrl}
+                    />
+                </section>
 
-                <div className="space-y-12">
-                    <section className="bg-slate-900/50 rounded-3xl border border-slate-800 p-8">
-                         <h3 className="text-lg font-black text-white mb-6 uppercase tracking-tighter">System Notes</h3>
-                         <div className="space-y-4">
-                            <div className="text-sm text-slate-400 leading-relaxed italic border-l-2 border-blue-500 pl-4">
-                                "Account flagged for review prior to departure on 2026-04-01. Manager requested full SharePoint deletion report."
-                            </div>
-                         </div>
-                    </section>
-                </div>
+                <SecurityAuditModule 
+                    userId={id} 
+                    employeeName={user.displayName} 
+                    sinceDate={sinceDate} 
+                />
             </div>
+
+            {/* Secondary Content Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-1 gap-12">
+                <section className="bg-slate-900/50 rounded-3xl border border-slate-800 p-8 text-left">
+                     <h3 className="text-lg font-black text-white mb-6 uppercase tracking-tighter">System Notes</h3>
+                     <div className="space-y-4">
+                        <div className="text-sm text-slate-400 leading-relaxed italic border-l-2 border-blue-500 pl-4">
+                            "Account flagged for review prior to departure on 2026-04-01. Manager requested full SharePoint deletion report."
+                        </div>
+                     </div>
+                </section>
+            </div>
+
         </div>
     );
 }
