@@ -80,6 +80,10 @@ export default function UsersPage() {
     const [mailboxSettings, setMailboxSettings] = useState<any>(null);
     const [mailboxSaving, setMailboxSaving] = useState(false);
 
+    const [memberships, setMemberships] = useState<any[]>([]);
+    const [sharedItems, setSharedItems] = useState<any[]>([]);
+    const [loadingMemberships, setLoadingMemberships] = useState(false);
+
     const fetchUsers = async () => {
         setLoading(true);
         try {
@@ -140,6 +144,21 @@ export default function UsersPage() {
             console.error("Failed to fetch mailbox settings", error);
         } finally {
             setMailboxLoading(false);
+        }
+
+        // Fetch Memberships & Shared Items
+        setLoadingMemberships(true);
+        try {
+            const res = await fetch(`/api/users/${id}/memberships?t=${Date.now()}`);
+            const data = await res.json();
+            if (data.success) {
+                setMemberships(data.groups || []);
+                setSharedItems(data.sharedItems || []);
+            }
+        } catch (error) {
+            console.error("Failed to fetch memberships", error);
+        } finally {
+            setLoadingMemberships(false);
         }
     };
 
@@ -477,6 +496,81 @@ export default function UsersPage() {
                                             <InputField label="Country or Region" field="country" value={editForm.country} onChange={(v) => setEditForm({...editForm, country: v})} />
                                             <div className="col-span-full">
                                                 <InputField label="Email" field="mail" value={selectedUser?.mail} readOnly />
+                                            </div>
+                                        </div>
+                                    </section>
+
+                                    {/* Access & Permissions Section */}
+                                    <section>
+                                        <h3 className="text-lg font-bold text-slate-200 mb-4 border-b border-slate-800 pb-2 flex items-center gap-2">
+                                            Access & Permissions
+                                            {loadingMemberships && <RefreshCw size={14} className="animate-spin text-blue-500" />}
+                                        </h3>
+                                        
+                                        <div className="space-y-6">
+                                            {/* Groups */}
+                                            <div>
+                                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Group Memberships ({memberships.length})</p>
+                                                <div className="bg-slate-900/50 rounded-xl border border-slate-800 overflow-hidden divide-y divide-slate-800/50">
+                                                    {memberships.length > 0 ? (
+                                                        memberships.map((group) => (
+                                                            <div key={group.id} className="p-4 hover:bg-slate-800/30 transition-colors flex items-center justify-between group/grp">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className={`p-2 rounded-lg ${group.groupTypes?.includes('Unified') ? 'bg-indigo-500/10 text-indigo-500' : 'bg-slate-800 text-slate-400'}`}>
+                                                                        <Users size={16} />
+                                                                    </div>
+                                                                    <div>
+                                                                        <p className="text-xs font-bold text-slate-200">{group.displayName}</p>
+                                                                        <p className="text-[10px] text-slate-500 truncate max-w-[250px]">{group.mail || group.description || 'No email associated'}</p>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex items-center gap-2">
+                                                                    {group.groupTypes?.includes('Unified') && (
+                                                                        <span className="text-[8px] font-black px-2 py-0.5 bg-blue-500/10 text-blue-500 rounded uppercase">Microsoft 365</span>
+                                                                    )}
+                                                                    {group.securityEnabled && (
+                                                                        <span className="text-[8px] font-black px-2 py-0.5 bg-rose-500/10 text-rose-500 rounded uppercase">Security</span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <div className="p-8 text-center text-slate-600 italic text-xs">No group memberships found.</div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Shared Items */}
+                                            <div>
+                                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Shared Folders & Files ({sharedItems.length})</p>
+                                                <div className="bg-slate-900/50 rounded-xl border border-slate-800 overflow-hidden divide-y divide-slate-800/50">
+                                                    {sharedItems.length > 0 ? (
+                                                        sharedItems.map((item, idx) => (
+                                                            <div key={idx} className="p-4 hover:bg-slate-800/30 transition-colors flex items-center justify-between group/item">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="p-2 bg-emerald-500/10 text-emerald-500 rounded-lg">
+                                                                        {item.folder ? <Globe size={16} /> : <Save size={16} />}
+                                                                    </div>
+                                                                    <div>
+                                                                        <p className="text-xs font-bold text-slate-200">{item.name}</p>
+                                                                        <p className="text-[10px] text-slate-500">Shared by {item.remoteItem?.createdBy?.user?.displayName || 'Unknown'}</p>
+                                                                    </div>
+                                                                </div>
+                                                                {item.webUrl && (
+                                                                    <a 
+                                                                        href={item.webUrl} 
+                                                                        target="_blank" 
+                                                                        className="p-2 text-slate-500 hover:text-blue-500 transition-colors opacity-0 group-hover/item:opacity-100"
+                                                                    >
+                                                                        <Globe size={14} />
+                                                                    </a>
+                                                                )}
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <div className="p-8 text-center text-slate-600 italic text-xs">No explicitly shared items discovered.</div>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </section>
