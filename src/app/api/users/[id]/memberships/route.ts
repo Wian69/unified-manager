@@ -60,61 +60,91 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
             console.warn(`[API] Could not fetch shared items for ${id}:`, e);
         }
 
-        // 3. Targeted Restricted Folder Discovery (New)
-        let restrictedItems = [];
-        if (searchKeywords) {
-            const keywords = searchKeywords.split(',').map(k => k.trim()).filter(Boolean);
-            
-            for (const keyword of keywords) {
-                try {
-                    const searchRes = await client.api('/search/query').post({
-                        requests: [{
-                            entityTypes: ['driveItem'],
-                            query: { queryString: `"${keyword}"` },
-                            from: 0,
-                            size: 25
-                        }]
+        // 3. Targeted Restricted Folder Discovery & Auto-Discovery
+        let restrictedItems: any[] = [];
+        const discoveredFolderIds = new Set(sharedItems.map((si: any) => si.id));
+
+        // AUTO-DISCOVERY PHASE (without manual searching)
+        
+        // A. Fetch Followed Sites
+        try {
+            const followedRes = await client.api(`/users/${id}/sites/followed`).get();
+            const followedSites = followedRes.value || [];
+            for (const site of followedSites) {
+                restrictedItems.push({
+                    name: site.displayName,
+                    id: site.id,
+                    webUrl: site.webUrl,
+                    isFolder: true,
+                    role: 'Followed Site',
+                    isRestricted: false
+                });
+            }
+        } catch (e) {}
+
+        // B. Fetch Recent Activity (Folders Only)
+        try {
+            const recentRes = await client.api(`/users/${id}/drive/recent`).get();
+            const recentFolders = (recentRes.value || []).filter((i: any) => !!i.folder);
+            for (const rf of recentFolders) {
+                if (!discoveredFolderIds.has(rf.id)) {
+                    restrictedItems.push({
+                        name: rf.name,
+                        id: rf.id,
+                        webUrl: rf.webUrl,
+                        isFolder: true,
+                        role: 'Recent Access',
+                        isRestricted: false
                     });
-
-                    const hits = searchRes.value?.[0]?.hitsContainers?.[0]?.hits || [];
-                    
-                    for (const hit of hits) {
-                        const item = hit.resource;
-                        if (!item.id || !item.parentReference?.driveId) continue;
-
-                        // Deep check permissions for this specific item
-                        try {
-                            const perms = await client.api(`/drives/${item.parentReference.driveId}/items/${item.id}/permissions`).get();
-                            const hasAccess = perms.value?.some((p: any) => {
-                                // Check if user ID or any of their groups are in the permissions
-                                const grantee = p.grantedToV2 || p.grantedTo;
-                                if (!grantee) return false;
-                                
-                                const targetId = grantee.user?.id || grantee.group?.id || grantee.siteGroup?.id;
-                                return targetId === id || groupIds.includes(targetId);
-                            });
-
-                            if (hasAccess) {
-                                // Filter out if already in sharedItems to avoid duplicates
-                                if (!sharedItems.some((si: any) => si.id === item.id)) {
-                                    restrictedItems.push({
-                                        name: item.name,
-                                        id: item.id,
-                                        webUrl: item.webUrl,
-                                        isFolder: !!item.folder,
-                                        role: 'Discovered Access',
-                                        isRestricted: true
-                                    });
-                                }
-                            }
-                        } catch (pErr) {
-                            // Site might be too restricted to even read permissions
-                        }
-                    }
-                } catch (sErr) {
-                    console.error(`[API] Search error for ${keyword}:`, sErr);
+                    discoveredFolderIds.add(rf.id);
                 }
             }
+        } catch (e) {}
+
+        // C. Wildcard Pattern Scan (Automatically find folders matching sensitive patterns)
+        const autoKeywords = searchKeywords ? searchKeywords.split(',').map(k => k.trim()) : ['Finance', 'Management', 'Legal', 'HR', 'Executive', 'Salaries'];
+        
+        for (const keyword of autoKeywords) {
+            if (!keyword) continue;
+            try {
+                const searchRes = await client.api('/search/query').post({
+                    requests: [{
+                        entityTypes: ['driveItem'],
+                        query: { queryString: `"${keyword}" isDocument:false` },
+                        from: 0,
+                        size: 15
+                    }]
+                });
+
+                const hits = searchRes.value?.[0]?.hitsContainers?.[0]?.hits || [];
+                
+                for (const hit of hits) {
+                    const item = hit.resource;
+                    if (!item.id || !item.parentReference?.driveId || discoveredFolderIds.has(item.id)) continue;
+
+                    try {
+                        const perms = await client.api(`/drives/${item.parentReference.driveId}/items/${item.id}/permissions`).get();
+                        const hasAccess = perms.value?.some((p: any) => {
+                            const grantee = p.grantedToV2 || p.grantedTo;
+                            if (!grantee) return false;
+                            const targetId = grantee.user?.id || grantee.group?.id || grantee.siteGroup?.id;
+                            return targetId === id || groupIds.includes(targetId);
+                        });
+
+                        if (hasAccess) {
+                            restrictedItems.push({
+                                name: item.name,
+                                id: item.id,
+                                webUrl: item.webUrl,
+                                isFolder: true,
+                                role: 'Discovery Match',
+                                isRestricted: true
+                            });
+                            discoveredFolderIds.add(item.id);
+                        }
+                    } catch (pErr) {}
+                }
+            } catch (sErr) {}
         }
 
         return NextResponse.json({
