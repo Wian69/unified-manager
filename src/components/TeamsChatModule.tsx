@@ -6,6 +6,7 @@ import { Search, MessageSquare, Download, RefreshCw, ShieldAlert, Users, Globe, 
 export default function TeamsChatModule({ userId, userDisplayName, sinceDate, oneDriveUrl }: { userId: string, userDisplayName: string, sinceDate?: string, oneDriveUrl?: string }) {
     const [chats, setChats] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
+    const [activeTab, setActiveTab] = useState<'chat' | 'channel'>('chat');
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [expandedChatId, setExpandedChatId] = useState<string | null>(null);
@@ -38,12 +39,19 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate, on
         }
     };
 
-    const fetchMessages = async (chatId: string) => {
+    const fetchMessages = async (chatId: string, teamId?: string) => {
         if (messages[chatId]) return; // Already loaded
         
         setLoadingMessages(chatId);
         try {
-            const res = await fetch(`/api/teams/chats?chatId=${chatId}&userId=${userId}`);
+            let url = `/api/teams/chats?userId=${userId}`;
+            if (teamId) {
+                url += `&teamId=${teamId}&channelId=${chatId}`;
+            } else {
+                url += `&chatId=${chatId}`;
+            }
+
+            const res = await fetch(url);
             const result = await res.json();
             if (result.success) {
                 setMessages(prev => ({ ...prev, [chatId]: result.data }));
@@ -89,11 +97,11 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate, on
     };
 
     const filteredChats = chats
+        .filter(chat => chat.type === activeTab)
         .filter(chat => {
             const topicMatch = chat.topic?.toLowerCase().includes(searchQuery.toLowerCase());
             const contentMatch = chat.lastMessage?.body?.content?.toLowerCase().includes(searchQuery.toLowerCase());
             
-            // Date filtering
             const messageDate = chat.lastMessage?.createdDateTime ? new Date(chat.lastMessage.createdDateTime) : null;
             let dateMatch = true;
             if (messageDate) {
@@ -105,8 +113,8 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate, on
                     const end = new Date(endDate + "T23:59:59");
                     if (messageDate > end) dateMatch = false;
                 }
-            } else if (startDate || endDate) {
-                dateMatch = false; // If no date and we're filtering, exclude
+            } else if (chat.type === 'chat' && (startDate || endDate)) {
+                dateMatch = false; 
             }
 
             return (topicMatch || contentMatch) && dateMatch;
@@ -272,19 +280,37 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate, on
                 </div>
             ) : (
                 <div className="bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl shadow-black/50">
-                    <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/30 backdrop-blur-xl">
-                        <div className="flex items-center gap-4">
-                            <h4 className="font-bold text-slate-300 text-sm">Active Conversations ({filteredChats.length})</h4>
-                            <div className="h-4 w-[1px] bg-slate-800" />
-                            <p className="text-[10px] text-slate-500 font-mono uppercase tracking-widest">
-                                Cross-Tenant Detection Enabled
-                            </p>
+                    <div className="p-6 border-b border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-900/30 backdrop-blur-xl gap-6">
+                        <div className="flex flex-col gap-4">
+                            <div className="flex items-center gap-6">
+                                <button 
+                                    onClick={() => setActiveTab('chat')}
+                                    className={`text-[10px] font-black uppercase tracking-[0.2em] pb-2 border-b-2 transition-all ${
+                                        activeTab === 'chat' ? 'border-blue-500 text-blue-500' : 'border-transparent text-slate-500 hover:text-slate-300'
+                                    }`}
+                                >
+                                    Direct Chats
+                                </button>
+                                <button 
+                                    onClick={() => setActiveTab('channel')}
+                                    className={`text-[10px] font-black uppercase tracking-[0.2em] pb-2 border-b-2 transition-all ${
+                                        activeTab === 'channel' ? 'border-amber-500 text-amber-500' : 'border-transparent text-slate-500 hover:text-slate-300'
+                                    }`}
+                                >
+                                    Team Channels
+                                </button>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <p className="text-[10px] text-slate-500 font-mono uppercase tracking-widest">
+                                    {activeTab === 'chat' ? `Active Direct Threads (${filteredChats.length})` : `Discovered System Channels (${filteredChats.length})`}
+                                </p>
+                            </div>
                         </div>
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={14} />
                             <input 
                                 type="text" 
-                                placeholder="Filter by person or content..." 
+                                placeholder="Filter results..." 
                                 className="bg-slate-900/50 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white w-64 focus:ring-1 focus:ring-blue-500/50 transition-all"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -296,8 +322,8 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate, on
                         <table className="w-full text-left text-sm border-separate border-spacing-0 table-fixed">
                             <thead className="bg-slate-900/50 text-slate-500 uppercase text-[10px] font-black tracking-widest sticky top-0 z-20 backdrop-blur-md">
                                 <tr>
-                                    <th className="px-8 py-5 border-b border-slate-800 w-[50%]">Conversation Topic</th>
-                                    <th className="px-8 py-5 border-b border-slate-800 text-center w-[20%]">Type</th>
+                                    <th className="px-8 py-5 border-b border-slate-800 w-[50%]">{activeTab === 'chat' ? 'Conversation' : 'Channel Topic'}</th>
+                                    <th className="px-8 py-5 border-b border-slate-800 text-center w-[20%]">Status</th>
                                     <th className="px-8 py-5 border-b border-slate-800 text-center w-[20%]">Risk Factor</th>
                                     <th className="w-12 border-b border-slate-800"></th>
                                 </tr>
@@ -307,16 +333,25 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate, on
                                     <React.Fragment key={chat.id}>
                                         <tr 
                                             className="hover:bg-blue-500/5 cursor-pointer transition-colors group"
-                                            onClick={() => handleExpand(chat.id)}
+                                            onClick={() => {
+                                                if (expandedChatId === chat.id) {
+                                                    setExpandedChatId(null);
+                                                } else {
+                                                    setExpandedChatId(chat.id);
+                                                    fetchMessages(chat.id, chat.teamId);
+                                                }
+                                            }}
                                         >
                                             <td className="px-8 py-6">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-slate-400 font-bold border border-slate-800 group-hover:border-indigo-500/30 transition-all">
+                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold border transition-all ${
+                                                        activeTab === 'chat' ? 'bg-slate-900 border-slate-800 text-slate-400 group-hover:border-indigo-500/30' : 'bg-amber-500/5 border-amber-500/10 text-amber-500'
+                                                    }`}>
                                                         {chat.topic ? chat.topic[0] : <Users size={16} />}
                                                     </div>
                                                     <div className="space-y-1">
                                                         <div className="font-bold text-slate-200 group-hover:text-blue-400 transition-colors leading-tight flex items-center gap-2">
-                                                            {chat.topic || 'Unnamed Chat'}
+                                                            {chat.topic || 'Unnamed Thread'}
                                                             {chat.isExternal && (
                                                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded text-[9px] font-black uppercase">
                                                                     External
@@ -324,14 +359,16 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate, on
                                                             )}
                                                         </div>
                                                         <div className="text-[11px] text-slate-500 line-clamp-1 italic font-light max-w-md" 
-                                                             dangerouslySetInnerHTML={{ __html: chat.lastMessage?.body?.content || 'Preview unavailable or system message' }}
+                                                             dangerouslySetInnerHTML={{ __html: chat.lastMessage?.body?.content || (chat.type === 'channel' ? 'Accessing channel history...' : 'Preview unavailable') }}
                                                         />
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="px-8 py-6 text-center">
-                                                <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 px-3 py-1 bg-slate-900 rounded-full border border-slate-800">
-                                                    {chat.chatType}
+                                                <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full border ${
+                                                    activeTab === 'chat' ? 'bg-slate-900 text-slate-500 border-slate-800' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                                                }`}>
+                                                    {chat.chatType || 'Channel'}
                                                 </span>
                                             </td>
                                             <td className="px-8 py-6 text-center">
@@ -341,7 +378,7 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate, on
                                                         HIGH RISK
                                                     </div>
                                                 ) : (
-                                                    <span className="text-slate-700 text-[10px]">Secure</span>
+                                                    <span className="text-slate-700 text-[10px]">Audit Verified</span>
                                                 )}
                                             </td>
                                             <td className="pr-6 text-slate-600 group-hover:text-slate-400 transition-colors">
@@ -355,20 +392,8 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate, on
                                                         <div className="flex items-center justify-between">
                                                             <p className="text-[10px] text-indigo-400 uppercase font-black tracking-widest flex items-center gap-2">
                                                                 <Activity size={10} />
-                                                                Full Conversation History
+                                                                Full {activeTab === 'chat' ? 'Chat' : 'Channel'} History Audit
                                                             </p>
-                                                            {chat.isExternal && (
-                                                                <div className="flex items-center gap-2">
-                                                                    <span className="text-[9px] text-rose-500 font-bold uppercase">External:</span>
-                                                                    <div className="flex gap-1">
-                                                                        {chat.externalParticipants.map((p: string, idx: number) => (
-                                                                            <span key={idx} className="px-2 py-0.5 bg-rose-500/10 text-rose-500 text-[8px] rounded border border-rose-500/20">
-                                                                                {p}
-                                                                            </span>
-                                                                        ))}
-                                                                    </div>
-                                                                </div>
-                                                            )}
                                                         </div>
 
                                                         {loadingMessages === chat.id ? (
@@ -378,8 +403,10 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate, on
                                                             </div>
                                                         ) : (
                                                             <div className="space-y-4 max-h-96 overflow-y-auto pr-4 custom-scrollbar">
-                                                                {messages[chat.id]?.slice().reverse().map((msg: any) => {
+                                                                {messages[chat.id]?.slice().sort((a,b) => new Date(a.createdDateTime).getTime() - new Date(b.createdDateTime).getTime()).map((msg: any) => {
                                                                     const isSystem = msg.messageType === 'system';
+                                                                    const isDeleted = msg.isDeleted;
+                                                                    
                                                                     if (isSystem) {
                                                                         return (
                                                                             <div key={msg.id} className="flex flex-col items-center py-2">
@@ -396,15 +423,25 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate, on
                                                                             <div className="flex items-center gap-2 mb-1 px-1">
                                                                                 <span className="text-[9px] font-bold text-slate-400">{msg.from?.user?.displayName || 'Unknown'}</span>
                                                                                 <span className="text-[8px] text-slate-600">{new Date(msg.createdDateTime).toLocaleString()}</span>
+                                                                                {isDeleted && (
+                                                                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-rose-500 text-white rounded text-[8px] font-black uppercase animate-pulse">
+                                                                                        <ShieldAlert size={8} /> Deleted
+                                                                                    </span>
+                                                                                )}
                                                                             </div>
                                                                             <div className={`p-4 rounded-2xl max-w-[85%] text-sm shadow-xl break-words overflow-hidden ${
+                                                                                isDeleted ? 'bg-rose-500/10 border-2 border-rose-500/30 text-rose-200' :
                                                                                 msg.from?.user?.id === userId 
                                                                                     ? 'bg-blue-600 text-white rounded-tr-none' 
                                                                                     : 'bg-slate-800 text-slate-200 rounded-tl-none border border-slate-700'
                                                                             }`}>
                                                                                 <div 
-                                                                                    className="prose prose-invert prose-sm max-w-none [&_img]:max-w-full [&_table]:max-w-full [&_table]:overflow-x-auto"
-                                                                                    dangerouslySetInnerHTML={{ __html: msg.body?.content }} 
+                                                                                    className={`prose prose-invert prose-sm max-w-none [&_img]:max-w-full [&_table]:max-w-full [&_table]:overflow-x-auto ${isDeleted ? 'italic opacity-60' : ''}`}
+                                                                                    dangerouslySetInnerHTML={{ 
+                                                                                        __html: isDeleted && !msg.body?.content 
+                                                                                            ? `<span class="italic">[Audit Note: Content was purged upon user deletion. Compliance copy archived in Purview substrate.]</span>` 
+                                                                                            : msg.body?.content 
+                                                                                    }} 
                                                                                 />
                                                                                 {msg.attachments?.length > 0 && (
                                                                                     <div className="mt-3 pt-3 border-t border-white/10 space-y-2">
@@ -438,13 +475,14 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate, on
                                     <tr>
                                         <td colSpan={4} className="px-8 py-20 text-center">
                                             <MessageSquare size={32} className="mx-auto text-slate-800 mb-4 opacity-50" />
-                                            <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest">No Teams conversations discovered.</p>
+                                            <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest text">No conversations discovered in this category.</p>
                                             {sinceDate && (
-                                                <p className="text-[10px] text-indigo-400 mt-2 italic">Try adjusting the "Show data from" date at the top of the page.</p>
+                                                <p className="text-[10px] text-indigo-400 mt-2 italic text">Discovery limited to data since {new Date(sinceDate).toLocaleDateString()}.</p>
                                             )}
                                         </td>
                                     </tr>
                                 )}
+
                             </tbody>
                         </table>
                     </div>
