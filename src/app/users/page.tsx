@@ -83,7 +83,10 @@ export default function UsersPage() {
     const [memberships, setMemberships] = useState<any[]>([]);
     const [directoryRoles, setDirectoryRoles] = useState<any[]>([]);
     const [sharedItems, setSharedItems] = useState<any[]>([]);
+    const [restrictedItems, setRestrictedItems] = useState<any[]>([]);
     const [loadingMemberships, setLoadingMemberships] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [scanning, setScanning] = useState(false);
 
     const fetchUsers = async () => {
         setLoading(true);
@@ -127,6 +130,10 @@ export default function UsersPage() {
                 mobilePhone: data.mobilePhone || '',
                 businessPhones: data.businessPhones && data.businessPhones.length > 0 ? data.businessPhones[0] : ''
             });
+
+            // Clear restricted items when switching users
+            setRestrictedItems([]);
+            setSearchQuery("");
         } catch (error) {
             console.error("Failed to fetch user details", error);
         } finally {
@@ -156,11 +163,28 @@ export default function UsersPage() {
                 setMemberships(data.groups || []);
                 setDirectoryRoles(data.directoryRoles || []);
                 setSharedItems(data.sharedItems || []);
+                setRestrictedItems(data.restrictedItems || []);
             }
         } catch (error) {
             console.error("Failed to fetch memberships", error);
         } finally {
             setLoadingMemberships(false);
+        }
+    };
+
+    const handleRestrictedScan = async () => {
+        if (!selectedUserId || !searchQuery) return;
+        setScanning(true);
+        try {
+            const res = await fetch(`/api/users/${selectedUserId}/memberships?search=${encodeURIComponent(searchQuery)}&t=${Date.now()}`);
+            const data = await res.json();
+            if (data.success) {
+                setRestrictedItems(data.restrictedItems || []);
+            }
+        } catch (error) {
+            console.error("Restricted scan failed", error);
+        } finally {
+            setScanning(false);
         }
     };
 
@@ -607,6 +631,78 @@ export default function UsersPage() {
                                                     ) : (
                                                         <div className="p-8 text-center text-slate-600 italic text-xs">No special shared permissions discovered.</div>
                                                     )}
+                                                </div>
+                                            </div>
+
+                                            {/* Restricted Content Audit */}
+                                            <div>
+                                                <div className="flex justify-between items-center mb-3">
+                                                    <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest flex items-center gap-2">
+                                                        <ShieldAlert size={12} /> Restricted Content Discovery
+                                                    </p>
+                                                </div>
+                                                
+                                                <div className="space-y-3">
+                                                    <div className="flex gap-2">
+                                                        <div className="relative flex-1">
+                                                            <input 
+                                                                type="text" 
+                                                                placeholder="Enter sensitive folder names (e.g. Finance, CEO)..." 
+                                                                value={searchQuery}
+                                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                                                onKeyDown={(e) => e.key === 'Enter' && handleRestrictedScan()}
+                                                                className="w-full bg-slate-900/80 border border-slate-700 rounded-lg pl-3 pr-10 py-2 text-xs text-white placeholder:text-slate-600 outline-none focus:border-amber-500/50 transition-all"
+                                                            />
+                                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600">
+                                                                <Users size={12} />
+                                                            </div>
+                                                        </div>
+                                                        <button 
+                                                            onClick={handleRestrictedScan}
+                                                            disabled={scanning || !searchQuery}
+                                                            className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 text-[10px] font-black uppercase px-4 py-2 rounded-lg border border-amber-500/20 transition-all disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
+                                                        >
+                                                            {scanning ? <RefreshCw size={12} className="animate-spin" /> : <ShieldAlert size={12} />}
+                                                            {scanning ? 'Scanning...' : 'Scan Access'}
+                                                        </button>
+                                                    </div>
+
+                                                    <div className="bg-slate-900/50 rounded-xl border border-slate-800 overflow-hidden divide-y divide-slate-800/50">
+                                                        {restrictedItems.length > 0 ? (
+                                                            restrictedItems.map((item, idx) => (
+                                                                <div key={idx} className="p-4 hover:bg-slate-800/30 transition-colors flex items-center justify-between group/res">
+                                                                    <div className="flex items-center gap-4">
+                                                                        <div className="p-2 bg-rose-500/10 text-rose-500 rounded-lg">
+                                                                            <ShieldAlert size={16} />
+                                                                        </div>
+                                                                        <div>
+                                                                            <div className="flex items-center gap-2 mb-0.5">
+                                                                                <p className="text-xs font-bold text-slate-200">{item.name}</p>
+                                                                                <span className="text-[8px] font-black px-1.5 py-0.5 rounded uppercase bg-rose-500 text-white animate-pulse">
+                                                                                    Direct Access Found
+                                                                                </span>
+                                                                            </div>
+                                                                            <p className="text-[10px] text-slate-500">Verified Restricted Folder Visibility</p>
+                                                                        </div>
+                                                                    </div>
+                                                                    {item.webUrl && (
+                                                                        <a 
+                                                                            href={item.webUrl} 
+                                                                            target="_blank" 
+                                                                            className="p-2 text-slate-500 hover:text-amber-500 transition-colors opacity-0 group-hover/res:opacity-100 flex items-center gap-2"
+                                                                        >
+                                                                            <span className="text-[9px] font-bold">Investigate</span>
+                                                                            <ExternalLink size={14} />
+                                                                        </a>
+                                                                    )}
+                                                                </div>
+                                                            ))
+                                                        ) : (
+                                                            <div className="p-6 text-center text-slate-600 italic text-xs">
+                                                                {searchQuery ? 'Physical scan complete. No direct access discovered for these terms.' : 'Enter folder names above to perform a deep security scan for this user.'}
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
