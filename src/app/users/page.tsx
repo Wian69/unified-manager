@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Users, RefreshCw, X, Save, ChevronDown, ChevronRight, Clock, Mail, Calendar as CalendarIcon, Globe } from "lucide-react";
+import { Users, RefreshCw, X, Save, ChevronDown, ChevronRight, Clock, Mail, Calendar as CalendarIcon, Globe, ShieldAlert, ShieldCheck, ExternalLink } from "lucide-react";
 
 /**
  * Formats an ISO date string into a compact relative time string.
@@ -81,6 +81,7 @@ export default function UsersPage() {
     const [mailboxSaving, setMailboxSaving] = useState(false);
 
     const [memberships, setMemberships] = useState<any[]>([]);
+    const [directoryRoles, setDirectoryRoles] = useState<any[]>([]);
     const [sharedItems, setSharedItems] = useState<any[]>([]);
     const [loadingMemberships, setLoadingMemberships] = useState(false);
 
@@ -153,6 +154,7 @@ export default function UsersPage() {
             const data = await res.json();
             if (data.success) {
                 setMemberships(data.groups || []);
+                setDirectoryRoles(data.directoryRoles || []);
                 setSharedItems(data.sharedItems || []);
             }
         } catch (error) {
@@ -508,6 +510,31 @@ export default function UsersPage() {
                                         </h3>
                                         
                                         <div className="space-y-6">
+                                            {/* Directory Roles / Admin Roles */}
+                                            {directoryRoles.length > 0 && (
+                                                <div>
+                                                    <p className="text-[10px] font-black text-rose-500 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                                                        <ShieldAlert size={12} /> Special Admin Roles ({directoryRoles.length})
+                                                    </p>
+                                                    <div className="bg-rose-500/5 rounded-xl border border-rose-500/10 overflow-hidden divide-y divide-rose-500/10 shadow-lg shadow-rose-900/10">
+                                                        {directoryRoles.map((role) => (
+                                                            <div key={role.id} className="p-4 flex items-center justify-between">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="p-2 bg-rose-500/10 text-rose-500 rounded-lg">
+                                                                        <ShieldCheck size={16} />
+                                                                    </div>
+                                                                    <div>
+                                                                        <p className="text-xs font-black text-rose-400 uppercase tracking-wider">{role.displayName}</p>
+                                                                        <p className="text-[10px] text-slate-500 font-medium">{role.description || 'Elevated privileges across the tenant'}</p>
+                                                                    </div>
+                                                                </div>
+                                                                <span className="text-[8px] font-black px-2 py-0.5 bg-rose-500 text-white rounded uppercase animate-pulse">Critical</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+
                                             {/* Groups */}
                                             <div>
                                                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Group Memberships ({memberships.length})</p>
@@ -542,33 +569,43 @@ export default function UsersPage() {
 
                                             {/* Shared Items */}
                                             <div>
-                                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Shared Folders & Files ({sharedItems.length})</p>
+                                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Special Folder & File Permissions ({sharedItems.length})</p>
                                                 <div className="bg-slate-900/50 rounded-xl border border-slate-800 overflow-hidden divide-y divide-slate-800/50">
                                                     {sharedItems.length > 0 ? (
                                                         sharedItems.map((item, idx) => (
                                                             <div key={idx} className="p-4 hover:bg-slate-800/30 transition-colors flex items-center justify-between group/item">
-                                                                <div className="flex items-center gap-3">
-                                                                    <div className="p-2 bg-emerald-500/10 text-emerald-500 rounded-lg">
-                                                                        {item.folder ? <Globe size={16} /> : <Save size={16} />}
+                                                                <div className="flex items-center gap-4">
+                                                                    <div className={`p-2 rounded-lg ${item.isFolder ? 'bg-amber-500/10 text-amber-500' : 'bg-blue-500/10 text-blue-500'}`}>
+                                                                        {item.isFolder ? <Globe size={16} /> : <Save size={16} />}
                                                                     </div>
                                                                     <div>
-                                                                        <p className="text-xs font-bold text-slate-200">{item.name}</p>
-                                                                        <p className="text-[10px] text-slate-500">Shared by {item.remoteItem?.createdBy?.user?.displayName || 'Unknown'}</p>
+                                                                        <div className="flex items-center gap-2 mb-0.5">
+                                                                            <p className="text-xs font-bold text-slate-200">{item.name}</p>
+                                                                            <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase border ${
+                                                                                item.role?.toLowerCase().includes('owner') || item.role?.toLowerCase().includes('write')
+                                                                                    ? 'bg-rose-500/10 text-rose-500 border-rose-500/20'
+                                                                                    : 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20'
+                                                                            }`}>
+                                                                                {item.role || 'Read'}
+                                                                            </span>
+                                                                        </div>
+                                                                        <p className="text-[10px] text-slate-500">Shared by <span className="text-slate-400">{item.sharedBy}</span></p>
                                                                     </div>
                                                                 </div>
                                                                 {item.webUrl && (
                                                                     <a 
                                                                         href={item.webUrl} 
                                                                         target="_blank" 
-                                                                        className="p-2 text-slate-500 hover:text-blue-500 transition-colors opacity-0 group-hover/item:opacity-100"
+                                                                        className="p-2 text-slate-500 hover:text-blue-500 transition-colors opacity-0 group-hover/item:opacity-100 flex items-center gap-2"
                                                                     >
-                                                                        <Globe size={14} />
+                                                                        <span className="text-[9px] font-bold">Open</span>
+                                                                        <ExternalLink size={14} />
                                                                     </a>
                                                                 )}
                                                             </div>
                                                         ))
                                                     ) : (
-                                                        <div className="p-8 text-center text-slate-600 italic text-xs">No explicitly shared items discovered.</div>
+                                                        <div className="p-8 text-center text-slate-600 italic text-xs">No special shared permissions discovered.</div>
                                                     )}
                                                 </div>
                                             </div>
