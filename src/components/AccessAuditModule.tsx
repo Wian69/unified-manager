@@ -33,7 +33,11 @@ export default function AccessAuditModule() {
             const res = await fetch('/api/security/audit/recent-failures');
             const data = await res.json();
             if (data.failures) {
-                setAuditData(data.failures);
+                // Ensure strict sorting by date descending (newest first)
+                const sortedData = [...data.failures].sort((a, b) => 
+                    new Date(b.time).getTime() - new Date(a.time).getTime()
+                );
+                setAuditData(sortedData);
                 setError(null);
             } else {
                 setError(data.error || "Failed to fetch audit logs");
@@ -138,7 +142,9 @@ export default function AccessAuditModule() {
                                             <span className="text-xs text-slate-400">{f.location}</span>
                                             <span className="text-slate-700">•</span>
                                             <Clock size={12} className="text-slate-500" />
-                                            <span className="text-xs text-slate-400">{new Date(f.time).toLocaleTimeString()}</span>
+                                            <span className="text-xs text-slate-400">
+                                                {new Date(f.time).toLocaleDateString()} {new Date(f.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
