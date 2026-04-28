@@ -15,6 +15,7 @@ import {
     User,
     Lock,
     Zap,
+    Info,
     ChevronDown,
     ChevronUp
 } from "lucide-react";
