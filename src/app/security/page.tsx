@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Shield, RefreshCw, AlertTriangle, CheckCircle, ChevronDown, ChevronRight, Info, Rocket, Search, Loader2 } from "lucide-react";
+import { Shield, RefreshCw, AlertTriangle, CheckCircle, ChevronDown, ChevronRight, Info, Rocket, Search, Loader2, Lock } from "lucide-react";
+import AccessAuditModule from "@/components/AccessAuditModule";
 
 export default function SecurityPage() {
     const [security, setSecurity] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [expandedRec, setExpandedRec] = useState<string | null>(null);
+    const [expandedRec, setExpandedRow] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState<'vulnerabilities' | 'access'>('vulnerabilities');
 
     // Remediation Deployment State
     const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
@@ -117,9 +119,42 @@ export default function SecurityPage() {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500 pb-20">
-            {/* ... (Header and Error Alert remain same) */}
+            <div className="flex justify-between items-end bg-slate-900/20 p-8 rounded-3xl border border-slate-800/40 backdrop-blur-xl">
+                <div>
+                    <h1 className="text-4xl font-black text-white tracking-tighter flex items-center gap-3">
+                        <Shield className="text-emerald-500" size={36} />
+                        Security Posture
+                    </h1>
+                    <p className="text-slate-400 mt-2 font-medium">Monitoring tenant vulnerabilities and access controls.</p>
+                </div>
+                <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-800">
+                    <button 
+                        onClick={() => setActiveTab('vulnerabilities')}
+                        className={`px-6 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'vulnerabilities' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'text-slate-500 hover:text-slate-300'}`}
+                    >
+                        Vulnerabilities
+                    </button>
+                    <button 
+                        onClick={() => setActiveTab('access')}
+                        className={`px-6 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'access' ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20' : 'text-slate-500 hover:text-slate-300'}`}
+                    >
+                        Access Audit
+                    </button>
+                </div>
+            </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {error && (
+                <div className="bg-rose-500/10 border border-rose-500/30 p-4 rounded-2xl flex items-center gap-3 text-rose-400 animate-in shake duration-500">
+                    <AlertTriangle size={20} />
+                    <p className="text-sm font-bold">{error}</p>
+                </div>
+            )}
+
+            {activeTab === 'access' ? (
+                <AccessAuditModule />
+            ) : (
+                <>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Score Card (remains same) */}
                 
                 {/* Vulnerability Catalog */}
@@ -399,6 +434,8 @@ export default function SecurityPage() {
                         </div>
                     </div>
                 </div>
+            )}
+                </>
             )}
         </div>
     );
