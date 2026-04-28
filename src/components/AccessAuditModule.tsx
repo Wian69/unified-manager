@@ -221,15 +221,26 @@ export default function AccessAuditModule() {
                                             </div>
 
                                             {/* Fix Action */}
-                                            {f.appliedPolicies.some((p: any) => p.result === 'failure' || p.result === 'notApplied') && (
-                                                <button 
-                                                    onClick={() => handleFix(f)}
-                                                    disabled={fixingId === f.id}
-                                                    className="w-full mt-2 flex items-center justify-center gap-2 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 py-3 rounded-xl border border-emerald-600/30 transition-all font-bold text-xs uppercase tracking-widest active:scale-95 disabled:opacity-50"
-                                                >
-                                                    {fixingId === f.id ? <RefreshCw className="animate-spin" size={14} /> : <Zap size={14} />}
-                                                    Apply Enrollment Exclusion Fix
-                                                </button>
+                                            {(f.appliedPolicies.some((p: any) => p.result === 'failure' || p.result === 'notApplied') || f.errorCode === 50097) && (
+                                                <div className="space-y-3">
+                                                    <button 
+                                                        onClick={() => handleFix(f)}
+                                                        disabled={fixingId === f.id}
+                                                        className="w-full mt-2 flex items-center justify-center gap-2 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 py-3 rounded-xl border border-emerald-600/30 transition-all font-bold text-xs uppercase tracking-widest active:scale-95 disabled:opacity-50"
+                                                    >
+                                                        {fixingId === f.id ? <RefreshCw className="animate-spin" size={14} /> : <Zap size={14} />}
+                                                        {f.appliedPolicies.length > 0 ? "Apply Policy Exclusion Fix" : "Apply Universal Enrollment Fix"}
+                                                    </button>
+                                                    
+                                                    {f.appliedPolicies.length === 0 && (
+                                                        <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 flex gap-3">
+                                                            <Info className="text-blue-400 shrink-0" size={14} />
+                                                            <p className="text-[10px] text-slate-500 leading-relaxed italic">
+                                                                No specific policy was reported. Applying the "Universal Fix" will scan all your policies and add enrollment exclusions to any that might be blocking this device join.
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             )}
                                         </div>
                                     </div>
