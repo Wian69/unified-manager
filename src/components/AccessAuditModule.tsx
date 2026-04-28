@@ -24,7 +24,6 @@ export default function AccessAuditModule() {
     const [auditData, setAuditData] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [fixingId, setFixingId] = useState<string | null>(null);
     const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
     const fetchAudit = async () => {
@@ -52,52 +51,6 @@ export default function AccessAuditModule() {
     useEffect(() => {
         fetchAudit();
     }, []);
-
-    const handleFix = async (failure: any) => {
-        // Find the specific policy that failed
-        const blockingPolicy = failure.appliedPolicies.find((p: any) => 
-            p.result === 'failure' || p.result === 'notApplied' || p.result === 'reportOnlyFailure'
-        );
-
-        // If no policy is found, but it's a Device Authentication error, we do a Universal Fix
-        const isUniversalFix = !blockingPolicy && failure.errorCode === 50097;
-
-        if (!blockingPolicy && !isUniversalFix) {
-            alert("No specific blocking policy identified for this failure and it is not a standard enrollment error.");
-            return;
-        }
-
-        const confirmMsg = isUniversalFix 
-            ? "No specific policy was reported by Entra ID. Would you like to perform a UNIVERSAL SCAN and apply enrollment exclusions to all policies that require MFA or Compliance?"
-            : `Are you sure you want to apply a fix to the policy: "${blockingPolicy.displayName}"? This will exclude Intune Enrollment apps to allow user onboarding.`;
-
-        if (!confirm(confirmMsg)) {
-            return;
-        }
-
-        setFixingId(failure.id);
-        try {
-            const res = await fetch('/api/security/remediate/ca', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    policyId: blockingPolicy?.id || null, // null triggers universal scan in the backend
-                    action: 'exclude-enrollment'
-                })
-            });
-            const result = await res.json();
-            if (res.ok) {
-                alert("Successfully updated policy exclusions!");
-                fetchAudit();
-            } else {
-                alert("Failed to apply fix: " + (result.details || result.error));
-            }
-        } catch (err: any) {
-            alert("Error: " + err.message);
-        } finally {
-            setFixingId(null);
-        }
-    };
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -245,26 +198,23 @@ export default function AccessAuditModule() {
                                                 )}
                                             </div>
 
-                                            {/* Fix Action */}
-                                            {(f.appliedPolicies.some((p: any) => p.result === 'failure' || p.result === 'notApplied') || f.errorCode === 50097) && (
-                                                <div className="space-y-3">
-                                                    <button 
-                                                        onClick={() => handleFix(f)}
-                                                        disabled={fixingId === f.id}
-                                                        className="w-full mt-2 flex items-center justify-center gap-2 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 py-3 rounded-xl border border-emerald-600/30 transition-all font-bold text-xs uppercase tracking-widest active:scale-95 disabled:opacity-50"
-                                                    >
-                                                        {fixingId === f.id ? <RefreshCw className="animate-spin" size={14} /> : <Zap size={14} />}
-                                                        {f.appliedPolicies.length > 0 ? "Apply Policy Exclusion Fix" : "Apply Universal Enrollment Fix"}
-                                                    </button>
-                                                    
-                                                    {f.appliedPolicies.length === 0 && (
-                                                        <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 flex gap-3">
-                                                            <Info className="text-blue-400 shrink-0" size={14} />
-                                                            <p className="text-[10px] text-slate-500 leading-relaxed italic">
-                                                                No specific policy was reported. Applying the "Universal Fix" will scan all your policies and add enrollment exclusions to any that might be blocking this device join.
-                                                            </p>
-                                                        </div>
-                                                    )}
+                                            {/* Manual Remediation Guide */}
+                                            {f.errorCode === 50097 && (
+                                                <div className="mt-4 p-4 bg-blue-500/5 border border-blue-500/20 rounded-xl space-y-3">
+                                                    <div className="flex items-center gap-2 text-blue-400">
+                                                        <ShieldAlert size={16} />
+                                                        <h4 className="text-xs font-bold uppercase tracking-wider">Manual Remediation Steps</h4>
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <p className="text-[11px] text-slate-300 font-medium">To resolve the 0x80070000 join error, apply these exclusions in Entra ID:</p>
+                                                        <ol className="text-[10px] text-slate-400 space-y-1 list-decimal ml-4">
+                                                            <li>Go to <span className="text-blue-400">Conditional Access</span> in the Entra Portal.</li>
+                                                            <li>Locate your global MFA or Compliance policies.</li>
+                                                            <li>In <span className="font-bold">Cloud apps or actions</span>, go to the <span className="font-bold text-white">Exclude</span> tab.</li>
+                                                            <li>Add <span className="text-emerald-400">Microsoft Intune Enrollment</span>, <span className="text-emerald-400">Microsoft Entra Register</span>, and <span className="text-emerald-400">Microsoft Intune</span> to the exclusion list.</li>
+                                                            <li>Save the policy and ask the user to try again.</li>
+                                                        </ol>
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
