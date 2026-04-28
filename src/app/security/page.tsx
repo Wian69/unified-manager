@@ -6,6 +6,19 @@ import { Shield, RefreshCw, AlertTriangle, CheckCircle, ChevronDown, ChevronRigh
 import AccessAuditModule from "@/components/AccessAuditModule";
 
 export default function SecurityPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex flex-col items-center justify-center py-20 bg-slate-900/20 rounded-3xl border border-dashed border-slate-800 animate-pulse">
+                <Loader2 className="animate-spin text-blue-500 mb-4" size={32} />
+                <h3 className="text-lg font-bold text-slate-300">Loading Security Posture...</h3>
+            </div>
+        }>
+            <SecurityContent />
+        </Suspense>
+    );
+}
+
+function SecurityContent() {
     const [security, setSecurity] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
