@@ -43,7 +43,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         { name: 'Out of Office', icon: Clock, path: '/ooo' },
         { name: 'Email Signatures', icon: Signature, path: '/signatures' },
         { name: 'Email Trace', icon: Mail, path: '/email/trace' },
-        { name: 'Security Audit', icon: ShieldAlert, path: '/security' },
+        { name: 'Security Audit', icon: ShieldAlert, path: '/security?tab=access' },
         { name: 'Settings', icon: Settings, path: '/settings' },
     ];
 

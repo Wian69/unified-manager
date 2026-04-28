@@ -54,13 +54,24 @@ export default function AccessAuditModule() {
     }, []);
 
     const handleFix = async (failure: any) => {
-        const blockingPolicy = failure.appliedPolicies.find((p: any) => p.result === 'failure' || p.result === 'notApplied' || p.result === 'reportOnlyFailure');
-        if (!blockingPolicy) {
-            alert("No specific blocking policy identified for this failure.");
+        // Find the specific policy that failed
+        const blockingPolicy = failure.appliedPolicies.find((p: any) => 
+            p.result === 'failure' || p.result === 'notApplied' || p.result === 'reportOnlyFailure'
+        );
+
+        // If no policy is found, but it's a Device Authentication error, we do a Universal Fix
+        const isUniversalFix = !blockingPolicy && failure.errorCode === 50097;
+
+        if (!blockingPolicy && !isUniversalFix) {
+            alert("No specific blocking policy identified for this failure and it is not a standard enrollment error.");
             return;
         }
 
-        if (!confirm(`Are you sure you want to apply a fix to the policy: "${blockingPolicy.displayName}"? This will exclude Intune Enrollment apps to allow user onboarding.`)) {
+        const confirmMsg = isUniversalFix 
+            ? "No specific policy was reported by Entra ID. Would you like to perform a UNIVERSAL SCAN and apply enrollment exclusions to all policies that require MFA or Compliance?"
+            : `Are you sure you want to apply a fix to the policy: "${blockingPolicy.displayName}"? This will exclude Intune Enrollment apps to allow user onboarding.`;
+
+        if (!confirm(confirmMsg)) {
             return;
         }
 
@@ -70,7 +81,7 @@ export default function AccessAuditModule() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    policyId: blockingPolicy.id,
+                    policyId: blockingPolicy?.id || null, // null triggers universal scan in the backend
                     action: 'exclude-enrollment'
                 })
             });
@@ -112,9 +123,16 @@ export default function AccessAuditModule() {
 
             <div className="grid grid-cols-1 gap-4">
                 {loading && auditData.length === 0 ? (
-                    Array(5).fill(0).map((_, i) => (
-                        <div key={i} className="h-24 bg-slate-800/20 rounded-2xl animate-pulse border border-slate-800/50" />
-                    ))
+                    <div className="space-y-4">
+                        <div className="flex flex-col items-center justify-center py-12 bg-slate-900/20 rounded-3xl border border-dashed border-slate-800 animate-pulse">
+                            <RefreshCw className="animate-spin text-blue-500 mb-4" size={32} />
+                            <h3 className="text-lg font-bold text-slate-300">Scanning Tenant for Access Failures...</h3>
+                            <p className="text-slate-500 text-sm mt-1">This may take up to 60 seconds as we resolve policy identities.</p>
+                        </div>
+                        {Array(3).fill(0).map((_, i) => (
+                            <div key={i} className="h-24 bg-slate-800/20 rounded-2xl animate-pulse border border-slate-800/50" />
+                        ))}
+                    </div>
                 ) : auditData.length > 0 ? (
                     auditData.map((f) => (
                         <div 

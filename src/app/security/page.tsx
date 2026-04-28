@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Shield, RefreshCw, AlertTriangle, CheckCircle, ChevronDown, ChevronRight, Info, Rocket, Search, Loader2, Lock } from "lucide-react";
 import AccessAuditModule from "@/components/AccessAuditModule";
 
@@ -9,7 +10,23 @@ export default function SecurityPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [expandedRec, setExpandedRow] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState<'vulnerabilities' | 'access'>('vulnerabilities');
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const [activeTab, setActiveTab] = useState<'vulnerabilities' | 'access'>(
+        searchParams.get('tab') === 'access' ? 'access' : 'vulnerabilities'
+    );
+
+    // Sync tab with URL
+    useEffect(() => {
+        const tab = searchParams.get('tab');
+        if (tab === 'access') setActiveTab('access');
+        else if (tab === 'vulnerabilities') setActiveTab('vulnerabilities');
+    }, [searchParams]);
+
+    const handleTabChange = (tab: 'vulnerabilities' | 'access') => {
+        setActiveTab(tab);
+        router.push(`/security?tab=${tab}`);
+    };
 
     // Remediation Deployment State
     const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
@@ -129,13 +146,13 @@ export default function SecurityPage() {
                 </div>
                 <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-800">
                     <button 
-                        onClick={() => setActiveTab('vulnerabilities')}
+                        onClick={() => handleTabChange('vulnerabilities')}
                         className={`px-6 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'vulnerabilities' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'text-slate-500 hover:text-slate-300'}`}
                     >
                         Vulnerabilities
                     </button>
                     <button 
-                        onClick={() => setActiveTab('access')}
+                        onClick={() => handleTabChange('access')}
                         className={`px-6 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'access' ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20' : 'text-slate-500 hover:text-slate-300'}`}
                     >
                         Access Audit
