@@ -59,7 +59,7 @@ export async function POST(request: Request) {
 
             return NextResponse.json({
                 success: true,
-                message: `Exclusions added to ${policiesToUpdate.length} policy/policies.`
+                message: `Exclusions added to ${policiesToUpdate.length} policy/policies: ${policiesToUpdate.map(p => p.displayName).join(', ')}`
             });
         }
 
