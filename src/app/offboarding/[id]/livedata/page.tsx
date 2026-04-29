@@ -185,7 +185,7 @@ export default function LiveDataDashboard() {
     };
 
     const triggerWinget = () => {
-        queueCommand('shell', { command: `winget upgrade --accept-source-agreements | Out-String` });
+        queueCommand('shell', { command: `winget upgrade --all --silent --accept-package-agreements --accept-source-agreements | Out-String` });
     };
 
     const triggerMessage = async () => {
