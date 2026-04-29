@@ -119,7 +119,7 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         deviceId: deviceId,
-                        scriptId: '9cac64c5-d352-4234-baa1-fa857481b912' 
+                        scriptId: 'e2a8c3da-73dc-461a-8ed0-4122ba261aac' 
                     })
                 });
                 const data = await res.json();
