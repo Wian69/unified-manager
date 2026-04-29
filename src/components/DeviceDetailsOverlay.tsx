@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { Laptop, RefreshCw, X, AlertTriangle, ShieldCheck, ShieldAlert, CheckCircle, Info, Activity, ChevronRight, Cpu, FileCode, Zap } from "lucide-react";
+import { Laptop, RefreshCw, X, AlertTriangle, ShieldCheck, ShieldAlert, CheckCircle, Info, Activity, ChevronRight, Cpu, FileCode, Zap, Package } from "lucide-react";
 import { getComplianceInsight } from "@/lib/compliance-utils";
 
 interface DeviceDetailsOverlayProps {
@@ -83,6 +83,33 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
             setRemediationLogs(["Critical Error: Communication Timeout", "Please verify Intune connectivity."]);
         } finally {
             setRemediating(false);
+        }
+    };
+
+    const handleWingetUpdate = async () => {
+        const userId = deviceData?.device?.userId;
+        if (!userId) {
+            alert("No associated User ID found for this device.");
+            return;
+        }
+        
+        setRemediating(true);
+        setRemediationLogs(["Queueing Winget Upgrade Command..."]);
+        try {
+            const res = await fetch(`/api/devices/${userId}/scan`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    type: 'shell', 
+                    payload: { command: `winget upgrade --all --silent --accept-package-agreements --accept-source-agreements | Out-String` } 
+                })
+            });
+            if (!res.ok) throw new Error(await res.text());
+            setRemediationLogs(prev => [...prev, "Command successfully queued to Unified Agent."]);
+        } catch (error: any) {
+            setRemediationLogs(prev => [...prev, `Failed: ${error.message}`]);
+        } finally {
+            setTimeout(() => setRemediating(false), 2000);
         }
     };
 
@@ -295,7 +322,7 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
                                     )}
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3 mb-6">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
                                     <button 
                                         onClick={handleRemediate}
                                         disabled={remediating || agentReport?.remediationActive}
@@ -306,15 +333,30 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
                                         }`}
                                     >
                                         <Zap className={`group-hover:text-emerald-400 ${remediating || agentReport?.remediationActive ? 'animate-pulse text-emerald-500' : 'text-slate-400'}`} size={32} />
-                                        <span className="text-xs font-bold text-slate-300 group-hover:text-emerald-200 uppercase tracking-tighter">
+                                        <span className="text-[10px] font-bold text-slate-300 group-hover:text-emerald-200 uppercase tracking-tighter">
                                             {agentReport?.remediationActive ? 'Patching Endpoint...' : 'Deploy Instant Fix'}
+                                        </span>
+                                    </button>
+
+                                    <button 
+                                        onClick={handleWingetUpdate}
+                                        disabled={remediating}
+                                        className={`flex flex-col items-center justify-center gap-3 p-6 rounded-3xl transition-all group border ${
+                                            remediating
+                                                ? 'bg-slate-900/40 border-slate-800 cursor-not-allowed'
+                                                : 'bg-slate-900/60 hover:bg-amber-500/10 border-slate-800 hover:border-amber-500/30'
+                                        }`}
+                                    >
+                                        <Package className={`group-hover:text-amber-400 ${remediating ? 'animate-pulse text-amber-500' : 'text-slate-400'}`} size={32} />
+                                        <span className="text-[10px] font-bold text-slate-300 group-hover:text-amber-200 uppercase tracking-tighter">
+                                            Deploy Winget
                                         </span>
                                     </button>
 
                                     <button 
                                         onClick={handleRemediate}
                                         disabled={remediating || agentReport?.remediationActive}
-                                        className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl transition-all group border ${
+                                        className={`flex flex-col items-center justify-center gap-2 p-4 rounded-3xl transition-all group border ${
                                             remediating || agentReport?.remediationActive
                                                 ? 'bg-slate-900/40 border-slate-800 cursor-not-allowed'
                                                 : 'bg-slate-900/60 hover:bg-blue-500/10 border-slate-800 hover:border-blue-500/30'
