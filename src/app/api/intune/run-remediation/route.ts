@@ -14,13 +14,12 @@ export async function POST(req: NextRequest) {
 
         console.log(`[IntuneAPI] Triggering remediation ${scriptId} on device ${deviceId}...`);
 
-        // Trigger the "Run Remediation" action on the specific device
-        // Endpoint: POST /deviceManagement/managedDevices/{managedDeviceId}/executeAction
-        await client.api(`/deviceManagement/managedDevices/${deviceId}/executeAction`)
+        // Trigger the "Initiate On Demand Proactive Remediation" action
+        // Endpoint: POST /deviceManagement/managedDevices/{managedDeviceId}/initiateOnDemandProactiveRemediation
+        await client.api(`/deviceManagement/managedDevices/${deviceId}/initiateOnDemandProactiveRemediation`)
             .version('beta')
             .post({
-                actionName: 'runRemediation',
-                deviceManagementScriptId: scriptId
+                scriptPolicyId: scriptId
             });
 
         return NextResponse.json({
