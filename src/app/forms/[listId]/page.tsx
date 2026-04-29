@@ -84,13 +84,24 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
 
     const handleEdit = (item: Item) => {
         setSelectedItem(item);
-        setEditData({ ...item.fields });
+        // Only populate editData with fields that match editable columns,
+        // excluding SharePoint system/read-only fields that would cause Graph API to reject the update
+        const editableFields: Record<string, any> = {};
+        columns.forEach(col => {
+            editableFields[col.name] = item.fields[col.name] ?? '';
+        });
+        setEditData(editableFields);
         setSaveStatus('idle');
     };
 
     const handleAddNew = () => {
         setSelectedItem({ id: '', fields: {} });
-        setEditData({});
+        // Initialize editData with empty values for each editable column
+        const emptyFields: Record<string, any> = {};
+        columns.forEach(col => {
+            emptyFields[col.name] = '';
+        });
+        setEditData(emptyFields);
         setSaveStatus('idle');
     };
 
@@ -104,20 +115,32 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
                 : `/api/forms/items?listId=${listId}&itemId=${selectedItem?.id}`;
             const method = isNew ? 'POST' : 'PATCH';
 
+            // Only send editable column fields, strip out any system fields
+            const cleanFields: Record<string, any> = {};
+            columns.forEach(col => {
+                if (editData[col.name] !== undefined && editData[col.name] !== '') {
+                    cleanFields[col.name] = editData[col.name];
+                }
+            });
+
             const res = await fetch(url, {
                 method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ fields: editData })
+                body: JSON.stringify({ fields: cleanFields })
             });
 
-            if (!res.ok) throw new Error('Save failed');
             const data = await res.json();
+            if (!res.ok) throw new Error(data.details || data.error || 'Save failed');
 
             // Refresh local items
             if (isNew) {
-                setItems(prev => [data.item, ...prev]);
+                // Normalize the Graph response — item may have fields nested or inline
+                const newItem = data.item?.fields 
+                    ? { id: data.item.id, fields: data.item.fields }
+                    : { id: data.item?.id || '', fields: cleanFields };
+                setItems(prev => [newItem, ...prev]);
             } else {
-                setItems(prev => prev.map(item => item.id === selectedItem?.id ? { ...item, fields: editData } : item));
+                setItems(prev => prev.map(item => item.id === selectedItem?.id ? { ...item, fields: { ...item.fields, ...cleanFields } } : item));
             }
             
             setSaveStatus('success');
@@ -126,6 +149,7 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
                 setSaveStatus('idle');
             }, 1500);
         } catch (err: any) {
+            console.error('[Forms] Save error:', err.message);
             setSaveStatus('error');
         } finally {
             setSaving(false);

@@ -5,6 +5,25 @@ export const dynamic = 'force-dynamic';
 
 const SITE_ID = 'xxeqncs.sharepoint.com,21560bf0-53a4-4067-90c0-a711b01ea3f2,b8018860-10c2-49bf-82a7-811de2ce3c3e';
 
+// SharePoint read-only / system fields that must never be sent in create/update calls
+const READ_ONLY_FIELDS = new Set([
+    'id', 'Created', 'Modified', 'AuthorLookupId', 'EditorLookupId',
+    '_UIVersionString', 'Attachments', 'Edit', 'LinkTitleNoMenu', 'LinkTitle',
+    'ItemChildCount', 'FolderChildCount', 'ContentType', '_ComplianceFlags',
+    '_ComplianceTag', '_ComplianceTagWrittenTime', '_ComplianceTagUserId',
+    '_ModerationComments', '_ModerationStatus',
+]);
+
+function stripReadOnlyFields(fields: Record<string, any>): Record<string, any> {
+    const clean: Record<string, any> = {};
+    for (const [key, value] of Object.entries(fields)) {
+        if (!READ_ONLY_FIELDS.has(key) && !key.startsWith('@') && !key.startsWith('_')) {
+            clean[key] = value;
+        }
+    }
+    return clean;
+}
+
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const listId = searchParams.get('listId');
@@ -46,9 +65,12 @@ export async function PATCH(request: Request) {
         const body = await request.json();
         const client = getGraphClient();
 
+        // Strip read-only system fields before sending to Graph API
+        const cleanFields = stripReadOnlyFields(body.fields || {});
+
         // Update the item's fields
         const response = await client.api(`/sites/${SITE_ID}/lists/${listId}/items/${itemId}/fields`)
-            .update(body.fields);
+            .update(cleanFields);
 
         return NextResponse.json({
             success: true,
@@ -74,10 +96,13 @@ export async function POST(request: Request) {
         const body = await request.json();
         const client = getGraphClient();
 
+        // Strip read-only system fields before sending to Graph API
+        const cleanFields = stripReadOnlyFields(body.fields || {});
+
         // Create the new item
         const response = await client.api(`/sites/${SITE_ID}/lists/${listId}/items`)
             .post({
-                fields: body.fields
+                fields: cleanFields
             });
 
         return NextResponse.json({
