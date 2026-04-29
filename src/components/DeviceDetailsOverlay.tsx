@@ -88,28 +88,53 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
 
     const handleWingetUpdate = async () => {
         const userId = deviceData?.device?.userId;
-        if (!userId) {
-            alert("No associated User ID found for this device.");
-            return;
-        }
+        const hasAgent = !!agentReport;
         
         setRemediating(true);
-        setRemediationLogs(["Queueing Winget Upgrade Command..."]);
-        try {
-            const res = await fetch(`/api/devices/${userId}/scan`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    type: 'shell', 
-                    payload: { command: `winget upgrade --all --silent --accept-package-agreements --accept-source-agreements | Out-String` } 
-                })
-            });
-            if (!res.ok) throw new Error(await res.text());
-            setRemediationLogs(prev => [...prev, "Command successfully queued to Unified Agent."]);
-        } catch (error: any) {
-            setRemediationLogs(prev => [...prev, `Failed: ${error.message}`]);
-        } finally {
-            setTimeout(() => setRemediating(false), 2000);
+        
+        if (hasAgent && userId) {
+            setRemediationLogs(["Unified Agent detected. Queueing Direct Command..."]);
+            try {
+                const res = await fetch(`/api/devices/${userId}/scan`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        type: 'shell', 
+                        payload: { command: `winget upgrade --all --silent --accept-package-agreements --accept-source-agreements | Out-String` } 
+                    })
+                });
+                if (!res.ok) throw new Error(await res.text());
+                setRemediationLogs(prev => [...prev, "Command successfully queued to Unified Agent."]);
+            } catch (error: any) {
+                setRemediationLogs(prev => [...prev, `Failed: ${error.message}`]);
+            } finally {
+                setTimeout(() => setRemediating(false), 2000);
+            }
+        } else {
+            setRemediationLogs(["No Unified Agent detected. Falling back to Intune...", "Triggering Intune Proactive Remediation: Winget 2026..."]);
+            try {
+                // Use the fixed Winget 2026 script ID: 9cac64c5-d352-4234-baa1-fa857481b912
+                const res = await fetch('/api/intune/run-remediation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        deviceId: deviceId,
+                        scriptId: '9cac64c5-d352-4234-baa1-fa857481b912' 
+                    })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || "Failed to trigger Intune remediation");
+                
+                setRemediationLogs(prev => [
+                    ...prev, 
+                    "SUCCESS: Intune Remediation Job Triggered.",
+                    "The device will now be forced to sync and run the Winget upgrade script via Intune Management Extension."
+                ]);
+            } catch (error: any) {
+                setRemediationLogs(prev => [...prev, `Intune Fallback Failed: ${error.message}`]);
+            } finally {
+                setTimeout(() => setRemediating(false), 3000);
+            }
         }
     };
 
