@@ -359,17 +359,26 @@ export default function EmailTraceModule({ userId, userDisplayName, sinceDate, o
                                                                     </p>
                                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                                                                         {fullMessages[email.id].attachments.map((att: any, idx: number) => (
-                                                                            <div key={idx} className="flex items-center justify-between p-4 bg-slate-900 rounded-xl border border-slate-800 group/att">
+                                                                            <a 
+                                                                                key={idx} 
+                                                                                href={`/api/email/message/${email.id}/attachment/${att.id}?userId=${userId}`}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                className="flex items-center justify-between p-4 bg-slate-900 rounded-xl border border-slate-800 hover:border-emerald-500/50 hover:bg-slate-800 transition-all cursor-pointer group/att"
+                                                                            >
                                                                                 <div className="flex items-center gap-3">
                                                                                     <div className="p-2 bg-emerald-500/10 rounded-lg group-hover/att:scale-110 transition-transform">
                                                                                         <Paperclip size={14} className="text-emerald-500" />
                                                                                     </div>
                                                                                     <div className="min-w-0">
-                                                                                        <p className="text-xs font-bold text-slate-200 truncate pr-2">{att.name}</p>
-                                                                                        <p className="text-[10px] text-slate-500 uppercase">{(att.size / 1024).toFixed(1)} KB • {att.contentType.split('/')[1]}</p>
+                                                                                        <p className="text-xs font-bold text-slate-200 truncate pr-2 group-hover/att:text-emerald-400 transition-colors">{att.name}</p>
+                                                                                        <p className="text-[10px] text-slate-500 uppercase">{(att.size / 1024).toFixed(1)} KB • {att.contentType?.split('/')[1] || 'Unknown'}</p>
                                                                                     </div>
                                                                                 </div>
-                                                                            </div>
+                                                                                <div className="text-slate-600 group-hover/att:text-emerald-400 transition-colors">
+                                                                                    <ExternalLink size={14} />
+                                                                                </div>
+                                                                            </a>
                                                                         ))}
                                                                     </div>
                                                                 </div>

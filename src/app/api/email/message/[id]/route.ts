@@ -21,7 +21,7 @@ export async function GET(
         // Fetch full message including body
         const response = await client.api(`/users/${userId}/messages/${messageId}`)
             .select('id,subject,sentDateTime,body,hasAttachments,toRecipients,ccRecipients')
-            .expand('attachments($select=name,contentType,size)')
+            .expand('attachments($select=id,name,contentType,size)')
             .get();
 
         return NextResponse.json({
