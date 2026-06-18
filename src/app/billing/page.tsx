@@ -1,9 +1,10 @@
 import { Download, FileSpreadsheet, Activity, DollarSign, Users, Globe, MapPin } from 'lucide-react';
-import billingData from '../../data/billing_data.json';
+import { fetchBillingData } from '../../lib/billing';
 
-export default function BillingPage() {
-    const calculatedM365RunRate = billingData?.regions?.reduce((acc: number, region: any) => acc + region.totalCost, 0) || 0;
-    const projectedNextBill = calculatedM365RunRate + (billingData?.secondaryCost || 0);
+export default async function BillingPage() {
+    const billingData = await fetchBillingData();
+    const calculatedM365RunRate = billingData.calculatedM365RunRate;
+    const projectedNextBill = billingData.projectedNextBill;
 
     return (
         <div className="p-8 max-w-7xl mx-auto">
@@ -13,10 +14,10 @@ export default function BillingPage() {
                         <Activity className="text-blue-500" /> 
                         Billing & Licensing
                     </h1>
-                    <p className="text-slate-400">View and download consolidated monthly billing categorized by Region.</p>
+                    <p className="text-slate-400">Live consolidated monthly billing categorized by Region.</p>
                 </div>
                 <a 
-                    href="/reports/Microsoft_License_Billing.csv" 
+                    href="/api/billing/export" 
                     download
                     className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 px-5 rounded-xl transition-all shadow-lg shadow-blue-900/20"
                 >

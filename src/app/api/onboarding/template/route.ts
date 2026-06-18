@@ -4,8 +4,8 @@ import { createClient } from '@supabase/supabase-js';
 export const dynamic = 'force-dynamic';
 
 const supabase = createClient(
-    process.env.SUPABASE_URL || '',
-    process.env.SUPABASE_ANON_KEY || ''
+    process.env.SUPABASE_URL || 'https://dummy.supabase.co',
+    process.env.SUPABASE_ANON_KEY || 'dummy'
 );
 
 // Default Template: Cleaned to remove "Done" labels as per User Request
