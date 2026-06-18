@@ -16,7 +16,7 @@ export default function BillingPage() {
                     <p className="text-slate-400">View and download consolidated monthly billing categorized by Region.</p>
                 </div>
                 <a 
-                    href="/reports/CFO_Billing_Report.csv" 
+                    href="/reports/Microsoft_License_Billing.csv" 
                     download
                     className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 px-5 rounded-xl transition-all shadow-lg shadow-blue-900/20"
                 >
