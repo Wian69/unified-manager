@@ -20,6 +20,7 @@ import {
     Zap,
     Signature,
     Mail,
+    DollarSign,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -44,6 +45,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         { name: 'Email Signatures', icon: Signature, path: '/signatures' },
         { name: 'Email Trace', icon: Mail, path: '/email/trace' },
         { name: 'Security Audit', icon: ShieldAlert, path: '/security?tab=access' },
+        { name: 'Billing', icon: DollarSign, path: '/billing' },
         { name: 'Settings', icon: Settings, path: '/settings' },
     ];
 

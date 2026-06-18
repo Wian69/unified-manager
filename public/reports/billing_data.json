@@ -1,0 +1,1144 @@
+﻿{
+    "generatedAt":  "2026-06-18 12:22:43",
+    "primaryCost":  1197.3200000000002,
+    "secondaryCost":  462.4882580388628,
+    "totalAmount":  1659.808258038863,
+    "assignments":  [
+                        {
+                            "user":  "abir.regaieg@eqncs.com",
+                            "product":  "AAD_PREMIUM_P2"
+                        },
+                        {
+                            "user":  "abir.regaieg@eqncs.com",
+                            "product":  "FLOW_FREE"
+                        },
+                        {
+                            "user":  "abir.regaieg@eqncs.com",
+                            "product":  "SPB"
+                        },
+                        {
+                            "user":  "accounts@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "accountssa@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "acueva_justworks.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "adams.ogunrinde@eqncs.com",
+                            "product":  "FLOW_FREE"
+                        },
+                        {
+                            "user":  "adams.ogunrinde@eqncs.com",
+                            "product":  "AAD_PREMIUM_P2"
+                        },
+                        {
+                            "user":  "adams.ogunrinde@eqncs.com",
+                            "product":  "SPB"
+                        },
+                        {
+                            "user":  "adm_arno@eqncs.com",
+                            "product":  "AAD_PREMIUM_P2"
+                        },
+                        {
+                            "user":  "adm_wian@eqncs.com",
+                            "product":  "POWER_BI_STANDARD"
+                        },
+                        {
+                            "user":  "adm_wian@eqncs.com",
+                            "product":  "SPB"
+                        },
+                        {
+                            "user":  "adm_wian@eqncs.com",
+                            "product":  "POWERAPPS_DEV"
+                        },
+                        {
+                            "user":  "adm_wian@eqncs.com",
+                            "product":  "FLOW_FREE"
+                        },
+                        {
+                            "user":  "adm_wian@eqncs.com",
+                            "product":  "CCIBOTS_PRIVPREV_VIRAL"
+                        },
+                        {
+                            "user":  "adm_wian@eqncs.com",
+                            "product":  "AAD_PREMIUM_P2"
+                        },
+                        {
+                            "user":  "admin.breakglass@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "admin@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "adminsa@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "adri_ziwani.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "adrian.akulubya@partner.eqncs.com",
+                            "product":  "EXCHANGESTANDARD"
+                        },
+                        {
+                            "user":  "adrienned_fusionsoftware.co.za#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "aiyasou_gmail.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "alex.iyasu@eqncs.com",
+                            "product":  "EXCHANGESTANDARD"
+                        },
+                        {
+                            "user":  "Aline.Umuhoza@partner.eqncs.com",
+                            "product":  "EXCHANGESTANDARD"
+                        },
+                        {
+                            "user":  "alissa.foale_robinai.co.uk#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "allem.benyaala@eqncs.com",
+                            "product":  "FLOW_FREE"
+                        },
+                        {
+                            "user":  "allem.benyaala@eqncs.com",
+                            "product":  "AAD_PREMIUM_P2"
+                        },
+                        {
+                            "user":  "allem.benyaala@eqncs.com",
+                            "product":  "SPB"
+                        },
+                        {
+                            "user":  "amanda.law@eqncs.com",
+                            "product":  "FLOW_FREE"
+                        },
+                        {
+                            "user":  "amanda.law@eqncs.com",
+                            "product":  "SPB"
+                        },
+                        {
+                            "user":  "amanda.law@eqncs.com",
+                            "product":  "AAD_PREMIUM_P2"
+                        },
+                        {
+                            "user":  "amorette.vandaalen@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "andrea.waterboer@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "annemarie.joseph_pkf.co.za#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "annique.detter@eqncs.com",
+                            "product":  "FLOW_FREE"
+                        },
+                        {
+                            "user":  "annique.detter@eqncs.com",
+                            "product":  "AAD_PREMIUM_P2"
+                        },
+                        {
+                            "user":  "annique.detter@eqncs.com",
+                            "product":  "SPB"
+                        },
+                        {
+                            "user":  "antonarlene_gmail.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "antonbrink2_gmail.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "arlene_smithland.co.za#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "arno.goedhart@eqncs.com",
+                            "product":  "FLOW_FREE"
+                        },
+                        {
+                            "user":  "arno.goedhart@eqncs.com",
+                            "product":  "AAD_PREMIUM_P2"
+                        },
+                        {
+                            "user":  "arno.goedhart@eqncs.com",
+                            "product":  "SPB"
+                        },
+                        {
+                            "user":  "Asrat.Bekele@partner.eqncs.com",
+                            "product":  "EXCHANGESTANDARD"
+                        },
+                        {
+                            "user":  "AUngerer_totaltrials.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "badie.bennour@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "baltonar_justworks.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "bankingke@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "bernard.kyalo_mbaya.co.ke#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "bert.damstra@eqncs.com",
+                            "product":  "AAD_PREMIUM_P2"
+                        },
+                        {
+                            "user":  "bert.damstra@eqncs.com",
+                            "product":  "SPB"
+                        },
+                        {
+                            "user":  "beverlyn.atieno@eqncs.com",
+                            "product":  "FLOW_FREE"
+                        },
+                        {
+                            "user":  "beverlyn.atieno@eqncs.com",
+                            "product":  "AAD_PREMIUM_P2"
+                        },
+                        {
+                            "user":  "beverlyn.atieno@eqncs.com",
+                            "product":  "SPB"
+                        },
+                        {
+                            "user":  "bianca_managedpeoplesolutions.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "BookaMeeting@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "bookings-prod@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "bookings-sandbox@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "bower1914_gmail.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "Bradley.Earp_europa-worldwide.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "Brinty@partner.eqncs.com",
+                            "product":  "EXCHANGESTANDARD"
+                        },
+                        {
+                            "user":  "burger_ziwani.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "CapeTownMeetingroom@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "careers@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "carla.loubser@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "carol_altowgro.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "Cawo_altowgroup.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "cescamilla_justworks.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "chantae.vandieman@eqncs.com",
+                            "product":  "FLOW_FREE"
+                        },
+                        {
+                            "user":  "chantae.vandieman@eqncs.com",
+                            "product":  "SPB"
+                        },
+                        {
+                            "user":  "chantae.vandieman@eqncs.com",
+                            "product":  "AAD_PREMIUM_P2"
+                        },
+                        {
+                            "user":  "charles.gombe@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "CHIKELUE.OKEKE_nrs.gov.ng#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "ChrisB_managedpeoplesolutions.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "cirsten_finvoke.co.za#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "clientpayments@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "cml@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "Corpoconsult.Morroco@partner.eqncs.com",
+                            "product":  "EXCHANGESTANDARD"
+                        },
+                        {
+                            "user":  "CorpSecSA@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "cosecea@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "CPTboardroom@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "crm@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "cyrine.mighri@eqncs.com",
+                            "product":  "FLOW_FREE"
+                        },
+                        {
+                            "user":  "cyrine.mighri@eqncs.com",
+                            "product":  "SPB"
+                        },
+                        {
+                            "user":  "cyrine.mighri@eqncs.com",
+                            "product":  "AAD_PREMIUM_P2"
+                        },
+                        {
+                            "user":  "Darlyn.Mbaya@partner.eqncs.com",
+                            "product":  "EXCHANGESTANDARD"
+                        },
+                        {
+                            "user":  "dataprivacy@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "david.mcdonough@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "dbaston_justworks.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "deon_vvsacc.co.za#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "derrick.lusiba@eqncs.com",
+                            "product":  "AAD_PREMIUM_P2"
+                        },
+                        {
+                            "user":  "derrick.lusiba@eqncs.com",
+                            "product":  "SPB"
+                        },
+                        {
+                            "user":  "desre.visagie_cipla.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "DevtestBooking@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "dm@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "dnderitu_ihrsolutions.co.ke#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "dorcas_fanisi.net#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "dustyn.winder@eqncs.com",
+                            "product":  "SPB"
+                        },
+                        {
+                            "user":  "dustyn.winder@eqncs.com",
+                            "product":  "AAD_PREMIUM_P2"
+                        },
+                        {
+                            "user":  "e_future.africa#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "edward.fraser_europa-worldwide.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "egypt.sdt@partner.eqncs.com",
+                            "product":  "EXCHANGESTANDARD"
+                        },
+                        {
+                            "user":  "ekinsey_vantage-dc.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "elana_kuteraccounting.co.za#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "enquiries@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "enzo_attacq.co.za#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "ekavanagh_europa-worldwide.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "EQN-Birthdays@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "eqncptprinter@eqncs.com",
+                            "product":  "EXCHANGESTANDARD"
+                        },
+                        {
+                            "user":  "eqntest@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "equinox@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "Equinox1@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "EquinoxEvents@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "EquinoxSandbox@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "esmeb_ldp.co.za#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "faith.cheruto_mbaya.co.ke#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "fhi@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "frivera_justworks.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "funmilayo.fajobi_nrs.go.ng#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "FusionTrainingOneonOne@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "gcazares_justworks.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "geos@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "Gerard.Akoni_nrs.gov.ng#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "Ginelle.Lategan@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "global-e-egypt@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "Habu.KAZAURE_nrs.gov.ng#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "hana.bae_robinai.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "hayen.achek@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "hongkong@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "Immaculate.Ibrahim@eqncs.com",
+                            "product":  "FLOW_FREE"
+                        },
+                        {
+                            "user":  "Immaculate.Ibrahim@eqncs.com",
+                            "product":  "AAD_PREMIUM_P2"
+                        },
+                        {
+                            "user":  "Immaculate.Ibrahim@eqncs.com",
+                            "product":  "SPB"
+                        },
+                        {
+                            "user":  "incidents@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "info.sa@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "info.wa@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "info@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "itcglobal@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "itsupport@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "itsupport@partner.eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "ITSupport1@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "ivy.royole@eqncs.com",
+                            "product":  "FLOW_FREE"
+                        },
+                        {
+                            "user":  "ivy.royole@eqncs.com",
+                            "product":  "SPB"
+                        },
+                        {
+                            "user":  "ivy.royole@eqncs.com",
+                            "product":  "AAD_PREMIUM_P2"
+                        },
+                        {
+                            "user":  "j.wambani_altowgro.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "jack.abari@eqncs.com",
+                            "product":  "EXCHANGESTANDARD"
+                        },
+                        {
+                            "user":  "jan.reyneke@eqncs.com",
+                            "product":  "EXCHANGEENTERPRISE"
+                        },
+                        {
+                            "user":  "jan.reyneke@eqncs.com",
+                            "product":  "FLOW_FREE"
+                        },
+                        {
+                            "user":  "jan.reyneke@eqncs.com",
+                            "product":  "AAD_PREMIUM_P2"
+                        },
+                        {
+                            "user":  "jan.reyneke@eqncs.com",
+                            "product":  "SPB"
+                        },
+                        {
+                            "user":  "janavz_ldp.co.za#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "jarboleda_justworks.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "jean.claude@partner.eqncs.com",
+                            "product":  "EXCHANGESTANDARD"
+                        },
+                        {
+                            "user":  "Jide.Adegboyegun_firs.gov.ng#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "jofrie.bower@eqncs.com",
+                            "product":  "FLOW_FREE"
+                        },
+                        {
+                            "user":  "jofrie.bower@eqncs.com",
+                            "product":  "AAD_PREMIUM_P2"
+                        },
+                        {
+                            "user":  "jofrie.bower@eqncs.com",
+                            "product":  "SPB"
+                        },
+                        {
+                            "user":  "jote.wakjira@eqncs.com",
+                            "product":  "EXCHANGEENTERPRISE"
+                        },
+                        {
+                            "user":  "jote.wakjira@eqncs.com",
+                            "product":  "FLOW_FREE"
+                        },
+                        {
+                            "user":  "jote.wakjira@eqncs.com",
+                            "product":  "AAD_PREMIUM_P2"
+                        },
+                        {
+                            "user":  "jote.wakjira@eqncs.com",
+                            "product":  "SPB"
+                        },
+                        {
+                            "user":  "Joyeux.Bahidika@partner.eqncs.com",
+                            "product":  "EXCHANGESTANDARD"
+                        },
+                        {
+                            "user":  "jrobles_justworks.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "juha.wiese@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "k.owusu-adjei_thirdwaycapital.co#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "kcarrasco_justworks.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "keri-leigh_ziwani.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "Kerr.cameron_robinai.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "Kevin.Njenga@partner.eqncs.com",
+                            "product":  "EXCHANGESTANDARD"
+                        },
+                        {
+                            "user":  "kevin.njenga_njengakevinassociates.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "komal.kungwani_robinai.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "KVandrau_totaltrials.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "lbasson_oldmutualalternatives.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "learning@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "lebohang.ramokonopi_bowmanslaw.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "liane.rainbow_robinai.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "Lizanne.deJager@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "londiwe.khoza_bowmanslaw.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "margaret.abah@eqncs.com",
+                            "product":  "FLOW_FREE"
+                        },
+                        {
+                            "user":  "margaret.abah@eqncs.com",
+                            "product":  "SPB"
+                        },
+                        {
+                            "user":  "margaret.abah@eqncs.com",
+                            "product":  "AAD_PREMIUM_P2"
+                        },
+                        {
+                            "user":  "marianne_finleys.co.za#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "marlon.ken_dartglobal.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "martin.wangigi_mbaya.co.ke#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "MedicalExam@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "MeetJote@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "melissa_finvoke.co.za#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "mgiovannetti_justworks.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "mguidorizzi_justworks.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "mohamed.werdien@eqncs.com",
+                            "product":  "AAD_PREMIUM_P2"
+                        },
+                        {
+                            "user":  "mohamed.werdien@eqncs.com",
+                            "product":  "POWER_BI_STANDARD"
+                        },
+                        {
+                            "user":  "mohamed.werdien@eqncs.com",
+                            "product":  "FLOW_FREE"
+                        },
+                        {
+                            "user":  "mohamed.werdien@eqncs.com",
+                            "product":  "SPB"
+                        },
+                        {
+                            "user":  "mohamed.yasin@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "mpeshane_justworks.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "Mwimba.Mwanxa@partner.eqncs.com",
+                            "product":  "EXCHANGESTANDARD"
+                        },
+                        {
+                            "user":  "nicholas.makusa@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "noahstanger_millenniumequity.co.za#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "noreply-automation@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "Nour.Manai@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "orcun.kadioglu_robinai.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "Partnerships@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "pastel.pc@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "paul.njoroge@eqncs.com",
+                            "product":  "AAD_PREMIUM_P2"
+                        },
+                        {
+                            "user":  "paul.njoroge@eqncs.com",
+                            "product":  "SPB"
+                        },
+                        {
+                            "user":  "Pauline.Mtui@partner.eqncs.com",
+                            "product":  "EXCHANGESTANDARD"
+                        },
+                        {
+                            "user":  "Pauline.Stratton@eqncs.com",
+                            "product":  "EXCHANGESTANDARD"
+                        },
+                        {
+                            "user":  "paulng.njoroge_gmail.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "Penninah.Ngabire@eqncs.com",
+                            "product":  "EXCHANGESTANDARD"
+                        },
+                        {
+                            "user":  "Perpetua.Mwangi@eqncs.com",
+                            "product":  "FLOW_FREE"
+                        },
+                        {
+                            "user":  "Perpetua.Mwangi@eqncs.com",
+                            "product":  "AAD_PREMIUM_P2"
+                        },
+                        {
+                            "user":  "Perpetua.Mwangi@eqncs.com",
+                            "product":  "SPB"
+                        },
+                        {
+                            "user":  "peter_vestedworld.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "pierre.smal@eqncs.com",
+                            "product":  "SPB"
+                        },
+                        {
+                            "user":  "pierre.smal@eqncs.com",
+                            "product":  "AAD_PREMIUM_P2"
+                        },
+                        {
+                            "user":  "Precious.Ette@eqncs.com",
+                            "product":  "AAD_PREMIUM_P2"
+                        },
+                        {
+                            "user":  "Precious.Ette@eqncs.com",
+                            "product":  "SPB"
+                        },
+                        {
+                            "user":  "psmal_totaltrials.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "radhouene.khayati@eqncs.com",
+                            "product":  "FLOW_FREE"
+                        },
+                        {
+                            "user":  "radhouene.khayati@eqncs.com",
+                            "product":  "SPB"
+                        },
+                        {
+                            "user":  "radwenkayeti_gmail.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "raisha.ramkhelawan_bowmanslaw.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "remote@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "retief.smith_pkf.co.za#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "RHerselman_FHIClinical.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "roan_ipicgroup.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "rsen_justworks.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "ruhann.herselman@eqncs.com",
+                            "product":  "FLOW_FREE"
+                        },
+                        {
+                            "user":  "ruhannherselman_gmail.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "ruth.browne_bowmanslaw.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "saber.gharbi@eqncs.com",
+                            "product":  "FLOW_FREE"
+                        },
+                        {
+                            "user":  "saber.gharbi@eqncs.com",
+                            "product":  "AAD_PREMIUM_P2"
+                        },
+                        {
+                            "user":  "saber.gharbi@eqncs.com",
+                            "product":  "SPB"
+                        },
+                        {
+                            "user":  "Samuel.Ogundare_firs.gov.ng#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "sbusisiwe.masondo_bowmanslaw.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "schuttev_fusionsoftware.co.za#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "sdanso_justworks.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "security@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "Selamawit.Alemayehu@partner.eqncs.com",
+                            "product":  "EXCHANGESTANDARD"
+                        },
+                        {
+                            "user":  "semhar.nigussie@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "serina.grobler_gmail.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "shalin.pillay_pkf.co.za#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "Shalin.pillay_pkfpta.co.za#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "shannon.fernandes_pkf.co.za#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "sheila.mate@partner.eqncs.com",
+                            "product":  "EXCHANGESTANDARD"
+                        },
+                        {
+                            "user":  "sheline.uygun_robinai.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "sla-support@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "SoftLanding@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "solezama_justworks.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "Sophia.Kadenge@partner.eqncs.com",
+                            "product":  "EXCHANGESTANDARD"
+                        },
+                        {
+                            "user":  "sophie_robinai.co.uk#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "souad.habibi@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "spencer.bush_europa-worldwide.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "stephanie_mediaagenda.co.za#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "Stephen.Ouma@partner.eqncs.com",
+                            "product":  "EXCHANGESTANDARD"
+                        },
+                        {
+                            "user":  "stripe@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "tamara.jacobs_pkf.co.za#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "tanya.scoble@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "tatiana.gitonga@eqncs.com",
+                            "product":  "FLOW_FREE"
+                        },
+                        {
+                            "user":  "tatiana.gitonga@eqncs.com",
+                            "product":  "SPB"
+                        },
+                        {
+                            "user":  "tatiana.gitonga@eqncs.com",
+                            "product":  "AAD_PREMIUM_P2"
+                        },
+                        {
+                            "user":  "taxsa@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "teams_maestrolabs.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "Timothy.Gatonye@partner.eqncs.com",
+                            "product":  "EXCHANGESTANDARD"
+                        },
+                        {
+                            "user":  "tolulope.fasanya@eqncs.com",
+                            "product":  "POWER_BI_STANDARD"
+                        },
+                        {
+                            "user":  "tolulope.fasanya@eqncs.com",
+                            "product":  "Microsoft_365_Copilot"
+                        },
+                        {
+                            "user":  "tolulope.fasanya@eqncs.com",
+                            "product":  "POWERAPPS_DEV"
+                        },
+                        {
+                            "user":  "tolulope.fasanya@eqncs.com",
+                            "product":  "FLOW_FREE"
+                        },
+                        {
+                            "user":  "tolulope.fasanya@eqncs.com",
+                            "product":  "AAD_PREMIUM_P2"
+                        },
+                        {
+                            "user":  "tolulope.fasanya@eqncs.com",
+                            "product":  "SPB"
+                        },
+                        {
+                            "user":  "tom.barugh_robinai.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "tsion.tirsit@partner.eqncs.com",
+                            "product":  "EXCHANGESTANDARD"
+                        },
+                        {
+                            "user":  "Valence.Rukesha@eqncs.com",
+                            "product":  "EXCHANGESTANDARD"
+                        },
+                        {
+                            "user":  "vantagesa@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "Wael.Ahmed@partner.eqncs.com",
+                            "product":  "EXCHANGESTANDARD"
+                        },
+                        {
+                            "user":  "whistleblower@eqncs.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "wian.du.randt@eqncs.com",
+                            "product":  "POWERAPPS_DEV"
+                        },
+                        {
+                            "user":  "wian.du.randt@eqncs.com",
+                            "product":  "POWER_BI_STANDARD"
+                        },
+                        {
+                            "user":  "wian.du.randt@eqncs.com",
+                            "product":  "FLOW_FREE"
+                        },
+                        {
+                            "user":  "wian.du.randt@eqncs.com",
+                            "product":  "SPB"
+                        },
+                        {
+                            "user":  "wian.du.randt@eqncs.com",
+                            "product":  "AAD_PREMIUM_P2"
+                        },
+                        {
+                            "user":  "wiandurandt69_gmail.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "yolandies_ldp.co.za#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        },
+                        {
+                            "user":  "ZKumandan_oldmutualalternatives.com#EXT#@xxeqncs.onmicrosoft.com",
+                            "product":  "No Licenses Assigned"
+                        }
+                    ]
+}
