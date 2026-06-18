@@ -24,14 +24,14 @@ export default function BillingPage() {
 
             {billingData ? (
                 <>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
                         {/* Total Cost Card */}
                         <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 relative overflow-hidden">
                             <div className="absolute top-0 right-0 p-6 opacity-10">
                                 <DollarSign className="w-24 h-24 text-blue-500" />
                             </div>
-                            <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-2">Total Monthly Spend</h3>
-                            <div className="text-4xl font-black text-white mb-1">
+                            <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-2">Current Spend</h3>
+                            <div className="text-3xl font-black text-white mb-1">
                                 ${parseFloat(billingData.totalAmount as unknown as string).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
                             <div className="text-xs text-slate-500 mt-2">
@@ -39,10 +39,21 @@ export default function BillingPage() {
                             </div>
                         </div>
 
+                        {/* Projected Next Bill Card */}
+                        <div className="bg-blue-900/20 border border-blue-500/30 rounded-2xl p-6 relative overflow-hidden">
+                            <h3 className="text-sm font-semibold text-blue-300 uppercase tracking-widest mb-2">Projected Next Bill</h3>
+                            <div className="text-3xl font-black text-blue-400 mb-1">
+                                ${parseFloat(billingData.totalAmount as unknown as string).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </div>
+                            <p className="text-xs text-blue-300/70 mt-2">
+                                Estimated based on current active licenses
+                            </p>
+                        </div>
+
                         {/* M365 Cost Card */}
                         <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 relative overflow-hidden">
                             <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-2">M365 Licenses</h3>
-                            <div className="text-3xl font-black text-blue-400 mb-1">
+                            <div className="text-2xl font-black text-white mb-1">
                                 ${parseFloat(billingData.primaryCost as unknown as string).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
                             <p className="text-xs text-slate-500 mt-2">
@@ -53,11 +64,11 @@ export default function BillingPage() {
                         {/* Azure Cost Card */}
                         <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 relative overflow-hidden">
                             <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-2">Azure Infrastructure</h3>
-                            <div className="text-3xl font-black text-emerald-400 mb-1">
+                            <div className="text-2xl font-black text-emerald-400 mb-1">
                                 ${parseFloat(billingData.secondaryCost as unknown as string).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
                             <p className="text-xs text-slate-500 mt-2">
-                                Azure Plan subscription cost
+                                Current Azure Plan charges
                             </p>
                         </div>
                     </div>
