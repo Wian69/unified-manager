@@ -376,14 +376,13 @@
                                          },
                                          {
                                              "unitPrice":  9,
-                                             "totalCost":  63,
+                                             "totalCost":  54,
                                              "name":  "Microsoft Entra ID P2",
                                              "users":  [
                                                            "amanda.law@eqncs.com",
                                                            "annique.detter@eqncs.com",
                                                            "chantae.vandieman@eqncs.com",
                                                            "jan.reyneke@eqncs.com",
-                                                           "jofrie.bower@eqncs.com",
                                                            "pierre.smal@eqncs.com",
                                                            "wian.du.randt@eqncs.com"
                                                        ]
@@ -404,14 +403,13 @@
                                          },
                                          {
                                              "unitPrice":  22,
-                                             "totalCost":  154,
+                                             "totalCost":  132,
                                              "name":  "Microsoft 365 Business Premium",
                                              "users":  [
                                                            "amanda.law@eqncs.com",
                                                            "annique.detter@eqncs.com",
                                                            "chantae.vandieman@eqncs.com",
                                                            "jan.reyneke@eqncs.com",
-                                                           "jofrie.bower@eqncs.com",
                                                            "pierre.smal@eqncs.com",
                                                            "wian.du.randt@eqncs.com"
                                                        ]
@@ -432,7 +430,7 @@
                                                        ]
                                          }
                                      ],
-                        "totalCost":  235,
+                        "totalCost":  204,
                         "name":  "Southern Region",
                         "totalUsers":  16
                     },
@@ -608,7 +606,7 @@
                         "totalUsers":  4
                     }
                 ],
-    "generatedAt":  "2026-06-18 14:34:15",
+    "generatedAt":  "2026-06-18 14:38:28",
     "primaryCost":  1197.3200000000002,
     "secondaryCost":  462.4882580388628,
     "totalAmount":  1659.808258038863
