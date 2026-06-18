@@ -11,164 +11,100 @@
                                                        ]
                                          },
                                          {
+                                             "unitPrice":  0,
+                                             "totalCost":  0,
+                                             "name":  "Power Automate Free",
+                                             "users":  [
+                                                           "beverlyn.atieno@eqncs.com",
+                                                           "ivy.royole@eqncs.com",
+                                                           "jote.wakjira@eqncs.com",
+                                                           "Perpetua.Mwangi@eqncs.com",
+                                                           "tatiana.gitonga@eqncs.com"
+                                                       ]
+                                         },
+                                         {
+                                             "unitPrice":  9,
+                                             "totalCost":  63,
+                                             "name":  "Microsoft Entra ID P2",
+                                             "users":  [
+                                                           "beverlyn.atieno@eqncs.com",
+                                                           "dustyn.winder@eqncs.com",
+                                                           "ivy.royole@eqncs.com",
+                                                           "jote.wakjira@eqncs.com",
+                                                           "paul.njoroge@eqncs.com",
+                                                           "Perpetua.Mwangi@eqncs.com",
+                                                           "tatiana.gitonga@eqncs.com"
+                                                       ]
+                                         },
+                                         {
+                                             "unitPrice":  4,
+                                             "totalCost":  12,
+                                             "name":  "Exchange Online (Plan 1)",
+                                             "users":  [
+                                                           "Pauline.Stratton@eqncs.com",
+                                                           "Penninah.Ngabire@eqncs.com",
+                                                           "Valence.Rukesha@eqncs.com"
+                                                       ]
+                                         },
+                                         {
+                                             "unitPrice":  22,
+                                             "totalCost":  154,
+                                             "name":  "Microsoft 365 Business Premium",
+                                             "users":  [
+                                                           "beverlyn.atieno@eqncs.com",
+                                                           "dustyn.winder@eqncs.com",
+                                                           "ivy.royole@eqncs.com",
+                                                           "jote.wakjira@eqncs.com",
+                                                           "paul.njoroge@eqncs.com",
+                                                           "Perpetua.Mwangi@eqncs.com",
+                                                           "tatiana.gitonga@eqncs.com"
+                                                       ]
+                                         }
+                                     ],
+                        "totalCost":  237,
+                        "name":  "Eastern Region",
+                        "totalUsers":  10
+                    },
+                    {
+                        "products":  [
+                                         {
+                                             "unitPrice":  0,
+                                             "totalCost":  0,
+                                             "name":  "No Licenses Assigned",
+                                             "users":  [
+                                                           "itsupport@partner.eqncs.com"
+                                                       ]
+                                         },
+                                         {
                                              "unitPrice":  4,
                                              "totalCost":  76,
                                              "name":  "Exchange Online (Plan 1)",
                                              "users":  [
+                                                           "adrian.akulubya@partner.eqncs.com",
                                                            "Aline.Umuhoza@partner.eqncs.com",
                                                            "Asrat.Bekele@partner.eqncs.com",
                                                            "Brinty@partner.eqncs.com",
+                                                           "Corpoconsult.Morroco@partner.eqncs.com",
                                                            "Darlyn.Mbaya@partner.eqncs.com",
+                                                           "egypt.sdt@partner.eqncs.com",
                                                            "jean.claude@partner.eqncs.com",
                                                            "Joyeux.Bahidika@partner.eqncs.com",
                                                            "Kevin.Njenga@partner.eqncs.com",
                                                            "Mwimba.Mwanxa@partner.eqncs.com",
                                                            "Pauline.Mtui@partner.eqncs.com",
-                                                           "Pauline.Stratton@eqncs.com",
-                                                           "Penninah.Ngabire@eqncs.com",
                                                            "Selamawit.Alemayehu@partner.eqncs.com",
                                                            "sheila.mate@partner.eqncs.com",
                                                            "Sophia.Kadenge@partner.eqncs.com",
                                                            "Stephen.Ouma@partner.eqncs.com",
                                                            "Timothy.Gatonye@partner.eqncs.com",
                                                            "tsion.tirsit@partner.eqncs.com",
-                                                           "Valence.Rukesha@eqncs.com",
                                                            "Wael.Ahmed@partner.eqncs.com"
                                                        ]
-                                         },
-                                         {
-                                             "unitPrice":  9,
-                                             "totalCost":  63,
-                                             "name":  "Microsoft Entra ID P2",
-                                             "users":  [
-                                                           "beverlyn.atieno@eqncs.com",
-                                                           "dustyn.winder@eqncs.com",
-                                                           "ivy.royole@eqncs.com",
-                                                           "jote.wakjira@eqncs.com",
-                                                           "paul.njoroge@eqncs.com",
-                                                           "Perpetua.Mwangi@eqncs.com",
-                                                           "tatiana.gitonga@eqncs.com"
-                                                       ]
-                                         },
-                                         {
-                                             "unitPrice":  0,
-                                             "totalCost":  0,
-                                             "name":  "Power Automate Free",
-                                             "users":  [
-                                                           "beverlyn.atieno@eqncs.com",
-                                                           "ivy.royole@eqncs.com",
-                                                           "jote.wakjira@eqncs.com",
-                                                           "Perpetua.Mwangi@eqncs.com",
-                                                           "tatiana.gitonga@eqncs.com"
-                                                       ]
-                                         },
-                                         {
-                                             "unitPrice":  22,
-                                             "totalCost":  154,
-                                             "name":  "Microsoft 365 Business Premium",
-                                             "users":  [
-                                                           "beverlyn.atieno@eqncs.com",
-                                                           "dustyn.winder@eqncs.com",
-                                                           "ivy.royole@eqncs.com",
-                                                           "jote.wakjira@eqncs.com",
-                                                           "paul.njoroge@eqncs.com",
-                                                           "Perpetua.Mwangi@eqncs.com",
-                                                           "tatiana.gitonga@eqncs.com"
-                                                       ]
                                          }
                                      ],
-                        "totalCost":  301,
-                        "name":  "Eastern Region",
-                        "totalUsers":  26
-                    },
-                    {
-                        "products":  [
-                                         {
-                                             "unitPrice":  8,
-                                             "totalCost":  8,
-                                             "name":  "Exchange Online (Plan 2)",
-                                             "users":  [
-                                                           "jan.reyneke@eqncs.com"
-                                                       ]
-                                         },
-                                         {
-                                             "unitPrice":  10,
-                                             "totalCost":  10,
-                                             "name":  "Power BI Pro",
-                                             "users":  [
-                                                           "wian.du.randt@eqncs.com"
-                                                       ]
-                                         },
-                                         {
-                                             "unitPrice":  0,
-                                             "totalCost":  0,
-                                             "name":  "Power Apps Developer",
-                                             "users":  [
-                                                           "wian.du.randt@eqncs.com"
-                                                       ]
-                                         },
-                                         {
-                                             "unitPrice":  9,
-                                             "totalCost":  63,
-                                             "name":  "Microsoft Entra ID P2",
-                                             "users":  [
-                                                           "amanda.law@eqncs.com",
-                                                           "annique.detter@eqncs.com",
-                                                           "chantae.vandieman@eqncs.com",
-                                                           "jan.reyneke@eqncs.com",
-                                                           "jofrie.bower@eqncs.com",
-                                                           "pierre.smal@eqncs.com",
-                                                           "wian.du.randt@eqncs.com"
-                                                       ]
-                                         },
-                                         {
-                                             "unitPrice":  0,
-                                             "totalCost":  0,
-                                             "name":  "Power Automate Free",
-                                             "users":  [
-                                                           "amanda.law@eqncs.com",
-                                                           "annique.detter@eqncs.com",
-                                                           "chantae.vandieman@eqncs.com",
-                                                           "jan.reyneke@eqncs.com",
-                                                           "jofrie.bower@eqncs.com",
-                                                           "ruhann.herselman@eqncs.com",
-                                                           "wian.du.randt@eqncs.com"
-                                                       ]
-                                         },
-                                         {
-                                             "unitPrice":  22,
-                                             "totalCost":  154,
-                                             "name":  "Microsoft 365 Business Premium",
-                                             "users":  [
-                                                           "amanda.law@eqncs.com",
-                                                           "annique.detter@eqncs.com",
-                                                           "chantae.vandieman@eqncs.com",
-                                                           "jan.reyneke@eqncs.com",
-                                                           "jofrie.bower@eqncs.com",
-                                                           "pierre.smal@eqncs.com",
-                                                           "wian.du.randt@eqncs.com"
-                                                       ]
-                                         },
-                                         {
-                                             "unitPrice":  0,
-                                             "totalCost":  0,
-                                             "name":  "No Licenses Assigned",
-                                             "users":  [
-                                                           "amorette.vandaalen@eqncs.com",
-                                                           "andrea.waterboer@eqncs.com",
-                                                           "CapeTownMeetingroom@eqncs.com",
-                                                           "carla.loubser@eqncs.com",
-                                                           "CPTboardroom@eqncs.com",
-                                                           "itsupport@partner.eqncs.com",
-                                                           "juha.wiese@eqncs.com",
-                                                           "Lizanne.deJager@eqncs.com",
-                                                           "tanya.scoble@eqncs.com"
-                                                       ]
-                                         }
-                                     ],
-                        "totalCost":  235,
-                        "name":  "Southern Region",
-                        "totalUsers":  17
+                        "totalCost":  76,
+                        "name":  "Sub Contractors",
+                        "totalUsers":  20
                     },
                     {
                         "products":  [
@@ -415,17 +351,90 @@
                     {
                         "products":  [
                                          {
-                                             "unitPrice":  4,
-                                             "totalCost":  4,
-                                             "name":  "Exchange Online (Plan 1)",
+                                             "unitPrice":  8,
+                                             "totalCost":  8,
+                                             "name":  "Exchange Online (Plan 2)",
                                              "users":  [
-                                                           "adrian.akulubya@partner.eqncs.com"
+                                                           "jan.reyneke@eqncs.com"
+                                                       ]
+                                         },
+                                         {
+                                             "unitPrice":  10,
+                                             "totalCost":  10,
+                                             "name":  "Power BI Pro",
+                                             "users":  [
+                                                           "wian.du.randt@eqncs.com"
+                                                       ]
+                                         },
+                                         {
+                                             "unitPrice":  0,
+                                             "totalCost":  0,
+                                             "name":  "Power Apps Developer",
+                                             "users":  [
+                                                           "wian.du.randt@eqncs.com"
+                                                       ]
+                                         },
+                                         {
+                                             "unitPrice":  9,
+                                             "totalCost":  63,
+                                             "name":  "Microsoft Entra ID P2",
+                                             "users":  [
+                                                           "amanda.law@eqncs.com",
+                                                           "annique.detter@eqncs.com",
+                                                           "chantae.vandieman@eqncs.com",
+                                                           "jan.reyneke@eqncs.com",
+                                                           "jofrie.bower@eqncs.com",
+                                                           "pierre.smal@eqncs.com",
+                                                           "wian.du.randt@eqncs.com"
+                                                       ]
+                                         },
+                                         {
+                                             "unitPrice":  0,
+                                             "totalCost":  0,
+                                             "name":  "Power Automate Free",
+                                             "users":  [
+                                                           "amanda.law@eqncs.com",
+                                                           "annique.detter@eqncs.com",
+                                                           "chantae.vandieman@eqncs.com",
+                                                           "jan.reyneke@eqncs.com",
+                                                           "jofrie.bower@eqncs.com",
+                                                           "ruhann.herselman@eqncs.com",
+                                                           "wian.du.randt@eqncs.com"
+                                                       ]
+                                         },
+                                         {
+                                             "unitPrice":  22,
+                                             "totalCost":  154,
+                                             "name":  "Microsoft 365 Business Premium",
+                                             "users":  [
+                                                           "amanda.law@eqncs.com",
+                                                           "annique.detter@eqncs.com",
+                                                           "chantae.vandieman@eqncs.com",
+                                                           "jan.reyneke@eqncs.com",
+                                                           "jofrie.bower@eqncs.com",
+                                                           "pierre.smal@eqncs.com",
+                                                           "wian.du.randt@eqncs.com"
+                                                       ]
+                                         },
+                                         {
+                                             "unitPrice":  0,
+                                             "totalCost":  0,
+                                             "name":  "No Licenses Assigned",
+                                             "users":  [
+                                                           "amorette.vandaalen@eqncs.com",
+                                                           "andrea.waterboer@eqncs.com",
+                                                           "CapeTownMeetingroom@eqncs.com",
+                                                           "carla.loubser@eqncs.com",
+                                                           "CPTboardroom@eqncs.com",
+                                                           "juha.wiese@eqncs.com",
+                                                           "Lizanne.deJager@eqncs.com",
+                                                           "tanya.scoble@eqncs.com"
                                                        ]
                                          }
                                      ],
-                        "totalCost":  4,
-                        "name":  "Eastern Africa",
-                        "totalUsers":  1
+                        "totalCost":  235,
+                        "name":  "Southern Region",
+                        "totalUsers":  16
                     },
                     {
                         "products":  [
@@ -486,15 +495,6 @@
                                                        ]
                                          },
                                          {
-                                             "unitPrice":  4,
-                                             "totalCost":  8,
-                                             "name":  "Exchange Online (Plan 1)",
-                                             "users":  [
-                                                           "Corpoconsult.Morroco@partner.eqncs.com",
-                                                           "egypt.sdt@partner.eqncs.com"
-                                                       ]
-                                         },
-                                         {
                                              "unitPrice":  22,
                                              "totalCost":  132,
                                              "name":  "Microsoft 365 Business Premium",
@@ -508,9 +508,9 @@
                                                        ]
                                          }
                                      ],
-                        "totalCost":  195,
+                        "totalCost":  187,
                         "name":  "Northern Region",
-                        "totalUsers":  8
+                        "totalUsers":  6
                     },
                     {
                         "products":  [
@@ -608,7 +608,7 @@
                         "totalUsers":  4
                     }
                 ],
-    "generatedAt":  "2026-06-18 14:29:46",
+    "generatedAt":  "2026-06-18 14:34:15",
     "primaryCost":  1197.3200000000002,
     "secondaryCost":  462.4882580388628,
     "totalAmount":  1659.808258038863
