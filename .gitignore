@@ -67,3 +67,6 @@ x86/
 *.lib
 *.ilk
 *.exp
+
+scratch/
+

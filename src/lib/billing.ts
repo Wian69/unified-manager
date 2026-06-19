@@ -70,10 +70,7 @@ export async function fetchBillingData() {
         });
         if (invRes.ok) {
             const invData = await invRes.json();
-            const recentInvoices = (invData.value || [])
-                .sort((a: any, b: any) => new Date(b.properties.invoiceDate).getTime() - new Date(a.properties.invoiceDate).getTime())
-                .slice(0, 4);
-            primaryTotal = recentInvoices.reduce((sum: number, inv: any) => sum + (inv.properties.totalAmount?.value || 0), 0);
+            primaryTotal = (invData.value || []).reduce((sum: number, inv: any) => sum + (inv.properties.totalAmount?.value || 0), 0);
         }
 
         // Secondary Subscription (Azure)
