@@ -1,6 +1,8 @@
 import { Download, FileSpreadsheet, Activity, DollarSign, Users, Globe, MapPin } from 'lucide-react';
 import { fetchBillingData } from '../../lib/billing';
 
+export const dynamic = 'force-dynamic';
+
 export default async function BillingPage() {
     const billingData = await fetchBillingData();
     const calculatedM365RunRate = billingData.calculatedM365RunRate;

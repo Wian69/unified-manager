@@ -6,7 +6,8 @@ const PRICING_MAP: Record<string, number> = {
     "AAD_PREMIUM_P2": 9.00,
     "EXCHANGESTANDARD": 4.00,
     "EXCHANGEENTERPRISE": 8.00,
-    "POWER_BI_STANDARD": 10.00
+    "POWER_BI_STANDARD": 10.00,
+    "Remote_Help_AddOn": 3.50
 };
 
 const FRIENDLY_NAME_MAP: Record<string, string> = {
@@ -17,7 +18,8 @@ const FRIENDLY_NAME_MAP: Record<string, string> = {
     "POWER_BI_STANDARD": "Power BI Pro",
     "FLOW_FREE": "Power Automate Free",
     "POWERAPPS_DEV": "Power Apps Developer",
-    "CCIBOTS_PRIVPREV_VIRAL": "Copilot Studio (Preview)"
+    "CCIBOTS_PRIVPREV_VIRAL": "Copilot Studio (Preview)",
+    "Remote_Help_AddOn": "Intune Remote Help"
 };
 
 async function getAzureArmToken() {
@@ -62,7 +64,10 @@ export async function fetchBillingData() {
         const primaryProfile = "LMWI-D26L-BG7-PGB";
         const invoiceUrl = `https://management.azure.com/providers/Microsoft.Billing/billingAccounts/${primaryAccount}/billingProfiles/${primaryProfile}/invoices?api-version=2020-05-01&periodStartDate=${startDate}&periodEndDate=${endDate}`;
         
-        const invRes = await fetch(invoiceUrl, { headers: { Authorization: `Bearer ${armToken}` } });
+        const invRes = await fetch(invoiceUrl, { 
+            headers: { Authorization: `Bearer ${armToken}` },
+            cache: 'no-store'
+        });
         if (invRes.ok) {
             const invData = await invRes.json();
             const recentInvoices = (invData.value || [])
@@ -76,7 +81,10 @@ export async function fetchBillingData() {
         const secondaryProfile = "GAAA-MHOD-BG7-PGB";
         const subUrl = `https://management.azure.com/providers/Microsoft.Billing/billingAccounts/${secondaryAccount}/billingProfiles/${secondaryProfile}/billingSubscriptions?api-version=2020-05-01`;
         
-        const subRes = await fetch(subUrl, { headers: { Authorization: `Bearer ${armToken}` } });
+        const subRes = await fetch(subUrl, { 
+            headers: { Authorization: `Bearer ${armToken}` },
+            cache: 'no-store'
+        });
         if (subRes.ok) {
             const subData = await subRes.json();
             secondaryTotal = (subData.value || []).reduce((sum: number, sub: any) => sum + (sub.properties.lastMonthCharges?.value || 0), 0);
