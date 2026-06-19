@@ -7,7 +7,9 @@ const PRICING_MAP: Record<string, number> = {
     "EXCHANGESTANDARD": 4.00,
     "EXCHANGEENTERPRISE": 8.00,
     "POWER_BI_STANDARD": 10.00,
-    "Remote_Help_AddOn": 3.50
+    "Remote_Help_AddOn": 3.50,
+    "Microsoft_365_Copilot": 30.00,
+    "RMSBASIC": 2.00
 };
 
 const FRIENDLY_NAME_MAP: Record<string, string> = {
@@ -19,7 +21,12 @@ const FRIENDLY_NAME_MAP: Record<string, string> = {
     "FLOW_FREE": "Power Automate Free",
     "POWERAPPS_DEV": "Power Apps Developer",
     "CCIBOTS_PRIVPREV_VIRAL": "Copilot Studio (Preview)",
-    "Remote_Help_AddOn": "Intune Remote Help"
+    "Remote_Help_AddOn": "Intune Remote Help",
+    "Microsoft_365_Copilot": "Copilot for Microsoft 365",
+    "RMSBASIC": "Azure Rights Management Basic",
+    "STREAM": "Microsoft Stream",
+    "WINDOWS_STORE": "Windows Store for Business",
+    "Microsoft_Teams_Exploratory_Dept": "Microsoft Teams Exploratory"
 };
 
 async function getAzureArmToken() {
