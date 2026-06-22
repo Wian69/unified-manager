@@ -70,7 +70,8 @@ const RichEditor = forwardRef<HTMLDivElement, RichEditorProps>(({ id, label, onC
                         }
                     }}
                     onPaste={(e) => e.stopPropagation()}
-                    className="w-full min-h-[180px] max-h-[400px] text-slate-200 text-sm p-6 outline-none overflow-y-auto prose prose-invert prose-sm"
+                    style={{ fontFamily: 'Calibri, sans-serif', fontSize: '11pt', fontStyle: 'italic' }}
+                    className="w-full min-h-[180px] max-h-[400px] text-slate-200 p-6 outline-none overflow-y-auto prose prose-invert"
                 />
             </div>
         </div>

@@ -144,8 +144,8 @@ export default function OOOManagementPage() {
                     isTemplate: true,
                     automaticRepliesSetting: {
                         status: 'disabled',
-                        internalReplyMessage: 'I am currently out of the office and will return shortly.\n\nRegards,\n{Name}',
-                        externalReplyMessage: 'Thank you for your email. I am currently out of the office with limited access to email.\n\nFor urgent matters, please contact {Name} at {Mobile}.\n\nKind regards,\n{Name}',
+                        internalReplyMessage: 'I am currently out of the office and will return shortly.<br><br>Regards,<br>{Name}',
+                        externalReplyMessage: 'Thank you for your email. I am currently out of the office with limited access to email.<br><br>For urgent matters, please contact {Name} at {Mobile}.<br><br>Kind regards,<br>{Name}',
                         scheduledStartDateTime: { dateTime: new Date().toISOString().split('.')[0] + '.0000000', timeZone: tz },
                         scheduledEndDateTime: { dateTime: new Date(Date.now() + 86400000).toISOString().split('.')[0] + '.0000000', timeZone: tz }
                     }
@@ -177,8 +177,8 @@ export default function OOOManagementPage() {
             isTemplate: true,
             automaticRepliesSetting: {
                 status: 'disabled',
-                internalReplyMessage: 'I am currently out of the office and will return shortly.\n\nRegards,\n{Name}',
-                externalReplyMessage: 'Thank you for your email. I am currently out of the office with limited access to email.\n\nFor urgent matters, please contact {Name} at {Mobile}.\n\nKind regards,\n{Name}',
+                internalReplyMessage: 'I am currently out of the office and will return shortly.<br><br>Regards,<br>{Name}',
+                externalReplyMessage: 'Thank you for your email. I am currently out of the office with limited access to email.<br><br>For urgent matters, please contact {Name} at {Mobile}.<br><br>Kind regards,<br>{Name}',
                 scheduledStartDateTime: { dateTime: new Date().toISOString().split('.')[0] + '.0000000', timeZone: 'UTC' },
                 scheduledEndDateTime: { dateTime: new Date(Date.now() + 86400000).toISOString().split('.')[0] + '.0000000', timeZone: 'UTC' }
             }
@@ -315,17 +315,21 @@ export default function OOOManagementPage() {
             const u = users.find(user => user.id === id);
             setSyncProgress({ current: i + 1, total: selectedUserIds.length });
             
-            // Token Replacement Logic
+            // Token Replacement & Force Default Styling Logic
             const name = u?.displayName || '';
             const mobile = u?.mobilePhone || (u?.businessPhones && u.businessPhones[0]) || 'No Mobile Registered';
             
-            const personalizedInternal = internalHtml
+            const DEFAULT_STYLE = 'font-family: Calibri, sans-serif; font-size: 11pt; font-style: italic;';
+            
+            let personalizedInternal = internalHtml
                 .replace(/{Name}/gi, name)
                 .replace(/{Mobile( Phone)?}/gi, mobile);
+            personalizedInternal = `<div style="${DEFAULT_STYLE}">${personalizedInternal}</div>`;
                 
-            const personalizedExternal = externalHtml
+            let personalizedExternal = externalHtml
                 .replace(/{Name}/gi, name)
                 .replace(/{Mobile( Phone)?}/gi, mobile);
+            personalizedExternal = `<div style="${DEFAULT_STYLE}">${personalizedExternal}</div>`;
 
             // Construct the exact OOO payload
             const tz = getWindowsTimeZone();
