@@ -162,8 +162,12 @@ export default function OOOManagementPage() {
             
             // Timeout to ensure dynamic editors are mounted
             setTimeout(() => {
-                if (internalEditorRef.current) internalEditorRef.current.innerHTML = intMsg;
-                if (externalEditorRef.current) externalEditorRef.current.innerHTML = extMsg;
+                if (internalEditorRef.current && document.activeElement !== internalEditorRef.current) {
+                    internalEditorRef.current.innerHTML = intMsg;
+                }
+                if (externalEditorRef.current && document.activeElement !== externalEditorRef.current) {
+                    externalEditorRef.current.innerHTML = extMsg;
+                }
             }, 10); // Reduced delay for faster reset
         }
     }, [mailboxSettings, activeUserId]);

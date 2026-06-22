@@ -63,6 +63,12 @@ const RichEditor = forwardRef<HTMLDivElement, RichEditorProps>(({ id, label, onC
                     contentEditable
                     suppressContentEditableWarning
                     onInput={(e) => onChange?.(e.currentTarget.innerHTML)}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            document.execCommand('insertLineBreak');
+                            e.preventDefault();
+                        }
+                    }}
                     onPaste={(e) => e.stopPropagation()}
                     className="w-full min-h-[180px] max-h-[400px] text-slate-200 text-sm p-6 outline-none overflow-y-auto prose prose-invert prose-sm"
                 />
