@@ -513,16 +513,14 @@ export default function OOOManagementPage() {
                                             onChange={updateInternalMessage}
                                             ref={internalEditorRef}
                                         />
-                                        {isBulkMode && (
-                                            <div className="flex gap-4 ml-2">
-                                                <button onClick={() => insertToken('internal', '{Name}')} className="text-[9px] font-black uppercase text-blue-500 hover:text-white transition-colors flex items-center gap-1 bg-blue-500/10 px-2 py-1 rounded-md border border-blue-500/20">
-                                                    <UserCircle size={10} /> Insert {'{Name}'}
-                                                </button>
-                                                <button onClick={() => insertToken('internal', '{Mobile}')} className="text-[9px] font-black uppercase text-emerald-500 hover:text-white transition-colors flex items-center gap-1 bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/20">
-                                                    <Smartphone size={10} /> Insert {'{Mobile}'}
-                                                </button>
-                                            </div>
-                                        )}
+                                        <div className="flex gap-4 ml-2 mt-2">
+                                            <button onClick={() => insertToken('internal', '{Name}')} className="text-[9px] font-black uppercase text-blue-500 hover:text-white transition-colors flex items-center gap-1 bg-blue-500/10 px-2 py-1 rounded-md border border-blue-500/20">
+                                                <UserCircle size={10} /> Insert {'{Name}'}
+                                            </button>
+                                            <button onClick={() => insertToken('internal', '{Mobile}')} className="text-[9px] font-black uppercase text-emerald-500 hover:text-white transition-colors flex items-center gap-1 bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/20">
+                                                <Smartphone size={10} /> Insert {'{Mobile}'}
+                                            </button>
+                                        </div>
                                     </div>
                                     
                                     <div className="space-y-2">
@@ -534,16 +532,14 @@ export default function OOOManagementPage() {
                                             onChange={updateExternalMessage}
                                             ref={externalEditorRef}
                                         />
-                                        {isBulkMode && (
-                                            <div className="flex gap-4 ml-2">
-                                                <button onClick={() => insertToken('external', '{Name}')} className="text-[9px] font-black uppercase text-blue-500 hover:text-white transition-colors flex items-center gap-1 bg-blue-500/10 px-2 py-1 rounded-md border border-blue-500/20">
-                                                    <UserCircle size={10} /> Insert {'{Name}'}
-                                                </button>
-                                                <button onClick={() => insertToken('external', '{Mobile}')} className="text-[9px] font-black uppercase text-emerald-500 hover:text-white transition-colors flex items-center gap-1 bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/20">
-                                                    <Smartphone size={10} /> Insert {'{Mobile}'}
-                                                </button>
-                                            </div>
-                                        )}
+                                        <div className="flex gap-4 ml-2 mt-2">
+                                            <button onClick={() => insertToken('external', '{Name}')} className="text-[9px] font-black uppercase text-blue-500 hover:text-white transition-colors flex items-center gap-1 bg-blue-500/10 px-2 py-1 rounded-md border border-blue-500/20">
+                                                <UserCircle size={10} /> Insert {'{Name}'}
+                                            </button>
+                                            <button onClick={() => insertToken('external', '{Mobile}')} className="text-[9px] font-black uppercase text-emerald-500 hover:text-white transition-colors flex items-center gap-1 bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/20">
+                                                <Smartphone size={10} /> Insert {'{Mobile}'}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
