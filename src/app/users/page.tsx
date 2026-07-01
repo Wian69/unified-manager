@@ -88,6 +88,9 @@ export default function UsersPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [scanning, setScanning] = useState(false);
 
+    const [revoking, setRevoking] = useState(false);
+    const [revokeProgress, setRevokeProgress] = useState<{ total: number, completed: number } | null>(null);
+
     const fetchUsers = async () => {
         setLoading(true);
         try {
@@ -250,7 +253,54 @@ export default function UsersPage() {
         }
     };
 
-    // removed handleSaveMailbox as it's merged into handleSave
+    const handleRevokeAll = async () => {
+        if (!selectedUserId) return;
+        const confirmRevoke = window.confirm("WARNING: This will forcefully remove the user from all groups, directory roles, and directly shared SharePoint files. This action cannot be undone. Are you absolutely sure?");
+        if (!confirmRevoke) return;
+
+        setRevoking(true);
+        const tasks: any[] = [];
+
+        // 1. Queue Group Revocations
+        memberships.forEach(group => {
+            tasks.push({ type: 'group', targetId: group.id, name: group.displayName });
+        });
+
+        // 2. Queue Role Revocations
+        directoryRoles.forEach(role => {
+            tasks.push({ type: 'directoryRole', targetId: role.roleTemplateId || role.id, name: role.displayName });
+        });
+
+        // 3. Queue SharePoint/OneDrive Revocations
+        const itemsToRevoke = [...sharedItems, ...restrictedItems].filter(item => item.permissionId && item.driveId);
+        itemsToRevoke.forEach(item => {
+            tasks.push({ type: 'driveItem', targetId: item.id, driveId: item.driveId, permissionId: item.permissionId, name: item.name });
+        });
+
+        setRevokeProgress({ total: tasks.length, completed: 0 });
+        let completed = 0;
+
+        for (const task of tasks) {
+            try {
+                await fetch(`/api/users/${selectedUserId}/revoke`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(task)
+                });
+            } catch (e) {
+                console.error(`Failed to revoke ${task.name}`, e);
+            }
+            completed++;
+            setRevokeProgress({ total: tasks.length, completed });
+        }
+
+        alert("Revocation complete.");
+        setRevoking(false);
+        setRevokeProgress(null);
+        
+        // Refresh access list
+        handleUserClick(selectedUserId);
+    };
 
     const filteredUsers = users.filter(user => {
         if (signInFilter === 'all') return true;
@@ -528,10 +578,20 @@ export default function UsersPage() {
 
                                     {/* Access & Permissions Section */}
                                     <section>
-                                        <h3 className="text-lg font-bold text-slate-200 mb-4 border-b border-slate-800 pb-2 flex items-center gap-2">
-                                            Access & Permissions
-                                            {loadingMemberships && <RefreshCw size={14} className="animate-spin text-blue-500" />}
-                                        </h3>
+                                        <div className="flex justify-between items-center mb-4 border-b border-slate-800 pb-2">
+                                            <h3 className="text-lg font-bold text-slate-200 flex items-center gap-2">
+                                                Access & Permissions
+                                                {loadingMemberships && <RefreshCw size={14} className="animate-spin text-blue-500" />}
+                                            </h3>
+                                            <button 
+                                                onClick={handleRevokeAll}
+                                                disabled={revoking || loadingMemberships || (memberships.length === 0 && directoryRoles.length === 0 && restrictedItems.length === 0)}
+                                                className="bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+                                            >
+                                                {revoking ? <RefreshCw size={14} className="animate-spin" /> : <ShieldAlert size={14} />}
+                                                {revoking && revokeProgress ? `Revoking (${revokeProgress.completed}/${revokeProgress.total})...` : 'Revoke All Access'}
+                                            </button>
+                                        </div>
                                         
                                         <div className="space-y-6">
                                             {/* Directory Roles / Admin Roles */}

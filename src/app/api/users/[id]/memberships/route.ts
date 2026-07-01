@@ -40,15 +40,19 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
             
             sharedItems = (sharedRes.value || []).map((item: any) => {
                 let role = 'Contributor';
+                let permissionId = null;
                 const remote = item.remoteItem;
                 if (remote?.shared?.scope === 'anonymous') role = 'Public';
                 if (remote?.permissions && remote.permissions.length > 0) {
                     role = remote.permissions[0].roles?.join(', ') || role;
+                    permissionId = remote.permissions[0].id;
                 }
 
                 return {
                     name: item.name,
                     id: item.id,
+                    driveId: remote?.parentReference?.driveId,
+                    permissionId: permissionId,
                     webUrl: item.webUrl || remote?.webUrl,
                     isFolder: !!item.folder || !!remote?.folder,
                     sharedBy: remote?.sharedBy?.user?.displayName || 'Unknown',
@@ -124,17 +128,25 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
                     try {
                         const perms = await client.api(`/drives/${item.parentReference.driveId}/items/${item.id}/permissions`).get();
+                        let matchingPermissionId = null;
+                        
                         const hasAccess = perms.value?.some((p: any) => {
                             const grantee = p.grantedToV2 || p.grantedTo;
                             if (!grantee) return false;
                             const targetId = grantee.user?.id || grantee.group?.id || grantee.siteGroup?.id;
-                            return targetId === id || groupIds.includes(targetId);
+                            const matches = targetId === id || groupIds.includes(targetId);
+                            if (matches && !matchingPermissionId) {
+                                matchingPermissionId = p.id;
+                            }
+                            return matches;
                         });
 
                         if (hasAccess) {
                             restrictedItems.push({
                                 name: item.name,
                                 id: item.id,
+                                driveId: item.parentReference?.driveId,
+                                permissionId: matchingPermissionId,
                                 webUrl: item.webUrl,
                                 isFolder: true,
                                 role: 'Discovery Match',
