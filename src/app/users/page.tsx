@@ -651,6 +651,7 @@ export default function UsersPage() {
                                                         <div className="p-8 text-center text-slate-600 italic text-xs">No group memberships found.</div>
                                                     )}
                                                 </div>
+                                            </div>
                                             {/* Restricted Content Audit */}
                                             <div>
                                                 <div className="flex justify-between items-center mb-3">
