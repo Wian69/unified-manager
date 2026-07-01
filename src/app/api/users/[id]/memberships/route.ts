@@ -105,12 +105,69 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
             console.warn(`[API] Could not fetch recent folders for ${id}:`, e);
         }
 
+        // Deep Search Scan (Only runs when explicitly requested via searchKeywords)
+        let restrictedItems: any[] = [];
+        const autoKeywords = searchKeywords ? searchKeywords.split(',').map(k => k.trim()) : [];
+        const allDiscoveredIds = new Set(sharedItems.map(si => si.id));
+        
+        for (const keyword of autoKeywords) {
+            if (!keyword) continue;
+            try {
+                const searchRes = await client.api('/search/query').post({
+                    requests: [{
+                        entityTypes: ['driveItem'],
+                        query: { queryString: `"${keyword}" isDocument:false` },
+                        region: 'ZAF',
+                        from: 0,
+                        size: 25
+                    }]
+                });
+
+                const hits = searchRes.value?.[0]?.hitsContainers?.[0]?.hits || [];
+                
+                for (const hit of hits) {
+                    const item = hit.resource;
+                    if (!item.id || !item.parentReference?.driveId || allDiscoveredIds.has(item.id)) continue;
+
+                    try {
+                        const perms = await client.api(`/drives/${item.parentReference.driveId}/items/${item.id}/permissions`).get();
+                        let matchingPermissionId: string | null = null;
+                        
+                        const hasAccess = perms.value?.some((p: any) => {
+                            const grantee = p.grantedToV2 || p.grantedTo;
+                            if (!grantee) return false;
+                            const targetId = grantee.user?.id || grantee.group?.id || grantee.siteGroup?.id;
+                            const matches = targetId === id || groupIds.includes(targetId);
+                            if (matches && !matchingPermissionId) {
+                                matchingPermissionId = p.id;
+                            }
+                            return matches;
+                        });
+
+                        if (hasAccess) {
+                            restrictedItems.push({
+                                name: item.name,
+                                id: item.id,
+                                driveId: item.parentReference?.driveId,
+                                permissionId: matchingPermissionId,
+                                webUrl: item.webUrl,
+                                isFolder: true,
+                                role: 'Discovery Match',
+                                isRestricted: true
+                            });
+                            allDiscoveredIds.add(item.id);
+                        }
+                    } catch (pErr) {}
+                }
+            } catch (sErr) {}
+        }
+
         return NextResponse.json({
             success: true,
             groups,
             directoryRoles,
             sharedItems,
-            restrictedItems: [] // Keeping empty array to not break frontend before it is updated
+            restrictedItems
         });
     } catch (error: any) {
         console.error('[API] Memberships Error:', error.message);
