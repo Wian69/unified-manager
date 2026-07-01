@@ -10,8 +10,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         const client = getGraphClient();
         
         const tasks = Array.isArray(body) ? body : [body];
-        const results = [];
-        const errors = [];
+        const results: any[] = [];
+        const errors: string[] = [];
 
         await Promise.allSettled(tasks.map(async (task) => {
             const { type, targetId, driveId, permissionId } = task;
