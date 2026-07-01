@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Users, RefreshCw, X, Save, ChevronDown, ChevronRight, Clock, Mail, Calendar as CalendarIcon, Globe, ShieldAlert, ShieldCheck, ExternalLink } from "lucide-react";
+import { Users, RefreshCw, X, Save, ChevronDown, ChevronRight, Clock, Mail, Calendar as CalendarIcon, Globe, ShieldAlert, ShieldCheck, ExternalLink, FileText } from "lucide-react";
 
 /**
  * Formats an ISO date string into a compact relative time string.
