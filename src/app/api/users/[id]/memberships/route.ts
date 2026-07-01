@@ -86,7 +86,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         try {
             const recentRes = await client.api(`/users/${id}/drive/recent`).get();
             const recentFolders = (recentRes.value || []).filter((i: any) => !!i.folder);
-            const discoveredFolderIds = new Set(sharedItems.map(si => si.id));
+            const discoveredFolderIds = new Set(sharedItems.map((si: any) => si.id));
             
             for (const rf of recentFolders) {
                 if (!discoveredFolderIds.has(rf.id)) {
