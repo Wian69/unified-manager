@@ -128,7 +128,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
                     try {
                         const perms = await client.api(`/drives/${item.parentReference.driveId}/items/${item.id}/permissions`).get();
-                        let matchingPermissionId = null;
+                        let matchingPermissionId: string | null = null;
                         
                         const hasAccess = perms.value?.some((p: any) => {
                             const grantee = p.grantedToV2 || p.grantedTo;
