@@ -64,6 +64,47 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
             console.warn(`[API] Could not fetch shared items for ${id}:`, e);
         }
 
+        // Fetch Followed Sites
+        try {
+            const followedRes = await client.api(`/users/${id}/sites/followed`).get();
+            const followedSites = followedRes.value || [];
+            for (const site of followedSites) {
+                sharedItems.push({
+                    name: site.displayName,
+                    id: site.id,
+                    webUrl: site.webUrl,
+                    isFolder: true,
+                    role: 'Followed Site Member',
+                    sharedBy: 'SharePoint Site'
+                });
+            }
+        } catch (e) {
+            console.warn(`[API] Could not fetch followed sites for ${id}:`, e);
+        }
+
+        // Fetch Recent Activity (Folders Only)
+        try {
+            const recentRes = await client.api(`/users/${id}/drive/recent`).get();
+            const recentFolders = (recentRes.value || []).filter((i: any) => !!i.folder);
+            const discoveredFolderIds = new Set(sharedItems.map(si => si.id));
+            
+            for (const rf of recentFolders) {
+                if (!discoveredFolderIds.has(rf.id)) {
+                    sharedItems.push({
+                        name: rf.name,
+                        id: rf.id,
+                        webUrl: rf.webUrl,
+                        isFolder: true,
+                        role: 'Recent Folder Access',
+                        sharedBy: 'SharePoint Discovery'
+                    });
+                    discoveredFolderIds.add(rf.id);
+                }
+            }
+        } catch (e) {
+            console.warn(`[API] Could not fetch recent folders for ${id}:`, e);
+        }
+
         return NextResponse.json({
             success: true,
             groups,
