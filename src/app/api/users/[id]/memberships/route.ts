@@ -108,7 +108,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         // Deep Search Scan (Only runs when explicitly requested via searchKeywords)
         let restrictedItems: any[] = [];
         const autoKeywords = searchKeywords ? searchKeywords.split(',').map(k => k.trim()) : [];
-        const allDiscoveredIds = new Set(sharedItems.map(si => si.id));
+        const allDiscoveredIds = new Set(sharedItems.map((si: any) => si.id));
         
         for (const keyword of autoKeywords) {
             if (!keyword) continue;
