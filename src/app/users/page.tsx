@@ -279,22 +279,33 @@ export default function UsersPage() {
 
         setRevokeProgress({ total: tasks.length, completed: 0 });
         let completed = 0;
+        const errors: string[] = [];
 
         for (const task of tasks) {
             try {
-                await fetch(`/api/users/${selectedUserId}/revoke`, {
+                const res = await fetch(`/api/users/${selectedUserId}/revoke`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(task)
                 });
-            } catch (e) {
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    errors.push(`Failed to revoke ${task.name}: ${data.error || data.details || 'Unknown error'}`);
+                }
+            } catch (e: any) {
                 console.error(`Failed to revoke ${task.name}`, e);
+                errors.push(`Failed to revoke ${task.name}: ${e.message}`);
             }
             completed++;
             setRevokeProgress({ total: tasks.length, completed });
         }
 
-        alert("Revocation complete.");
+        if (errors.length > 0) {
+            alert(`Revocation partially completed with errors:\n\n${errors.join('\n')}\n\nNote: Dynamic groups and built-in system roles often cannot be removed manually.`);
+        } else {
+            alert("Revocation successfully completed.");
+        }
+        
         setRevoking(false);
         setRevokeProgress(null);
         

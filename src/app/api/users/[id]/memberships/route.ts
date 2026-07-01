@@ -106,7 +106,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         } catch (e) {}
 
         // C. Wildcard Pattern Scan (Automatically find folders matching sensitive patterns)
-        const autoKeywords = searchKeywords ? searchKeywords.split(',').map(k => k.trim()) : ['Finance', 'Management', 'Legal', 'HR', 'Executive', 'Salaries'];
+        const autoKeywords = searchKeywords ? searchKeywords.split(',').map(k => k.trim()) : [];
         
         for (const keyword of autoKeywords) {
             if (!keyword) continue;
