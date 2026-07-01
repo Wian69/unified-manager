@@ -653,6 +653,45 @@ export default function UsersPage() {
                                                 </div>
                                             </div>
 
+                                            {/* Directly Shared Items */}
+                                            <div>
+                                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 mt-6">Directly Shared Items ({sharedItems.length})</p>
+                                                <div className="bg-slate-900/50 rounded-xl border border-slate-800 overflow-hidden divide-y divide-slate-800/50">
+                                                    {sharedItems.length > 0 ? (
+                                                        sharedItems.map((item, idx) => (
+                                                            <div key={idx} className="p-4 hover:bg-slate-800/30 transition-colors flex items-center justify-between group/share">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="p-2 bg-blue-500/10 text-blue-500 rounded-lg">
+                                                                        {item.isFolder ? <Globe size={16} /> : <FileText size={16} />}
+                                                                    </div>
+                                                                    <div>
+                                                                        <p className="text-xs font-bold text-slate-200">{item.name}</p>
+                                                                        <p className="text-[10px] text-slate-500">Shared by: {item.sharedBy}</p>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex items-center gap-4">
+                                                                    <span className="text-[8px] font-black px-2 py-0.5 bg-slate-800 text-slate-400 rounded uppercase">
+                                                                        {item.role}
+                                                                    </span>
+                                                                    {item.webUrl && (
+                                                                        <a 
+                                                                            href={item.webUrl} 
+                                                                            target="_blank" 
+                                                                            className="p-2 text-slate-500 hover:text-blue-400 transition-colors opacity-0 group-hover/share:opacity-100 flex items-center gap-2"
+                                                                        >
+                                                                            <span className="text-[9px] font-bold">Investigate</span>
+                                                                            <ExternalLink size={14} />
+                                                                        </a>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <div className="p-8 text-center text-slate-600 italic text-xs">No directly shared items found.</div>
+                                                    )}
+                                                </div>
+                                            </div>
+
                                         </div>
                                     </section>
                                 </div>
