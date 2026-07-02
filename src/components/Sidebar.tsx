@@ -38,6 +38,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         { name: 'Forms', icon: ClipboardList, path: '/forms' },
         { name: 'Cloud Flows', icon: Zap, path: '/flows' },
         { name: 'Offboarding', icon: UserMinus, path: '/offboarding' },
+        { name: 'Final Removal All', icon: Trash2, path: '/final-removal' },
         { name: 'Users', icon: Users, path: '/users' },
         { name: 'SharePoint', icon: HardDrive, path: '/sharepoint' },
         { name: 'Meeting Rooms', icon: Calendar, path: '/rooms' },
