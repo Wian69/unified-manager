@@ -7,6 +7,8 @@ export async function GET(req: NextRequest) {
     try {
         const { searchParams } = new URL(req.url);
         const userId = searchParams.get('userId');
+        const startParam = searchParams.get('startDate');
+        const endParam = searchParams.get('endDate');
 
         if (!userId) {
             return NextResponse.json({ error: "Missing required parameter: userId" }, { status: 400 });
@@ -14,13 +16,19 @@ export async function GET(req: NextRequest) {
 
         const client = getGraphClient();
 
-        // Calculate today and 7 days from now for the calendar view window
-        const now = new Date();
-        const nextWeek = new Date();
-        nextWeek.setDate(now.getDate() + 7);
+        // Use provided dates or default to current month
+        let startDateTime, endDateTime;
 
-        const startDateTime = now.toISOString();
-        const endDateTime = nextWeek.toISOString();
+        if (startParam && endParam) {
+            startDateTime = startParam;
+            endDateTime = endParam;
+        } else {
+            const now = new Date();
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+            startDateTime = firstDay.toISOString();
+            endDateTime = lastDay.toISOString();
+        }
 
         // Fetch calendar events using calendarView which expands recurring meetings
         const response = await client.api(`/users/${userId}/calendarView`)
@@ -30,7 +38,7 @@ export async function GET(req: NextRequest) {
             })
             .select('subject,start,end,isAllDay,location,attendees,isOnlineMeeting,onlineMeeting')
             .orderby('start/dateTime')
-            .top(20) // Limit to next 20 events
+            .top(200) // Increase limit for an entire month
             .get();
 
         return NextResponse.json({ 
