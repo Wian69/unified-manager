@@ -25,6 +25,7 @@ export async function GET(req: Request) {
                 // Using the user-relative endpoint for reliability
                 const allMessages: any[] = [];
                 let messagesResponse = await client.api(`/users/${userId}/chats/${chatId}/messages`)
+                    .query({ model: 'B' })
                     .top(50)
                     .get();
                 
