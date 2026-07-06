@@ -30,10 +30,12 @@ export async function GET(req: Request) {
                 
                 allMessages.push(...(messagesResponse.value || []));
 
-                // Follow nextLink to get ALL messages
-                while (messagesResponse['@odata.nextLink']) {
+                // Follow nextLink to get more messages, but limit to prevent timeouts
+                let pages = 0;
+                while (messagesResponse['@odata.nextLink'] && pages < 3) {
                     messagesResponse = await client.api(messagesResponse['@odata.nextLink']).get();
                     allMessages.push(...(messagesResponse.value || []));
+                    pages++;
                 }
                 
                 return NextResponse.json({ 
