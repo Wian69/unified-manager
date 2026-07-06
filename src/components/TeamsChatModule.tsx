@@ -48,8 +48,8 @@ export default function TeamsChatModule({ userId, userDisplayName, sinceDate, on
             if (result.success) {
                 setMessages(prev => ({ ...prev, [chatId]: result.data }));
             } else {
-                console.error("Teams API Error:", result.error);
-                alert(`Failed to load messages: ${result.error}`);
+                console.error("Teams API Error:", result);
+                alert(`Failed to load messages: ${result.error}\nCode: ${result.details}\nBody: ${JSON.stringify(result.body)}`);
             }
         } catch (err: any) {
             console.error("Failed to fetch messages:", err);

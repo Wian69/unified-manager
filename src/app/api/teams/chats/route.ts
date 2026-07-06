@@ -43,8 +43,12 @@ export async function GET(req: Request) {
                     data: allMessages 
                 });
             } catch (err: any) {
-                console.error(`[Teams API] History Error:`, err.message);
-                return NextResponse.json({ error: err.message }, { status: 500 });
+                console.error(`[Teams API] History Error:`, err);
+                return NextResponse.json({ 
+                    error: err.message, 
+                    details: err.code || err.statusCode,
+                    body: err.body
+                }, { status: 500 });
             }
         }
 
