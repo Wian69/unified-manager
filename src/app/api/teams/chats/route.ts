@@ -22,9 +22,10 @@ export async function GET(req: Request) {
             }
 
             try {
-                // Using the user-relative endpoint for reliability
+                // Using the direct chat endpoint instead of user-relative endpoint
+                // because user-relative fails with "Client access token validation" if the user is disabled/unlicensed
                 const allMessages: any[] = [];
-                let messagesResponse = await client.api(`/users/${userId}/chats/${chatId}/messages`)
+                let messagesResponse = await client.api(`/chats/${chatId}/messages`)
                     .query({ model: 'B' })
                     .top(50)
                     .get();
