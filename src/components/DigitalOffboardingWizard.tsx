@@ -303,6 +303,7 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                 "• IT will help identify items that may be transferred, while ensuring no corporate data is removed."
             ]);
 
+            y = checkPageBreak(y, 70); // Ensure the entire acknowledgement and signature block fits
             drawSectionHeader("6. Final Employee Acknowledgement");
             pdf.setFont("helvetica", "normal"); pdf.setFontSize(9); pdf.setTextColor("#334155");
             
