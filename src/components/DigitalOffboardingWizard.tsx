@@ -56,7 +56,7 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
         { id: 201, section: 2, label: "Uninstalled Euphoria App, Outlook, Teams, and OneDrive from personal devices.", checked: false },
         { id: 202, section: 2, label: "Verified no company data remains on any personal external storage devices.", checked: false },
         { id: 203, section: 2, label: "Personal files stored on company equipment reviewed and approved.", checked: false },
-        { id: 204, section: 2, label: "System Access Removed: SharePoint, VPN, Distribution Lists, Jira, SAP, Slack.", checked: false },
+        { id: 204, section: 2, label: "System Access Removed: SharePoint, VPN, Distribution Lists, Fusion, Xero, Sage, CaseWare etc..", checked: false },
         { id: 205, section: 2, label: "Device Security: Device wiped, security logs reviewed.", checked: false },
         
         // Section 3: Account Deactivation & Data Handling
@@ -291,7 +291,7 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
             ]);
 
             drawLegalSection("5.5 Applications & SaaS Platforms", [
-                "For any third party systems (e.g., Jira, Freshservice, SAP, Slack):",
+                "For any third party systems (e.g., Fusion, Xero, Sage, CaseWare etc..):",
                 "• Your access will be fully removed.",
                 "• Active tasks or projects may be reassigned to your department.",
                 "• All content created remains the intellectual property of Equinox Group Holdings, Inc."
@@ -562,7 +562,7 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
 
                                     <div>
                                         <h5 className="font-bold text-white mb-2 text-[12px] uppercase tracking-wider">Applications & SaaS Platforms</h5>
-                                        <p className="text-xs mb-1 text-slate-400">For any third party systems (e.g., Jira, Freshservice, SAP, Slack):</p>
+                                        <p className="text-xs mb-1 text-slate-400">For any third party systems (e.g., Fusion, Xero, Sage, CaseWare etc..):</p>
                                         <ul className="list-disc pl-5 space-y-1">
                                             <li>Your access will be fully removed.</li>
                                             <li>Active tasks or projects may be reassigned to your department.</li>
