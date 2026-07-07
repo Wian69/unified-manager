@@ -70,7 +70,7 @@ export async function POST(request: Request) {
             const bytes = await unifiedFile.arrayBuffer();
             const buffer = Buffer.from(bytes);
             const dateStr = new Date().toISOString().split('T')[0];
-            const customName = `EQN IT Offboarding Document [${dateStr}].pdf`;
+            const customName = `Equinox Group - Offboarding ${userName} ${dateStr}.pdf`;
 
             // 2. UPLOAD TO SHAREPOINT
             let webUrl = "";

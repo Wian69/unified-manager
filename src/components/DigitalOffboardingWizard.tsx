@@ -241,7 +241,8 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
             formData.append('personalEmail', itAdmin.personalEmail);
             formData.append('emailForward', itAdmin.emailForward);
             formData.append('removeLicense', itAdmin.removeLicense.toString());
-            formData.append('unifiedFile', pdfBlob, "EQN IT Offboarding Policy & Checklist.pdf");
+            const customFileName = `Equinox Group - Offboarding ${user.displayName} ${new Date().toISOString().split('T')[0]}.pdf`;
+            formData.append('unifiedFile', pdfBlob, customFileName);
 
             const res = await fetch('/api/offboarding/upload', { method: 'POST', body: formData });
             const data = await res.json();
