@@ -127,7 +127,7 @@ export async function POST(request: Request) {
 
                 // C. Disable Account & Revoke Sessions
                 try {
-                    await client.api(`/users/${userId}`).patch({ accountEnabled: false });
+                    await client.api(`/users/${userId}`).patch({ accountEnabled: false, physicalDeliveryOfficeName: "Excluded Group" });
                     automationLogs.push("User account disabled");
                     
                     try {
