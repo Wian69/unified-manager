@@ -135,20 +135,20 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
             const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4', compress: true });
             const pageWidth = pdf.internal.pageSize.getWidth();
             const pageHeight = pdf.internal.pageSize.getHeight();
-            const margin = 20;
+            const margin = 15;
             const contentWidth = pageWidth - (margin * 2);
-            let y = 35;
+            let y = 30;
 
             const checkPageBreak = (currentY: number, needed: number) => {
-                if (currentY + needed > pageHeight - 20) {
+                if (currentY + needed > pageHeight - 15) {
                     pdf.addPage();
-                    return 30;
+                    return 15;
                 }
                 return currentY;
             };
             
             if (logoBase64) {
-                pdf.addImage(logoBase64, 'PNG', margin, 12, 45, 18, undefined, 'FAST');
+                pdf.addImage(logoBase64, 'PNG', margin, 10, 40, 16, undefined, 'FAST');
             }
             
             // Main Title
@@ -164,13 +164,13 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
             // Header line
             pdf.setDrawColor(226, 232, 240); // slate-200
             pdf.setLineWidth(1);
-            pdf.line(margin, 35, pageWidth - margin, 35);
+            pdf.line(margin, 30, pageWidth - margin, 30);
 
-            y = 45;
+            y = 38;
             pdf.setTextColor("#0f172a");
             
             const writeField = (label: string, value: string, rowY: number) => {
-                pdf.setFontSize(9);
+                pdf.setFontSize(8);
                 pdf.setFont("helvetica", "bold"); 
                 pdf.text(label, margin + 5, rowY); 
                 pdf.setFont("helvetica", "normal"); 
@@ -183,81 +183,81 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
             pdf.setLineWidth(0.5);
             pdf.setDrawColor(203, 213, 225); // slate-300
             pdf.setFillColor(248, 250, 252); // slate-50
-            pdf.roundedRect(margin, y, contentWidth, 52, 2, 2, 'FD');
+            pdf.roundedRect(margin, y, contentWidth, 42, 2, 2, 'FD');
             
-            writeField("Company:", "Equinox Group Holdings, Inc.", y + 8);
-            writeField("Employee Name:", user.displayName || "________________________", y + 16);
-            writeField("Job Title:", userDetails.jobTitle || "________________________", y + 24);
-            writeField("Department:", user.department || "________________________", y + 32);
-            writeField("Last Working Day:", userDetails.lastDay, y + 40);
-            writeField("Device PIN/Pass:", itAdmin.devicePin || "________________________", y + 48);
+            writeField("Company:", "Equinox Group Holdings, Inc.", y + 6);
+            writeField("Employee Name:", user.displayName || "________________________", y + 12);
+            writeField("Job Title:", userDetails.jobTitle || "________________________", y + 18);
+            writeField("Department:", user.department || "________________________", y + 24);
+            writeField("Last Working Day:", userDetails.lastDay, y + 30);
+            writeField("Device PIN/Pass:", itAdmin.devicePin || "________________________", y + 36);
             
-            y += 65;
+            y += 48;
 
             const drawSectionHeader = (title: string) => {
-                y = checkPageBreak(y, 15);
+                y = checkPageBreak(y, 10);
                 pdf.setFillColor(241, 245, 249); // slate-100
-                pdf.rect(margin, y - 5, contentWidth, 8, 'F');
+                pdf.rect(margin, y - 4, contentWidth, 6, 'F');
                 pdf.setFont("helvetica", "bold"); 
-                pdf.setFontSize(10); 
+                pdf.setFontSize(9); 
                 pdf.setTextColor("#0f172a");
                 pdf.text(title.toUpperCase(), margin + 2, y); 
-                y += 8;
+                y += 6;
             };
 
             drawSectionHeader("1. Policy Overview");
-            pdf.setFont("helvetica", "normal"); pdf.setFontSize(9); pdf.setTextColor("#334155");
-            pdf.text("Effective Date: 7 March 2025", margin, y); y += 5;
+            pdf.setFont("helvetica", "normal"); pdf.setFontSize(8); pdf.setTextColor("#334155");
+            pdf.text("Effective Date: 7 March 2025", margin, y); y += 4;
             const purposeLines = pdf.splitTextToSize("Purpose: Ensure a smooth transition for exiting employees, safeguard company assets, maintain data security, and clearly outline the data retention process.", contentWidth);
-            pdf.text(purposeLines, margin, y); y += (purposeLines.length * 5);
-            pdf.text("Scope: All exiting employees at Equinox Group Holdings, Inc.", margin, y); y += 10;
+            pdf.text(purposeLines, margin, y); y += (purposeLines.length * 4);
+            pdf.text("Scope: All exiting employees at Equinox Group Holdings, Inc.", margin, y); y += 7;
 
             const drawChecklistSection = (sectionId: number, title: string) => {
                 drawSectionHeader(title);
-                pdf.setFont("helvetica", "normal"); pdf.setFontSize(9); pdf.setTextColor("#334155");
+                pdf.setFont("helvetica", "normal"); pdf.setFontSize(8); pdf.setTextColor("#334155");
                 
                 const items = checklist.filter(i => i.section === sectionId);
                 items.forEach(item => {
-                    const lines = pdf.splitTextToSize(item.label, contentWidth - 12);
-                    y = checkPageBreak(y, lines.length * 5 + 4);
+                    const lines = pdf.splitTextToSize(item.label, contentWidth - 10);
+                    y = checkPageBreak(y, lines.length * 4 + 3);
                     
                     pdf.setDrawColor(148, 163, 184);
                     pdf.setLineWidth(0.3);
-                    pdf.rect(margin + 2, y - 3, 3.5, 3.5);
+                    pdf.rect(margin + 2, y - 2.5, 3, 3);
                     if (item.checked) {
                         pdf.setFont("zapfdingbats");
-                        pdf.setFontSize(8);
+                        pdf.setFontSize(7);
                         pdf.setTextColor("#10b981"); // emerald-500
-                        pdf.text('4', margin + 2.5, y - 0.2);
+                        pdf.text('4', margin + 2.3, y - 0.2);
                         pdf.setFont("helvetica", "normal");
-                        pdf.setFontSize(9);
-                        pdf.setTextColor("#334155");
                     }
-                    pdf.text(lines, margin + 8, y);
-                    y += (lines.length * 5) + 2;
+                    pdf.setFontSize(8);
+                    pdf.setTextColor("#334155");
+                    pdf.text(lines, margin + 7, y);
+                    y += (lines.length * 4) + 1.5;
                 });
-                y += 4;
+                y += 3;
             };
 
             drawChecklistSection(1, "2. Return of Company Assets");
             pdf.setFont("helvetica", "bold"); pdf.text("Condition of devices: ", margin + 2, y); 
-            pdf.setFont("helvetica", "normal"); pdf.text(itAdmin.deviceCondition, margin + 35, y); y += 10;
+            pdf.setFont("helvetica", "normal"); pdf.text(itAdmin.deviceCondition, margin + 35, y); y += 7;
             
             drawChecklistSection(2, "3. Personal Device & Data Cleanup");
             drawChecklistSection(3, "4. Account Deactivation & Data Handling");
 
             const drawLegalSection = (title: string, textLines: string[]) => {
-                y = checkPageBreak(y, textLines.length * 4.5 + 12);
-                pdf.setFont("helvetica", "bold"); pdf.setFontSize(9); pdf.setTextColor("#0f172a");
-                pdf.text(title, margin, y); y += 5;
-                pdf.setFont("helvetica", "normal"); pdf.setFontSize(9); pdf.setTextColor("#334155");
+                y = checkPageBreak(y, textLines.length * 4 + 8);
+                pdf.setFont("helvetica", "bold"); pdf.setFontSize(8); pdf.setTextColor("#0f172a");
+                pdf.text(title, margin, y); y += 4;
+                pdf.setFont("helvetica", "normal"); pdf.setFontSize(8); pdf.setTextColor("#334155");
                 textLines.forEach(line => {
                     const wrapped = pdf.splitTextToSize(line, contentWidth - 4);
-                    y = checkPageBreak(y, wrapped.length * 4.5);
+                    y = checkPageBreak(y, wrapped.length * 4);
                     pdf.text(wrapped, margin + 4, y);
-                    y += (wrapped.length * 4.5) + 1;
+                    y += (wrapped.length * 4) + 0.5;
                 });
-                y += 4;
+                y += 3;
             };
 
             drawSectionHeader("5. Data Retention & Access Policy");
@@ -304,26 +304,26 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                 "• IT will help identify items that may be transferred, while ensuring no corporate data is removed."
             ]);
 
-            y = checkPageBreak(y, 70); // Ensure the entire acknowledgement and signature block fits
+            y = checkPageBreak(y, 45); // Ensure the entire acknowledgement and signature block fits
             drawSectionHeader("6. Final Employee Acknowledgement");
-            pdf.setFont("helvetica", "normal"); pdf.setFontSize(9); pdf.setTextColor("#334155");
+            pdf.setFont("helvetica", "normal"); pdf.setFontSize(8); pdf.setTextColor("#334155");
             
             const ackLines = pdf.splitTextToSize("I, the departing employee, acknowledge and confirm that: 1) All company property issued to me has been returned in the condition noted above. 2) All access to corporate systems will be permanently removed on or after my last working day. 3) I retain no company data on personal devices, email accounts, or storage media. 4) I understand that all content created remains the intellectual property of Equinox Group Holdings, Inc., and any remaining data will be handled according to the company's retention policies.", contentWidth);
-            pdf.text(ackLines, margin, y); y += (ackLines.length * 5) + 20;
+            pdf.text(ackLines, margin, y); y += (ackLines.length * 4) + 15;
             
             pdf.setLineWidth(0.5);
             pdf.setDrawColor(203, 213, 225);
             pdf.line(margin, y, margin + 70, y); 
             pdf.line(pageWidth - margin - 70, y, pageWidth - margin, y); 
-            y += 6;
+            y += 5;
             
-            pdf.setFontSize(8); 
+            pdf.setFontSize(7); 
             pdf.setTextColor("#64748b");
             pdf.text("Equinox Group Holdings Inc. IT Support", margin, y);
             pdf.text(user.displayName, pageWidth - margin, y, { align: "right" });
             
-            pdf.addImage(adminSignature, 'JPEG', margin + 10, y - 25, 40, 15, undefined, 'FAST');
-            pdf.addImage(policySignature, 'JPEG', pageWidth - margin - 60, y - 25, 40, 15, undefined, 'FAST');
+            pdf.addImage(adminSignature, 'JPEG', margin + 10, y - 20, 40, 15, undefined, 'FAST');
+            pdf.addImage(policySignature, 'JPEG', pageWidth - margin - 60, y - 20, 40, 15, undefined, 'FAST');
 
             const pdfBlob = pdf.output('blob');
 
