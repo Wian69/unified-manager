@@ -18,6 +18,14 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
     const [links, setLinks] = useState<string[]>([]);
     const [policySignature, setPolicySignature] = useState("");
     const [adminSignature, setAdminSignature] = useState("");
+    
+    const scrollRef = React.useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }, [step]);
 
     const [userDetails, setUserDetails] = useState({
         email: user.mail || user.userPrincipalName || "",
@@ -394,7 +402,7 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                 <button onClick={onClose} className="p-2 text-slate-500 hover:text-white transition-all"><X size={24} /></button>
             </div>
 
-            <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 md:px-12 py-6 pb-40 md:pb-32 w-full">
+            <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden px-4 md:px-12 py-6 pb-40 md:pb-32 w-full">
                 <div className="max-w-3xl mx-auto space-y-8">
                     
                     {step === 1 && (
