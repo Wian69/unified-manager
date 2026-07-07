@@ -144,7 +144,7 @@ color: #555;
 </head>
 <body>
 <div class="email-container">
-<h2>Request Acknowledgment</h2>
+<h2>Offboarding Complete</h2>
 
 <p><strong>Good Day,</strong></p>
 
