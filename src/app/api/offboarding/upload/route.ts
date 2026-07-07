@@ -172,7 +172,7 @@ information contained in this message or in any attachment.
 
                         await client.api(`/users/noreply-automation@eqncs.com/sendMail`).post({
                             message: {
-                                subject: "EQN IT Support Acknowledgment",
+                                subject: "Offboarding Complete",
                                 body: { contentType: "HTML", content: htmlBody },
                                 toRecipients: [{ emailAddress: { address: personalEmail } }],
                                 attachments: [{
