@@ -153,7 +153,7 @@ color: #555;
 <p><strong>Equinox Group - IT Support</strong></p>
 
 <div class="logo">
-<img src="https://eqncs.com/2025/html/images/logo.png" alt="Company Logo" width="180">
+<img src="https://unified-manager.vercel.app/Equinox-Group-Holdings-Logo.png" alt="Company Logo" width="180">
 </div>
 
 <div class="notice">

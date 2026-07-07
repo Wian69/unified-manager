@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 const LOGO_KEY = "eqn-company-logo";
-const DEFAULT_LOGO = "/Equinox-Logo-Transparent.png";
+const DEFAULT_LOGO = "/Equinox-Group-Holdings-Logo.png";
 
 export function useCompanyLogo() {
     const [logo, setLogoState] = useState<string>(DEFAULT_LOGO);

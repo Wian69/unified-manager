@@ -109,7 +109,7 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                     if (stored) return stored;
 
                     // Default logo
-                    const response = await fetch('/Equinox-Logo-Transparent.png');
+                    const response = await fetch('/Equinox-Group-Holdings-Logo.png');
                     const blob = await response.blob();
                     return new Promise<string>((resolve) => {
                         const reader = new FileReader();
