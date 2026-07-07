@@ -140,29 +140,41 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
             
             if (logoBase64) {
                 pdf.addImage(logoBase64, 'PNG', margin, 12, 45, 18, undefined, 'FAST');
-                pdf.setTextColor("#000000");
             }
+            
+            // Main Title
+            pdf.setTextColor("#0f172a"); // Dark slate
             pdf.setFont("helvetica", "bold");
-            pdf.setFontSize(14);
-            pdf.text("IT OFFBOARDING POLICY & CHECKLIST", pageWidth - margin, 27, { align: "right" });
-            pdf.setLineWidth(0.8);
-            pdf.line(margin, 38, pageWidth - margin, 38);
-
-            y = 48;
+            pdf.setFontSize(16);
+            pdf.text("IT OFFBOARDING POLICY", pageWidth - margin, 22, { align: "right" });
             pdf.setFontSize(10);
+            pdf.setFont("helvetica", "normal");
+            pdf.setTextColor("#64748b");
+            pdf.text("Confidential & Proprietary", pageWidth - margin, 28, { align: "right" });
+            
+            // Header line
+            pdf.setDrawColor(226, 232, 240); // slate-200
+            pdf.setLineWidth(1);
+            pdf.line(margin, 35, pageWidth - margin, 35);
+
+            y = 45;
+            pdf.setTextColor("#0f172a");
             
             const writeField = (label: string, value: string, rowY: number) => {
+                pdf.setFontSize(9);
                 pdf.setFont("helvetica", "bold"); 
                 pdf.text(label, margin + 5, rowY); 
                 pdf.setFont("helvetica", "normal"); 
                 pdf.text(value, margin + 45, rowY);
-                pdf.setDrawColor(200, 200, 200);
+                pdf.setDrawColor(241, 245, 249); // slate-100
+                pdf.setLineWidth(0.5);
                 pdf.line(margin + 5, rowY + 3, pageWidth - margin - 5, rowY + 3);
             };
 
-            pdf.setLineWidth(0.3);
-            pdf.setDrawColor(0);
-            pdf.rect(margin, y, contentWidth, 50);
+            pdf.setLineWidth(0.5);
+            pdf.setDrawColor(203, 213, 225); // slate-300
+            pdf.setFillColor(248, 250, 252); // slate-50
+            pdf.roundedRect(margin, y, contentWidth, 52, 2, 2, 'FD');
             
             writeField("Company:", "Equinox Group Holdings, Inc.", y + 8);
             writeField("Employee Name:", user.displayName || "________________________", y + 16);
@@ -171,77 +183,89 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
             writeField("Last Working Day:", userDetails.lastDay, y + 40);
             writeField("Device PIN/Pass:", itAdmin.devicePin || "________________________", y + 48);
             
-            y += 60;
+            y += 65;
 
-            y = checkPageBreak(y, 20);
-            pdf.setFont("helvetica", "bold"); pdf.setFontSize(12); pdf.text("1. Policy Overview", margin, y); y += 6;
-            pdf.setFont("helvetica", "normal"); pdf.setFontSize(10); 
+            const drawSectionHeader = (title: string) => {
+                y = checkPageBreak(y, 15);
+                pdf.setFillColor(241, 245, 249); // slate-100
+                pdf.rect(margin, y - 5, contentWidth, 8, 'F');
+                pdf.setFont("helvetica", "bold"); 
+                pdf.setFontSize(10); 
+                pdf.setTextColor("#0f172a");
+                pdf.text(title.toUpperCase(), margin + 2, y); 
+                y += 8;
+            };
+
+            drawSectionHeader("1. Policy Overview");
+            pdf.setFont("helvetica", "normal"); pdf.setFontSize(9); pdf.setTextColor("#334155");
             pdf.text("Effective Date: 7 March 2025", margin, y); y += 5;
             const purposeLines = pdf.splitTextToSize("Purpose: Ensure a smooth transition for exiting employees, safeguard company assets, maintain data security, and clearly outline the data retention process.", contentWidth);
             pdf.text(purposeLines, margin, y); y += (purposeLines.length * 5);
             pdf.text("Scope: All exiting employees at Equinox Group Holdings, Inc.", margin, y); y += 10;
 
             const drawChecklistSection = (sectionId: number, title: string) => {
-                y = checkPageBreak(y, 25);
-                pdf.setFont("helvetica", "bold"); pdf.setFontSize(12); pdf.text(title, margin, y); y += 6;
-                pdf.setFont("helvetica", "normal"); pdf.setFontSize(10);
+                drawSectionHeader(title);
+                pdf.setFont("helvetica", "normal"); pdf.setFontSize(9); pdf.setTextColor("#334155");
                 
                 const items = checklist.filter(i => i.section === sectionId);
                 items.forEach(item => {
-                    const lines = pdf.splitTextToSize(item.label, contentWidth - 15);
+                    const lines = pdf.splitTextToSize(item.label, contentWidth - 12);
                     y = checkPageBreak(y, lines.length * 5 + 4);
                     
-                    pdf.setLineWidth(0.2);
-                    pdf.rect(margin + 5, y - 3, 4, 4);
+                    pdf.setDrawColor(148, 163, 184);
+                    pdf.setLineWidth(0.3);
+                    pdf.rect(margin + 2, y - 3, 3.5, 3.5);
                     if (item.checked) {
                         pdf.setFont("zapfdingbats");
-                        pdf.text('4', margin + 5.5, y - 0.5);
+                        pdf.setFontSize(8);
+                        pdf.setTextColor("#10b981"); // emerald-500
+                        pdf.text('4', margin + 2.5, y - 0.2);
                         pdf.setFont("helvetica", "normal");
+                        pdf.setFontSize(9);
+                        pdf.setTextColor("#334155");
                     }
-                    pdf.text(lines, margin + 12, y);
+                    pdf.text(lines, margin + 8, y);
                     y += (lines.length * 5) + 2;
                 });
-                y += 6;
+                y += 4;
             };
 
             drawChecklistSection(1, "2. Return of Company Assets");
-            pdf.setFont("helvetica", "bold"); pdf.text("Condition of devices: ", margin + 5, y); 
-            pdf.setFont("helvetica", "normal"); pdf.text(itAdmin.deviceCondition, margin + 45, y); y += 10;
+            pdf.setFont("helvetica", "bold"); pdf.text("Condition of devices: ", margin + 2, y); 
+            pdf.setFont("helvetica", "normal"); pdf.text(itAdmin.deviceCondition, margin + 35, y); y += 10;
             
             drawChecklistSection(2, "3. Personal Device & Data Cleanup");
             drawChecklistSection(3, "4. Account Deactivation & Data Handling");
 
             const drawLegalSection = (title: string, textLines: string[]) => {
-                y = checkPageBreak(y, textLines.length * 4 + 15);
-                pdf.setFont("helvetica", "bold"); pdf.setFontSize(9);
+                y = checkPageBreak(y, textLines.length * 4.5 + 12);
+                pdf.setFont("helvetica", "bold"); pdf.setFontSize(9); pdf.setTextColor("#0f172a");
                 pdf.text(title, margin, y); y += 5;
-                pdf.setFont("helvetica", "normal"); pdf.setFontSize(8);
+                pdf.setFont("helvetica", "normal"); pdf.setFontSize(9); pdf.setTextColor("#334155");
                 textLines.forEach(line => {
-                    const wrapped = pdf.splitTextToSize(line, contentWidth - 5);
-                    y = checkPageBreak(y, wrapped.length * 4);
-                    pdf.text(wrapped, margin + 5, y);
-                    y += (wrapped.length * 4) + 1;
+                    const wrapped = pdf.splitTextToSize(line, contentWidth - 4);
+                    y = checkPageBreak(y, wrapped.length * 4.5);
+                    pdf.text(wrapped, margin + 4, y);
+                    y += (wrapped.length * 4.5) + 1;
                 });
-                y += 3;
+                y += 4;
             };
 
-            y = checkPageBreak(y, 20);
-            pdf.setFont("helvetica", "bold"); pdf.setFontSize(12);
-            pdf.text("5. Data Retention & Access Policy", margin, y); y += 6;
+            drawSectionHeader("5. Data Retention & Access Policy");
 
             drawLegalSection("5.1 Email (Outlook / Microsoft 365 Mailbox)", [
                 "• Your mailbox will be disabled on your last working day.",
                 "• Your manager or designated successor will receive full access for business continuity.",
                 "• Auto reply and forwarding (if applicable) will be configured according to company policy.",
                 "• Your mailbox will be retained for 12 months according to Equinox Group Holdings, Inc.'s retention policies.",
-                "You will no longer have access after offboarding is completed."
+                "• You will no longer have access after offboarding is completed."
             ]);
 
             drawLegalSection("5.2 OneDrive Files", [
                 "• Ownership of your OneDrive files will be transferred to your manager.",
                 "• Your manager will have access for 7 days to review and relocate required business related files.",
                 "• After the retention period, your OneDrive and its contents will be deleted following company policy.",
-                "Personal files may be exported only after IT review and formal approval."
+                "• Personal files may be exported only after IT review and formal approval."
             ]);
 
             drawLegalSection("5.3 Teams Chats & Teams Files", [
@@ -271,25 +295,25 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                 "• IT will help identify items that may be transferred, while ensuring no corporate data is removed."
             ]);
 
-            y = checkPageBreak(y, 50);
-            pdf.setFont("helvetica", "bold"); pdf.setFontSize(12); pdf.text("6. Final Employee Acknowledgement", margin, y); y += 6;
-            pdf.setFont("helvetica", "normal"); pdf.setFontSize(10);
+            drawSectionHeader("6. Final Employee Acknowledgement");
+            pdf.setFont("helvetica", "normal"); pdf.setFontSize(9); pdf.setTextColor("#334155");
             
             const ackLines = pdf.splitTextToSize("I, the departing employee, acknowledge and confirm that: 1) All company property issued to me has been returned in the condition noted above. 2) All access to corporate systems will be permanently removed on or after my last working day. 3) I retain no company data on personal devices, email accounts, or storage media. 4) I understand that all content created remains the intellectual property of Equinox Group Holdings, Inc., and any remaining data will be handled according to the company's retention policies.", contentWidth);
-            pdf.text(ackLines, margin, y); y += (ackLines.length * 5) + 25;
+            pdf.text(ackLines, margin, y); y += (ackLines.length * 5) + 20;
             
             pdf.setLineWidth(0.5);
-            pdf.setDrawColor(0);
+            pdf.setDrawColor(203, 213, 225);
             pdf.line(margin, y, margin + 70, y); 
             pdf.line(pageWidth - margin - 70, y, pageWidth - margin, y); 
             y += 6;
             
-            pdf.setFontSize(9); 
+            pdf.setFontSize(8); 
+            pdf.setTextColor("#64748b");
             pdf.text("Equinox Group Holdings Inc. IT Support", margin, y);
             pdf.text(user.displayName, pageWidth - margin, y, { align: "right" });
             
-            pdf.addImage(adminSignature, 'JPEG', margin, y - 25, 50, 18, undefined, 'FAST');
-            pdf.addImage(policySignature, 'JPEG', pageWidth - margin - 50, y - 25, 50, 18, undefined, 'FAST');
+            pdf.addImage(adminSignature, 'JPEG', margin + 10, y - 25, 40, 15, undefined, 'FAST');
+            pdf.addImage(policySignature, 'JPEG', pageWidth - margin - 60, y - 25, 40, 15, undefined, 'FAST');
 
             const pdfBlob = pdf.output('blob');
 
@@ -477,7 +501,75 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                         <div className="space-y-8 animate-in fade-in slide-in-from-right-4 text-left">
                             <div className="bg-purple-600/10 p-6 rounded-2xl border border-purple-500/20 mb-8">
                                 <h3 className="text-lg font-bold text-purple-400 mb-2 flex items-center gap-2"><UploadCloud size={20} /> Final Acknowledgment</h3>
-                                <p className="text-xs text-purple-300/60 italic">Please sign below to formally agree to the terms in the IT Offboarding Policy.</p>
+                                <p className="text-xs text-purple-300/60 italic">Please review the Data Retention Policy and sign below to formally agree to the terms in the IT Offboarding Policy.</p>
+                            </div>
+
+                            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-8 max-h-96 overflow-y-auto custom-scrollbar">
+                                <h4 className="text-sm font-black text-white uppercase tracking-widest mb-6 border-b border-slate-800 pb-4 sticky top-0 bg-slate-900">Data Retention & Access Policy</h4>
+                                
+                                <div className="space-y-6 text-sm text-slate-300">
+                                    <div>
+                                        <h5 className="font-bold text-white mb-2 text-[12px] uppercase tracking-wider">Email (Outlook / Microsoft 365 Mailbox)</h5>
+                                        <ul className="list-disc pl-5 space-y-1">
+                                            <li>Your mailbox will be disabled on your last working day.</li>
+                                            <li>Your manager or designated successor will receive full access for business continuity.</li>
+                                            <li>Auto reply and forwarding (if applicable) will be configured according to company policy.</li>
+                                            <li>Your mailbox will be retained for 12 months according to Equinox Group Holdings, Inc.'s retention policies.</li>
+                                            <li>You will no longer have access after offboarding is completed.</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div>
+                                        <h5 className="font-bold text-white mb-2 text-[12px] uppercase tracking-wider">OneDrive Files</h5>
+                                        <ul className="list-disc pl-5 space-y-1">
+                                            <li>Ownership of your OneDrive files will be transferred to your manager.</li>
+                                            <li>Your manager will have access for 7 days to review and relocate required business related files.</li>
+                                            <li>After the retention period, your OneDrive and its contents will be deleted following company policy.</li>
+                                            <li>Personal files may be exported only after IT review and formal approval.</li>
+                                        </ul>
+                                    </div>
+
+                                    <div>
+                                        <h5 className="font-bold text-white mb-2 text-[12px] uppercase tracking-wider">Teams Chats & Teams Files</h5>
+                                        <p className="font-bold text-xs mt-1 text-slate-400">Teams Chats:</p>
+                                        <ul className="list-disc pl-5 space-y-1">
+                                            <li>Private Teams chats remain stored according to compliance and retention rules.</li>
+                                            <li>No one receives direct access to your private chat history unless legally required.</li>
+                                        </ul>
+                                        <p className="font-bold text-xs mt-2 text-slate-400">Teams Files:</p>
+                                        <ul className="list-disc pl-5 space-y-1">
+                                            <li>Files in Teams channels remain accessible to the team.</li>
+                                            <li>Files shared in private chats follow OneDrive transfer rules.</li>
+                                        </ul>
+                                    </div>
+
+                                    <div>
+                                        <h5 className="font-bold text-white mb-2 text-[12px] uppercase tracking-wider">SharePoint & Network Drives</h5>
+                                        <ul className="list-disc pl-5 space-y-1">
+                                            <li>All SharePoint documents remain part of their respective sites.</li>
+                                            <li>Access permissions will be updated to remove you from shared folders, groups, and sites.</li>
+                                        </ul>
+                                    </div>
+
+                                    <div>
+                                        <h5 className="font-bold text-white mb-2 text-[12px] uppercase tracking-wider">Applications & SaaS Platforms</h5>
+                                        <p className="text-xs mb-1 text-slate-400">For any third party systems (e.g., Jira, Freshservice, SAP, Slack):</p>
+                                        <ul className="list-disc pl-5 space-y-1">
+                                            <li>Your access will be fully removed.</li>
+                                            <li>Active tasks or projects may be reassigned to your department.</li>
+                                            <li>All content created remains the intellectual property of Equinox Group Holdings, Inc.</li>
+                                        </ul>
+                                    </div>
+
+                                    <div>
+                                        <h5 className="font-bold text-white mb-2 text-[12px] uppercase tracking-wider">Personal Data on Company Devices</h5>
+                                        <p className="text-xs mb-1 text-slate-400">If you stored personal files on company equipment:</p>
+                                        <ul className="list-disc pl-5 space-y-1">
+                                            <li>You may request a Personal Data Review before your last day.</li>
+                                            <li>IT will help identify items that may be transferred, while ensuring no corporate data is removed.</li>
+                                        </ul>
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="space-y-12">
