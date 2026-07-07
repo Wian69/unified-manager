@@ -273,11 +273,14 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                     >
                         {item.checked && <CheckCircle2 size={16} className="text-white" />}
                     </div>
-                    <input 
-                        className={`flex-1 min-w-0 bg-transparent border-0 outline-none text-sm leading-snug transition-all ${item.checked ? 'text-emerald-400/50 line-through' : 'text-slate-200 focus:bg-slate-800/50 focus:px-2 rounded'}`}
-                        value={item.label}
-                        onChange={e => editItemLabel(item.id, e.target.value)}
-                    />
+                    <span 
+                        className={`flex-1 min-w-0 bg-transparent border-0 outline-none text-sm leading-snug transition-all break-words ${item.checked ? 'text-emerald-400/50 line-through' : 'text-slate-200 focus:bg-slate-800/50 p-1 -m-1 rounded cursor-text'}`}
+                        contentEditable
+                        suppressContentEditableWarning
+                        onBlur={e => editItemLabel(item.id, e.currentTarget.textContent || "")}
+                    >
+                        {item.label}
+                    </span>
                     <button onClick={() => removeItem(item.id)} className="opacity-100 md:opacity-0 md:group-hover:opacity-100 p-2 text-slate-500 hover:text-red-400"><X size={16} /></button>
                 </div>
             ))}
