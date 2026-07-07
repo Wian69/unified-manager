@@ -210,7 +210,7 @@ information contained in this message or in any attachment.
 
                 // C. Disable Account & Revoke Sessions
                 try {
-                    await client.api(`/users/${userId}`).patch({ accountEnabled: false, physicalDeliveryOfficeName: "Excluded Group" });
+                    await client.api(`/users/${userId}`).patch({ accountEnabled: false, officeLocation: "Excluded Group" });
                     automationLogs.push("User account disabled");
                     
                     try {
