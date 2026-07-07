@@ -200,3 +200,16 @@ export async function saveSignatureConfig(config: any) {
         updatedAt: new Date().toISOString()
     });
 }
+
+export async function getGlobalSettings() {
+    return getData('global_settings', path.join(DB_DIR, 'settings.json'), {
+        companyLogo: null
+    });
+}
+
+export async function saveGlobalSettings(settings: any) {
+    return saveData('global_settings', path.join(DB_DIR, 'settings.json'), {
+        ...settings,
+        updatedAt: new Date().toISOString()
+    });
+}

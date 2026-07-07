@@ -99,9 +99,16 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
             
             const getLogoBase64 = async () => {
                 try {
+                    // Check global backend settings first
+                    const settingsRes = await fetch('/api/settings');
+                    const settings = await settingsRes.json();
+                    if (settings?.companyLogo) return settings.companyLogo;
+
+                    // Fallback to local storage (for speed)
                     const stored = localStorage.getItem('eqn-company-logo');
                     if (stored) return stored;
 
+                    // Default logo
                     const response = await fetch('/Equinox-Logo-Transparent.png');
                     const blob = await response.blob();
                     return new Promise<string>((resolve) => {
