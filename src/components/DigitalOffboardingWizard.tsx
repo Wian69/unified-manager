@@ -211,8 +211,68 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
             drawChecklistSection(2, "3. Personal Device & Data Cleanup");
             drawChecklistSection(3, "4. Account Deactivation & Data Handling");
 
+            const drawLegalSection = (title: string, textLines: string[]) => {
+                y = checkPageBreak(y, textLines.length * 4 + 15);
+                pdf.setFont("helvetica", "bold"); pdf.setFontSize(9);
+                pdf.text(title, margin, y); y += 5;
+                pdf.setFont("helvetica", "normal"); pdf.setFontSize(8);
+                textLines.forEach(line => {
+                    const wrapped = pdf.splitTextToSize(line, contentWidth - 5);
+                    y = checkPageBreak(y, wrapped.length * 4);
+                    pdf.text(wrapped, margin + 5, y);
+                    y += (wrapped.length * 4) + 1;
+                });
+                y += 3;
+            };
+
+            y = checkPageBreak(y, 20);
+            pdf.setFont("helvetica", "bold"); pdf.setFontSize(12);
+            pdf.text("5. Data Retention & Access Policy", margin, y); y += 6;
+
+            drawLegalSection("5.1 Email (Outlook / Microsoft 365 Mailbox)", [
+                "• Your mailbox will be disabled on your last working day.",
+                "• Your manager or designated successor will receive full access for business continuity.",
+                "• Auto reply and forwarding (if applicable) will be configured according to company policy.",
+                "• Your mailbox will be retained for 12 months according to Equinox Group Holdings, Inc.'s retention policies.",
+                "You will no longer have access after offboarding is completed."
+            ]);
+
+            drawLegalSection("5.2 OneDrive Files", [
+                "• Ownership of your OneDrive files will be transferred to your manager.",
+                "• Your manager will have access for 7 days to review and relocate required business related files.",
+                "• After the retention period, your OneDrive and its contents will be deleted following company policy.",
+                "Personal files may be exported only after IT review and formal approval."
+            ]);
+
+            drawLegalSection("5.3 Teams Chats & Teams Files", [
+                "Teams Chats:",
+                "• Private Teams chats remain stored according to compliance and retention rules.",
+                "• No one receives direct access to your private chat history unless legally required.",
+                "Teams Files:",
+                "• Files in Teams channels remain accessible to the team.",
+                "• Files shared in private chats follow OneDrive transfer rules."
+            ]);
+
+            drawLegalSection("5.4 SharePoint & Network Drives", [
+                "• All SharePoint documents remain part of their respective sites.",
+                "• Access permissions will be updated to remove you from shared folders, groups, and sites."
+            ]);
+
+            drawLegalSection("5.5 Applications & SaaS Platforms", [
+                "For any third party systems (e.g., Jira, Freshservice, SAP, Slack):",
+                "• Your access will be fully removed.",
+                "• Active tasks or projects may be reassigned to your department.",
+                "• All content created remains the intellectual property of Equinox Group Holdings, Inc."
+            ]);
+
+            drawLegalSection("5.6 Personal Data on Company Devices", [
+                "If you stored personal files on company equipment:",
+                "• You may request a Personal Data Review before your last day.",
+                "• IT will help identify items that may be transferred, while ensuring no corporate data is removed."
+            ]);
+
             y = checkPageBreak(y, 50);
-            pdf.setFont("helvetica", "bold"); pdf.setFontSize(12); pdf.text("5. Final Employee Acknowledgement", margin, y); y += 6;
+            pdf.setFont("helvetica", "bold"); pdf.setFontSize(12); pdf.text("6. Final Employee Acknowledgement", margin, y); y += 6;
             pdf.setFont("helvetica", "normal"); pdf.setFontSize(10);
             
             const ackLines = pdf.splitTextToSize("I, the departing employee, acknowledge and confirm that: 1) All company property issued to me has been returned in the condition noted above. 2) All access to corporate systems will be permanently removed on or after my last working day. 3) I retain no company data on personal devices, email accounts, or storage media. 4) I understand that all content created remains the intellectual property of Equinox Group Holdings, Inc., and any remaining data will be handled according to the company's retention policies.", contentWidth);
