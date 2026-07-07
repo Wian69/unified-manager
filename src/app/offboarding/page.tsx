@@ -217,7 +217,7 @@ function OffboardingContent() {
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* Unified User Search Header */}
-            <div className="bg-slate-900/50 backdrop-blur-xl p-10 rounded-3xl border border-slate-800 shadow-xl relative group">
+            <div className="bg-slate-900/50 backdrop-blur-xl p-6 md:p-10 rounded-3xl border border-slate-800 shadow-xl relative group">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-600/5 to-transparent pointer-events-none rounded-3xl" />
                 <div className="relative z-10 flex flex-col items-start text-left space-y-8">
                     <div>
@@ -291,12 +291,12 @@ function OffboardingContent() {
             </div>
 
             <div className="bg-slate-900/40 rounded-2xl border border-slate-800/60 overflow-hidden backdrop-blur-md">
-                <div className="p-6 border-b border-slate-800/60 flex justify-between items-center bg-slate-950/30">
+                <div className="p-4 md:p-6 border-b border-slate-800/60 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-950/30">
                     <h2 className="text-xl font-bold text-white flex items-center gap-2">
                         <ShieldAlert size={20} className="text-rose-500" />
                         Employee Watchlist ({monitoredUsers.length})
                     </h2>
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
                         {reportError && (
                             <span className="text-[10px] text-rose-500 font-bold bg-rose-500/10 px-3 py-1.5 rounded-lg border border-rose-500/20 animate-in fade-in slide-in-from-right-2">
                                 Error: {reportError}

@@ -1,0 +1,524 @@
+﻿[
+    {
+        "DisplayName":  "Jofrie Bower",
+        "UserPrincipalName":  "jofrie.bower@eqncs.com",
+        "LastSignIn":  "2026-05-22",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "Andrea Waterboer",
+        "UserPrincipalName":  "andrea.waterboer@eqncs.com",
+        "LastSignIn":  "2025-04-08",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "Charles Gombe",
+        "UserPrincipalName":  "charles.gombe@eqncs.com",
+        "LastSignIn":  "2025-08-09",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "David Mcdonough",
+        "UserPrincipalName":  "david.mcdonough@eqncs.com",
+        "LastSignIn":  "2025-08-09",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Accounts SA",
+        "UserPrincipalName":  "accountssa@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "Admin South Africa",
+        "UserPrincipalName":  "adminsa@eqncs.com",
+        "LastSignIn":  "2024-05-02",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "IT Support",
+        "UserPrincipalName":  "itsupport@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "CoSec Eastern Africa",
+        "UserPrincipalName":  "cosecea@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "CoSec SA",
+        "UserPrincipalName":  "CorpSecSA@eqncs.com",
+        "LastSignIn":  "2024-01-29",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "Careers",
+        "UserPrincipalName":  "careers@eqncs.com",
+        "LastSignIn":  "2026-03-16",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "Global e-Egypt",
+        "UserPrincipalName":  "global-e-egypt@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "Banking Kenya",
+        "UserPrincipalName":  "bankingke@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "Equinox Outsourced Services",
+        "UserPrincipalName":  "info@eqncs.com",
+        "LastSignIn":  "2026-03-24",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "Hong Kong",
+        "UserPrincipalName":  "hongkong@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "Cape Town Boardroom",
+        "UserPrincipalName":  "CPTboardroom@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "ITC Global",
+        "UserPrincipalName":  "itcglobal@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "CML",
+        "UserPrincipalName":  "cml@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "Accounts",
+        "UserPrincipalName":  "accounts@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "Semhar Nigussie",
+        "UserPrincipalName":  "semhar.nigussie@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "Tax SA",
+        "UserPrincipalName":  "taxsa@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "Equinox",
+        "UserPrincipalName":  "equinox@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "FHI",
+        "UserPrincipalName":  "fhi@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "Remote",
+        "UserPrincipalName":  "remote@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "Data Privacy",
+        "UserPrincipalName":  "dataprivacy@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "Hayen Achek",
+        "UserPrincipalName":  "hayen.achek@eqncs.com",
+        "LastSignIn":  "2025-08-09",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Badie Bennour",
+        "UserPrincipalName":  "badie.bennour@eqncs.com",
+        "LastSignIn":  "2024-08-02",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "Enquiries",
+        "UserPrincipalName":  "enquiries@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "Meet Jote",
+        "UserPrincipalName":  "MeetJote@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "admin.breakglass",
+        "UserPrincipalName":  "admin.breakglass@xxeqncs.onmicrosoft.com",
+        "LastSignIn":  "Never",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Ginelle Lategan",
+        "UserPrincipalName":  "Ginelle.Lategan@eqncs.com",
+        "LastSignIn":  "2024-04-30",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "Cape Town Meetingroom",
+        "UserPrincipalName":  "CapeTownMeetingroom@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Carla Loubser",
+        "UserPrincipalName":  "carla.loubser@eqncs.com",
+        "LastSignIn":  "2025-05-16",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "Nicholas Makusa",
+        "UserPrincipalName":  "nicholas.makusa@eqncs.com",
+        "LastSignIn":  "2025-05-03",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Ruhann Herselman",
+        "UserPrincipalName":  "ruhann.herselman@eqncs.com",
+        "LastSignIn":  "2026-06-01",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "Souad Habibi",
+        "UserPrincipalName":  "souad.habibi@eqncs.com",
+        "LastSignIn":  "2025-06-09",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "Lizanne de Jager",
+        "UserPrincipalName":  "Lizanne.deJager@eqncs.com",
+        "LastSignIn":  "2025-05-09",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "Whistleblower Service",
+        "UserPrincipalName":  "whistleblower@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "Vantage SA",
+        "UserPrincipalName":  "vantagesa@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Admin EQN",
+        "UserPrincipalName":  "admin@eqncs.com",
+        "LastSignIn":  "2026-03-24",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "EQNCS Test Laptop",
+        "UserPrincipalName":  "eqntest@eqncs.com",
+        "LastSignIn":  "2025-02-17",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "DM",
+        "UserPrincipalName":  "dm@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "IT Support",
+        "UserPrincipalName":  "ITSupport1@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Incidents",
+        "UserPrincipalName":  "incidents@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Learning",
+        "UserPrincipalName":  "learning@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Jack Abari",
+        "UserPrincipalName":  "jack.abari@eqncs.com",
+        "LastSignIn":  "2025-02-12",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Mohamed Yasin",
+        "UserPrincipalName":  "mohamed.yasin@eqncs.com",
+        "LastSignIn":  "2025-11-28",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Amorette van Daalen",
+        "UserPrincipalName":  "amorette.vandaalen@eqncs.com",
+        "LastSignIn":  "2026-04-28",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "IT Support Partner",
+        "UserPrincipalName":  "itsupport@partner.eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Info Western Region",
+        "UserPrincipalName":  "info.wa@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "Equinox Status",
+        "UserPrincipalName":  "crm@eqncs.com",
+        "LastSignIn":  "2026-03-06",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Pastel Pc",
+        "UserPrincipalName":  "pastel.pc@eqncs.com",
+        "LastSignIn":  "2025-11-03",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Equinox Outsourced Services",
+        "UserPrincipalName":  "FusionTrainingOneonOne@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Timothy Gatonye",
+        "UserPrincipalName":  "Timothy.Gatonye@partner.eqncs.com",
+        "LastSignIn":  "2025-08-04",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Aline Umuhoza",
+        "UserPrincipalName":  "Aline.Umuhoza@partner.eqncs.com",
+        "LastSignIn":  "2025-07-29",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Selamawit Alemayehu",
+        "UserPrincipalName":  "Selamawit.Alemayehu@partner.eqncs.com",
+        "LastSignIn":  "2026-04-14",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Stephen Ouma",
+        "UserPrincipalName":  "Stephen.Ouma@partner.eqncs.com",
+        "LastSignIn":  "2026-05-07",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Darlyn Mbaya",
+        "UserPrincipalName":  "Darlyn.Mbaya@partner.eqncs.com",
+        "LastSignIn":  "2025-07-18",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Brinty",
+        "UserPrincipalName":  "Brinty@partner.eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Penninah Ngabire",
+        "UserPrincipalName":  "Penninah.Ngabire@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Valence Rukesha",
+        "UserPrincipalName":  "Valence.Rukesha@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Wael Ahmed",
+        "UserPrincipalName":  "Wael.Ahmed@partner.eqncs.com",
+        "LastSignIn":  "2025-12-22",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Joyeux Bahidika",
+        "UserPrincipalName":  "Joyeux.Bahidika@partner.eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "EQN Office Printer",
+        "UserPrincipalName":  "eqncptprinter@eqncs.com",
+        "LastSignIn":  "2025-09-17",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Tsion Tirsit",
+        "UserPrincipalName":  "tsion.tirsit@partner.eqncs.com",
+        "LastSignIn":  "2025-09-29",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Client Payments",
+        "UserPrincipalName":  "clientpayments@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "Egypte Onbaording",
+        "UserPrincipalName":  "MedicalExam@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Nour Manai",
+        "UserPrincipalName":  "Nour.Manai@eqncs.com",
+        "LastSignIn":  "2026-03-09",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "Sheila Mate",
+        "UserPrincipalName":  "sheila.mate@partner.eqncs.com",
+        "LastSignIn":  "2025-11-24",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Pauline Mtui",
+        "UserPrincipalName":  "Pauline.Mtui@partner.eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Book a Meeting",
+        "UserPrincipalName":  "BookaMeeting@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Security EQNCS",
+        "UserPrincipalName":  "security@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "EGYPT SDT",
+        "UserPrincipalName":  "egypt.sdt@partner.eqncs.com",
+        "LastSignIn":  "2026-02-26",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Corpoconsult Morocco",
+        "UserPrincipalName":  "Corpoconsult.Morroco@partner.eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Info Southern Region",
+        "UserPrincipalName":  "info.sa@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "GEOS",
+        "UserPrincipalName":  "geos@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "Jean Claude Abayisenga",
+        "UserPrincipalName":  "jean.claude@partner.eqncs.com",
+        "LastSignIn":  "2026-06-05",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Equinox",
+        "UserPrincipalName":  "bookings-prod@eqncs.com",
+        "LastSignIn":  "2026-05-11",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Equinox Sandbox",
+        "UserPrincipalName":  "bookings-sandbox@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Equinox",
+        "UserPrincipalName":  "Equinox1@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Equinox Sandbox",
+        "UserPrincipalName":  "EquinoxSandbox@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Soft Landing",
+        "UserPrincipalName":  "SoftLanding@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Stripe",
+        "UserPrincipalName":  "stripe@eqncs.com",
+        "LastSignIn":  "2026-05-29",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Strategic Partnerships",
+        "UserPrincipalName":  "Partnerships@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "Equinox Events",
+        "UserPrincipalName":  "EquinoxEvents@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "EQN SLA Tickets",
+        "UserPrincipalName":  "sla-support@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  false
+    },
+    {
+        "DisplayName":  "Dev test Booking",
+        "UserPrincipalName":  "DevtestBooking@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  true
+    },
+    {
+        "DisplayName":  "eor",
+        "UserPrincipalName":  "eor@eqncs.com",
+        "LastSignIn":  "Never",
+        "Enabled":  false
+    }
+]

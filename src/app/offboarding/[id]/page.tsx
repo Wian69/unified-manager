@@ -278,7 +278,7 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
             )}
 
             {/* Header Navigation */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <Link href="/offboarding" className="group flex items-center gap-3 text-slate-400 hover:text-white transition-all">
                     <div className="p-2 bg-slate-900 rounded-xl group-hover:bg-slate-800 border border-slate-800 group-hover:border-slate-700 transition-all">
                         <ArrowLeft size={20} />
@@ -308,7 +308,7 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
             {/* Profile Overview Card */}
             <div className="bg-slate-900/50 backdrop-blur-xl p-10 rounded-3xl border border-slate-800 shadow-xl relative overflow-hidden text-left">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/5 blur-[80px] pointer-events-none" />
-                <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
+                <div className="flex flex-col lg:flex-row items-center gap-8 relative z-10">
                     <div className="w-32 h-32 bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl flex items-center justify-center text-4xl font-black text-white shadow-2xl">
                         {user.displayName.charAt(0)}
                     </div>
@@ -328,7 +328,7 @@ export default function UserOffboardingPage({ params }: { params: Promise<{ id: 
                     </div>
                     
                     {/* Action Panel */}
-                    <div className="flex flex-col gap-4 self-end min-w-[280px]">
+                    <div className="flex flex-col gap-4 self-stretch lg:self-end w-full lg:w-auto lg:min-w-[280px]">
                         {/* Digital First Action */}
                         <button 
                             onClick={() => setShowWizard(true)}
