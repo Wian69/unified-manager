@@ -56,13 +56,13 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
         { id: 201, section: 2, label: "Uninstalled Euphoria App, Outlook, Teams, and OneDrive from personal devices.", checked: false },
         { id: 202, section: 2, label: "Verified no company data remains on any personal external storage devices.", checked: false },
         { id: 203, section: 2, label: "Personal files stored on company equipment reviewed and approved.", checked: false },
+        { id: 204, section: 2, label: "System Access Removed: SharePoint, VPN, Distribution Lists, Jira, SAP, Slack.", checked: false },
+        { id: 205, section: 2, label: "Device Security: Device wiped, security logs reviewed.", checked: false },
         
         // Section 3: Account Deactivation & Data Handling
         { id: 301, section: 3, label: "Microsoft 365 Account Disabled: Sign-in blocked and MFA/Authenticator removed.", checked: false },
         { id: 302, section: 3, label: "Email Routing: Mailbox access transferred, forwarding configured. Retained 12 months.", checked: false },
         { id: 303, section: 3, label: "OneDrive Transfer: Ownership transferred for 7 days, then deleted.", checked: false },
-        { id: 304, section: 3, label: "System Access Removed: SharePoint, VPN, Distribution Lists, Jira, SAP, Slack.", checked: false },
-        { id: 305, section: 3, label: "Device Security: Device wiped, security logs reviewed.", checked: false },
     ]);
 
     useEffect(() => {
