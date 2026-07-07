@@ -14,6 +14,7 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
     const [step, setStep] = useState(1);
     const [uploading, setUploading] = useState(false);
     const [status, setStatus] = useState<string | null>(null);
+    const [logs, setLogs] = useState<string[]>([]);
     const [links, setLinks] = useState<string[]>([]);
     const [policySignature, setPolicySignature] = useState("");
     const [adminSignature, setAdminSignature] = useState("");
@@ -98,6 +99,9 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
             
             const getLogoBase64 = async () => {
                 try {
+                    const stored = localStorage.getItem('eqn-company-logo');
+                    if (stored) return stored;
+
                     const response = await fetch('/Equinox-Logo-Transparent.png');
                     const blob = await response.blob();
                     return new Promise<string>((resolve) => {
@@ -237,10 +241,11 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
 
             if (data.success) {
                 if (data.links) setLinks(data.links);
+                if (data.automationLogs) setLogs(data.automationLogs);
                 setStatus("✅ Offboarding Complete!");
                 setTimeout(() => {
                     if (!data.links) { onComplete(); onClose(); }
-                }, 5000);
+                }, 8000);
             } else {
                 setStatus("❌ " + (data.details || data.error));
             }
@@ -436,6 +441,19 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                                         >
                                             <UploadCloud size={24} /> {itAdmin.sharedMailboxCreated ? 'Finalize Offboarding' : 'Complete Manual Step First'}
                                         </button>
+                                    )}
+                                    {logs.length > 0 && (
+                                        <div className="mt-6 text-left bg-slate-900 border border-slate-800 rounded-xl p-4 max-h-60 overflow-y-auto">
+                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-2">Automation Logs</p>
+                                            <ul className="space-y-2 text-xs">
+                                                {logs.map((log, i) => (
+                                                    <li key={i} className={`flex items-start gap-2 ${log.toLowerCase().includes('failed') ? 'text-rose-400' : 'text-emerald-400'}`}>
+                                                        <span>{log.toLowerCase().includes('failed') ? '❌' : '✅'}</span>
+                                                        <span>{log}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
                                     )}
                                 </div>
                             )}
