@@ -281,7 +281,7 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
     );
 
     return (
-        <div className="fixed inset-0 z-[150] bg-slate-950 flex flex-col animate-in slide-in-from-bottom-5 duration-300">
+        <div className="fixed inset-0 z-[150] bg-slate-950 flex flex-col w-full h-[100dvh] overflow-hidden animate-in slide-in-from-bottom-5 duration-300">
             <div className="bg-slate-900 border-b border-slate-800 p-4 md:p-6 flex justify-between items-center sticky top-0 z-20">
                 <div className="flex items-center gap-3">
                     <Smartphone className="text-blue-500" size={24} />
@@ -293,7 +293,7 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                 <button onClick={onClose} className="p-2 text-slate-500 hover:text-white transition-all"><X size={24} /></button>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-4 md:px-12 py-6 pb-40 md:pb-32">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 md:px-12 py-6 pb-40 md:pb-32 w-full">
                 <div className="max-w-3xl mx-auto space-y-8">
                     
                     {step === 1 && (
@@ -322,7 +322,7 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                                         <label className="flex items-start gap-3 cursor-pointer">
                                             <input 
                                                 type="checkbox" 
-                                                className="mt-1 w-5 h-5 rounded border-orange-500 bg-slate-950 text-orange-500 focus:ring-0"
+                                                className="mt-1 w-6 h-6 rounded border-orange-500 bg-slate-950 text-orange-500 focus:ring-0 flex-shrink-0"
                                                 checked={itAdmin.sharedMailboxCreated}
                                                 onChange={e => setItAdmin(prev => ({...prev, sharedMailboxCreated: e.target.checked}))}
                                             />
@@ -383,7 +383,7 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                                         <label className="flex items-center gap-3 cursor-pointer group w-fit">
                                             <input 
                                                 type="checkbox" 
-                                                className="w-5 h-5 rounded border-slate-700 bg-slate-950 text-indigo-500 focus:ring-0"
+                                                className="w-6 h-6 rounded border-slate-700 bg-slate-950 text-indigo-500 focus:ring-0 flex-shrink-0"
                                                 checked={itAdmin.removeLicense}
                                                 onChange={e => setItAdmin(prev => ({...prev, removeLicense: e.target.checked}))}
                                             />
@@ -428,7 +428,7 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                                         <button 
                                             onClick={handleSubmit}
                                             disabled={!itAdmin.sharedMailboxCreated}
-                                            className={`px-12 py-4 text-white rounded-2xl text-lg font-black uppercase tracking-widest transition-all text-center flex items-center justify-center gap-3 mx-auto ${
+                                            className={`w-full md:px-12 py-4 text-white rounded-2xl text-lg font-black uppercase tracking-widest transition-all text-center flex items-center justify-center gap-3 mx-auto ${
                                                 itAdmin.sharedMailboxCreated 
                                                 ? 'bg-blue-600 hover:bg-blue-500 shadow-2xl shadow-blue-600/20 active:scale-95' 
                                                 : 'bg-slate-700 opacity-50 cursor-not-allowed'
@@ -444,7 +444,7 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                 </div>
             </div>
 
-            <div className="bg-slate-900 border-t border-slate-800 p-4 md:p-6 flex gap-3 fixed bottom-0 left-0 right-0 z-20 pb-safe">
+            <div className="bg-slate-900 border-t border-slate-800 p-4 md:p-6 flex flex-col sm:flex-row gap-3 fixed bottom-0 left-0 right-0 z-20 pb-safe">
                 {step > 1 && step < 4 && (
                     <button onClick={prev} className="flex-1 flex items-center justify-center gap-2 px-4 py-4 bg-slate-800 text-slate-300 rounded-2xl font-bold uppercase tracking-widest text-[11px] hover:bg-slate-700 active:scale-95"><ChevronLeft size={18} /> Back</button>
                 )}
