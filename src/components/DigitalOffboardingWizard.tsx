@@ -18,6 +18,7 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
     const [links, setLinks] = useState<string[]>([]);
     const [policySignature, setPolicySignature] = useState("");
     const [adminSignature, setAdminSignature] = useState("");
+    const [policyAccepted, setPolicyAccepted] = useState(false);
     
     const scrollRef = React.useRef<HTMLDivElement>(null);
 
@@ -510,81 +511,100 @@ export default function DigitalOffboardingWizard({ user, onClose, onComplete }: 
                         <div className="space-y-8 animate-in fade-in slide-in-from-right-4 text-left">
                             <div className="bg-purple-600/10 p-6 rounded-2xl border border-purple-500/20 mb-8">
                                 <h3 className="text-lg font-bold text-purple-400 mb-2 flex items-center gap-2"><UploadCloud size={20} /> Final Acknowledgment</h3>
-                                <p className="text-xs text-purple-300/60 italic">Please review the Data Retention Policy and sign below to formally agree to the terms in the IT Offboarding Policy.</p>
+                                <p className="text-xs text-purple-300/60 italic">Please sign below to formally agree to the terms in the IT Offboarding Policy.</p>
                             </div>
 
-                            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-8 max-h-96 overflow-y-auto custom-scrollbar">
-                                <h4 className="text-sm font-black text-white uppercase tracking-widest mb-6 border-b border-slate-800 pb-4 sticky top-0 bg-slate-900">Data Retention & Access Policy</h4>
-                                
-                                <div className="space-y-6 text-sm text-slate-300">
-                                    <div>
-                                        <h5 className="font-bold text-white mb-2 text-[12px] uppercase tracking-wider">Email (Outlook / Microsoft 365 Mailbox)</h5>
-                                        <ul className="list-disc pl-5 space-y-1">
-                                            <li>Your mailbox will be disabled on your last working day.</li>
-                                            <li>Your manager or designated successor will receive full access for business continuity.</li>
-                                            <li>Auto reply and forwarding (if applicable) will be configured according to company policy.</li>
-                                            <li>Your mailbox will be retained for 12 months according to Equinox Group Holdings, Inc.'s retention policies.</li>
-                                            <li>You will no longer have access after offboarding is completed.</li>
-                                        </ul>
-                                    </div>
-                                    
-                                    <div>
-                                        <h5 className="font-bold text-white mb-2 text-[12px] uppercase tracking-wider">OneDrive Files</h5>
-                                        <ul className="list-disc pl-5 space-y-1">
-                                            <li>Ownership of your OneDrive files will be transferred to your manager.</li>
-                                            <li>Your manager will have access for 7 days to review and relocate required business related files.</li>
-                                            <li>After the retention period, your OneDrive and its contents will be deleted following company policy.</li>
-                                            <li>Personal files may be exported only after IT review and formal approval.</li>
-                                        </ul>
-                                    </div>
+                            {!policyAccepted && (
+                                <div className="fixed inset-0 z-[200] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 md:p-12 animate-in fade-in duration-300">
+                                    <div className="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-2xl max-h-full flex flex-col overflow-hidden shadow-2xl">
+                                        <div className="p-6 border-b border-slate-800 bg-slate-900/50 flex justify-between items-center sticky top-0">
+                                            <h4 className="text-lg font-black text-white uppercase tracking-widest flex items-center gap-2"><ShieldCheck className="text-emerald-500" /> Data Retention & Access Policy</h4>
+                                        </div>
+                                        
+                                        <div className="p-6 overflow-y-auto custom-scrollbar space-y-6 text-sm text-slate-300">
+                                            <p className="text-emerald-400 font-bold mb-4 uppercase text-xs tracking-widest border-b border-emerald-500/20 pb-2">Please read and accept to proceed</p>
+                                            
+                                            <div>
+                                                <h5 className="font-bold text-white mb-2 text-[12px] uppercase tracking-wider">Email (Outlook / Microsoft 365 Mailbox)</h5>
+                                                <ul className="list-disc pl-5 space-y-1">
+                                                    <li>Your mailbox will be disabled on your last working day.</li>
+                                                    <li>Your manager or designated successor will receive full access for business continuity.</li>
+                                                    <li>Auto reply and forwarding (if applicable) will be configured according to company policy.</li>
+                                                    <li>Your mailbox will be retained for 12 months according to Equinox Group Holdings, Inc.'s retention policies.</li>
+                                                    <li>You will no longer have access after offboarding is completed.</li>
+                                                </ul>
+                                            </div>
+                                            
+                                            <div>
+                                                <h5 className="font-bold text-white mb-2 text-[12px] uppercase tracking-wider">OneDrive Files</h5>
+                                                <ul className="list-disc pl-5 space-y-1">
+                                                    <li>Ownership of your OneDrive files will be transferred to your manager.</li>
+                                                    <li>Your manager will have access for 7 days to review and relocate required business related files.</li>
+                                                    <li>After the retention period, your OneDrive and its contents will be deleted following company policy.</li>
+                                                    <li>Personal files may be exported only after IT review and formal approval.</li>
+                                                </ul>
+                                            </div>
 
-                                    <div>
-                                        <h5 className="font-bold text-white mb-2 text-[12px] uppercase tracking-wider">Teams Chats & Teams Files</h5>
-                                        <p className="font-bold text-xs mt-1 text-slate-400">Teams Chats:</p>
-                                        <ul className="list-disc pl-5 space-y-1">
-                                            <li>Private Teams chats remain stored according to compliance and retention rules.</li>
-                                            <li>No one receives direct access to your private chat history unless legally required.</li>
-                                        </ul>
-                                        <p className="font-bold text-xs mt-2 text-slate-400">Teams Files:</p>
-                                        <ul className="list-disc pl-5 space-y-1">
-                                            <li>Files in Teams channels remain accessible to the team.</li>
-                                            <li>Files shared in private chats follow OneDrive transfer rules.</li>
-                                        </ul>
-                                    </div>
+                                            <div>
+                                                <h5 className="font-bold text-white mb-2 text-[12px] uppercase tracking-wider">Teams Chats & Teams Files</h5>
+                                                <p className="font-bold text-xs mt-1 text-slate-400">Teams Chats:</p>
+                                                <ul className="list-disc pl-5 space-y-1">
+                                                    <li>Private Teams chats remain stored according to compliance and retention rules.</li>
+                                                    <li>No one receives direct access to your private chat history unless legally required.</li>
+                                                </ul>
+                                                <p className="font-bold text-xs mt-2 text-slate-400">Teams Files:</p>
+                                                <ul className="list-disc pl-5 space-y-1">
+                                                    <li>Files in Teams channels remain accessible to the team.</li>
+                                                    <li>Files shared in private chats follow OneDrive transfer rules.</li>
+                                                </ul>
+                                            </div>
 
-                                    <div>
-                                        <h5 className="font-bold text-white mb-2 text-[12px] uppercase tracking-wider">SharePoint & Network Drives</h5>
-                                        <ul className="list-disc pl-5 space-y-1">
-                                            <li>All SharePoint documents remain part of their respective sites.</li>
-                                            <li>Access permissions will be updated to remove you from shared folders, groups, and sites.</li>
-                                        </ul>
-                                    </div>
+                                            <div>
+                                                <h5 className="font-bold text-white mb-2 text-[12px] uppercase tracking-wider">SharePoint & Network Drives</h5>
+                                                <ul className="list-disc pl-5 space-y-1">
+                                                    <li>All SharePoint documents remain part of their respective sites.</li>
+                                                    <li>Access permissions will be updated to remove you from shared folders, groups, and sites.</li>
+                                                </ul>
+                                            </div>
 
-                                    <div>
-                                        <h5 className="font-bold text-white mb-2 text-[12px] uppercase tracking-wider">Applications & SaaS Platforms</h5>
-                                        <p className="text-xs mb-1 text-slate-400">For any third party systems (e.g., Fusion, Xero, Sage, CaseWare etc..):</p>
-                                        <ul className="list-disc pl-5 space-y-1">
-                                            <li>Your access will be fully removed.</li>
-                                            <li>Active tasks or projects may be reassigned to your department.</li>
-                                            <li>All content created remains the intellectual property of Equinox Group Holdings, Inc.</li>
-                                        </ul>
-                                    </div>
+                                            <div>
+                                                <h5 className="font-bold text-white mb-2 text-[12px] uppercase tracking-wider">Applications & SaaS Platforms</h5>
+                                                <p className="text-xs mb-1 text-slate-400">For any third party systems (e.g., Fusion, Xero, Sage, CaseWare etc..):</p>
+                                                <ul className="list-disc pl-5 space-y-1">
+                                                    <li>Your access will be fully removed.</li>
+                                                    <li>Active tasks or projects may be reassigned to your department.</li>
+                                                    <li>All content created remains the intellectual property of Equinox Group Holdings, Inc.</li>
+                                                </ul>
+                                            </div>
 
-                                    <div>
-                                        <h5 className="font-bold text-white mb-2 text-[12px] uppercase tracking-wider">Personal Data on Company Devices</h5>
-                                        <p className="text-xs mb-1 text-slate-400">If you stored personal files on company equipment:</p>
-                                        <ul className="list-disc pl-5 space-y-1">
-                                            <li>You may request a Personal Data Review before your last day.</li>
-                                            <li>IT will help identify items that may be transferred, while ensuring no corporate data is removed.</li>
-                                        </ul>
+                                            <div>
+                                                <h5 className="font-bold text-white mb-2 text-[12px] uppercase tracking-wider">Personal Data on Company Devices</h5>
+                                                <p className="text-xs mb-1 text-slate-400">If you stored personal files on company equipment:</p>
+                                                <ul className="list-disc pl-5 space-y-1">
+                                                    <li>You may request a Personal Data Review before your last day.</li>
+                                                    <li>IT will help identify items that may be transferred, while ensuring no corporate data is removed.</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+
+                                        <div className="p-6 border-t border-slate-800 bg-slate-900/80 mt-auto">
+                                            <button 
+                                                onClick={() => setPolicyAccepted(true)}
+                                                className="w-full py-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-widest transition-all shadow-xl shadow-emerald-900/20 active:scale-95 flex items-center justify-center gap-2"
+                                            >
+                                                <CheckCircle2 size={20} /> I Have Read and Accept
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            )}
 
-                            <div className="space-y-12">
-                                <SignaturePad label={`Employee Signature (${user.displayName})`} onSave={setPolicySignature} />
-                                <SignaturePad label="IT Admin Signature (Equinox Support)" onSave={setAdminSignature} />
-                            </div>
+                            {policyAccepted && (
+                                <div className="space-y-12 animate-in slide-in-from-bottom-8 fade-in duration-500">
+                                    <SignaturePad label={`Employee Signature (${user.displayName})`} onSave={setPolicySignature} />
+                                    <SignaturePad label="IT Admin Signature (Equinox Support)" onSave={setAdminSignature} />
+                                </div>
+                            )}
                         </div>
                     )}
 
