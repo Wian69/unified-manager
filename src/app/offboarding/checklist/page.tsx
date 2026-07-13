@@ -328,6 +328,36 @@ function ChecklistContent() {
                 </div>
 
                 {/* Controls */}
+                <div className="print:break-before-page pt-12 pb-8">
+                    <h2 className="font-bold border-b border-black pb-1 mb-4 text-xl">Data Retention & Access Policy</h2>
+                    <div className="space-y-4 text-sm text-gray-800 text-justify">
+                        <p>
+                            <strong>1. Purpose and Scope:</strong> This policy outlines the procedures and responsibilities regarding the retention, access, and destruction of company data by departing employees. It applies to all Equinox Group Holdings Inc. personnel upon termination of their employment or contract.
+                        </p>
+                        <p>
+                            <strong>2. Data Ownership:</strong> All data, documents, emails, software, and intellectual property created, received, or stored on company-issued devices or personal devices used for company business are the exclusive property of Equinox Group Holdings Inc.
+                        </p>
+                        <p>
+                            <strong>3. Return of Company Data:</strong> The departing employee must return all company data and information in their possession, regardless of the format (physical or electronic). This includes, but is not limited to, client lists, financial records, strategic plans, and internal communications.
+                        </p>
+                        <p>
+                            <strong>4. Prohibition of Data Transfer:</strong> Employees are strictly prohibited from transferring, forwarding, copying, or saving company data to personal email accounts, cloud storage (e.g., personal Google Drive, Dropbox), USB drives, or any other unauthorized external locations prior to or during the offboarding process.
+                        </p>
+                        <p>
+                            <strong>5. Removal from Personal Devices:</strong> If an employee has utilized personal devices (e.g., mobile phones, tablets, personal laptops) for company business, they must securely delete all company data, emails, and applications (such as Microsoft 365, Teams, and specialized software) from these devices. IT reserves the right to remotely wipe company data from registered personal devices where applicable.
+                        </p>
+                        <p>
+                            <strong>6. Access Revocation:</strong> All access to company systems, networks, facilities, and physical assets will be revoked immediately upon the employee's last working day, or earlier if deemed necessary by management.
+                        </p>
+                        <p>
+                            <strong>7. Post-Employment Obligations:</strong> The obligation to protect company data and maintain confidentiality extends beyond the termination of employment. Former employees must not use or disclose any confidential or proprietary information belonging to Equinox Group Holdings Inc.
+                        </p>
+                        <p>
+                            <strong>8. Compliance and Verification:</strong> By signing the Formal Acknowledgment section of this document, the employee certifies that they have complied with all requirements of this Data Retention & Access Policy. Equinox Group Holdings Inc. reserves the right to conduct audits and forensic investigations to ensure compliance. Failure to adhere to these policies may result in legal action.
+                        </p>
+                    </div>
+                </div>
+
                 <div className="mt-12 text-center print:hidden border-t border-gray-200 pt-8 flex flex-wrap justify-center gap-3">
                     <button onClick={saveTemplate} className={`px-8 py-3 text-white text-sm font-bold uppercase tracking-wider transition-colors ${saved ? 'bg-green-700' : 'bg-blue-700 hover:bg-blue-900'}`}>
                         {saved ? '✓ Template Saved' : 'Save as Template'}
