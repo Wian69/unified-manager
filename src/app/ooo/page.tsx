@@ -53,7 +53,7 @@ export default function OOOManagementPage() {
     const externalEditorRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        fetch('/api/users?onlyLicensed=true')
+        fetch('/api/users')
             .then(res => res.json())
             .then(data => {
                 if (data.users) setUsers(data.users);
