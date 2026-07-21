@@ -243,6 +243,44 @@ information contained in this message or in any attachment.
                 }
             }
 
+            // E. Remove User from SharePoint Root Site (MembershipGroupId=0)
+            try {
+                const rootSiteId = 'xxeqncs.sharepoint.com,5dea61bb-5414-4eb9-8924-4e77ce632099,9ebbd486-a44e-476d-9225-7865f971459a';
+                const listId = '480dd628-b51c-46a9-9aba-f8d3c83b1635';
+                
+                let hasNext = true;
+                let url = `/sites/${rootSiteId}/lists/${listId}/items?$expand=fields&$top=999`;
+                let targetItemId = null;
+                
+                while (hasNext && url && !targetItemId) {
+                    const res = await client.api(url).header('Prefer', 'HonorNonIndexedQueriesWarningMayFailRandomly').get();
+                    const match = res.value.find((u: any) => 
+                        u.fields?.EMail?.toLowerCase() === userEmail?.toLowerCase() ||
+                        u.fields?.UserName?.toLowerCase() === userEmail?.toLowerCase()
+                    );
+                    
+                    if (match) {
+                        targetItemId = match.id;
+                        break;
+                    }
+                    
+                    if (res['@odata.nextLink']) {
+                        url = res['@odata.nextLink'];
+                    } else {
+                        hasNext = false;
+                    }
+                }
+                
+                if (targetItemId) {
+                    await client.api(`/sites/${rootSiteId}/lists/${listId}/items/${targetItemId}`).delete();
+                    automationLogs.push(`Removed user from SharePoint root site (MembershipGroupId=0)`);
+                } else {
+                    automationLogs.push(`User not found in SharePoint root site, skipping removal`);
+                }
+            } catch (e: any) {
+                automationLogs.push("Failed to remove user from SharePoint site: " + e.message);
+            }
+
             // 4. UPDATE WATCHLIST STATUS
             try {
                 const watchlist = await getWatchlist();
