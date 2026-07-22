@@ -12,7 +12,7 @@ export default function MailMigrationPage() {
     
     const [folders, setFolders] = useState<any[]>([]);
     const [loadingFolders, setLoadingFolders] = useState(false);
-    const [selectedFolder, setSelectedFolder] = useState("");
+    const [selectedFolders, setSelectedFolders] = useState<string[]>([]);
     const [recursive, setRecursive] = useState(true);
 
     const [migrating, setMigrating] = useState(false);
@@ -39,7 +39,7 @@ export default function MailMigrationPage() {
     useEffect(() => {
         if (!sourceUser) {
             setFolders([]);
-            setSelectedFolder("");
+            setSelectedFolders([]);
             return;
         }
 
@@ -64,7 +64,7 @@ export default function MailMigrationPage() {
     }, [sourceUser]);
 
     const handleStartMigration = async () => {
-        if (!sourceUser || !targetUser || !selectedFolder) return;
+        if (!sourceUser || !targetUser || selectedFolders.length === 0) return;
         
         setMigrating(true);
         setSuccessMsg("");
@@ -77,7 +77,7 @@ export default function MailMigrationPage() {
                 body: JSON.stringify({
                     sourceUser,
                     targetUser,
-                    sourceFolderId: selectedFolder,
+                    sourceFolderIds: selectedFolders,
                     recursive
                 })
             });
@@ -85,6 +85,7 @@ export default function MailMigrationPage() {
             const data = await res.json();
             if (data.success) {
                 setSuccessMsg("Migration started successfully! The process is running in the background and might take several minutes to complete depending on the folder size.");
+                setSelectedFolders([]);
             } else {
                 setErrorMsg(data.error || "Failed to start migration");
             }
@@ -92,6 +93,22 @@ export default function MailMigrationPage() {
             setErrorMsg(e.message || "Network error");
         } finally {
             setMigrating(false);
+        }
+    };
+
+    const toggleFolderSelection = (folderId: string) => {
+        if (selectedFolders.includes(folderId)) {
+            setSelectedFolders(selectedFolders.filter(id => id !== folderId));
+        } else {
+            setSelectedFolders([...selectedFolders, folderId]);
+        }
+    };
+
+    const toggleSelectAllFolders = () => {
+        if (selectedFolders.length === folders.length) {
+            setSelectedFolders([]);
+        } else {
+            setSelectedFolders(folders.map(f => f.id));
         }
     };
 
@@ -132,29 +149,62 @@ export default function MailMigrationPage() {
                                     ))}
                                 </select>
                             </div>
-                            
-                            <div>
-                                <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">Select Folder to Copy</label>
-                                <div className="relative">
-                                    <select
-                                        value={selectedFolder}
-                                        onChange={(e) => setSelectedFolder(e.target.value)}
-                                        className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500 transition-colors disabled:opacity-50"
-                                        disabled={!sourceUser || loadingFolders}
-                                    >
-                                        <option value="">{loadingFolders ? "Fetching folders..." : (sourceUser ? "Select a folder..." : "Select a user first")}</option>
-                                        {folders.map(f => (
-                                            <option key={f.id} value={f.id}>{f.path} ({f.totalItemCount} items)</option>
-                                        ))}
-                                    </select>
-                                    {loadingFolders && (
-                                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                            <Loader2 size={16} className="animate-spin text-blue-500" />
+                        </div>
+
+                        {sourceUser && (
+                            <div className="ml-8 mt-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <label className="block text-xs font-semibold text-slate-400 uppercase">Select Folders to Copy</label>
+                                    {folders.length > 0 && (
+                                        <button 
+                                            onClick={toggleSelectAllFolders}
+                                            className="text-xs font-bold text-blue-500 hover:text-blue-400"
+                                        >
+                                            {selectedFolders.length === folders.length ? 'Deselect All' : 'Select All'}
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="relative border border-slate-800 rounded-lg bg-slate-950 overflow-hidden h-64">
+                                    {loadingFolders ? (
+                                        <div className="flex items-center justify-center h-full text-slate-500">
+                                            <Loader2 size={24} className="animate-spin text-blue-500 mr-2" />
+                                            Fetching folders...
+                                        </div>
+                                    ) : folders.length === 0 ? (
+                                        <div className="flex items-center justify-center h-full text-slate-500 text-sm">
+                                            No folders found.
+                                        </div>
+                                    ) : (
+                                        <div className="overflow-y-auto h-full p-2 space-y-1">
+                                            {folders.map(f => (
+                                                <label 
+                                                    key={f.id} 
+                                                    className={`flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors ${selectedFolders.includes(f.id) ? 'bg-blue-500/10' : 'hover:bg-slate-900'}`}
+                                                >
+                                                    <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors shrink-0 ${selectedFolders.includes(f.id) ? 'bg-blue-600 border-blue-600' : 'border-slate-600'}`}>
+                                                        {selectedFolders.includes(f.id) && <CheckCircle2 size={12} className="text-white" />}
+                                                    </div>
+                                                    <input 
+                                                        type="checkbox" 
+                                                        className="hidden" 
+                                                        checked={selectedFolders.includes(f.id)} 
+                                                        onChange={() => toggleFolderSelection(f.id)} 
+                                                    />
+                                                    <span className="text-sm text-slate-300 truncate font-medium">
+                                                        {f.path} <span className="text-slate-500 font-normal ml-1">({f.totalItemCount} items)</span>
+                                                    </span>
+                                                </label>
+                                            ))}
                                         </div>
                                     )}
                                 </div>
+                                {selectedFolders.length > 0 && (
+                                    <p className="text-xs text-blue-400 mt-2 font-medium">
+                                        {selectedFolders.length} folder(s) selected
+                                    </p>
+                                )}
                             </div>
-                        </div>
+                        )}
                     </div>
 
                     <div className="flex justify-center ml-8">
@@ -216,7 +266,7 @@ export default function MailMigrationPage() {
 
                         <button 
                             onClick={handleStartMigration}
-                            disabled={!sourceUser || !targetUser || !selectedFolder || migrating}
+                            disabled={!sourceUser || !targetUser || selectedFolders.length === 0 || migrating}
                             className="w-full md:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:from-slate-800 disabled:to-slate-800 text-white px-8 py-4 rounded-xl font-black tracking-wide uppercase text-sm transition-all shadow-xl shadow-blue-900/20 disabled:shadow-none flex items-center justify-center gap-2"
                         >
                             {migrating ? (

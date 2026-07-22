@@ -4,14 +4,14 @@ import { getGraphClient } from '@/lib/graph';
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { sourceUser, targetUser, sourceFolderId, recursive } = body;
+        const { sourceUser, targetUser, sourceFolderIds, recursive } = body;
 
-        if (!sourceUser || !targetUser || !sourceFolderId) {
+        if (!sourceUser || !targetUser || !sourceFolderIds || !Array.isArray(sourceFolderIds) || sourceFolderIds.length === 0) {
             return NextResponse.json({ error: "Missing parameters" }, { status: 400 });
         }
 
         // We run the copy process in the background so the request doesn't timeout
-        executeBackgroundMigration(sourceUser, targetUser, sourceFolderId, !!recursive).catch(console.error);
+        executeBackgroundMigration(sourceUser, targetUser, sourceFolderIds, !!recursive).catch(console.error);
 
         return NextResponse.json({ success: true, message: "Migration started in background" });
     } catch (error: any) {
@@ -20,12 +20,14 @@ export async function POST(request: Request) {
     }
 }
 
-async function executeBackgroundMigration(sourceUser: string, targetUser: string, sourceFolderId: string, recursive: boolean) {
+async function executeBackgroundMigration(sourceUser: string, targetUser: string, sourceFolderIds: string[], recursive: boolean) {
     const client = getGraphClient();
-    console.log(`[Migration] Starting from ${sourceUser} to ${targetUser}, Folder: ${sourceFolderId}, Recursive: ${recursive}`);
+    console.log(`[Migration] Starting from ${sourceUser} to ${targetUser}, Folders: ${sourceFolderIds.length}, Recursive: ${recursive}`);
 
     try {
-        await copyFolderRecursively(client, sourceUser, targetUser, sourceFolderId, 'msgfolderroot', recursive);
+        for (const folderId of sourceFolderIds) {
+            await copyFolderRecursively(client, sourceUser, targetUser, folderId, 'msgfolderroot', recursive);
+        }
         console.log(`[Migration] Completed for ${sourceUser} -> ${targetUser}`);
     } catch (e: any) {
         console.error(`[Migration] Fatal Error:`, e.message);
