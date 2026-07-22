@@ -18,6 +18,7 @@ export default function MailMigrationPage() {
     const [migrating, setMigrating] = useState(false);
     const [successMsg, setSuccessMsg] = useState("");
     const [errorMsg, setErrorMsg] = useState("");
+    const [logs, setLogs] = useState<string[]>([]);
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -69,6 +70,7 @@ export default function MailMigrationPage() {
         setMigrating(true);
         setSuccessMsg("");
         setErrorMsg("");
+        setLogs([]);
         
         try {
             const res = await fetch('/api/mail/copy-folder', {
@@ -82,16 +84,46 @@ export default function MailMigrationPage() {
                 })
             });
             
-            const data = await res.json();
-            if (data.success) {
-                setSuccessMsg("Migration started successfully! The process is running in the background and might take several minutes to complete depending on the folder size.");
-                setSelectedFolders([]);
-            } else {
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
                 setErrorMsg(data.error || "Failed to start migration");
+                setMigrating(false);
+                return;
+            }
+
+            const reader = res.body?.getReader();
+            if (!reader) throw new Error('No readable stream returned');
+            const decoder = new TextDecoder();
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                
+                const chunk = decoder.decode(value, { stream: true });
+                const lines = chunk.split('\n');
+                
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const data = JSON.parse(line.slice(6));
+                            if (data.type === 'log') {
+                                setLogs(prev => [...prev, data.message]);
+                            } else if (data.type === 'complete') {
+                                setSuccessMsg("Migration completed successfully! All selected folders have been copied.");
+                                setSelectedFolders([]);
+                                setMigrating(false);
+                            } else if (data.type === 'error') {
+                                setErrorMsg(data.error);
+                                setMigrating(false);
+                            }
+                        } catch (e) {
+                            // ignore incomplete json chunks
+                        }
+                    }
+                }
             }
         } catch (e: any) {
             setErrorMsg(e.message || "Network error");
-        } finally {
             setMigrating(false);
         }
     };
@@ -272,15 +304,32 @@ export default function MailMigrationPage() {
                             {migrating ? (
                                 <>
                                     <Loader2 size={18} className="animate-spin" />
-                                    Starting Migration...
+                                    Migrating... Please do not close this page
                                 </>
                             ) : (
                                 <>
-                                    Start Background Migration
+                                    Start Migration
                                     <ChevronRight size={18} />
                                 </>
                             )}
                         </button>
+
+                        {(migrating || logs.length > 0) && (
+                            <div className="mt-6 bg-slate-950 border border-slate-800 rounded-lg p-4 font-mono text-xs text-slate-400 h-64 overflow-y-auto flex flex-col gap-1">
+                                {logs.map((log, i) => (
+                                    <div key={i} className="flex gap-3">
+                                        <span className="text-slate-600 select-none">{(i + 1).toString().padStart(3, '0')}</span>
+                                        <span className={log.includes('Error') || log.includes('Failed') ? 'text-rose-400' : 'text-slate-300'}>{log}</span>
+                                    </div>
+                                ))}
+                                {migrating && (
+                                    <div className="flex items-center gap-2 text-blue-500 mt-2">
+                                        <Loader2 size={12} className="animate-spin" />
+                                        <span>Processing...</span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                 </div>

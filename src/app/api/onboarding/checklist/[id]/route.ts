@@ -3,10 +3,16 @@ import { createClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
-const supabase = createClient(
-    process.env.SUPABASE_URL || '',
-    process.env.SUPABASE_ANON_KEY || ''
-);
+let supabase: ReturnType<typeof createClient> | null = null;
+function getSupabase() {
+    if (!supabase) {
+        supabase = createClient(
+            process.env.SUPABASE_URL || 'http://localhost:54321', // Dummy URL to prevent crash on build
+            process.env.SUPABASE_ANON_KEY || 'dummy'
+        );
+    }
+    return supabase;
+}
 
 export async function GET(
     request: Request,
@@ -14,7 +20,7 @@ export async function GET(
 ) {
     const { id: userId } = await params;
     try {
-        const { data, error } = await supabase
+        const { data, error } = await getSupabase()
             .from('kv')
             .select('value')
             .eq('key', `onboarding_checklist:${userId}`)
@@ -35,7 +41,7 @@ export async function POST(
     const { id: userId } = await params;
     try {
         const { checklist } = await request.json();
-        const { error } = await supabase
+        const { error } = await getSupabase()
             .from('kv')
             .upsert({ key: `onboarding_checklist:${userId}`, value: checklist }, { onConflict: 'key' });
 

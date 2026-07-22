@@ -2,44 +2,65 @@ import { NextResponse } from 'next/server';
 import { getGraphClient } from '@/lib/graph';
 
 export async function POST(request: Request) {
-    try {
-        const body = await request.json();
-        const { sourceUser, targetUser, sourceFolderIds, recursive } = body;
+    const body = await request.json();
+    const { sourceUser, targetUser, sourceFolderIds, recursive } = body;
 
-        if (!sourceUser || !targetUser || !sourceFolderIds || !Array.isArray(sourceFolderIds) || sourceFolderIds.length === 0) {
-            return NextResponse.json({ error: "Missing parameters" }, { status: 400 });
-        }
-
-        // We run the copy process in the background so the request doesn't timeout
-        executeBackgroundMigration(sourceUser, targetUser, sourceFolderIds, !!recursive).catch(console.error);
-
-        return NextResponse.json({ success: true, message: "Migration started in background" });
-    } catch (error: any) {
-        console.error('[API] Migration Start Error:', error);
-        return NextResponse.json({ error: "Failed to start migration" }, { status: 500 });
+    if (!sourceUser || !targetUser || !sourceFolderIds || !Array.isArray(sourceFolderIds) || sourceFolderIds.length === 0) {
+        return NextResponse.json({ error: "Missing parameters" }, { status: 400 });
     }
+
+    const stream = new ReadableStream({
+        async start(controller) {
+            function sendLog(message: string) {
+                controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ type: 'log', message })}\n\n`));
+            }
+
+            function sendComplete() {
+                controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ type: 'complete' })}\n\n`));
+                controller.close();
+            }
+
+            function sendError(error: string) {
+                controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ type: 'error', error })}\n\n`));
+                controller.close();
+            }
+
+            try {
+                await executeBackgroundMigration(sourceUser, targetUser, sourceFolderIds, !!recursive, sendLog);
+                sendComplete();
+            } catch (error: any) {
+                sendError(error.message);
+            }
+        }
+    });
+
+    return new Response(stream, {
+        headers: {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+        },
+    });
 }
 
-async function executeBackgroundMigration(sourceUser: string, targetUser: string, sourceFolderIds: string[], recursive: boolean) {
+async function executeBackgroundMigration(sourceUser: string, targetUser: string, sourceFolderIds: string[], recursive: boolean, sendLog: (msg: string) => void) {
     const client = getGraphClient();
-    console.log(`[Migration] Starting from ${sourceUser} to ${targetUser}, Folders: ${sourceFolderIds.length}, Recursive: ${recursive}`);
+    sendLog(`Starting migration from ${sourceUser} to ${targetUser}`);
 
-    try {
-        for (const folderId of sourceFolderIds) {
-            await copyFolderRecursively(client, sourceUser, targetUser, folderId, 'msgfolderroot', recursive);
+    for (const folderId of sourceFolderIds) {
+        try {
+            await copyFolderRecursively(client, sourceUser, targetUser, folderId, 'msgfolderroot', recursive, sendLog);
+        } catch (err: any) {
+            sendLog(`[Error] Failed to process folder: ${err.message}`);
         }
-        console.log(`[Migration] Completed for ${sourceUser} -> ${targetUser}`);
-    } catch (e: any) {
-        console.error(`[Migration] Fatal Error:`, e.message);
     }
+    sendLog(`Migration finished!`);
 }
 
-async function copyFolderRecursively(client: any, sourceUser: string, targetUser: string, sourceFolderId: string, targetParentFolderId: string, recursive: boolean) {
-    // 1. Get source folder details
+async function copyFolderRecursively(client: any, sourceUser: string, targetUser: string, sourceFolderId: string, targetParentFolderId: string, recursive: boolean, sendLog: (msg: string) => void) {
     const sourceFolder = await client.api(`/users/${sourceUser}/mailFolders/${sourceFolderId}`).get();
     
-    // 2. Create folder in target user
-    console.log(`[Migration] Creating folder '${sourceFolder.displayName}' in target...`);
+    sendLog(`Creating folder: ${sourceFolder.displayName}`);
     let targetFolder;
     try {
         targetFolder = await client.api(`/users/${targetUser}/mailFolders/${targetParentFolderId}/childFolders`).post({
@@ -47,10 +68,10 @@ async function copyFolderRecursively(client: any, sourceUser: string, targetUser
         });
     } catch (e: any) {
         if (e.code === 'ErrorFolderExists') {
-            // If folder exists, we might need to find it by name
-            const existingFolders = await client.api(`/users/${targetUser}/mailFolders/${targetParentFolderId}/childFolders`).filter(`displayName eq '${sourceFolder.displayName}'`).get();
-            if (existingFolders.value.length > 0) {
-                targetFolder = existingFolders.value[0];
+            const existingFolders = await client.api(`/users/${targetUser}/mailFolders/${targetParentFolderId}/childFolders?$top=250`).get();
+            const found = existingFolders.value.find((f: any) => f.displayName.toLowerCase() === sourceFolder.displayName.toLowerCase());
+            if (found) {
+                targetFolder = found;
             } else {
                 throw new Error(`Folder exists but couldn't be retrieved: ${sourceFolder.displayName}`);
             }
@@ -59,17 +80,16 @@ async function copyFolderRecursively(client: any, sourceUser: string, targetUser
         }
     }
 
-    // 3. Copy messages in this folder
-    console.log(`[Migration] Copying messages for '${sourceFolder.displayName}'...`);
+    sendLog(`Copying messages for: ${sourceFolder.displayName}`);
     let hasNextMsg = true;
     let msgUrl = `/users/${sourceUser}/mailFolders/${sourceFolderId}/messages?$top=50`;
     
+    let totalCopied = 0;
     while (hasNextMsg && msgUrl) {
         const msgs = await client.api(msgUrl).header('Prefer', 'HonorNonIndexedQueriesWarningMayFailRandomly').get();
         
         for (const msg of msgs.value) {
             try {
-                // Fetch full message to get body and all properties correctly
                 const fullMsg = await client.api(`/users/${sourceUser}/messages/${msg.id}`).get();
                 
                 const newMsg = {
@@ -84,15 +104,19 @@ async function copyFolderRecursively(client: any, sourceUser: string, targetUser
                     importance: fullMsg.importance,
                     singleValueExtendedProperties: [
                         {
-                            id: "SystemTime 0x0E06", // PR_MESSAGE_DELIVERY_TIME
+                            id: "SystemTime 0x0E06",
                             value: fullMsg.receivedDateTime
                         }
                     ]
                 };
 
                 await client.api(`/users/${targetUser}/mailFolders/${targetFolder.id}/messages`).post(newMsg);
+                totalCopied++;
+                if (totalCopied % 10 === 0) {
+                    sendLog(`... copied ${totalCopied} messages in ${sourceFolder.displayName}`);
+                }
             } catch (err: any) {
-                console.error(`[Migration] Failed to copy message ${msg.subject}: ${err.message}`);
+                console.error(`Failed to copy message ${msg.subject}: ${err.message}`);
             }
         }
         
@@ -102,17 +126,16 @@ async function copyFolderRecursively(client: any, sourceUser: string, targetUser
             hasNextMsg = false;
         }
     }
+    if (totalCopied > 0) sendLog(`Finished copying ${totalCopied} messages in ${sourceFolder.displayName}`);
 
-    // 4. Handle Subfolders recursively
     if (recursive && sourceFolder.childFolderCount > 0) {
-        console.log(`[Migration] Processing subfolders for '${sourceFolder.displayName}'...`);
         let hasNextSub = true;
         let subUrl = `/users/${sourceUser}/mailFolders/${sourceFolderId}/childFolders?$top=50`;
         
         while (hasNextSub && subUrl) {
             const subFolders = await client.api(subUrl).get();
             for (const sub of subFolders.value) {
-                await copyFolderRecursively(client, sourceUser, targetUser, sub.id, targetFolder.id, recursive);
+                await copyFolderRecursively(client, sourceUser, targetUser, sub.id, targetFolder.id, recursive, sendLog);
             }
             if (subFolders['@odata.nextLink']) {
                 subUrl = subFolders['@odata.nextLink'];
