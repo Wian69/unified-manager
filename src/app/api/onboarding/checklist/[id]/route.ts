@@ -28,7 +28,8 @@ export async function GET(
 
         if (error) throw error;
         
-        return NextResponse.json({ checklist: data?.value || {} }, { status: 200 });
+        const row = data as any;
+        return NextResponse.json({ checklist: row?.value || {} }, { status: 200 });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
