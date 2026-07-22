@@ -42,7 +42,8 @@ export async function POST(
     const { id: userId } = await params;
     try {
         const { checklist } = await request.json();
-        const { error } = await getSupabase()
+        const client = getSupabase() as any;
+        const { error } = await client
             .from('kv')
             .upsert({ key: `onboarding_checklist:${userId}`, value: checklist }, { onConflict: 'key' });
 
