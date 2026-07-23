@@ -72,36 +72,36 @@ export async function generateInvoicePdf(regionName: string, data: any, budget: 
     y = Math.max(y + 35, addressY + 15);
 
     // 4. Invoice Title & Region Info
-    doc.setFontSize(18);
+    doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
     doc.text(`IT Cost Allocation Statement`, 15, y);
-    y += 10;
+    y += 8;
     
-    doc.setFontSize(12);
+    doc.setFontSize(10);
     doc.text(`Region: ${regionName}`, 15, y);
     doc.setFont("helvetica", "normal");
     doc.text(`Date Generated: ${new Date().toLocaleDateString()}`, pageWidth - 15, y, { align: "right" });
-    y += 15;
+    y += 10;
 
     // Draw horizontal line
     doc.setLineWidth(0.5);
     doc.line(15, y, pageWidth - 15, y);
-    y += 10;
+    y += 8;
 
     // Helper to print a line item
     const printLineItem = (title: string, amount: number, subtitle?: string) => {
-        checkPageBreak(15);
-        doc.setFontSize(11);
+        checkPageBreak(12);
+        doc.setFontSize(10);
         doc.setFont("helvetica", "bold");
         doc.text(title, 15, y);
         doc.text(`$${amount.toFixed(2)}`, pageWidth - 15, y, { align: "right" });
-        y += 5;
+        y += 4;
         
         if (subtitle) {
-            doc.setFontSize(9);
+            doc.setFontSize(8);
             doc.setFont("helvetica", "italic");
             doc.text(subtitle, 15, y);
-            y += 5;
+            y += 4;
         }
     };
 
@@ -111,17 +111,16 @@ export async function generateInvoicePdf(regionName: string, data: any, budget: 
             return;
         }
         
-        doc.setFontSize(9);
+        doc.setFontSize(8);
         doc.setFont("helvetica", "normal");
         
         // Print in 2 columns to save space
         const columnWidth = (pageWidth - 30) / 2;
         let col = 0;
-        let startY = y;
         
         for (let i = 0; i < usersList.length; i++) {
             if (col === 0) {
-                checkPageBreak(5);
+                checkPageBreak(4);
             }
             
             const x = 20 + (col * columnWidth);
@@ -129,14 +128,14 @@ export async function generateInvoicePdf(regionName: string, data: any, budget: 
             
             if (col === 1) {
                 col = 0;
-                y += 5;
+                y += 4;
             } else {
                 col = 1;
             }
         }
         
-        if (col === 1) y += 5; // advance Y if we ended on the first column
-        y += 5;
+        if (col === 1) y += 4; // advance Y if we ended on the first column
+        y += 4;
     };
 
     let totalAmount = 0;
@@ -147,20 +146,24 @@ export async function generateInvoicePdf(regionName: string, data: any, budget: 
     
     if (isMainRegion && mainRegions.length > 0 && budget.azureRunRate > 0) {
         const azureSplit = budget.azureRunRate / mainRegions.length;
-        printLineItem("Azure Servers & Add-ons", azureSplit, `Equal Split (1 of ${mainRegions.length})`);
-        totalAmount += azureSplit;
-        y += 5;
+        if (azureSplit > 0) {
+            printLineItem("Azure Servers & Add-ons", azureSplit, `Regional split`);
+            totalAmount += azureSplit;
+            y += 4;
+        }
     }
 
     // --- MICROSOFT LICENSES ---
     const regionData = data.regions.find((r: any) => r.name === regionName);
     if (regionData && regionData.products) {
         for (const product of regionData.products) {
-            printLineItem(product.name, product.totalCost, `${product.users.length} users @ $${product.unitPrice.toFixed(2)}/mo`);
-            totalAmount += product.totalCost;
-            
-            // Print the users
-            printUsers(product.users);
+            if (product.totalCost > 0) {
+                printLineItem(product.name, product.totalCost, `${product.users.length} users @ $${product.unitPrice.toFixed(2)}/mo`);
+                totalAmount += product.totalCost;
+                
+                // Print the users
+                printUsers(product.users);
+            }
         }
     }
 
@@ -179,15 +182,17 @@ export async function generateInvoicePdf(regionName: string, data: any, budget: 
                         const swMonthlyCost = sw.interval === 'yearly' ? sw.cost / 12 : sw.cost;
                         const allocatedCost = (swMonthlyCost * sw.quantity) * proportion;
                         
-                        let label = sw.name;
-                        if (proportion >= 0.99 && regionName !== 'Southern Region') {
-                            label += ' (No cost recovery to Southern Region necessary)';
+                        if (allocatedCost > 0) {
+                            let label = sw.name;
+                            if (proportion >= 0.99 && regionName !== 'Southern Region') {
+                                label += ' (No cost recovery to Southern Region necessary)';
+                            }
+                            
+                            printLineItem(label, allocatedCost, `Assigned to ${usersInThisRegion.length} users in this region (${(proportion * 100).toFixed(0)}% of total)`);
+                            totalAmount += allocatedCost;
+                            
+                            printUsers(usersInThisRegion);
                         }
-                        
-                        printLineItem(label, allocatedCost, `Assigned to ${usersInThisRegion.length} users in this region (${(proportion * 100).toFixed(0)}% of total)`);
-                        totalAmount += allocatedCost;
-                        
-                        printUsers(usersInThisRegion);
                     }
                 } else {
                     const totalUsersInSelectedRegions = data.regions
@@ -199,16 +204,18 @@ export async function generateInvoicePdf(regionName: string, data: any, budget: 
                         const swMonthlyCost = sw.interval === 'yearly' ? sw.cost / 12 : sw.cost;
                         const allocatedCost = (swMonthlyCost * sw.quantity) * proportion;
                         
-                        let label = sw.name;
-                        if (proportion >= 0.99 && regionName !== 'Southern Region') {
-                            label += ' (No cost recovery to Southern Region necessary)';
-                        } else {
-                            label += ' (Custom Software Allocation)';
+                        if (allocatedCost > 0) {
+                            let label = sw.name;
+                            if (proportion >= 0.99 && regionName !== 'Southern Region') {
+                                label += ' (No cost recovery to Southern Region necessary)';
+                            } else {
+                                label += ' (Custom Software Allocation)';
+                            }
+                            
+                            printLineItem(label, allocatedCost);
+                            totalAmount += allocatedCost;
+                            y += 4;
                         }
-                        
-                        printLineItem(label, allocatedCost, `Allocated proportionally by M365 Premium User count`);
-                        totalAmount += allocatedCost;
-                        y += 5;
                     }
                 }
             }
@@ -222,7 +229,7 @@ export async function generateInvoicePdf(regionName: string, data: any, budget: 
     y += 10;
 
     // TOTAL
-    doc.setFontSize(14);
+    doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
     doc.text("TOTAL ALLOCATED COST:", 15, y);
     doc.text(`$${totalAmount.toFixed(2)}`, pageWidth - 15, y, { align: "right" });
