@@ -28,7 +28,7 @@ export async function GET(request: Request) {
 
             const pdfBuffer = await generateInvoicePdf(regionParam, data, enhancedBudget);
 
-            return new NextResponse(pdfBuffer, {
+            return new NextResponse(pdfBuffer as unknown as BodyInit, {
                 headers: {
                     'Content-Type': 'application/pdf',
                     'Content-Disposition': `attachment; filename="Invoice_${regionParam.replace(/\s+/g, '_')}.pdf"`
