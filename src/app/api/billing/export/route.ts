@@ -1,28 +1,59 @@
 import { fetchBillingData } from '@/lib/billing';
+import { getItBudget } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(req: Request) {
+    const { searchParams } = new URL(req.url);
+    const regionParam = searchParams.get('region');
+
     const data = await fetchBillingData();
+    const budget = await getItBudget() as any;
 
     let csvContent = 'Region,Product,Price\n';
     
-    // Summary Rows
-    csvContent += `GLOBAL SUMMARY,Last Invoice (Paid),$${data.lastInvoicePaid.toFixed(2)}\n`;
-    csvContent += `GLOBAL SUMMARY,Projected Next Bill,$${data.projectedNextBill.toFixed(2)}\n`;
-    csvContent += `,,\n`;
+    // Summary Rows (only if not filtering by region)
+    if (!regionParam) {
+        csvContent += `GLOBAL SUMMARY,Last Invoice (Paid),$${data.lastInvoicePaid.toFixed(2)}\n`;
+        csvContent += `GLOBAL SUMMARY,Projected Next Bill,$${data.projectedNextBill.toFixed(2)}\n`;
+        csvContent += `,,\n`;
+    }
 
     // Region Rows
     for (const region of data.regions) {
+        if (regionParam && region.name !== regionParam) continue;
+
+        // M365 Products
         for (const product of region.products) {
             csvContent += `"${region.name}","${product.name}",$${product.totalCost.toFixed(2)}\n`;
         }
+
+        // Manual Software allocation
+        if (budget && budget.software) {
+            budget.software.forEach((sw: any) => {
+                if (sw.regions && sw.regions.includes(region.name)) {
+                    const totalUsersInSelectedRegions = data.regions
+                        .filter((r: any) => sw.regions.includes(r.name))
+                        .reduce((sum: number, r: any) => sum + r.totalUsers, 0);
+
+                    if (totalUsersInSelectedRegions > 0) {
+                        const proportion = region.totalUsers / totalUsersInSelectedRegions;
+                        const swMonthlyCost = sw.interval === 'yearly' ? sw.cost / 12 : sw.cost;
+                        const allocatedCost = (swMonthlyCost * sw.quantity) * proportion;
+                        
+                        csvContent += `"${region.name}","${sw.name} (Custom Software Allocation)",$${allocatedCost.toFixed(2)}\n`;
+                    }
+                }
+            });
+        }
     }
+
+    const filename = regionParam ? `IT_Billing_${regionParam.replace(/\s+/g, '_')}.csv` : 'Microsoft_License_Billing.csv';
 
     return new Response(csvContent, {
         headers: {
             'Content-Type': 'text/csv',
-            'Content-Disposition': 'attachment; filename="Microsoft_License_Billing.csv"',
+            'Content-Disposition': `attachment; filename="${filename}"`,
             'Cache-Control': 'no-cache, no-store, must-revalidate',
         },
     });

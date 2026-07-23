@@ -12,6 +12,7 @@ type BudgetItem = {
     date?: string;
     interval?: 'monthly' | 'yearly';
     description?: string;
+    regions?: string[];
 };
 
 type BudgetData = {
@@ -23,17 +24,19 @@ type BudgetData = {
 export default function BudgetDashboard({ 
     initialBudget, 
     m365RunRate, 
-    azureRunRate 
+    azureRunRate,
+    billingRegions
 }: { 
     initialBudget: BudgetData, 
     m365RunRate: number, 
-    azureRunRate: number 
+    azureRunRate: number,
+    billingRegions: any[]
 }) {
     const [budget, setBudget] = useState<BudgetData>(initialBudget);
     const [isSaving, setIsSaving] = useState(false);
     
     // Forms state
-    const [newSoftware, setNewSoftware] = useState<{name: string, description: string, cost: number, quantity: number, interval: 'monthly'|'yearly'}>({ name: '', description: '', cost: 0, quantity: 1, interval: 'monthly' });
+    const [newSoftware, setNewSoftware] = useState<{name: string, description: string, cost: number, quantity: number, interval: 'monthly'|'yearly', regions: string[]}>({ name: '', description: '', cost: 0, quantity: 1, interval: 'monthly', regions: [] });
     const [newHardware, setNewHardware] = useState<{name: string, description: string, cost: number, quantity: number, type: string}>({ name: '', description: '', cost: 0, quantity: 1, type: 'laptop' });
     const [editingSoftwareId, setEditingSoftwareId] = useState<string | null>(null);
     const [editingSoftwareData, setEditingSoftwareData] = useState<BudgetItem | null>(null);
@@ -63,10 +66,11 @@ export default function BudgetDashboard({
             description: newSoftware.description,
             cost: Number(newSoftware.cost), 
             quantity: Number(newSoftware.quantity),
-            interval: newSoftware.interval
+            interval: newSoftware.interval,
+            regions: newSoftware.regions
         };
         handleSave({ ...budget, software: [...budget.software, item] });
-        setNewSoftware({ name: '', description: '', cost: 0, quantity: 1, interval: 'monthly' });
+        setNewSoftware({ name: '', description: '', cost: 0, quantity: 1, interval: 'monthly', regions: [] });
     };
 
     const removeSoftware = (id: string) => {
@@ -75,7 +79,7 @@ export default function BudgetDashboard({
 
     const startEditingSoftware = (item: BudgetItem) => {
         setEditingSoftwareId(item.id);
-        setEditingSoftwareData({ ...item, interval: item.interval || 'monthly' });
+        setEditingSoftwareData({ ...item, interval: item.interval || 'monthly', regions: item.regions || [] });
     };
 
     const saveEditingSoftware = () => {
@@ -132,7 +136,10 @@ export default function BudgetDashboard({
         <div className="space-y-12 mb-16">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Total Budget Card */}
-                <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+                <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-6 opacity-10">
+                        <DollarSign className="w-24 h-24 text-blue-500" />
+                    </div>
                     <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-2">Total Monthly IT Budget</h3>
                     <div className="flex items-center gap-2 mb-1">
                         <span className="text-3xl font-black text-white">$</span>
@@ -213,6 +220,28 @@ export default function BudgetDashboard({
                                             />
                                         </div>
                                         <div className="flex flex-wrap items-center gap-3">
+                                            <div className="flex-1 flex flex-wrap gap-2 items-center bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 min-w-[200px]">
+                                                <span className="text-xs text-slate-400 mr-1">Regions:</span>
+                                                {billingRegions.map(r => (
+                                                    <label key={r.name} className="flex items-center gap-1 text-xs text-slate-300">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            checked={(editingSoftwareData.regions || []).includes(r.name)}
+                                                            onChange={e => {
+                                                                const checked = e.target.checked;
+                                                                const current = editingSoftwareData.regions || [];
+                                                                setEditingSoftwareData({
+                                                                    ...editingSoftwareData, 
+                                                                    regions: checked ? [...current, r.name] : current.filter(x => x !== r.name)
+                                                                });
+                                                            }}
+                                                        />
+                                                        {r.name}
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-wrap items-center gap-3">
                                             <select 
                                                 value={editingSoftwareData.interval || 'monthly'}
                                                 onChange={e => setEditingSoftwareData({...editingSoftwareData, interval: e.target.value as 'monthly'|'yearly'})}
@@ -252,6 +281,13 @@ export default function BudgetDashboard({
                                         <div className="font-semibold text-slate-200">{item.name}</div>
                                         {item.description && <div className="text-xs text-slate-400 mt-0.5 mb-1">{item.description}</div>}
                                         <div className="text-xs text-slate-500">{item.quantity} licenses @ ${item.cost.toFixed(2)}/{item.interval === 'yearly' ? 'yr' : 'mo'}</div>
+                                        {item.regions && item.regions.length > 0 && (
+                                            <div className="flex gap-1 mt-1.5 flex-wrap">
+                                                {item.regions.map(r => (
+                                                    <span key={r} className="text-[10px] bg-indigo-500/20 text-indigo-300 px-1.5 py-0.5 rounded">{r}</span>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="flex items-center gap-4">
                                         <div className="text-right">
@@ -282,15 +318,36 @@ export default function BudgetDashboard({
                                 className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white flex-1 min-w-[150px] focus:outline-none focus:border-indigo-500"
                             />
                             <input 
-                                placeholder="Description (Optional)" 
-                                value={newSoftware.description}
-                                onChange={e => setNewSoftware({...newSoftware, description: e.target.value})}
-                                className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white flex-1 min-w-[150px] focus:outline-none focus:border-indigo-500"
-                            />
-                        </div>
-                        <div className="flex gap-3">
-                            <select 
-                                value={newSoftware.interval}
+                                                placeholder="Description (Optional)" 
+                                                value={newSoftware.description}
+                                                onChange={e => setNewSoftware({...newSoftware, description: e.target.value})}
+                                                className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white flex-1 min-w-[150px] focus:outline-none focus:border-indigo-500"
+                                            />
+                                        </div>
+                                        <div className="flex flex-wrap gap-2 items-center bg-slate-900 border border-slate-700 rounded-lg px-3 py-2">
+                                            <span className="text-xs text-slate-400 mr-2">Allocate to Regions:</span>
+                                            {billingRegions.map(r => (
+                                                <label key={r.name} className="flex items-center gap-1.5 text-xs text-slate-300 mr-3 cursor-pointer">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        className="cursor-pointer"
+                                                        checked={newSoftware.regions.includes(r.name)}
+                                                        onChange={e => {
+                                                            const checked = e.target.checked;
+                                                            const current = newSoftware.regions;
+                                                            setNewSoftware({
+                                                                ...newSoftware, 
+                                                                regions: checked ? [...current, r.name] : current.filter(x => x !== r.name)
+                                                            });
+                                                        }}
+                                                    />
+                                                    {r.name}
+                                                </label>
+                                            ))}
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <select 
+                                                value={newSoftware.interval}
                                 onChange={e => setNewSoftware({...newSoftware, interval: e.target.value as 'monthly'|'yearly'})}
                                 className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
                             >
@@ -458,7 +515,156 @@ export default function BudgetDashboard({
                 </section>
             </div>
             
-            {isSaving && <div className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm flex items-center gap-2">
+            <div className="space-y-12">
+                {billingRegions?.sort((a: any, b: any) => b.totalCost - a.totalCost).map((region: any, rIdx: number) => {
+                    // Calculate allocated software costs for this region
+                    let regionSoftwareCost = 0;
+                    const allocatedSoftwareItems: any[] = [];
+
+                    budget.software.forEach(sw => {
+                        if (sw.regions && sw.regions.includes(region.name)) {
+                            // Find total users across all selected regions for this software
+                            const totalUsersInSelectedRegions = billingRegions
+                                .filter(r => sw.regions!.includes(r.name))
+                                .reduce((sum, r) => sum + r.totalUsers, 0);
+
+                            if (totalUsersInSelectedRegions > 0) {
+                                const proportion = region.totalUsers / totalUsersInSelectedRegions;
+                                const swMonthlyCost = sw.interval === 'yearly' ? sw.cost / 12 : sw.cost;
+                                const allocatedCost = (swMonthlyCost * sw.quantity) * proportion;
+                                
+                                regionSoftwareCost += allocatedCost;
+                                allocatedSoftwareItems.push({
+                                    name: sw.name,
+                                    allocatedCost,
+                                    proportion,
+                                    originalCost: swMonthlyCost * sw.quantity
+                                });
+                            }
+                        }
+                    });
+
+                    const regionTotalCost = region.totalCost + regionSoftwareCost;
+
+                    return (
+                        <section key={rIdx} className="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 md:p-8 relative overflow-hidden group/region print:bg-white print:border-none print:shadow-none print:p-0 print:mb-12">
+                            <div className="absolute top-0 right-0 p-8 opacity-5 group-hover/region:opacity-10 transition-opacity print:hidden">
+                                <Globe className="w-48 h-48 text-blue-500" />
+                            </div>
+                            
+                            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 border-b border-slate-800/50 pb-6 relative z-10 print:border-slate-300">
+                                <div>
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <div className="p-2.5 bg-blue-500/20 rounded-xl print:bg-transparent print:p-0">
+                                            <MapPin className="text-blue-400 w-6 h-6 print:text-black" />
+                                        </div>
+                                        <h2 className="text-3xl font-black text-white tracking-tight print:text-black">{region.name}</h2>
+                                    </div>
+                                    <p className="text-slate-400 text-sm ml-14 print:ml-0 print:text-slate-600">
+                                        Total Users in Region: <strong className="text-white print:text-black">{region.totalUsers}</strong>
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <div className="flex gap-2 print:hidden">
+                                        <button 
+                                            onClick={() => window.print()}
+                                            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-semibold rounded-xl transition-colors border border-slate-700"
+                                        >
+                                            Print Invoice
+                                        </button>
+                                        <a 
+                                            href={`/api/billing/export?region=${encodeURIComponent(region.name)}`}
+                                            download
+                                            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl transition-colors"
+                                        >
+                                            Download CSV
+                                        </a>
+                                    </div>
+                                    <div className="text-right bg-slate-950/50 p-4 rounded-2xl border border-slate-800 print:bg-transparent print:border-none print:p-0">
+                                        <div className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1 print:text-slate-600">Region Total Cost</div>
+                                        <div className="text-3xl font-black text-blue-400 print:text-black">
+                                            ${regionTotalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 relative z-10 print:grid-cols-1">
+                                {region.products?.sort((a: any, b: any) => b.totalCost - a.totalCost).map((product: any, pIdx: number) => (
+                                    <div key={pIdx} className="bg-slate-950/50 border border-slate-800 rounded-2xl overflow-hidden hover:border-blue-500/30 transition-colors print:border-slate-300 print:bg-transparent">
+                                        <div className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/50 bg-slate-900/80 print:bg-transparent print:border-slate-300">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-slate-800 rounded-lg print:hidden">
+                                                    <FileSpreadsheet className="text-slate-300 w-5 h-5" />
+                                                </div>
+                                                <div>
+                                                    <h4 className="text-md font-bold text-slate-200 print:text-black">{product.name}</h4>
+                                                    <div className="flex items-center gap-2 text-xs text-slate-500 mt-1 print:text-slate-600">
+                                                        <span className="flex items-center gap-1 font-medium text-slate-400 print:text-slate-700"><Users className="w-3 h-3" /> {product.users.length}</span>
+                                                        <span>•</span>
+                                                        <span>${product.unitPrice.toFixed(2)} / mo</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-xl font-bold text-slate-300 print:text-black">
+                                                    ${product.totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="p-0 max-h-60 overflow-y-auto custom-scrollbar print:max-h-none print:overflow-visible">
+                                            <table className="w-full text-left text-sm text-slate-400 print:text-black">
+                                                <tbody className="divide-y divide-slate-800/30 print:divide-slate-200">
+                                                    {product.users.map((user: string, i: number) => (
+                                                        <tr key={i} className="hover:bg-slate-800/40 transition-colors print:hover:bg-transparent">
+                                                            <td className="px-5 py-2.5 truncate">{user}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                ))}
+
+                                {allocatedSoftwareItems.length > 0 && (
+                                    <div className="bg-indigo-950/20 border border-indigo-500/30 rounded-2xl overflow-hidden print:border-slate-300 print:bg-transparent lg:col-span-2 print:col-span-1 mt-4">
+                                        <div className="p-5 border-b border-indigo-500/30 bg-indigo-900/20 print:bg-transparent print:border-slate-300">
+                                            <h4 className="text-lg font-bold text-indigo-300 print:text-black flex items-center gap-2">
+                                                <Server className="w-5 h-5 print:hidden" />
+                                                Allocated Custom Software
+                                            </h4>
+                                            <p className="text-xs text-indigo-300/70 mt-1 print:text-slate-600">Proportional cost based on region's user count</p>
+                                        </div>
+                                        <div className="p-0">
+                                            <table className="w-full text-left text-sm text-indigo-200/80 print:text-black">
+                                                <thead className="bg-indigo-950/50 text-xs uppercase text-indigo-300/50 print:bg-slate-100 print:text-slate-600 border-b border-indigo-500/20 print:border-slate-300">
+                                                    <tr>
+                                                        <th className="px-5 py-3">Software</th>
+                                                        <th className="px-5 py-3 text-right">Proportion</th>
+                                                        <th className="px-5 py-3 text-right">Allocated Cost</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-indigo-500/10 print:divide-slate-200">
+                                                    {allocatedSoftwareItems.map((item, i) => (
+                                                        <tr key={i} className="hover:bg-indigo-900/30 transition-colors print:hover:bg-transparent">
+                                                            <td className="px-5 py-3 font-medium text-indigo-100 print:text-black">{item.name}</td>
+                                                            <td className="px-5 py-3 text-right">{(item.proportion * 100).toFixed(1)}% <span className="text-indigo-400/50 text-xs">of ${item.originalCost.toFixed(2)}</span></td>
+                                                            <td className="px-5 py-3 text-right font-bold text-indigo-300 print:text-black">${item.allocatedCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </section>
+                    );
+                })}
+            </div>
+            
+            {isSaving && <div className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm flex items-center gap-2 print:hidden z-50">
                 <Activity className="w-4 h-4 animate-spin" /> Saving Budget...
             </div>}
         </div>
