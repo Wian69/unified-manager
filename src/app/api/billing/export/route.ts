@@ -20,12 +20,21 @@ export async function GET(req: Request) {
     }
 
     // Region Rows
+    const mainRegions = data.regions.filter((r: any) => r.name !== 'Sub Contractors' && r.name !== 'Unassigned Region');
+
     for (const region of data.regions) {
         if (regionParam && region.name !== regionParam) continue;
 
         // M365 Products
         for (const product of region.products) {
             csvContent += `"${region.name}","${product.name}",$${product.totalCost.toFixed(2)}\n`;
+        }
+
+        // Azure Allocation
+        const isMainRegion = mainRegions.some((r: any) => r.name === region.name);
+        if (isMainRegion && mainRegions.length > 0 && data.secondaryCost > 0) {
+            const azureSplit = data.secondaryCost / mainRegions.length;
+            csvContent += `"${region.name}","Azure Servers & Add-ons (Equal Split)",$${azureSplit.toFixed(2)}\n`;
         }
 
         // Manual Software allocation

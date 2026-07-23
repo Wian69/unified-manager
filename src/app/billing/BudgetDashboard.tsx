@@ -517,10 +517,26 @@ export default function BudgetDashboard({
             
             <div className="space-y-12">
                 {billingRegions?.sort((a: any, b: any) => b.totalCost - a.totalCost).map((region: any, rIdx: number) => {
-                    // Calculate allocated software costs for this region
-                    let regionSoftwareCost = 0;
-                    const allocatedSoftwareItems: any[] = [];
+                    // Calculate allocated costs for this region
+                    let regionAllocatedCost = 0;
+                    const allocatedItems: any[] = [];
+                    
+                    // 1. Azure Allocation (Equal split across main regions)
+                    const mainRegions = billingRegions.filter(r => r.name !== 'Sub Contractors' && r.name !== 'Unassigned Region');
+                    const isMainRegion = mainRegions.some(r => r.name === region.name);
+                    
+                    if (isMainRegion && mainRegions.length > 0 && azureRunRate > 0) {
+                        const azureSplit = azureRunRate / mainRegions.length;
+                        regionAllocatedCost += azureSplit;
+                        allocatedItems.push({
+                            name: "Azure Servers & Add-ons",
+                            allocatedCost: azureSplit,
+                            proportionLabel: `Equal Split (1 of ${mainRegions.length})`,
+                            originalCost: azureRunRate
+                        });
+                    }
 
+                    // 2. Custom Software Allocation
                     budget.software.forEach(sw => {
                         if (sw.regions && sw.regions.includes(region.name)) {
                             // Find premium users across all selected regions for this software
@@ -533,18 +549,18 @@ export default function BudgetDashboard({
                                 const swMonthlyCost = sw.interval === 'yearly' ? sw.cost / 12 : sw.cost;
                                 const allocatedCost = (swMonthlyCost * sw.quantity) * proportion;
                                 
-                                regionSoftwareCost += allocatedCost;
-                                allocatedSoftwareItems.push({
+                                regionAllocatedCost += allocatedCost;
+                                allocatedItems.push({
                                     name: sw.name,
                                     allocatedCost,
-                                    proportion,
+                                    proportionLabel: `${(proportion * 100).toFixed(1)}% (Premium Users)`,
                                     originalCost: swMonthlyCost * sw.quantity
                                 });
                             }
                         }
                     });
 
-                    const regionTotalCost = region.totalCost + regionSoftwareCost;
+                    const regionTotalCost = region.totalCost + regionAllocatedCost;
 
                     return (
                         <section key={rIdx} className="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 md:p-8 relative overflow-hidden group/region print:bg-white print:border-none print:shadow-none print:p-0 print:mb-12">
@@ -627,29 +643,29 @@ export default function BudgetDashboard({
                                     </div>
                                 ))}
 
-                                {allocatedSoftwareItems.length > 0 && (
+                                {allocatedItems.length > 0 && (
                                     <div className="bg-indigo-950/20 border border-indigo-500/30 rounded-2xl overflow-hidden print:border-slate-300 print:bg-transparent lg:col-span-2 print:col-span-1 mt-4">
                                         <div className="p-5 border-b border-indigo-500/30 bg-indigo-900/20 print:bg-transparent print:border-slate-300">
                                             <h4 className="text-lg font-bold text-indigo-300 print:text-black flex items-center gap-2">
                                                 <Server className="w-5 h-5 print:hidden" />
-                                                Allocated Custom Software
+                                                Allocated Services & Software
                                             </h4>
-                                            <p className="text-xs text-indigo-300/70 mt-1 print:text-slate-600">Proportional cost based on region's M365 Premium user count</p>
+                                            <p className="text-xs text-indigo-300/70 mt-1 print:text-slate-600">Azure costs split equally, software split by Premium users</p>
                                         </div>
                                         <div className="p-0">
                                             <table className="w-full text-left text-sm text-indigo-200/80 print:text-black">
                                                 <thead className="bg-indigo-950/50 text-xs uppercase text-indigo-300/50 print:bg-slate-100 print:text-slate-600 border-b border-indigo-500/20 print:border-slate-300">
                                                     <tr>
-                                                        <th className="px-5 py-3">Software</th>
-                                                        <th className="px-5 py-3 text-right">Proportion</th>
+                                                        <th className="px-5 py-3">Service / Software</th>
+                                                        <th className="px-5 py-3 text-right">Allocation Rule</th>
                                                         <th className="px-5 py-3 text-right">Allocated Cost</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-indigo-500/10 print:divide-slate-200">
-                                                    {allocatedSoftwareItems.map((item, i) => (
+                                                    {allocatedItems.map((item, i) => (
                                                         <tr key={i} className="hover:bg-indigo-900/30 transition-colors print:hover:bg-transparent">
                                                             <td className="px-5 py-3 font-medium text-indigo-100 print:text-black">{item.name}</td>
-                                                            <td className="px-5 py-3 text-right">{(item.proportion * 100).toFixed(1)}% <span className="text-indigo-400/50 text-xs">of ${item.originalCost.toFixed(2)}</span></td>
+                                                            <td className="px-5 py-3 text-right">{item.proportionLabel} <span className="text-indigo-400/50 text-xs">of ${item.originalCost.toFixed(2)}</span></td>
                                                             <td className="px-5 py-3 text-right font-bold text-indigo-300 print:text-black">${item.allocatedCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                                         </tr>
                                                     ))}
