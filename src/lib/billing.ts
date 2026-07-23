@@ -6,7 +6,8 @@ const PRICING_MAP: Record<string, number> = {
     "AAD_PREMIUM_P2": 9.00,
     "EXCHANGESTANDARD": 4.00,
     "EXCHANGEENTERPRISE": 8.00,
-    "POWER_BI_STANDARD": 10.00,
+    "POWER_BI_STANDARD": 0.00, // Power BI Free
+    "POWER_BI_PRO": 10.00,
     "Remote_Help_AddOn": 3.50,
     "Microsoft_365_Copilot": 30.00,
     "RMSBASIC": 2.00
@@ -135,12 +136,19 @@ export async function fetchBillingData() {
         }
     }
 
-    // Calculate overall M365 Run Rate
+    // Calculate overall M365 Run Rate based on PURCHASED licenses
     let calculatedM365RunRate = 0;
+    
+    // Add purchased costs
+    for (const sku of skusRes.value) {
+        const purchasedUnits = (sku.prepaidUnits?.enabled || 0) + (sku.prepaidUnits?.warning || 0);
+        const price = PRICING_MAP[sku.skuPartNumber] || 0.00;
+        calculatedM365RunRate += purchasedUnits * price;
+    }
+
     const structuredRegions = [];
     
     for (const [regionName, group] of Object.entries(regionGroups)) {
-        calculatedM365RunRate += group.totalCost;
         
         const structuredProducts = [];
         for (const [productName, pGroup] of Object.entries(group.products)) {
@@ -155,7 +163,7 @@ export async function fetchBillingData() {
         structuredRegions.push({
             name: regionName,
             totalUsers: group.usersCount,
-            totalCost: group.totalCost,
+            totalCost: group.totalCost, // Assigned cost for region breakdown
             products: structuredProducts
         });
     }

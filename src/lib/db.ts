@@ -213,3 +213,18 @@ export async function saveGlobalSettings(settings: any) {
         updatedAt: new Date().toISOString()
     });
 }
+
+export async function getItBudget() {
+    return getData('it_budget', path.join(DB_DIR, 'it_budget.json'), {
+        totalMonthlyBudget: 0,
+        software: [],
+        hardware: []
+    });
+}
+
+export async function saveItBudget(budget: any) {
+    return saveData('it_budget', path.join(DB_DIR, 'it_budget.json'), {
+        ...budget,
+        updatedAt: new Date().toISOString()
+    });
+}

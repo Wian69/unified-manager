@@ -1,12 +1,15 @@
-import { Download, FileSpreadsheet, Activity, DollarSign, Users, Globe, MapPin } from 'lucide-react';
+import { Download, FileSpreadsheet, Activity, Globe, MapPin, Users } from 'lucide-react';
 import { fetchBillingData } from '../../lib/billing';
+import { getItBudget } from '../../lib/db';
+import BudgetDashboard from './BudgetDashboard';
 
 export const dynamic = 'force-dynamic';
 
 export default async function BillingPage() {
     const billingData = await fetchBillingData();
+    const itBudget = await getItBudget();
     const calculatedM365RunRate = billingData.calculatedM365RunRate;
-    const projectedNextBill = billingData.projectedNextBill;
+    const azureRunRate = billingData.secondaryCost;
 
     return (
         <div className="p-8 max-w-7xl mx-auto">
@@ -30,54 +33,11 @@ export default async function BillingPage() {
 
             {billingData ? (
                 <>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
-                        {/* Actual Paid Card */}
-                        <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-6 opacity-10">
-                                <DollarSign className="w-24 h-24 text-blue-500" />
-                            </div>
-                            <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-2">Last Invoice (Paid)</h3>
-                            <div className="text-3xl font-black text-white mb-1">
-                                ${parseFloat(billingData.totalAmount as unknown as string).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </div>
-                            <div className="text-xs text-slate-500 mt-2">
-                                Actual billed by Microsoft last month
-                            </div>
-                        </div>
-
-                        {/* Projected Next Bill Card */}
-                        <div className="bg-blue-900/20 border border-blue-500/30 rounded-2xl p-6 relative overflow-hidden">
-                            <h3 className="text-sm font-semibold text-blue-300 uppercase tracking-widest mb-2">Projected Next Bill</h3>
-                            <div className="text-3xl font-black text-blue-400 mb-1">
-                                ${projectedNextBill.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </div>
-                            <p className="text-xs text-blue-300/70 mt-2">
-                                Forecast based on active license assignments
-                            </p>
-                        </div>
-
-                        {/* M365 Cost Card */}
-                        <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 relative overflow-hidden">
-                            <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-2">M365 Run Rate</h3>
-                            <div className="text-2xl font-black text-white mb-1">
-                                ${calculatedM365RunRate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </div>
-                            <p className="text-xs text-slate-500 mt-2">
-                                Calculated from assigned products
-                            </p>
-                        </div>
-
-                        {/* Azure Cost Card */}
-                        <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 relative overflow-hidden">
-                            <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-2">Azure Run Rate</h3>
-                            <div className="text-2xl font-black text-emerald-400 mb-1">
-                                ${parseFloat(billingData.secondaryCost as unknown as string).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </div>
-                            <p className="text-xs text-slate-500 mt-2">
-                                Current Azure Plan charges
-                            </p>
-                        </div>
-                    </div>
+                    <BudgetDashboard 
+                        initialBudget={itBudget as any} 
+                        m365RunRate={calculatedM365RunRate} 
+                        azureRunRate={azureRunRate} 
+                    />
 
                     <div className="space-y-12">
                         {billingData.regions?.sort((a: any, b: any) => b.totalCost - a.totalCost).map((region: any, rIdx: number) => (
