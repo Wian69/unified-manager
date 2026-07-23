@@ -522,7 +522,7 @@ export default function BudgetDashboard({
                     const allocatedItems: any[] = [];
                     
                     // 1. Azure Allocation (Equal split across main regions)
-                    const mainRegions = billingRegions.filter(r => r.name !== 'Sub Contractors' && r.name !== 'Unassigned Region');
+                    const mainRegions = billingRegions.filter(r => ['Northern Region', 'Eastern Region', 'Southern Region', 'Western Region'].includes(r.name));
                     const isMainRegion = mainRegions.some(r => r.name === region.name);
                     
                     if (isMainRegion && mainRegions.length > 0 && azureRunRate > 0) {

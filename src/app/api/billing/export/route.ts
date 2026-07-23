@@ -17,10 +17,8 @@ export async function GET(req: Request) {
         csvContent += `GLOBAL SUMMARY,Last Invoice (Paid),$${data.lastInvoicePaid.toFixed(2)}\n`;
         csvContent += `GLOBAL SUMMARY,Projected Next Bill,$${data.projectedNextBill.toFixed(2)}\n`;
         csvContent += `,,\n`;
-    }
-
     // Region Rows
-    const mainRegions = data.regions.filter((r: any) => r.name !== 'Sub Contractors' && r.name !== 'Unassigned Region');
+    const mainRegions = data.regions.filter((r: any) => ['Northern Region', 'Eastern Region', 'Southern Region', 'Western Region'].includes(r.name));
 
     for (const region of data.regions) {
         if (regionParam && region.name !== regionParam) continue;
