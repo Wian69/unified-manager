@@ -38,6 +38,7 @@ export default async function BillingPage() {
                         m365RunRate={calculatedM365RunRate} 
                         azureRunRate={azureRunRate} 
                         billingRegions={billingData.regions || []}
+                        configurableUsers={billingData.configurableUsers || []}
                     />
                 </>
             ) : (

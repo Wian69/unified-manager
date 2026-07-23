@@ -189,6 +189,22 @@ export async function fetchBillingData() {
         });
     }
 
+    const configurableUsers = users
+        .filter(u => {
+            const upn = u.userPrincipalName || "";
+            return !u.officeLocation || upn.endsWith('@partner.eqncs.com');
+        })
+        .map(u => {
+            const upn = u.userPrincipalName || "";
+            const currentRegion = regionOverrides[upn] || (upn.endsWith('@partner.eqncs.com') ? "Eastern Region" : "Unassigned Region");
+            return {
+                name: u.displayName || "Unknown",
+                email: upn,
+                currentRegion
+            };
+        })
+        .sort((a, b) => a.name.localeCompare(b.name));
+
     return {
         totalAmount: primaryTotal + secondaryTotal,
         primaryCost: primaryTotal,
@@ -197,6 +213,7 @@ export async function fetchBillingData() {
         projectedNextBill: calculatedM365RunRate + secondaryTotal,
         lastInvoicePaid: primaryTotal + secondaryTotal,
         generatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
-        regions: structuredRegions
+        regions: structuredRegions,
+        configurableUsers
     };
 }
