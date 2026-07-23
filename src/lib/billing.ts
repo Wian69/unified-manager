@@ -191,6 +191,9 @@ export async function fetchBillingData() {
 
     const configurableUsers = users
         .filter(u => {
+            const hasLicense = u.assignedLicenses && u.assignedLicenses.length > 0;
+            if (!hasLicense) return false;
+            
             const upn = u.userPrincipalName || "";
             const loc = (u.officeLocation || "").toLowerCase();
             return !u.officeLocation || 
