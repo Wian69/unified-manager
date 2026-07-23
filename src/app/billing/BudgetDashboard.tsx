@@ -741,27 +741,25 @@ export default function BudgetDashboard({
                                         </button>
                                         <button 
                                             onClick={() => window.print()}
-                                            <button 
-                                                onClick={() => window.print()}
-                                                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-semibold rounded-xl transition-colors border border-slate-700"
-                                            >
-                                                Print Invoice
-                                            </button>
-                                            <button 
-                                                onClick={async () => {
-                                                    const res = await fetch(`/api/billing/export?region=${encodeURIComponent(region.name)}`);
-                                                    const blob = await res.blob();
-                                                    const url = window.URL.createObjectURL(blob);
-                                                    const a = document.createElement('a');
-                                                    a.href = url;
-                                                    a.download = `Invoice_${region.name.replace(/\s+/g, '_')}.pdf`;
-                                                    a.click();
-                                                }}
-                                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-sm font-medium transition-colors print:hidden"
-                                            >
-                                                <FileSpreadsheet className="w-4 h-4" />
-                                                Download PDF
-                                            </button>
+                                            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-semibold rounded-xl transition-colors border border-slate-700"
+                                        >
+                                            Print Invoice
+                                        </button>
+                                        <button 
+                                            onClick={async () => {
+                                                const res = await fetch(`/api/billing/export?region=${encodeURIComponent(region.name)}`);
+                                                const blob = await res.blob();
+                                                const url = window.URL.createObjectURL(blob);
+                                                const a = document.createElement('a');
+                                                a.href = url;
+                                                a.download = `Invoice_${region.name.replace(/\s+/g, '_')}.pdf`;
+                                                a.click();
+                                            }}
+                                            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl transition-colors flex items-center gap-2"
+                                        >
+                                            <FileSpreadsheet className="w-4 h-4" />
+                                            Download PDF
+                                        </button>
                                     </div>
                                     <div className="text-right bg-slate-950/50 p-4 rounded-2xl border border-slate-800 print:bg-transparent print:border-none print:p-0">
                                         <div className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1 print:text-slate-600">Region Total Cost</div>
