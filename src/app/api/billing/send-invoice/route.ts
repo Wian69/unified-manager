@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { fetchBillingData } from '@/lib/billing';
 import { generateInvoicePdf } from '@/lib/pdfGenerator';
-import kv from '@/lib/kv';
+import { getItBudget } from '@/lib/db';
 import { getGraphClient } from '@/lib/graph';
 
 export async function POST(request: Request) {
@@ -14,7 +14,7 @@ export async function POST(request: Request) {
         }
 
         const data = await fetchBillingData();
-        const budget = await kv.get('budget_data') || { totalMonthlyBudget: 25000, software: [], hardware: [] };
+        const budget = await getItBudget() || { totalMonthlyBudget: 25000, software: [], hardware: [] };
         
         // Ensure we have azureRunRate accessible
         const enhancedBudget = {
