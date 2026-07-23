@@ -1,139 +1,103 @@
+import { NextResponse } from 'next/server';
 import { fetchBillingData } from '@/lib/billing';
-import { getItBudget } from '@/lib/db';
+import { generateInvoicePdf } from '@/lib/pdfGenerator';
+import kv from '@/lib/kv';
 import { getGraphClient } from '@/lib/graph';
 
-export const dynamic = 'force-dynamic';
-
-export async function POST(req: Request) {
+export async function POST(request: Request) {
     try {
-        const body = await req.json();
+        const body = await request.json();
         const { region, toEmail, fromEmail } = body;
 
         if (!region || !toEmail || !fromEmail) {
-            return new Response(JSON.stringify({ error: 'Missing required fields' }), { status: 400 });
+            return NextResponse.json({ error: 'Missing required fields: region, toEmail, or fromEmail' }, { status: 400 });
         }
 
         const data = await fetchBillingData();
-        const budget = await getItBudget() as any;
-
-        const mainRegions = data.regions.filter((r: any) => ['Northern Region', 'Eastern Region', 'Southern Region', 'Western Region'].includes(r.name));
-
-        let csvContent = 'Region,Product,Price\n';
-        let regionTotalCost = 0;
-        let foundRegion = false;
-
-        for (const r of data.regions) {
-            if (r.name !== region) continue;
-            foundRegion = true;
-
-            // M365 Products
-            for (const product of r.products) {
-                csvContent += `"${r.name}","${product.name}",$${product.totalCost.toFixed(2)}\n`;
-                regionTotalCost += product.totalCost;
-            }
-
-            // Azure Allocation
-            const isMainRegion = mainRegions.some((m: any) => m.name === r.name);
-            if (isMainRegion && mainRegions.length > 0 && data.secondaryCost > 0) {
-                const azureSplit = data.secondaryCost / mainRegions.length;
-                csvContent += `"${r.name}","Azure Servers & Add-ons (Equal Split)",$${azureSplit.toFixed(2)}\n`;
-                regionTotalCost += azureSplit;
-            }
-
-            // Manual Software allocation
-            if (budget && budget.software) {
-                budget.software.forEach((sw: any) => {
-                    if (sw.regions && sw.regions.includes(r.name)) {
-                        const hasAssignedUsers = sw.assignedUsers && sw.assignedUsers.length > 0;
-
-                        if (hasAssignedUsers) {
-                            const usersInThisRegion = (sw.assignedUsers || []).filter((email: string) => r.usersList?.some((u: any) => u.email === email)).length;
-                            const totalAssignedUsers = sw.assignedUsers?.length || 0;
-
-                            if (usersInThisRegion > 0 && totalAssignedUsers > 0) {
-                                const proportion = usersInThisRegion / totalAssignedUsers;
-                                const swMonthlyCost = sw.interval === 'yearly' ? sw.cost / 12 : sw.cost;
-                                const allocatedCost = (swMonthlyCost * sw.quantity) * proportion;
-                                
-                                let label = sw.name.replace(/,/g, '');
-                                if (proportion >= 0.99 && r.name !== 'Southern Region') {
-                                    label += ' (No cost recovery to Southern Region necessary)';
-                                } else {
-                                    label += ' (Custom Software Allocation)';
-                                }
-
-                                regionTotalCost += allocatedCost;
-                                csvContent += `"${r.name}","${label}",$${allocatedCost.toFixed(2)}\n`;
-                            }
-                        } else {
-                            const totalUsersInSelectedRegions = data.regions
-                                .filter((rx: any) => sw.regions.includes(rx.name))
-                                .reduce((sum: number, rx: any) => sum + (rx.premiumUsers || 0), 0);
-
-                            if (totalUsersInSelectedRegions > 0) {
-                                const proportion = (r.premiumUsers || 0) / totalUsersInSelectedRegions;
-                                const swMonthlyCost = sw.interval === 'yearly' ? sw.cost / 12 : sw.cost;
-                                const allocatedCost = (swMonthlyCost * sw.quantity) * proportion;
-                                
-                                let label = sw.name.replace(/,/g, '');
-                                if (proportion >= 0.99 && r.name !== 'Southern Region') {
-                                    label += ' (No cost recovery to Southern Region necessary)';
-                                } else {
-                                    label += ' (Custom Software Allocation)';
-                                }
-
-                                regionTotalCost += allocatedCost;
-                                csvContent += `"${r.name}","${label}",$${allocatedCost.toFixed(2)}\n`;
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
-        if (!foundRegion) {
-            return new Response(JSON.stringify({ error: 'Region not found' }), { status: 404 });
-        }
-
-        // Send Email via MS Graph
-        const graphClient = getGraphClient();
-        const monthYear = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+        const budget = await kv.get('budget_data') || { totalMonthlyBudget: 25000, software: [], hardware: [] };
         
-        const message = {
-            subject: `Equinox IT Cost Recovery Invoice - ${region} - ${monthYear}`,
-            body: {
-                contentType: 'HTML',
-                content: `
-                    <h2>IT Cost Recovery Invoice</h2>
-                    <p><strong>Region:</strong> ${region}</p>
-                    <p><strong>Billing Period:</strong> ${monthYear}</p>
-                    <p><strong>Total Cost Recovery Amount:</strong> $${regionTotalCost.toFixed(2)}</p>
-                    <br/>
-                    <p>Please find the detailed line-item breakdown of your Microsoft 365, Azure, and Custom Software costs attached as a CSV file.</p>
-                    <p>If you have any questions about this billing statement, please contact IT.</p>
-                `
-            },
-            toRecipients: [
-                { emailAddress: { address: toEmail } }
-            ],
-            attachments: [
-                {
-                    '@odata.type': '#microsoft.graph.fileAttachment',
-                    name: `IT_Billing_${region.replace(/\s+/g, '_')}_${monthYear}.csv`,
-                    contentBytes: Buffer.from(csvContent).toString('base64')
-                }
-            ]
+        // Ensure we have azureRunRate accessible
+        const enhancedBudget = {
+            ...(budget as any),
+            azureRunRate: data.azureRunRate
         };
 
-        await graphClient.api(`/users/${fromEmail}/sendMail`).post({
-            message,
-            saveToSentItems: true
-        });
+        const regionExists = data.regions.some((r: any) => r.name === region);
+        if (!regionExists) {
+            return NextResponse.json({ error: 'Region not found in billing data' }, { status: 404 });
+        }
 
-        return new Response(JSON.stringify({ success: true, totalCost: regionTotalCost }), { status: 200 });
+        const pdfBuffer = await generateInvoicePdf(region, data, enhancedBudget);
 
-    } catch (error: any) {
-        console.error("Failed to send email invoice:", error);
-        return new Response(JSON.stringify({ error: error.message || 'Internal Server Error' }), { status: 500 });
+        // Calculate total amount for the email body
+        // We can just query it from our logic, or simply state "See attached invoice for details."
+        let totalAmount = 0;
+        // Let's quickly re-calculate total just for the email body text
+        const mainRegions = data.regions.filter((r: any) => ['Northern Region', 'Eastern Region', 'Southern Region', 'Western Region'].includes(r.name));
+        const isMainRegion = mainRegions.some((r: any) => r.name === region);
+        if (isMainRegion && mainRegions.length > 0 && enhancedBudget.azureRunRate > 0) totalAmount += enhancedBudget.azureRunRate / mainRegions.length;
+        
+        const regionData = data.regions.find((r: any) => r.name === region);
+        if (regionData && regionData.products) {
+            for (const p of regionData.products) totalAmount += p.totalCost;
+        }
+
+        if (enhancedBudget.software) {
+            enhancedBudget.software.forEach((sw: any) => {
+                if (sw.regions && sw.regions.includes(region)) {
+                    const hasAssignedUsers = sw.assignedUsers && sw.assignedUsers.length > 0;
+                    if (hasAssignedUsers) {
+                        const usersInThisRegion = (sw.assignedUsers || []).filter((email: string) => regionData?.usersList?.some((u: any) => u.email === email)).length;
+                        const totalAssignedUsers = sw.assignedUsers?.length || 0;
+                        if (usersInThisRegion > 0 && totalAssignedUsers > 0) {
+                            totalAmount += (sw.interval === 'yearly' ? sw.cost / 12 : sw.cost) * sw.quantity * (usersInThisRegion / totalAssignedUsers);
+                        }
+                    } else {
+                        const totalUsersInSelectedRegions = data.regions
+                            .filter((rx: any) => sw.regions.includes(rx.name))
+                            .reduce((sum: number, rx: any) => sum + (rx.premiumUsers || 0), 0);
+                        if (totalUsersInSelectedRegions > 0) {
+                            totalAmount += (sw.interval === 'yearly' ? sw.cost / 12 : sw.cost) * sw.quantity * ((regionData?.premiumUsers || 0) / totalUsersInSelectedRegions);
+                        }
+                    }
+                }
+            });
+        }
+
+        const message = {
+            message: {
+                subject: `IT Billing Invoice: ${region}`,
+                body: {
+                    contentType: "HTML",
+                    content: `
+                        <h2>IT Billing Invoice</h2>
+                        <p>Hello,</p>
+                        <p>Please find attached the IT billing invoice and cost allocation for <strong>${region}</strong>.</p>
+                        <p><strong>Total Allocated Cost: $${totalAmount.toFixed(2)}</strong></p>
+                        <p>Thank you,</p>
+                        <p>IT Department</p>
+                    `
+                },
+                toRecipients: [
+                    { emailAddress: { address: toEmail } }
+                ],
+                attachments: [
+                    {
+                        "@odata.type": "#microsoft.graph.fileAttachment",
+                        name: `Invoice_${region.replace(/\s+/g, '_')}.pdf`,
+                        contentType: "application/pdf",
+                        contentBytes: pdfBuffer.toString('base64')
+                    }
+                ]
+            },
+            saveToSentItems: "true"
+        };
+
+        const client = getGraphClient();
+        await client.api(`/users/${fromEmail}/sendMail`).post(message);
+
+        return NextResponse.json({ success: true });
+    } catch (e: any) {
+        return NextResponse.json({ error: e.message || 'Unknown error occurred' }, { status: 500 });
     }
 }
