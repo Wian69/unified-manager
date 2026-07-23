@@ -73,7 +73,7 @@ export async function POST(request: Request) {
 <html>
 <head>
 <meta>
-<title>Equinox Group Holdings IT Recoveryt</title>
+<title>Equinox Group Holdings IT Recoveries</title>
 <style>
 body {
 font-family: Arial, Helvetica, sans-serif;
@@ -126,9 +126,9 @@ color: #555;
 </head>
 <body>
 <div class="email-container">
-<h2>Request Completed</h2>
+<h2>IT Recoveries</h2>
 <p><strong>Good Day,</strong></p>
-<p>Please see the attached cost recoviers to the Southern Region.</p>
+<p>Please see the attached cost recoveries for the ${region}.</p>
 <p><strong>Equinox Group Holdings IT Support</strong></p>
 <div class="logo">
 <img src="https://eqncs.com/2025/html/images/logo.png" alt="Company Logo" width="180">
