@@ -128,7 +128,7 @@ color: #555;
 <div class="email-container">
 <h2>IT Recoveries</h2>
 <p><strong>Good Day,</strong></p>
-<p>Please see the attached cost recoveries for the ${region}.</p>
+<p>Please see the attached cost recoveries to the Southern Region.</p>
 <p><strong>Equinox Group Holdings IT Support</strong></p>
 <div class="logo">
 <img src="https://eqncs.com/2025/html/images/logo.png" alt="Company Logo" width="180">
