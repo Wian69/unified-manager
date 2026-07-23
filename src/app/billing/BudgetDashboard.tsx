@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { DollarSign, Plus, Trash2, Server, Laptop, Activity } from 'lucide-react';
+import { DollarSign, Plus, Trash2, Server, Laptop, Activity, Globe, MapPin, FileSpreadsheet, Users } from 'lucide-react';
 
 type BudgetItem = {
     id: string;
