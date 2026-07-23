@@ -116,7 +116,7 @@ export async function fetchBillingData() {
         let regionName = regionOverrides[upn] || user.officeLocation;
         
         if (!regionOverrides[upn] && upn.endsWith('@partner.eqncs.com')) {
-            regionName = "Sub Contractors";
+            regionName = "Eastern Region";
         } else if (!regionName) {
             regionName = "Unassigned Region";
         }
