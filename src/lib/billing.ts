@@ -39,8 +39,11 @@ async function getAzureArmToken() {
     return token.token;
 }
 
+import { getItBudget, getUserRegionOverrides } from './db';
+
 export async function fetchBillingData() {
     const graphClient = getGraphClient();
+    const regionOverrides = await getUserRegionOverrides();
     
     // 1. Fetch Subscribed SKUs for mapping
     const skusRes = await graphClient.api('/subscribedSkus').get();
@@ -109,8 +112,10 @@ export async function fetchBillingData() {
     }> = {};
 
     for (const user of users) {
-        let regionName = user.officeLocation;
-        if (user.userPrincipalName?.endsWith('@partner.eqncs.com')) {
+        const upn = user.userPrincipalName || "";
+        let regionName = regionOverrides[upn] || user.officeLocation;
+        
+        if (!regionOverrides[upn] && upn.endsWith('@partner.eqncs.com')) {
             regionName = "Sub Contractors";
         } else if (!regionName) {
             regionName = "Unassigned Region";

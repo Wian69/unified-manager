@@ -51,6 +51,9 @@ export default function BudgetDashboard({
     const [isSendingEmail, setIsSendingEmail] = useState(false);
     const [emailSuccess, setEmailSuccess] = useState<string | null>(null);
 
+    // Override State
+    const [isSavingOverride, setIsSavingOverride] = useState<string | null>(null);
+
     const handleSave = async (newBudget: BudgetData) => {
         setBudget(newBudget);
         setIsSaving(true);
@@ -64,6 +67,21 @@ export default function BudgetDashboard({
             console.error("Failed to save budget");
         }
         setIsSaving(false);
+    };
+
+    const handleRegionOverride = async (userEmail: string, regionName: string | null) => {
+        setIsSavingOverride(userEmail);
+        try {
+            await fetch('/api/billing/overrides', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userEmail, regionName })
+            });
+            window.location.reload();
+        } catch (e) {
+            console.error("Failed to save override");
+        }
+        setIsSavingOverride(null);
     };
 
     const addSoftware = () => {
@@ -845,6 +863,55 @@ export default function BudgetDashboard({
                     );
                 })}
             </div>
+
+            {/* Unassigned Service Accounts UI */}
+            {(() => {
+                const unassignedRegion = billingRegions.find(r => r.name === 'Unassigned Region' || r.name === 'Sub Contractors');
+                if (!unassignedRegion || unassignedRegion.usersList.length === 0) return null;
+
+                const regionsOptions = ['Northern Region', 'Eastern Region', 'Southern Region', 'Western Region'];
+
+                return (
+                    <div className="mt-12 bg-slate-900/50 border border-orange-500/30 rounded-2xl p-6 print:hidden">
+                        <div className="flex items-center gap-3 mb-4 border-b border-slate-800 pb-4">
+                            <div className="p-2 bg-orange-500/20 rounded-lg text-orange-400">
+                                <Users className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold text-white">Unassigned Accounts</h3>
+                                <p className="text-sm text-slate-400">Assign these accounts to a specific region to bill their M365 costs appropriately.</p>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {unassignedRegion.usersList.map((u: any) => (
+                                <div key={u.email} className="bg-slate-950 border border-slate-800 rounded-xl p-4 flex flex-col justify-between gap-4 relative">
+                                    {isSavingOverride === u.email && (
+                                        <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm z-10 flex items-center justify-center rounded-xl">
+                                            <Activity className="w-5 h-5 text-orange-400 animate-spin" />
+                                        </div>
+                                    )}
+                                    <div>
+                                        <div className="font-semibold text-slate-200 truncate" title={u.name}>{u.name}</div>
+                                        <div className="text-xs text-slate-500 truncate" title={u.email}>{u.email}</div>
+                                    </div>
+                                    
+                                    <select 
+                                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-orange-500"
+                                        onChange={(e) => handleRegionOverride(u.email, e.target.value || null)}
+                                        value=""
+                                    >
+                                        <option value="" disabled>Assign to Region...</option>
+                                        {regionsOptions.map(ro => (
+                                            <option key={ro} value={ro}>{ro}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                );
+            })()}
             
             {isSaving && <div className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm flex items-center gap-2 print:hidden z-50">
                 <Activity className="w-4 h-4 animate-spin" /> Saving Budget...

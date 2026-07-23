@@ -228,3 +228,11 @@ export async function saveItBudget(budget: any) {
         updatedAt: new Date().toISOString()
     });
 }
+
+export async function getUserRegionOverrides(): Promise<Record<string, string>> {
+    return getData('user_region_overrides', path.join(DB_DIR, 'user_region_overrides.json'), {});
+}
+
+export async function saveUserRegionOverrides(overrides: Record<string, string>) {
+    return saveData('user_region_overrides', path.join(DB_DIR, 'user_region_overrides.json'), overrides);
+}
