@@ -16,7 +16,7 @@ export async function GET(request: Request) {
         // Ensure we have azureRunRate accessible
         const enhancedBudget = {
             ...(budget as any),
-            azureRunRate: data.azureRunRate
+            azureRunRate: data.secondaryCost
         };
 
         if (regionParam) {

@@ -19,7 +19,7 @@ export async function POST(request: Request) {
         // Ensure we have azureRunRate accessible
         const enhancedBudget = {
             ...(budget as any),
-            azureRunRate: data.azureRunRate
+            azureRunRate: data.secondaryCost
         };
 
         const regionExists = data.regions.some((r: any) => r.name === region);
