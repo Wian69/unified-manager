@@ -163,6 +163,7 @@ export async function fetchBillingData() {
         structuredRegions.push({
             name: regionName,
             totalUsers: group.usersCount,
+            premiumUsers: group.products["Microsoft 365 Business Premium"] ? group.products["Microsoft 365 Business Premium"].users.length : 0,
             totalCost: group.totalCost, // Assigned cost for region breakdown
             products: structuredProducts
         });

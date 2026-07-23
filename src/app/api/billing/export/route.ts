@@ -34,10 +34,10 @@ export async function GET(req: Request) {
                 if (sw.regions && sw.regions.includes(region.name)) {
                     const totalUsersInSelectedRegions = data.regions
                         .filter((r: any) => sw.regions.includes(r.name))
-                        .reduce((sum: number, r: any) => sum + r.totalUsers, 0);
+                        .reduce((sum: number, r: any) => sum + (r.premiumUsers || 0), 0);
 
                     if (totalUsersInSelectedRegions > 0) {
-                        const proportion = region.totalUsers / totalUsersInSelectedRegions;
+                        const proportion = (region.premiumUsers || 0) / totalUsersInSelectedRegions;
                         const swMonthlyCost = sw.interval === 'yearly' ? sw.cost / 12 : sw.cost;
                         const allocatedCost = (swMonthlyCost * sw.quantity) * proportion;
                         

@@ -523,13 +523,13 @@ export default function BudgetDashboard({
 
                     budget.software.forEach(sw => {
                         if (sw.regions && sw.regions.includes(region.name)) {
-                            // Find total users across all selected regions for this software
+                            // Find premium users across all selected regions for this software
                             const totalUsersInSelectedRegions = billingRegions
                                 .filter(r => sw.regions!.includes(r.name))
-                                .reduce((sum, r) => sum + r.totalUsers, 0);
+                                .reduce((sum, r) => sum + (r.premiumUsers || 0), 0);
 
                             if (totalUsersInSelectedRegions > 0) {
-                                const proportion = region.totalUsers / totalUsersInSelectedRegions;
+                                const proportion = (region.premiumUsers || 0) / totalUsersInSelectedRegions;
                                 const swMonthlyCost = sw.interval === 'yearly' ? sw.cost / 12 : sw.cost;
                                 const allocatedCost = (swMonthlyCost * sw.quantity) * proportion;
                                 
@@ -634,7 +634,7 @@ export default function BudgetDashboard({
                                                 <Server className="w-5 h-5 print:hidden" />
                                                 Allocated Custom Software
                                             </h4>
-                                            <p className="text-xs text-indigo-300/70 mt-1 print:text-slate-600">Proportional cost based on region's user count</p>
+                                            <p className="text-xs text-indigo-300/70 mt-1 print:text-slate-600">Proportional cost based on region's M365 Premium user count</p>
                                         </div>
                                         <div className="p-0">
                                             <table className="w-full text-left text-sm text-indigo-200/80 print:text-black">
