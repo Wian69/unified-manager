@@ -112,10 +112,24 @@ export default function BudgetDashboard({
                 {/* Current Run Rate Card */}
                 <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
                     <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-2">Current Run Rate</h3>
-                    <div className="text-3xl font-black text-white mb-1">
+                    <div className="text-3xl font-black text-white mb-2">
                         ${currentRunRate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </div>
-                    <p className="text-xs text-slate-500 mt-2">M365 + Azure + Custom Software</p>
+                    
+                    <div className="space-y-1 mt-3 pt-3 border-t border-slate-800/50">
+                        <div className="flex justify-between text-xs">
+                            <span className="text-slate-500">M365 Licenses:</span>
+                            <span className="text-white font-medium">${m365RunRate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                            <span className="text-emerald-500">Azure Servers/Add-ons:</span>
+                            <span className="text-emerald-400 font-medium">${azureRunRate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                            <span className="text-indigo-400">Manual Software:</span>
+                            <span className="text-indigo-300 font-medium">${totalSoftwareRunRate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Remaining Budget Card */}
