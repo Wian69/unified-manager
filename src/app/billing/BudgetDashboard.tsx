@@ -13,6 +13,7 @@ type BudgetItem = {
     interval?: 'monthly' | 'yearly';
     description?: string;
     regions?: string[];
+    assignedUsers?: string[]; // Array of user emails
 };
 
 type BudgetData = {
@@ -36,7 +37,7 @@ export default function BudgetDashboard({
     const [isSaving, setIsSaving] = useState(false);
     
     // Forms state
-    const [newSoftware, setNewSoftware] = useState<{name: string, description: string, cost: number, quantity: number, interval: 'monthly'|'yearly', regions: string[]}>({ name: '', description: '', cost: 0, quantity: 1, interval: 'monthly', regions: [] });
+    const [newSoftware, setNewSoftware] = useState<{name: string, description: string, cost: number, quantity: number, interval: 'monthly'|'yearly', regions: string[], assignedUsers: string[]}>({ name: '', description: '', cost: 0, quantity: 1, interval: 'monthly', regions: [], assignedUsers: [] });
     const [newHardware, setNewHardware] = useState<{name: string, description: string, cost: number, quantity: number, type: string}>({ name: '', description: '', cost: 0, quantity: 1, type: 'laptop' });
     const [editingSoftwareId, setEditingSoftwareId] = useState<string | null>(null);
     const [editingSoftwareData, setEditingSoftwareData] = useState<BudgetItem | null>(null);
@@ -74,10 +75,11 @@ export default function BudgetDashboard({
             cost: Number(newSoftware.cost), 
             quantity: Number(newSoftware.quantity),
             interval: newSoftware.interval,
-            regions: newSoftware.regions
+            regions: newSoftware.regions,
+            assignedUsers: newSoftware.assignedUsers
         };
         handleSave({ ...budget, software: [...budget.software, item] });
-        setNewSoftware({ name: '', description: '', cost: 0, quantity: 1, interval: 'monthly', regions: [] });
+        setNewSoftware({ name: '', description: '', cost: 0, quantity: 1, interval: 'monthly', regions: [], assignedUsers: [] });
     };
 
     const removeSoftware = (id: string) => {
@@ -86,7 +88,7 @@ export default function BudgetDashboard({
 
     const startEditingSoftware = (item: BudgetItem) => {
         setEditingSoftwareId(item.id);
-        setEditingSoftwareData({ ...item, interval: item.interval || 'monthly', regions: item.regions || [] });
+        setEditingSoftwareData({ ...item, interval: item.interval || 'monthly', regions: item.regions || [], assignedUsers: item.assignedUsers || [] });
     };
 
     const saveEditingSoftware = () => {
@@ -259,24 +261,64 @@ export default function BudgetDashboard({
                                         </div>
                                         <div className="flex flex-wrap items-center gap-3">
                                             <div className="flex-1 flex flex-wrap gap-2 items-center bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 min-w-[200px]">
-                                                <span className="text-xs text-slate-400 mr-1">Regions:</span>
-                                                {billingRegions.map(r => (
-                                                    <label key={r.name} className="flex items-center gap-1 text-xs text-slate-300">
-                                                        <input 
-                                                            type="checkbox" 
-                                                            checked={(editingSoftwareData.regions || []).includes(r.name)}
-                                                            onChange={e => {
-                                                                const checked = e.target.checked;
-                                                                const current = editingSoftwareData.regions || [];
-                                                                setEditingSoftwareData({
-                                                                    ...editingSoftwareData, 
-                                                                    regions: checked ? [...current, r.name] : current.filter(x => x !== r.name)
-                                                                });
-                                                            }}
-                                                        />
-                                                        {r.name}
-                                                    </label>
-                                                ))}
+                                                {billingRegions && (
+                                            <div className="pt-2 border-t border-slate-700/50">
+                                                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 block">Assign to Specific Users / Regions</label>
+                                                <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                                    {billingRegions.sort((a: any, b: any) => a.name.localeCompare(b.name)).map((r: any) => {
+                                                        const isRegionSelected = editingSoftwareData.regions?.includes(r.name) || false;
+                                                        return (
+                                                        <div key={r.name} className="bg-slate-900/50 rounded-xl overflow-hidden border border-slate-800">
+                                                            <div className="flex items-center gap-3 p-3 hover:bg-slate-800/50 transition-colors">
+                                                                <input 
+                                                                    type="checkbox" 
+                                                                    checked={isRegionSelected}
+                                                                    onChange={(e) => {
+                                                                        const current = editingSoftwareData.regions || [];
+                                                                        if (e.target.checked) {
+                                                                            setEditingSoftwareData({ ...editingSoftwareData, regions: [...current, r.name] });
+                                                                        } else {
+                                                                            const newRegions = current.filter(cr => cr !== r.name);
+                                                                            const newUsers = (editingSoftwareData.assignedUsers || []).filter(email => !r.usersList?.some((u: any) => u.email === email));
+                                                                            setEditingSoftwareData({ ...editingSoftwareData, regions: newRegions, assignedUsers: newUsers });
+                                                                        }
+                                                                    }}
+                                                                    className="w-4 h-4 rounded border-slate-600 bg-slate-900 checked:bg-indigo-500 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-slate-950 transition-all cursor-pointer"
+                                                                />
+                                                                <span className="text-sm font-medium text-slate-200 cursor-pointer select-none">{r.name}</span>
+                                                            </div>
+                                                            {isRegionSelected && r.usersList && r.usersList.length > 0 && (
+                                                                <div className="pl-9 pr-3 pb-3 space-y-2">
+                                                                    {r.usersList.map((user: any) => {
+                                                                        const isUserSelected = editingSoftwareData.assignedUsers?.includes(user.email) || false;
+                                                                        return (
+                                                                            <label key={user.email} className="flex items-center gap-3 group cursor-pointer">
+                                                                                <input 
+                                                                                    type="checkbox"
+                                                                                    checked={isUserSelected}
+                                                                                    onChange={(e) => {
+                                                                                        const currentUsers = editingSoftwareData.assignedUsers || [];
+                                                                                        if (e.target.checked) {
+                                                                                            setEditingSoftwareData({ ...editingSoftwareData, assignedUsers: [...currentUsers, user.email] });
+                                                                                        } else {
+                                                                                            setEditingSoftwareData({ ...editingSoftwareData, assignedUsers: currentUsers.filter(em => em !== user.email) });
+                                                                                        }
+                                                                                    }}
+                                                                                    className="w-3.5 h-3.5 rounded-sm border-slate-700 bg-slate-900 checked:bg-indigo-500 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-slate-950 transition-all"
+                                                                                />
+                                                                                <span className="text-xs text-slate-400 group-hover:text-slate-300 transition-colors select-none truncate">
+                                                                                    {user.name} <span className="opacity-50">({user.email})</span>
+                                                                                </span>
+                                                                            </label>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )})}
+                                                </div>
+                                            </div>
+                                        )}
                                             </div>
                                         </div>
                                         <div className="flex flex-wrap items-center gap-3">
@@ -362,30 +404,9 @@ export default function BudgetDashboard({
                                                 className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white flex-1 min-w-[150px] focus:outline-none focus:border-indigo-500"
                                             />
                                         </div>
-                                        <div className="flex flex-wrap gap-2 items-center bg-slate-900 border border-slate-700 rounded-lg px-3 py-2">
-                                            <span className="text-xs text-slate-400 mr-2">Allocate to Regions:</span>
-                                            {billingRegions.map(r => (
-                                                <label key={r.name} className="flex items-center gap-1.5 text-xs text-slate-300 mr-3 cursor-pointer">
-                                                    <input 
-                                                        type="checkbox" 
-                                                        className="cursor-pointer"
-                                                        checked={newSoftware.regions.includes(r.name)}
-                                                        onChange={e => {
-                                                            const checked = e.target.checked;
-                                                            const current = newSoftware.regions;
-                                                            setNewSoftware({
-                                                                ...newSoftware, 
-                                                                regions: checked ? [...current, r.name] : current.filter(x => x !== r.name)
-                                                            });
-                                                        }}
-                                                    />
-                                                    {r.name}
-                                                </label>
-                                            ))}
-                                        </div>
                                         <div className="flex gap-3">
                                             <select 
-                                                value={newSoftware.interval}
+                                value={newSoftware.interval}
                                 onChange={e => setNewSoftware({...newSoftware, interval: e.target.value as 'monthly'|'yearly'})}
                                 className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
                             >
@@ -407,6 +428,66 @@ export default function BudgetDashboard({
                             <button onClick={addSoftware} className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg p-2 transition-colors ml-auto">
                                 <Plus className="w-5 h-5" />
                             </button>
+                        </div>
+                        <div className="flex-1 flex flex-wrap gap-2 items-center bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 min-w-[200px]">
+                            {billingRegions && (
+                                <div className="pt-2 border-t border-slate-700/50 w-full">
+                                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 block">Assign to Specific Users / Regions</label>
+                                    <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar w-full">
+                                        {billingRegions.sort((a: any, b: any) => a.name.localeCompare(b.name)).map((r: any) => {
+                                            const isRegionSelected = newSoftware.regions?.includes(r.name) || false;
+                                            return (
+                                            <div key={r.name} className="bg-slate-900/50 rounded-xl overflow-hidden border border-slate-800">
+                                                <div className="flex items-center gap-3 p-3 hover:bg-slate-800/50 transition-colors">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        checked={isRegionSelected}
+                                                        onChange={(e) => {
+                                                            const current = newSoftware.regions || [];
+                                                            if (e.target.checked) {
+                                                                setNewSoftware({ ...newSoftware, regions: [...current, r.name] });
+                                                            } else {
+                                                                const newRegions = current.filter(cr => cr !== r.name);
+                                                                const newUsers = (newSoftware.assignedUsers || []).filter(email => !r.usersList?.some((u: any) => u.email === email));
+                                                                setNewSoftware({ ...newSoftware, regions: newRegions, assignedUsers: newUsers });
+                                                            }
+                                                        }}
+                                                        className="w-4 h-4 rounded border-slate-600 bg-slate-900 checked:bg-indigo-500 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-slate-950 transition-all cursor-pointer"
+                                                    />
+                                                    <span className="text-sm font-medium text-slate-200 cursor-pointer select-none">{r.name}</span>
+                                                </div>
+                                                {isRegionSelected && r.usersList && r.usersList.length > 0 && (
+                                                    <div className="pl-9 pr-3 pb-3 space-y-2">
+                                                        {r.usersList.map((user: any) => {
+                                                            const isUserSelected = newSoftware.assignedUsers?.includes(user.email) || false;
+                                                            return (
+                                                                <label key={user.email} className="flex items-center gap-3 group cursor-pointer">
+                                                                    <input 
+                                                                        type="checkbox"
+                                                                        checked={isUserSelected}
+                                                                        onChange={(e) => {
+                                                                            const currentUsers = newSoftware.assignedUsers || [];
+                                                                            if (e.target.checked) {
+                                                                                setNewSoftware({ ...newSoftware, assignedUsers: [...currentUsers, user.email] });
+                                                                            } else {
+                                                                                setNewSoftware({ ...newSoftware, assignedUsers: currentUsers.filter(em => em !== user.email) });
+                                                                            }
+                                                                        }}
+                                                                        className="w-3.5 h-3.5 rounded-sm border-slate-700 bg-slate-900 checked:bg-indigo-500 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-slate-950 transition-all"
+                                                                    />
+                                                                    <span className="text-xs text-slate-400 group-hover:text-slate-300 transition-colors select-none truncate">
+                                                                        {user.name} <span className="opacity-50">({user.email})</span>
+                                                                    </span>
+                                                                </label>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )})}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </section>
@@ -577,23 +658,47 @@ export default function BudgetDashboard({
                     // 2. Custom Software Allocation
                     budget.software.forEach(sw => {
                         if (sw.regions && sw.regions.includes(region.name)) {
-                            // Find premium users across all selected regions for this software
-                            const totalUsersInSelectedRegions = billingRegions
-                                .filter(r => sw.regions!.includes(r.name))
-                                .reduce((sum, r) => sum + (r.premiumUsers || 0), 0);
+                            
+                            const hasAssignedUsers = sw.assignedUsers && sw.assignedUsers.length > 0;
 
-                            if (totalUsersInSelectedRegions > 0) {
-                                const proportion = (region.premiumUsers || 0) / totalUsersInSelectedRegions;
-                                const swMonthlyCost = sw.interval === 'yearly' ? sw.cost / 12 : sw.cost;
-                                const allocatedCost = (swMonthlyCost * sw.quantity) * proportion;
-                                
-                                regionAllocatedCost += allocatedCost;
-                                allocatedItems.push({
-                                    name: sw.name,
-                                    allocatedCost,
-                                    proportionLabel: `${(proportion * 100).toFixed(1)}% (Premium Users)`,
-                                    originalCost: swMonthlyCost * sw.quantity
-                                });
+                            if (hasAssignedUsers) {
+                                // NEW LOGIC: Calculate proportion strictly based on the assigned users
+                                // Find how many of the selected users are in THIS region
+                                const usersInThisRegion = (sw.assignedUsers || []).filter(email => region.usersList?.some((u: any) => u.email === email)).length;
+                                const totalAssignedUsers = sw.assignedUsers?.length || 0;
+
+                                if (usersInThisRegion > 0 && totalAssignedUsers > 0) {
+                                    const proportion = usersInThisRegion / totalAssignedUsers;
+                                    const swMonthlyCost = sw.interval === 'yearly' ? sw.cost / 12 : sw.cost;
+                                    const allocatedCost = (swMonthlyCost * sw.quantity) * proportion;
+                                    
+                                    regionAllocatedCost += allocatedCost;
+                                    allocatedItems.push({
+                                        name: sw.name,
+                                        allocatedCost,
+                                        proportionLabel: `${usersInThisRegion}/${totalAssignedUsers} Assigned Users`,
+                                        originalCost: swMonthlyCost * sw.quantity
+                                    });
+                                }
+                            } else {
+                                // OLD LOGIC: Fallback to Premium users proportion across selected regions
+                                const totalUsersInSelectedRegions = billingRegions
+                                    .filter(r => sw.regions!.includes(r.name))
+                                    .reduce((sum, r) => sum + (r.premiumUsers || 0), 0);
+
+                                if (totalUsersInSelectedRegions > 0) {
+                                    const proportion = (region.premiumUsers || 0) / totalUsersInSelectedRegions;
+                                    const swMonthlyCost = sw.interval === 'yearly' ? sw.cost / 12 : sw.cost;
+                                    const allocatedCost = (swMonthlyCost * sw.quantity) * proportion;
+                                    
+                                    regionAllocatedCost += allocatedCost;
+                                    allocatedItems.push({
+                                        name: sw.name,
+                                        allocatedCost,
+                                        proportionLabel: `${(proportion * 100).toFixed(1)}% (Premium Users Fallback)`,
+                                        originalCost: swMonthlyCost * sw.quantity
+                                    });
+                                }
                             }
                         }
                     });
@@ -695,7 +800,7 @@ export default function BudgetDashboard({
                                                 <Server className="w-5 h-5 print:hidden" />
                                                 Allocated Services & Software
                                             </h4>
-                                            <p className="text-xs text-indigo-300/70 mt-1 print:text-slate-600">Azure costs split equally, software split by Premium users</p>
+                                            <p className="text-xs text-indigo-300/70 mt-1 print:text-slate-600">Cost dynamically split by directly assigned users (or Premium User fallback)</p>
                                         </div>
                                         <div className="p-0">
                                             <table className="w-full text-left text-sm text-indigo-200/80 print:text-black">

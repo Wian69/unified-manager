@@ -44,17 +44,33 @@ export async function POST(req: Request) {
             if (budget && budget.software) {
                 budget.software.forEach((sw: any) => {
                     if (sw.regions && sw.regions.includes(r.name)) {
-                        const totalUsersInSelectedRegions = data.regions
-                            .filter((rx: any) => sw.regions.includes(rx.name))
-                            .reduce((sum: number, rx: any) => sum + (rx.premiumUsers || 0), 0);
+                        const hasAssignedUsers = sw.assignedUsers && sw.assignedUsers.length > 0;
 
-                        if (totalUsersInSelectedRegions > 0) {
-                            const proportion = (r.premiumUsers || 0) / totalUsersInSelectedRegions;
-                            const swMonthlyCost = sw.interval === 'yearly' ? sw.cost / 12 : sw.cost;
-                            const allocatedCost = (swMonthlyCost * sw.quantity) * proportion;
-                            
-                            csvContent += `"${r.name}","${sw.name} (Custom Software Allocation)",$${allocatedCost.toFixed(2)}\n`;
-                            regionTotalCost += allocatedCost;
+                        if (hasAssignedUsers) {
+                            const usersInThisRegion = (sw.assignedUsers || []).filter((email: string) => r.usersList?.some((u: any) => u.email === email)).length;
+                            const totalAssignedUsers = sw.assignedUsers?.length || 0;
+
+                            if (usersInThisRegion > 0 && totalAssignedUsers > 0) {
+                                const proportion = usersInThisRegion / totalAssignedUsers;
+                                const swMonthlyCost = sw.interval === 'yearly' ? sw.cost / 12 : sw.cost;
+                                const allocatedCost = (swMonthlyCost * sw.quantity) * proportion;
+                                
+                                regionTotalCost += allocatedCost;
+                                csvContent += `"${r.name}","${sw.name} (Custom Software Allocation)",$${allocatedCost.toFixed(2)}\n`;
+                            }
+                        } else {
+                            const totalUsersInSelectedRegions = data.regions
+                                .filter((rx: any) => sw.regions.includes(rx.name))
+                                .reduce((sum: number, rx: any) => sum + (rx.premiumUsers || 0), 0);
+
+                            if (totalUsersInSelectedRegions > 0) {
+                                const proportion = (r.premiumUsers || 0) / totalUsersInSelectedRegions;
+                                const swMonthlyCost = sw.interval === 'yearly' ? sw.cost / 12 : sw.cost;
+                                const allocatedCost = (swMonthlyCost * sw.quantity) * proportion;
+                                
+                                regionTotalCost += allocatedCost;
+                                csvContent += `"${r.name}","${sw.name} (Custom Software Allocation)",$${allocatedCost.toFixed(2)}\n`;
+                            }
                         }
                     }
                 });

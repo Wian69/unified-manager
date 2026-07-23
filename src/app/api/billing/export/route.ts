@@ -41,16 +41,29 @@ export async function GET(req: Request) {
         if (budget && budget.software) {
             budget.software.forEach((sw: any) => {
                 if (sw.regions && sw.regions.includes(region.name)) {
-                    const totalUsersInSelectedRegions = data.regions
-                        .filter((r: any) => sw.regions.includes(r.name))
-                        .reduce((sum: number, r: any) => sum + (r.premiumUsers || 0), 0);
+                    const hasAssignedUsers = sw.assignedUsers && sw.assignedUsers.length > 0;
 
-                    if (totalUsersInSelectedRegions > 0) {
-                        const proportion = (region.premiumUsers || 0) / totalUsersInSelectedRegions;
-                        const swMonthlyCost = sw.interval === 'yearly' ? sw.cost / 12 : sw.cost;
-                        const allocatedCost = (swMonthlyCost * sw.quantity) * proportion;
-                        
-                        csvContent += `"${region.name}","${sw.name} (Custom Software Allocation)",$${allocatedCost.toFixed(2)}\n`;
+                    if (hasAssignedUsers) {
+                        const usersInThisRegion = (sw.assignedUsers || []).filter((email: string) => region.usersList?.some((u: any) => u.email === email)).length;
+                        const totalAssignedUsers = sw.assignedUsers?.length || 0;
+
+                        if (usersInThisRegion > 0 && totalAssignedUsers > 0) {
+                            const proportion = usersInThisRegion / totalAssignedUsers;
+                            const swMonthlyCost = sw.interval === 'yearly' ? sw.cost / 12 : sw.cost;
+                            const allocatedCost = (swMonthlyCost * sw.quantity) * proportion;
+                            csvContent += `"${region.name}","${sw.name} (Custom Software Allocation)",$${allocatedCost.toFixed(2)}\n`;
+                        }
+                    } else {
+                        const totalUsersInSelectedRegions = data.regions
+                            .filter((r: any) => sw.regions.includes(r.name))
+                            .reduce((sum: number, r: any) => sum + (r.premiumUsers || 0), 0);
+
+                        if (totalUsersInSelectedRegions > 0) {
+                            const proportion = (region.premiumUsers || 0) / totalUsersInSelectedRegions;
+                            const swMonthlyCost = sw.interval === 'yearly' ? sw.cost / 12 : sw.cost;
+                            const allocatedCost = (swMonthlyCost * sw.quantity) * proportion;
+                            csvContent += `"${region.name}","${sw.name} (Custom Software Allocation)",$${allocatedCost.toFixed(2)}\n`;
+                        }
                     }
                 }
             });

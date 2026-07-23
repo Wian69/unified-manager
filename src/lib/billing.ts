@@ -100,7 +100,13 @@ export async function fetchBillingData() {
     }
 
     // 4. Group by Region
-    const regionGroups: Record<string, { usersCount: number, totalCost: number, products: Record<string, { unitPrice: number, users: string[] }> }> = {};
+    const regionGroups: Record<string, { 
+        usersCount: number, 
+        licensedUsersCount: number, 
+        totalCost: number, 
+        products: Record<string, { unitPrice: number, users: string[] }>,
+        usersList: { name: string, email: string }[]
+    }> = {};
 
     for (const user of users) {
         let regionName = user.officeLocation;
@@ -111,10 +117,16 @@ export async function fetchBillingData() {
         }
 
         if (!regionGroups[regionName]) {
-            regionGroups[regionName] = { usersCount: 0, licensedUsersCount: 0, totalCost: 0, products: {} };
+            regionGroups[regionName] = { usersCount: 0, licensedUsersCount: 0, totalCost: 0, products: {}, usersList: [] };
         }
 
         regionGroups[regionName].usersCount++;
+        if (user.displayName && user.userPrincipalName) {
+            regionGroups[regionName].usersList.push({
+                name: user.displayName,
+                email: user.userPrincipalName
+            });
+        }
 
         if (user.assignedLicenses && user.assignedLicenses.length > 0) {
             regionGroups[regionName].licensedUsersCount++;
@@ -167,7 +179,8 @@ export async function fetchBillingData() {
             premiumUsers: group.products["Microsoft 365 Business Premium"] ? group.products["Microsoft 365 Business Premium"].users.length : 0,
             licensedUsers: group.licensedUsersCount,
             totalCost: group.totalCost, // Assigned cost for region breakdown
-            products: structuredProducts
+            products: structuredProducts,
+            usersList: group.usersList.sort((a, b) => a.name.localeCompare(b.name))
         });
     }
 
