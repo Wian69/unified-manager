@@ -45,6 +45,7 @@ export default function BudgetDashboard({
     const [editingHardwareData, setEditingHardwareData] = useState<BudgetItem | null>(null);
 
     // Email Modal State
+    const [emailModalRegion, setEmailModalRegion] = useState<string | null>(null);
     const [emailTo, setEmailTo] = useState('');
     const [emailFrom, setEmailFrom] = useState('itsupport@eqncs.com');
     const [isSendingEmail, setIsSendingEmail] = useState(false);
