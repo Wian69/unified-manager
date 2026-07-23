@@ -34,9 +34,11 @@ export default function BudgetDashboard({
     
     // Forms state
     const [newSoftware, setNewSoftware] = useState<{name: string, description: string, cost: number, quantity: number, interval: 'monthly'|'yearly'}>({ name: '', description: '', cost: 0, quantity: 1, interval: 'monthly' });
-    const [newHardware, setNewHardware] = useState({ name: '', cost: 0, quantity: 1, type: 'laptop' });
+    const [newHardware, setNewHardware] = useState<{name: string, description: string, cost: number, quantity: number, type: string}>({ name: '', description: '', cost: 0, quantity: 1, type: 'laptop' });
     const [editingSoftwareId, setEditingSoftwareId] = useState<string | null>(null);
     const [editingSoftwareData, setEditingSoftwareData] = useState<BudgetItem | null>(null);
+    const [editingHardwareId, setEditingHardwareId] = useState<string | null>(null);
+    const [editingHardwareData, setEditingHardwareData] = useState<BudgetItem | null>(null);
 
     const handleSave = async (newBudget: BudgetData) => {
         setBudget(newBudget);
@@ -89,17 +91,31 @@ export default function BudgetDashboard({
         const item: BudgetItem = { 
             id: Date.now().toString(), 
             name: newHardware.name, 
+            description: newHardware.description,
             cost: Number(newHardware.cost), 
             quantity: Number(newHardware.quantity),
             type: newHardware.type,
             date: new Date().toISOString().split('T')[0]
         };
         handleSave({ ...budget, hardware: [...budget.hardware, item] });
-        setNewHardware({ name: '', cost: 0, quantity: 1, type: 'laptop' });
+        setNewHardware({ name: '', description: '', cost: 0, quantity: 1, type: 'laptop' });
     };
 
     const removeHardware = (id: string) => {
         handleSave({ ...budget, hardware: budget.hardware.filter(s => s.id !== id) });
+    };
+
+    const startEditingHardware = (item: BudgetItem) => {
+        setEditingHardwareId(item.id);
+        setEditingHardwareData({ ...item, type: item.type || 'laptop' });
+    };
+
+    const saveEditingHardware = () => {
+        if (!editingHardwareData) return;
+        const updatedHardware = budget.hardware.map(s => s.id === editingHardwareId ? editingHardwareData : s);
+        handleSave({ ...budget, hardware: updatedHardware });
+        setEditingHardwareId(null);
+        setEditingHardwareData(null);
     };
 
     const totalSoftwareRunRate = budget.software.reduce((sum, item) => {
@@ -316,56 +332,128 @@ export default function BudgetDashboard({
                     </div>
                     
                     <div className="space-y-3 mb-6">
-                        {budget.hardware.map(item => (
-                            <div key={item.id} className="flex items-center justify-between bg-slate-950/50 p-3 rounded-xl border border-slate-800">
-                                <div>
-                                    <div className="font-semibold text-slate-200">{item.name}</div>
-                                    <div className="text-xs text-slate-500">{item.quantity} {item.type}(s) @ ${item.cost.toFixed(2)} - {item.date}</div>
+                        {budget.hardware.map(item => {
+                            const isEditing = editingHardwareId === item.id;
+                            if (isEditing && editingHardwareData) {
+                                return (
+                                    <div key={item.id} className="flex flex-col gap-2 bg-slate-950/80 p-3 rounded-xl border border-orange-500/50">
+                                        <div className="flex flex-wrap items-center gap-3">
+                                            <input 
+                                                value={editingHardwareData.name}
+                                                onChange={e => setEditingHardwareData({...editingHardwareData, name: e.target.value})}
+                                                className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-sm text-white flex-1 min-w-[120px]"
+                                                placeholder="Name"
+                                            />
+                                            <input 
+                                                value={editingHardwareData.description || ''}
+                                                onChange={e => setEditingHardwareData({...editingHardwareData, description: e.target.value})}
+                                                className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-sm text-white flex-1 min-w-[150px]"
+                                                placeholder="Description (Optional)"
+                                            />
+                                        </div>
+                                        <div className="flex flex-wrap items-center gap-3">
+                                            <select 
+                                                value={editingHardwareData.type || 'laptop'}
+                                                onChange={e => setEditingHardwareData({...editingHardwareData, type: e.target.value})}
+                                                className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-sm text-white"
+                                            >
+                                                <option value="laptop">Laptop</option>
+                                                <option value="desktop">Desktop</option>
+                                                <option value="monitor">Monitor</option>
+                                                <option value="accessory">Accessory</option>
+                                                <option value="network">Networking</option>
+                                            </select>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-slate-400">$</span>
+                                                <input 
+                                                    type="number"
+                                                    value={editingHardwareData.cost}
+                                                    onChange={e => setEditingHardwareData({...editingHardwareData, cost: Number(e.target.value)})}
+                                                    className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-sm text-white w-20"
+                                                />
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-slate-400">Qty:</span>
+                                                <input 
+                                                    type="number"
+                                                    value={editingHardwareData.quantity}
+                                                    onChange={e => setEditingHardwareData({...editingHardwareData, quantity: Number(e.target.value)})}
+                                                    className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-sm text-white w-16"
+                                                />
+                                            </div>
+                                            <button onClick={saveEditingHardware} className="text-emerald-400 hover:text-emerald-300 font-bold px-2 py-1 ml-auto">Save</button>
+                                        </div>
+                                    </div>
+                                );
+                            }
+
+                            return (
+                                <div key={item.id} className="flex items-start justify-between bg-slate-950/50 p-3 rounded-xl border border-slate-800 hover:border-orange-500/30 transition-colors group">
+                                    <div className="flex-1 pr-4">
+                                        <div className="font-semibold text-slate-200">{item.name}</div>
+                                        {item.description && <div className="text-xs text-slate-400 mt-0.5 mb-1">{item.description}</div>}
+                                        <div className="text-xs text-slate-500">{item.quantity} {item.type}(s) @ ${item.cost.toFixed(2)} - {item.date}</div>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        <div className="font-bold text-orange-400">${(item.cost * item.quantity).toFixed(2)}</div>
+                                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button onClick={() => startEditingHardware(item)} className="text-slate-500 hover:text-orange-400 text-xs font-medium px-2 py-1 rounded bg-slate-800">
+                                                Edit
+                                            </button>
+                                            <button onClick={() => removeHardware(item.id)} className="text-slate-600 hover:text-red-400 p-1">
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-4">
-                                    <div className="font-bold text-orange-400">${(item.cost * item.quantity).toFixed(2)}</div>
-                                    <button onClick={() => removeHardware(item.id)} className="text-slate-600 hover:text-red-400 transition-colors">
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                         {budget.hardware.length === 0 && <div className="text-sm text-slate-500 italic">No hardware recorded.</div>}
                     </div>
 
-                    <div className="bg-slate-950/30 p-4 rounded-xl border border-slate-800/50 flex flex-wrap gap-3">
-                        <input 
-                            placeholder="Hardware (e.g. Dell Monitor)" 
-                            value={newHardware.name}
-                            onChange={e => setNewHardware({...newHardware, name: e.target.value})}
-                            className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white flex-1 min-w-[150px] focus:outline-none focus:border-orange-500"
-                        />
-                        <select 
-                            value={newHardware.type}
-                            onChange={e => setNewHardware({...newHardware, type: e.target.value})}
-                            className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500"
-                        >
-                            <option value="laptop">Laptop</option>
-                            <option value="desktop">Desktop</option>
-                            <option value="monitor">Monitor</option>
-                            <option value="accessory">Accessory</option>
-                            <option value="network">Networking</option>
-                        </select>
-                        <input 
-                            type="number" placeholder="Cost" 
-                            value={newHardware.cost || ''}
-                            onChange={e => setNewHardware({...newHardware, cost: Number(e.target.value)})}
-                            className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white w-24 focus:outline-none focus:border-orange-500"
-                        />
-                        <input 
-                            type="number" placeholder="Qty" 
-                            value={newHardware.quantity || ''}
-                            onChange={e => setNewHardware({...newHardware, quantity: Number(e.target.value)})}
-                            className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white w-20 focus:outline-none focus:border-orange-500"
-                        />
-                        <button onClick={addHardware} className="bg-orange-600 hover:bg-orange-500 text-white rounded-lg p-2 transition-colors">
-                            <Plus className="w-5 h-5" />
-                        </button>
+                    <div className="bg-slate-950/30 p-4 rounded-xl border border-slate-800/50 flex flex-col gap-3">
+                        <div className="flex gap-3">
+                            <input 
+                                placeholder="Hardware (e.g. Dell Monitor)" 
+                                value={newHardware.name}
+                                onChange={e => setNewHardware({...newHardware, name: e.target.value})}
+                                className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white flex-1 min-w-[150px] focus:outline-none focus:border-orange-500"
+                            />
+                            <input 
+                                placeholder="Description (Optional)" 
+                                value={newHardware.description}
+                                onChange={e => setNewHardware({...newHardware, description: e.target.value})}
+                                className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white flex-1 min-w-[150px] focus:outline-none focus:border-orange-500"
+                            />
+                        </div>
+                        <div className="flex gap-3">
+                            <select 
+                                value={newHardware.type}
+                                onChange={e => setNewHardware({...newHardware, type: e.target.value})}
+                                className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500"
+                            >
+                                <option value="laptop">Laptop</option>
+                                <option value="desktop">Desktop</option>
+                                <option value="monitor">Monitor</option>
+                                <option value="accessory">Accessory</option>
+                                <option value="network">Networking</option>
+                            </select>
+                            <input 
+                                type="number" placeholder="Cost" 
+                                value={newHardware.cost || ''}
+                                onChange={e => setNewHardware({...newHardware, cost: Number(e.target.value)})}
+                                className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white w-24 focus:outline-none focus:border-orange-500"
+                            />
+                            <input 
+                                type="number" placeholder="Qty" 
+                                value={newHardware.quantity || ''}
+                                onChange={e => setNewHardware({...newHardware, quantity: Number(e.target.value)})}
+                                className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white w-20 focus:outline-none focus:border-orange-500"
+                            />
+                            <button onClick={addHardware} className="bg-orange-600 hover:bg-orange-500 text-white rounded-lg p-2 transition-colors ml-auto">
+                                <Plus className="w-5 h-5" />
+                            </button>
+                        </div>
                     </div>
                 </section>
             </div>
