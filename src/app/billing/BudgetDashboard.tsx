@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { DollarSign, Plus, Trash2, Server, Laptop, Activity, Globe, MapPin, FileSpreadsheet, Users } from 'lucide-react';
+import { DollarSign, Plus, Trash2, Server, Laptop, Activity, Globe, MapPin, FileSpreadsheet, Users, Mail, X, CheckCircle2 } from 'lucide-react';
 
 type BudgetItem = {
     id: string;
@@ -42,6 +42,13 @@ export default function BudgetDashboard({
     const [editingSoftwareData, setEditingSoftwareData] = useState<BudgetItem | null>(null);
     const [editingHardwareId, setEditingHardwareId] = useState<string | null>(null);
     const [editingHardwareData, setEditingHardwareData] = useState<BudgetItem | null>(null);
+
+    // Email Modal State
+    const [emailModalRegion, setEmailModalRegion] = useState<string | null>(null);
+    const [emailTo, setEmailTo] = useState('');
+    const [emailFrom, setEmailFrom] = useState('jan.reyneke@eqncs.com');
+    const [isSendingEmail, setIsSendingEmail] = useState(false);
+    const [emailSuccess, setEmailSuccess] = useState<string | null>(null);
 
     const handleSave = async (newBudget: BudgetData) => {
         setBudget(newBudget);
@@ -120,6 +127,37 @@ export default function BudgetDashboard({
         handleSave({ ...budget, hardware: updatedHardware });
         setEditingHardwareId(null);
         setEditingHardwareData(null);
+    };
+
+    const handleSendEmail = async () => {
+        if (!emailModalRegion || !emailTo || !emailFrom) return;
+        setIsSendingEmail(true);
+        setEmailSuccess(null);
+        try {
+            const res = await fetch('/api/billing/send-invoice', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    region: emailModalRegion,
+                    toEmail: emailTo,
+                    fromEmail: emailFrom
+                })
+            });
+            if (res.ok) {
+                setEmailSuccess(`Invoice successfully sent to ${emailTo}!`);
+                setTimeout(() => {
+                    setEmailModalRegion(null);
+                    setEmailSuccess(null);
+                }, 3000);
+            } else {
+                const err = await res.json();
+                alert(`Failed to send email: ${err.error || 'Unknown error'}`);
+            }
+        } catch (error) {
+            alert('An error occurred while sending the email.');
+        } finally {
+            setIsSendingEmail(false);
+        }
     };
 
     const totalSoftwareRunRate = budget.software.reduce((sum, item) => {
@@ -583,6 +621,13 @@ export default function BudgetDashboard({
                                 <div className="flex items-center gap-4">
                                     <div className="flex gap-2 print:hidden">
                                         <button 
+                                            onClick={() => setEmailModalRegion(region.name)}
+                                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-xl transition-colors flex items-center gap-2"
+                                        >
+                                            <Mail className="w-4 h-4" />
+                                            Email Invoice
+                                        </button>
+                                        <button 
                                             onClick={() => window.print()}
                                             className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-semibold rounded-xl transition-colors border border-slate-700"
                                         >
@@ -683,6 +728,74 @@ export default function BudgetDashboard({
             {isSaving && <div className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm flex items-center gap-2 print:hidden z-50">
                 <Activity className="w-4 h-4 animate-spin" /> Saving Budget...
             </div>}
+
+            {/* Email Invoice Modal */}
+            {emailModalRegion && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 print:hidden">
+                    <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+                        <div className="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-950/50">
+                            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                <Mail className="w-5 h-5 text-indigo-400" />
+                                Email Invoice: {emailModalRegion}
+                            </h3>
+                            <button onClick={() => {setEmailModalRegion(null); setEmailSuccess(null);}} className="text-slate-500 hover:text-white transition-colors">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        
+                        <div className="p-6 space-y-4">
+                            {emailSuccess ? (
+                                <div className="bg-emerald-950/50 border border-emerald-500/30 rounded-xl p-4 flex items-center gap-3 text-emerald-400">
+                                    <CheckCircle2 className="w-6 h-6 shrink-0" />
+                                    <p className="font-medium text-sm">{emailSuccess}</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Send To:</label>
+                                        <input 
+                                            type="email" 
+                                            placeholder="manager@eqncs.com"
+                                            value={emailTo}
+                                            onChange={e => setEmailTo(e.target.value)}
+                                            className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Send From:</label>
+                                        <input 
+                                            type="email" 
+                                            value={emailFrom}
+                                            onChange={e => setEmailFrom(e.target.value)}
+                                            className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-400 focus:outline-none focus:border-indigo-500"
+                                        />
+                                        <p className="text-[10px] text-slate-500 mt-1">Must be a valid internal mailbox with Send permissions.</p>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        {!emailSuccess && (
+                            <div className="p-4 border-t border-slate-800 bg-slate-950/30 flex justify-end gap-3">
+                                <button 
+                                    onClick={() => setEmailModalRegion(null)}
+                                    className="px-4 py-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    onClick={handleSendEmail}
+                                    disabled={!emailTo || !emailFrom || isSendingEmail}
+                                    className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:hover:bg-indigo-600 text-white text-sm font-bold rounded-lg transition-colors flex items-center gap-2"
+                                >
+                                    {isSendingEmail ? <Activity className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+                                    Send Invoice
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
