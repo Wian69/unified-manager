@@ -192,11 +192,14 @@ export async function fetchBillingData() {
     const configurableUsers = users
         .filter(u => {
             const upn = u.userPrincipalName || "";
-            return !u.officeLocation || upn.endsWith('@partner.eqncs.com');
+            const loc = (u.officeLocation || "").toLowerCase();
+            return !u.officeLocation || 
+                   upn.endsWith('@partner.eqncs.com') ||
+                   loc.includes('exclude');
         })
         .map(u => {
             const upn = u.userPrincipalName || "";
-            const currentRegion = regionOverrides[upn] || (upn.endsWith('@partner.eqncs.com') ? "Eastern Region" : "Unassigned Region");
+            let currentRegion = regionOverrides[upn] || userOverridesDefault(u);
             return {
                 name: u.displayName || "Unknown",
                 email: upn,
@@ -204,6 +207,13 @@ export async function fetchBillingData() {
             };
         })
         .sort((a, b) => a.name.localeCompare(b.name));
+
+    function userOverridesDefault(u: any) {
+        const upn = u.userPrincipalName || "";
+        if (upn.endsWith('@partner.eqncs.com')) return "Eastern Region";
+        if (u.officeLocation) return u.officeLocation;
+        return "Unassigned Region";
+    }
 
     return {
         totalAmount: primaryTotal + secondaryTotal,
