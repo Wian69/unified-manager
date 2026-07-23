@@ -11,6 +11,7 @@ type BudgetItem = {
     type?: string;
     date?: string;
     interval?: 'monthly' | 'yearly';
+    description?: string;
 };
 
 type BudgetData = {
@@ -32,7 +33,7 @@ export default function BudgetDashboard({
     const [isSaving, setIsSaving] = useState(false);
     
     // Forms state
-    const [newSoftware, setNewSoftware] = useState<{name: string, cost: number, quantity: number, interval: 'monthly'|'yearly'}>({ name: '', cost: 0, quantity: 1, interval: 'monthly' });
+    const [newSoftware, setNewSoftware] = useState<{name: string, description: string, cost: number, quantity: number, interval: 'monthly'|'yearly'}>({ name: '', description: '', cost: 0, quantity: 1, interval: 'monthly' });
     const [newHardware, setNewHardware] = useState({ name: '', cost: 0, quantity: 1, type: 'laptop' });
     const [editingSoftwareId, setEditingSoftwareId] = useState<string | null>(null);
     const [editingSoftwareData, setEditingSoftwareData] = useState<BudgetItem | null>(null);
@@ -57,12 +58,13 @@ export default function BudgetDashboard({
         const item: BudgetItem = { 
             id: Date.now().toString(), 
             name: newSoftware.name, 
+            description: newSoftware.description,
             cost: Number(newSoftware.cost), 
             quantity: Number(newSoftware.quantity),
             interval: newSoftware.interval
         };
         handleSave({ ...budget, software: [...budget.software, item] });
-        setNewSoftware({ name: '', cost: 0, quantity: 1, interval: 'monthly' });
+        setNewSoftware({ name: '', description: '', cost: 0, quantity: 1, interval: 'monthly' });
     };
 
     const removeSoftware = (id: string) => {
@@ -179,48 +181,60 @@ export default function BudgetDashboard({
                             const isEditing = editingSoftwareId === item.id;
                             if (isEditing && editingSoftwareData) {
                                 return (
-                                    <div key={item.id} className="flex flex-wrap items-center gap-3 bg-slate-950/80 p-3 rounded-xl border border-indigo-500/50">
-                                        <input 
-                                            value={editingSoftwareData.name}
-                                            onChange={e => setEditingSoftwareData({...editingSoftwareData, name: e.target.value})}
-                                            className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-sm text-white flex-1 min-w-[120px]"
-                                        />
-                                        <select 
-                                            value={editingSoftwareData.interval || 'monthly'}
-                                            onChange={e => setEditingSoftwareData({...editingSoftwareData, interval: e.target.value as 'monthly'|'yearly'})}
-                                            className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-sm text-white"
-                                        >
-                                            <option value="monthly">Monthly</option>
-                                            <option value="yearly">Yearly</option>
-                                        </select>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-slate-400">$</span>
+                                    <div key={item.id} className="flex flex-col gap-2 bg-slate-950/80 p-3 rounded-xl border border-indigo-500/50">
+                                        <div className="flex flex-wrap items-center gap-3">
                                             <input 
-                                                type="number"
-                                                value={editingSoftwareData.cost}
-                                                onChange={e => setEditingSoftwareData({...editingSoftwareData, cost: Number(e.target.value)})}
-                                                className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-sm text-white w-20"
+                                                value={editingSoftwareData.name}
+                                                onChange={e => setEditingSoftwareData({...editingSoftwareData, name: e.target.value})}
+                                                className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-sm text-white flex-1 min-w-[120px]"
+                                                placeholder="Name"
+                                            />
+                                            <input 
+                                                value={editingSoftwareData.description || ''}
+                                                onChange={e => setEditingSoftwareData({...editingSoftwareData, description: e.target.value})}
+                                                className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-sm text-white flex-1 min-w-[150px]"
+                                                placeholder="Description (Optional)"
                                             />
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-slate-400">Qty:</span>
-                                            <input 
-                                                type="number"
-                                                value={editingSoftwareData.quantity}
-                                                onChange={e => setEditingSoftwareData({...editingSoftwareData, quantity: Number(e.target.value)})}
-                                                className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-sm text-white w-16"
-                                            />
+                                        <div className="flex flex-wrap items-center gap-3">
+                                            <select 
+                                                value={editingSoftwareData.interval || 'monthly'}
+                                                onChange={e => setEditingSoftwareData({...editingSoftwareData, interval: e.target.value as 'monthly'|'yearly'})}
+                                                className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-sm text-white"
+                                            >
+                                                <option value="monthly">Monthly</option>
+                                                <option value="yearly">Yearly</option>
+                                            </select>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-slate-400">$</span>
+                                                <input 
+                                                    type="number"
+                                                    value={editingSoftwareData.cost}
+                                                    onChange={e => setEditingSoftwareData({...editingSoftwareData, cost: Number(e.target.value)})}
+                                                    className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-sm text-white w-20"
+                                                />
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-slate-400">Qty:</span>
+                                                <input 
+                                                    type="number"
+                                                    value={editingSoftwareData.quantity}
+                                                    onChange={e => setEditingSoftwareData({...editingSoftwareData, quantity: Number(e.target.value)})}
+                                                    className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-sm text-white w-16"
+                                                />
+                                            </div>
+                                            <button onClick={saveEditingSoftware} className="text-emerald-400 hover:text-emerald-300 font-bold px-2 py-1 ml-auto">Save</button>
                                         </div>
-                                        <button onClick={saveEditingSoftware} className="text-emerald-400 hover:text-emerald-300 font-bold px-2 py-1">Save</button>
                                     </div>
                                 );
                             }
 
                             const itemMonthlyCost = item.interval === 'yearly' ? item.cost / 12 : item.cost;
                             return (
-                                <div key={item.id} className="flex items-center justify-between bg-slate-950/50 p-3 rounded-xl border border-slate-800 hover:border-indigo-500/30 transition-colors group">
-                                    <div>
+                                <div key={item.id} className="flex items-start justify-between bg-slate-950/50 p-3 rounded-xl border border-slate-800 hover:border-indigo-500/30 transition-colors group">
+                                    <div className="flex-1 pr-4">
                                         <div className="font-semibold text-slate-200">{item.name}</div>
+                                        {item.description && <div className="text-xs text-slate-400 mt-0.5 mb-1">{item.description}</div>}
                                         <div className="text-xs text-slate-500">{item.quantity} licenses @ ${item.cost.toFixed(2)}/{item.interval === 'yearly' ? 'yr' : 'mo'}</div>
                                     </div>
                                     <div className="flex items-center gap-4">
@@ -243,36 +257,46 @@ export default function BudgetDashboard({
                         {budget.software.length === 0 && <div className="text-sm text-slate-500 italic">No manual subscriptions added.</div>}
                     </div>
 
-                    <div className="bg-slate-950/30 p-4 rounded-xl border border-slate-800/50 flex flex-wrap gap-3">
-                        <input 
-                            placeholder="Software Name (e.g. Adobe)" 
-                            value={newSoftware.name}
-                            onChange={e => setNewSoftware({...newSoftware, name: e.target.value})}
-                            className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white flex-1 min-w-[150px] focus:outline-none focus:border-indigo-500"
-                        />
-                        <select 
-                            value={newSoftware.interval}
-                            onChange={e => setNewSoftware({...newSoftware, interval: e.target.value as 'monthly'|'yearly'})}
-                            className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
-                        >
-                            <option value="monthly">Monthly</option>
-                            <option value="yearly">Yearly</option>
-                        </select>
-                        <input 
-                            type="number" placeholder="Cost" 
-                            value={newSoftware.cost || ''}
-                            onChange={e => setNewSoftware({...newSoftware, cost: Number(e.target.value)})}
-                            className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white w-24 focus:outline-none focus:border-indigo-500"
-                        />
-                        <input 
-                            type="number" placeholder="Qty" 
-                            value={newSoftware.quantity || ''}
-                            onChange={e => setNewSoftware({...newSoftware, quantity: Number(e.target.value)})}
-                            className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white w-16 focus:outline-none focus:border-indigo-500"
-                        />
-                        <button onClick={addSoftware} className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg p-2 transition-colors">
-                            <Plus className="w-5 h-5" />
-                        </button>
+                    <div className="bg-slate-950/30 p-4 rounded-xl border border-slate-800/50 flex flex-col gap-3">
+                        <div className="flex gap-3">
+                            <input 
+                                placeholder="Software Name (e.g. Adobe)" 
+                                value={newSoftware.name}
+                                onChange={e => setNewSoftware({...newSoftware, name: e.target.value})}
+                                className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white flex-1 min-w-[150px] focus:outline-none focus:border-indigo-500"
+                            />
+                            <input 
+                                placeholder="Description (Optional)" 
+                                value={newSoftware.description}
+                                onChange={e => setNewSoftware({...newSoftware, description: e.target.value})}
+                                className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white flex-1 min-w-[150px] focus:outline-none focus:border-indigo-500"
+                            />
+                        </div>
+                        <div className="flex gap-3">
+                            <select 
+                                value={newSoftware.interval}
+                                onChange={e => setNewSoftware({...newSoftware, interval: e.target.value as 'monthly'|'yearly'})}
+                                className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                            >
+                                <option value="monthly">Monthly</option>
+                                <option value="yearly">Yearly</option>
+                            </select>
+                            <input 
+                                type="number" placeholder="Cost" 
+                                value={newSoftware.cost || ''}
+                                onChange={e => setNewSoftware({...newSoftware, cost: Number(e.target.value)})}
+                                className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white w-24 focus:outline-none focus:border-indigo-500"
+                            />
+                            <input 
+                                type="number" placeholder="Qty" 
+                                value={newSoftware.quantity || ''}
+                                onChange={e => setNewSoftware({...newSoftware, quantity: Number(e.target.value)})}
+                                className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white w-16 focus:outline-none focus:border-indigo-500"
+                            />
+                            <button onClick={addSoftware} className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg p-2 transition-colors ml-auto">
+                                <Plus className="w-5 h-5" />
+                            </button>
+                        </div>
                     </div>
                 </section>
 
