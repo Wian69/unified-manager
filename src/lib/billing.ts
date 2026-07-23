@@ -111,12 +111,13 @@ export async function fetchBillingData() {
         }
 
         if (!regionGroups[regionName]) {
-            regionGroups[regionName] = { usersCount: 0, totalCost: 0, products: {} };
+            regionGroups[regionName] = { usersCount: 0, licensedUsersCount: 0, totalCost: 0, products: {} };
         }
 
         regionGroups[regionName].usersCount++;
 
         if (user.assignedLicenses && user.assignedLicenses.length > 0) {
+            regionGroups[regionName].licensedUsersCount++;
             for (const license of user.assignedLicenses) {
                 let rawSku = skuMap[license.skuId] || license.skuId;
                 const productName = FRIENDLY_NAME_MAP[rawSku] || rawSku;
@@ -164,6 +165,7 @@ export async function fetchBillingData() {
             name: regionName,
             totalUsers: group.usersCount,
             premiumUsers: group.products["Microsoft 365 Business Premium"] ? group.products["Microsoft 365 Business Premium"].users.length : 0,
+            licensedUsers: group.licensedUsersCount,
             totalCost: group.totalCost, // Assigned cost for region breakdown
             products: structuredProducts
         });

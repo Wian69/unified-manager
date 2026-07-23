@@ -46,10 +46,10 @@ export async function POST(req: Request) {
                     if (sw.regions && sw.regions.includes(r.name)) {
                         const totalUsersInSelectedRegions = data.regions
                             .filter((rx: any) => sw.regions.includes(rx.name))
-                            .reduce((sum: number, rx: any) => sum + (rx.premiumUsers || 0), 0);
+                            .reduce((sum: number, rx: any) => sum + (rx.licensedUsers || 0), 0);
 
                         if (totalUsersInSelectedRegions > 0) {
-                            const proportion = (r.premiumUsers || 0) / totalUsersInSelectedRegions;
+                            const proportion = (r.licensedUsers || 0) / totalUsersInSelectedRegions;
                             const swMonthlyCost = sw.interval === 'yearly' ? sw.cost / 12 : sw.cost;
                             const allocatedCost = (swMonthlyCost * sw.quantity) * proportion;
                             

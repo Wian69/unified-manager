@@ -577,13 +577,13 @@ export default function BudgetDashboard({
                     // 2. Custom Software Allocation
                     budget.software.forEach(sw => {
                         if (sw.regions && sw.regions.includes(region.name)) {
-                            // Find premium users across all selected regions for this software
+                            // Find licensed users across all selected regions for this software
                             const totalUsersInSelectedRegions = billingRegions
                                 .filter(r => sw.regions!.includes(r.name))
-                                .reduce((sum, r) => sum + (r.premiumUsers || 0), 0);
+                                .reduce((sum, r) => sum + (r.licensedUsers || 0), 0);
 
                             if (totalUsersInSelectedRegions > 0) {
-                                const proportion = (region.premiumUsers || 0) / totalUsersInSelectedRegions;
+                                const proportion = (region.licensedUsers || 0) / totalUsersInSelectedRegions;
                                 const swMonthlyCost = sw.interval === 'yearly' ? sw.cost / 12 : sw.cost;
                                 const allocatedCost = (swMonthlyCost * sw.quantity) * proportion;
                                 
@@ -591,7 +591,7 @@ export default function BudgetDashboard({
                                 allocatedItems.push({
                                     name: sw.name,
                                     allocatedCost,
-                                    proportionLabel: `${(proportion * 100).toFixed(1)}% (Premium Users)`,
+                                    proportionLabel: `${(proportion * 100).toFixed(1)}% (Licensed Users)`,
                                     originalCost: swMonthlyCost * sw.quantity
                                 });
                             }
@@ -695,7 +695,7 @@ export default function BudgetDashboard({
                                                 <Server className="w-5 h-5 print:hidden" />
                                                 Allocated Services & Software
                                             </h4>
-                                            <p className="text-xs text-indigo-300/70 mt-1 print:text-slate-600">Azure costs split equally, software split by Premium users</p>
+                                            <p className="text-xs text-indigo-300/70 mt-1 print:text-slate-600">Azure costs split equally, software split by licensed users</p>
                                         </div>
                                         <div className="p-0">
                                             <table className="w-full text-left text-sm text-indigo-200/80 print:text-black">
