@@ -55,8 +55,15 @@ export async function POST(req: Request) {
                                 const swMonthlyCost = sw.interval === 'yearly' ? sw.cost / 12 : sw.cost;
                                 const allocatedCost = (swMonthlyCost * sw.quantity) * proportion;
                                 
+                                let label = sw.name.replace(/,/g, '');
+                                if (proportion >= 0.99 && r.name !== 'Southern Region') {
+                                    label += ' (No cost recovery to Southern Region necessary)';
+                                } else {
+                                    label += ' (Custom Software Allocation)';
+                                }
+
                                 regionTotalCost += allocatedCost;
-                                csvContent += `"${r.name}","${sw.name} (Custom Software Allocation)",$${allocatedCost.toFixed(2)}\n`;
+                                csvContent += `"${r.name}","${label}",$${allocatedCost.toFixed(2)}\n`;
                             }
                         } else {
                             const totalUsersInSelectedRegions = data.regions
@@ -68,8 +75,15 @@ export async function POST(req: Request) {
                                 const swMonthlyCost = sw.interval === 'yearly' ? sw.cost / 12 : sw.cost;
                                 const allocatedCost = (swMonthlyCost * sw.quantity) * proportion;
                                 
+                                let label = sw.name.replace(/,/g, '');
+                                if (proportion >= 0.99 && r.name !== 'Southern Region') {
+                                    label += ' (No cost recovery to Southern Region necessary)';
+                                } else {
+                                    label += ' (Custom Software Allocation)';
+                                }
+
                                 regionTotalCost += allocatedCost;
-                                csvContent += `"${r.name}","${sw.name} (Custom Software Allocation)",$${allocatedCost.toFixed(2)}\n`;
+                                csvContent += `"${r.name}","${label}",$${allocatedCost.toFixed(2)}\n`;
                             }
                         }
                     }

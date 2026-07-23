@@ -672,9 +672,13 @@ export default function BudgetDashboard({
                                     const swMonthlyCost = sw.interval === 'yearly' ? sw.cost / 12 : sw.cost;
                                     const allocatedCost = (swMonthlyCost * sw.quantity) * proportion;
                                     
+                                    const nameSuffix = (proportion >= 0.99 && region.name !== 'Southern Region') 
+                                        ? ' (No cost recovery to Southern Region necessary)' 
+                                        : '';
+
                                     regionAllocatedCost += allocatedCost;
                                     allocatedItems.push({
-                                        name: sw.name,
+                                        name: sw.name + nameSuffix,
                                         allocatedCost,
                                         proportionLabel: `${usersInThisRegion}/${totalAssignedUsers} Assigned Users`,
                                         originalCost: swMonthlyCost * sw.quantity
@@ -691,9 +695,13 @@ export default function BudgetDashboard({
                                     const swMonthlyCost = sw.interval === 'yearly' ? sw.cost / 12 : sw.cost;
                                     const allocatedCost = (swMonthlyCost * sw.quantity) * proportion;
                                     
+                                    const nameSuffix = (proportion >= 0.99 && region.name !== 'Southern Region') 
+                                        ? ' (No cost recovery to Southern Region necessary)' 
+                                        : '';
+
                                     regionAllocatedCost += allocatedCost;
                                     allocatedItems.push({
-                                        name: sw.name,
+                                        name: sw.name + nameSuffix,
                                         allocatedCost,
                                         proportionLabel: `${(proportion * 100).toFixed(1)}% (Premium Users Fallback)`,
                                         originalCost: swMonthlyCost * sw.quantity

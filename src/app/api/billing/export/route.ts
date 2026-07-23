@@ -51,7 +51,15 @@ export async function GET(req: Request) {
                             const proportion = usersInThisRegion / totalAssignedUsers;
                             const swMonthlyCost = sw.interval === 'yearly' ? sw.cost / 12 : sw.cost;
                             const allocatedCost = (swMonthlyCost * sw.quantity) * proportion;
-                            csvContent += `"${region.name}","${sw.name} (Custom Software Allocation)",$${allocatedCost.toFixed(2)}\n`;
+                            
+                            let label = sw.name.replace(/,/g, '');
+                            if (proportion >= 0.99 && region.name !== 'Southern Region') {
+                                label += ' (No cost recovery to Southern Region necessary)';
+                            } else {
+                                label += ' (Custom Software Allocation)';
+                            }
+                            
+                            csvContent += `"${region.name}","${label}",$${allocatedCost.toFixed(2)}\n`;
                         }
                     } else {
                         const totalUsersInSelectedRegions = data.regions
@@ -62,7 +70,15 @@ export async function GET(req: Request) {
                             const proportion = (region.premiumUsers || 0) / totalUsersInSelectedRegions;
                             const swMonthlyCost = sw.interval === 'yearly' ? sw.cost / 12 : sw.cost;
                             const allocatedCost = (swMonthlyCost * sw.quantity) * proportion;
-                            csvContent += `"${region.name}","${sw.name} (Custom Software Allocation)",$${allocatedCost.toFixed(2)}\n`;
+                            
+                            let label = sw.name.replace(/,/g, '');
+                            if (proportion >= 0.99 && region.name !== 'Southern Region') {
+                                label += ' (No cost recovery to Southern Region necessary)';
+                            } else {
+                                label += ' (Custom Software Allocation)';
+                            }
+                            
+                            csvContent += `"${region.name}","${label}",$${allocatedCost.toFixed(2)}\n`;
                         }
                     }
                 }
