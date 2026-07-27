@@ -696,7 +696,10 @@ export default function BudgetDashboard({
                                         ? ' (No cost recovery to Southern Region necessary)' 
                                         : '';
 
-                                    regionAllocatedCost += allocatedCost;
+                                    if (!(proportion >= 0.99 && region.name !== 'Southern Region')) {
+                                        regionAllocatedCost += allocatedCost;
+                                    }
+                                    
                                     allocatedItems.push({
                                         name: sw.name + nameSuffix,
                                         allocatedCost,
@@ -719,7 +722,10 @@ export default function BudgetDashboard({
                                         ? ' (No cost recovery to Southern Region necessary)' 
                                         : '';
 
-                                    regionAllocatedCost += allocatedCost;
+                                    if (!(proportion >= 0.99 && region.name !== 'Southern Region')) {
+                                        regionAllocatedCost += allocatedCost;
+                                    }
+                                    
                                     allocatedItems.push({
                                         name: sw.name + nameSuffix,
                                         allocatedCost,

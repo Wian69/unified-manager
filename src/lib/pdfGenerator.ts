@@ -189,7 +189,10 @@ export async function generateInvoicePdf(regionName: string, data: any, budget: 
                             }
                             
                             printLineItem(label, allocatedCost, `Assigned to ${usersInThisRegion.length} users in this region (${(proportion * 100).toFixed(0)}% of total)`);
-                            totalAmount += allocatedCost;
+                            
+                            if (!(proportion >= 0.99 && regionName !== 'Southern Region')) {
+                                totalAmount += allocatedCost;
+                            }
                             
                             printUsers(usersInThisRegion);
                         }
@@ -213,7 +216,10 @@ export async function generateInvoicePdf(regionName: string, data: any, budget: 
                             }
                             
                             printLineItem(label, allocatedCost);
-                            totalAmount += allocatedCost;
+                            
+                            if (!(proportion >= 0.99 && regionName !== 'Southern Region')) {
+                                totalAmount += allocatedCost;
+                            }
                             y += 4;
                         }
                     }
