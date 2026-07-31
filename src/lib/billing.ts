@@ -30,7 +30,7 @@ const FRIENDLY_NAME_MAP: Record<string, string> = {
     "Microsoft_Teams_Exploratory_Dept": "Microsoft Teams Exploratory"
 };
 
-async function getAzureArmToken() {
+export async function getAzureArmToken() {
     const tenantId = process.env.AZURE_TENANT_ID!;
     const clientId = process.env.AZURE_CLIENT_ID!;
     const clientSecret = process.env.AZURE_CLIENT_SECRET!;

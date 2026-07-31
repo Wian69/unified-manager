@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { DollarSign, Plus, Trash2, Server, Laptop, Activity, Globe, MapPin, FileSpreadsheet, Users, Mail, X, CheckCircle2 } from 'lucide-react';
+import { DollarSign, Plus, Trash2, Server, Laptop, Activity, Globe, MapPin, FileSpreadsheet, Users, Mail, X, CheckCircle2, Download } from 'lucide-react';
 
 type BudgetItem = {
     id: string;
@@ -48,10 +48,14 @@ export default function BudgetDashboard({
 
     // Email Modal State
     const [emailModalRegion, setEmailModalRegion] = useState<string | null>(null);
-    const [emailTo, setEmailTo] = useState('');
+    const [emailTo, setEmailTo] = useState('itsupport@eqncs.com');
     const [emailFrom, setEmailFrom] = useState('itsupport@eqncs.com');
     const [isSendingEmail, setIsSendingEmail] = useState(false);
     const [emailSuccess, setEmailSuccess] = useState<string | null>(null);
+
+    const [showInvoiceHistory, setShowInvoiceHistory] = useState(false);
+    const [invoiceHistory, setInvoiceHistory] = useState<any[]>([]);
+    const [isLoadingInvoices, setIsLoadingInvoices] = useState(false);
 
     // Override State
     const [isSavingOverride, setIsSavingOverride] = useState<string | null>(null);
@@ -182,6 +186,22 @@ export default function BudgetDashboard({
         }
     };
 
+    const fetchInvoiceHistory = async () => {
+        setIsLoadingInvoices(true);
+        setShowInvoiceHistory(true);
+        try {
+            const res = await fetch('/api/billing/invoices');
+            if (res.ok) {
+                const data = await res.json();
+                setInvoiceHistory(data.invoices || []);
+            }
+        } catch (e) {
+            console.error("Failed to fetch invoices", e);
+        } finally {
+            setIsLoadingInvoices(false);
+        }
+    };
+
     const totalSoftwareRunRate = budget.software.reduce((sum, item) => {
         const itemMonthlyCost = item.interval === 'yearly' ? item.cost / 12 : item.cost;
         return sum + (itemMonthlyCost * item.quantity);
@@ -194,6 +214,16 @@ export default function BudgetDashboard({
 
     return (
         <div className="space-y-12 mb-16">
+            <div className="flex justify-end print:hidden mb-[-2rem]">
+                <button 
+                    onClick={fetchInvoiceHistory}
+                    className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2 px-4 rounded-xl transition-colors flex items-center gap-2 border border-slate-700"
+                >
+                    <FileSpreadsheet className="w-4 h-4" />
+                    View Invoice History
+                </button>
+            </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Total Budget Card */}
                 <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 relative overflow-hidden">
@@ -999,6 +1029,75 @@ export default function BudgetDashboard({
                                 </div>
                             )}
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Invoice History Modal */}
+            {showInvoiceHistory && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 print:hidden">
+                    <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 md:p-8 w-full max-w-3xl shadow-2xl">
+                        <div className="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 className="text-2xl font-bold text-white mb-1">Microsoft / Azure Invoice History</h3>
+                                <p className="text-slate-400 text-sm">Past 12 months of official invoices dynamically fetched from Azure Billing API.</p>
+                            </div>
+                            <button onClick={() => setShowInvoiceHistory(false)} className="text-slate-500 hover:text-white transition-colors">
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        {isLoadingInvoices ? (
+                            <div className="py-20 flex flex-col items-center justify-center text-slate-400">
+                                <Activity className="w-8 h-8 text-blue-500 animate-spin mb-4" />
+                                <p>Fetching historical invoices from Microsoft...</p>
+                            </div>
+                        ) : (
+                            <div className="overflow-hidden border border-slate-800 rounded-xl max-h-[60vh] overflow-y-auto custom-scrollbar">
+                                <table className="w-full text-left text-sm text-slate-300">
+                                    <thead className="bg-slate-950/80 sticky top-0 border-b border-slate-800 backdrop-blur text-slate-400">
+                                        <tr>
+                                            <th className="px-6 py-4 font-semibold">Invoice Date</th>
+                                            <th className="px-6 py-4 font-semibold">Status</th>
+                                            <th className="px-6 py-4 font-semibold text-right">Amount</th>
+                                            <th className="px-6 py-4 font-semibold text-right">PDF</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-800/50">
+                                        {invoiceHistory.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={4} className="px-6 py-12 text-center text-slate-500">
+                                                    No invoices found for the past 12 months.
+                                                </td>
+                                            </tr>
+                                        ) : invoiceHistory.map((inv: any) => (
+                                            <tr key={inv.id} className="hover:bg-slate-800/20 transition-colors">
+                                                <td className="px-6 py-4">{new Date(inv.invoiceDate).toLocaleDateString()}</td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                                        inv.status === 'Paid' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-orange-500/10 text-orange-400'
+                                                    }`}>
+                                                        {inv.status}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-right font-semibold">
+                                                    ${inv.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    {inv.pdfUrl ? (
+                                                        <a href={inv.pdfUrl} target="_blank" rel="noreferrer" className="text-blue-400 hover:text-blue-300 flex justify-end items-center gap-1">
+                                                            <Download className="w-4 h-4" /> Download
+                                                        </a>
+                                                    ) : (
+                                                        <span className="text-slate-600 text-xs">N/A</span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
