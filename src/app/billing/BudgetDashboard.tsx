@@ -214,7 +214,7 @@ export default function BudgetDashboard({
 
     return (
         <div className="space-y-12 mb-16">
-            <div className="flex justify-end print:hidden mb-[-2rem]">
+            <div className="flex justify-end print:hidden mb-6 relative z-10">
                 <button 
                     onClick={fetchInvoiceHistory}
                     className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2 px-4 rounded-xl transition-colors flex items-center gap-2 border border-slate-700"
