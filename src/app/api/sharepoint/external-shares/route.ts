@@ -15,6 +15,29 @@ export async function GET() {
     }
 }
 
+export async function DELETE(request: Request) {
+    try {
+        const body = await request.json();
+        const { id } = body;
+
+        if (!id) {
+            return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+        }
+
+        const shares = await getExternalShares();
+        const updatedShares = shares.filter(s => s.id !== id);
+
+        if (shares.length === updatedShares.length) {
+            return NextResponse.json({ error: 'Share not found' }, { status: 404 });
+        }
+
+        await saveExternalShares(updatedShares);
+        return NextResponse.json({ success: true });
+    } catch (e: any) {
+        return NextResponse.json({ error: e.message || 'Unknown error' }, { status: 500 });
+    }
+}
+
 export async function POST(request: Request) {
     try {
         const body = await request.json();

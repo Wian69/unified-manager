@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { FileSignature, ShieldCheck, Mail, Clock, CheckCircle2, AlertCircle, Folder, X, RefreshCw } from 'lucide-react';
+import { FileSignature, ShieldCheck, Mail, Clock, CheckCircle2, AlertCircle, Folder, X, RefreshCw, Trash2 } from 'lucide-react';
 
 export default function ExternalSharesPage() {
     const [shares, setShares] = useState<any[]>([]);
@@ -71,6 +71,25 @@ export default function ExternalSharesPage() {
             setError(e.message);
         } finally {
             setIsInviting(false);
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!confirm("Are you sure you want to revoke this share and remove it from the audit trail?")) return;
+        try {
+            const res = await fetch('/api/sharepoint/external-shares', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+            if (res.ok) {
+                fetchShares();
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Failed to delete share');
+            }
+        } catch (e: any) {
+            alert(e.message);
         }
     };
 
@@ -165,13 +184,22 @@ export default function ExternalSharesPage() {
                                             </div>
                                         </div>
                                         
-                                        {share.status === 'Accepted' && (
-                                            <div className="text-right shrink-0">
-                                                <span className="inline-block px-3 py-1 bg-slate-800 rounded-lg text-xs font-medium text-slate-300 font-mono">
-                                                    IP: {share.ipAddress}
-                                                </span>
-                                            </div>
-                                        )}
+                                        <div className="flex items-center gap-4 shrink-0">
+                                            {share.status === 'Accepted' && (
+                                                <div className="text-right">
+                                                    <span className="inline-block px-3 py-1 bg-slate-800 rounded-lg text-xs font-medium text-slate-300 font-mono">
+                                                        IP: {share.ipAddress}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            <button 
+                                                onClick={() => handleDelete(share.id)}
+                                                className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                title="Revoke and Delete Share"
+                                            >
+                                                <Trash2 className="w-5 h-5" />
+                                            </button>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
