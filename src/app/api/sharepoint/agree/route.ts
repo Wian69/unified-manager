@@ -51,6 +51,27 @@ export async function POST(request: Request) {
                     customizedMessageBody: "Thank you for accepting the Terms of Use. You now have access to the secure files."
                 }
             });
+
+            // Grant explicit permissions to this specific folder so they are restricted to it
+            try {
+                const encodedUrl = Buffer.from(targetUrl).toString('base64').replace(/=/g, '').replace(/\//g, '_').replace(/\+/g, '-');
+                const driveItem = await client.api(`/shares/u!${encodedUrl}/driveItem`).get();
+                
+                if (driveItem && driveItem.parentReference) {
+                    const driveId = driveItem.parentReference.driveId;
+                    const itemId = driveItem.id;
+                    
+                    await client.api(`/drives/${driveId}/items/${itemId}/invite`).post({
+                        recipients: [{ email: share.email }],
+                        requireSignIn: true,
+                        sendInvitation: false,
+                        roles: ["write"] // Partner portal needs write access
+                    });
+                }
+            } catch (permError) {
+                console.error("Failed to set explicit folder permissions:", permError);
+                // Non-fatal, they might already have permissions or it might take a second for B2B to sync
+            }
         } catch (graphError: any) {
             console.error("Graph API B2B Invite Error:", graphError);
             // We still consider the agreement signed, but the backend invite failed
