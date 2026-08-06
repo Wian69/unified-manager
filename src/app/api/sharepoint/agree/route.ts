@@ -40,7 +40,7 @@ export async function POST(request: Request) {
 
         // Call Graph API to send official B2B invitation
         const client = getGraphClient();
-        const targetUrl = 'https://xxeqncs.sharepoint.com/teams/SharesForexternalusers/SitePages/CollabHome.aspx';
+        const targetUrl = share.targetUrl || 'https://xxeqncs.sharepoint.com/teams/SharesForexternalusers/SitePages/CollabHome.aspx';
 
         try {
             await client.api('/invitations').post({

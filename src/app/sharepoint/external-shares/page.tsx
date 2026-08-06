@@ -6,6 +6,7 @@ export default function ExternalSharesPage() {
     const [shares, setShares] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [newEmail, setNewEmail] = useState('');
+    const [targetUrl, setTargetUrl] = useState('https://xxeqncs.sharepoint.com/teams/SharesForexternalusers/SitePages/CollabHome.aspx');
     const [isInviting, setIsInviting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -36,7 +37,7 @@ export default function ExternalSharesPage() {
             const res = await fetch('/api/sharepoint/external-shares', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: newEmail })
+                body: JSON.stringify({ email: newEmail, targetUrl })
             });
             const data = await res.json();
             
@@ -44,6 +45,7 @@ export default function ExternalSharesPage() {
                 setError(data.error || 'Failed to send invite');
             } else {
                 setNewEmail('');
+                // We keep targetUrl as is for convenience in case they want to share the same folder with someone else
                 fetchShares();
             }
         } catch (e: any) {
@@ -90,6 +92,18 @@ export default function ExternalSharesPage() {
                                         onChange={e => setNewEmail(e.target.value)}
                                         placeholder="guest@company.com"
                                         className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder:text-slate-600"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-300 mb-1">Target Folder URL</label>
+                                    <input 
+                                        type="url" 
+                                        required
+                                        value={targetUrl}
+                                        onChange={e => setTargetUrl(e.target.value)}
+                                        placeholder="https://company.sharepoint.com/teams/..."
+                                        className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder:text-slate-600 text-sm"
                                     />
                                 </div>
 
@@ -143,7 +157,10 @@ export default function ExternalSharesPage() {
                                                 </div>
                                                 <div>
                                                     <p className="font-semibold text-white">{share.email}</p>
-                                                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-1 text-xs text-slate-400">
+                                                    <p className="text-xs text-blue-400 mt-1 truncate max-w-xs sm:max-w-md" title={share.targetUrl}>
+                                                        {share.targetUrl}
+                                                    </p>
+                                                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-2 text-xs text-slate-400">
                                                         <span>Invited: {new Date(share.invitedAt).toLocaleString()}</span>
                                                         {share.status === 'Accepted' && (
                                                             <>

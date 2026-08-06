@@ -17,18 +17,22 @@ export async function GET() {
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { email } = body;
+        const { email, targetUrl } = body;
 
         if (!email) {
             return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+        }
+        
+        if (!targetUrl) {
+            return NextResponse.json({ error: 'Target URL is required' }, { status: 400 });
         }
 
         const shares = await getExternalShares();
         
         // Check if already invited
-        const existing = shares.find(s => s.email.toLowerCase() === email.toLowerCase());
+        const existing = shares.find(s => s.email.toLowerCase() === email.toLowerCase() && s.targetUrl === targetUrl);
         if (existing && existing.status === 'Accepted') {
-            return NextResponse.json({ error: 'User has already accepted an invitation.' }, { status: 400 });
+            return NextResponse.json({ error: 'User has already accepted an invitation for this exact folder.' }, { status: 400 });
         }
 
         // Generate unique token
@@ -37,6 +41,7 @@ export async function POST(request: Request) {
         const newShare = {
             id: token,
             email: email.toLowerCase(),
+            targetUrl,
             status: 'Pending',
             invitedAt: new Date().toISOString(),
             acceptedAt: null,
