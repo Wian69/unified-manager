@@ -236,3 +236,12 @@ export async function getUserRegionOverrides(): Promise<Record<string, string>> 
 export async function saveUserRegionOverrides(overrides: Record<string, string>) {
     return saveData('user_region_overrides', path.join(DB_DIR, 'user_region_overrides.json'), overrides);
 }
+
+export async function getExternalShares(): Promise<any[]> {
+    return getData('external_shares', path.join(DB_DIR, 'external_shares.json'), []);
+}
+
+export async function saveExternalShares(shares: any[]) {
+    return saveData('external_shares', path.join(DB_DIR, 'external_shares.json'), shares);
+}
+

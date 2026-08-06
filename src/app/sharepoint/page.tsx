@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { HardDrive, RefreshCw, Search, FileText, Globe, User, ExternalLink, Hash, Clock, File, Activity } from "lucide-react";
+import { HardDrive, RefreshCw, Search, FileText, Globe, User, ExternalLink, Hash, Clock, File, Activity, ShieldCheck } from "lucide-react";
 
 export default function SharePointPage() {
     const [drives, setDrives] = useState<any[]>([]);
@@ -85,42 +85,65 @@ export default function SharePointPage() {
                 </button>
             </div>
 
-            {/* SLA Tracker Setup Widget */}
-            <div className="bg-slate-900/60 p-8 rounded-3xl border border-slate-800/60 backdrop-blur-xl shadow-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                <div className="space-y-2">
-                    <h2 className="text-xl font-black text-white flex items-center gap-3">
-                        <span className="p-2 bg-blue-600/20 text-blue-500 rounded-lg"><FileText size={20} /></span>
-                        SLA Tracker Compliance Setup
-                    </h2>
-                    <p className="text-slate-400 text-sm max-w-xl">
-                        Configure the newly created "SLA Tracker" SharePoint site with lists (SLA_Definitions, SLA_Tracker, Breach_Log) and seed the 14 Diligent SLA obligations.
-                    </p>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                    <button 
-                        onClick={() => window.open('http://localhost:3006')}
-                        className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl transition-all border border-slate-700 font-bold active:scale-95 text-center text-sm"
-                    >
-                        1. Connect M365 Account
-                    </button>
-                    <button 
-                        onClick={async () => {
-                            try {
-                                const res = await fetch('/api/sharepoint/setup-lists', { method: 'POST' });
-                                const data = await res.json();
-                                if (data.success) {
-                                    alert("Success: " + data.message);
-                                } else {
-                                    alert("Error: " + data.error);
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* SLA Tracker Setup Widget */}
+                <div className="bg-slate-900/60 p-8 rounded-3xl border border-slate-800/60 backdrop-blur-xl shadow-2xl flex flex-col justify-between items-start gap-6">
+                    <div className="space-y-2">
+                        <h2 className="text-xl font-black text-white flex items-center gap-3">
+                            <span className="p-2 bg-blue-600/20 text-blue-500 rounded-lg"><FileText size={20} /></span>
+                            SLA Tracker Compliance Setup
+                        </h2>
+                        <p className="text-slate-400 text-sm max-w-xl">
+                            Configure the newly created "SLA Tracker" SharePoint site with lists (SLA_Definitions, SLA_Tracker, Breach_Log) and seed the 14 Diligent SLA obligations.
+                        </p>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                        <button 
+                            onClick={() => window.open('http://localhost:3006')}
+                            className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl transition-all border border-slate-700 font-bold active:scale-95 text-center text-sm"
+                        >
+                            1. Connect M365 Account
+                        </button>
+                        <button 
+                            onClick={async () => {
+                                try {
+                                    const res = await fetch('/api/sharepoint/setup-lists', { method: 'POST' });
+                                    const data = await res.json();
+                                    if (data.success) {
+                                        alert("Success: " + data.message);
+                                    } else {
+                                        alert("Error: " + data.error);
+                                    }
+                                } catch (e: any) {
+                                    alert("Failed: " + e.message);
                                 }
-                            } catch (e: any) {
-                                alert("Failed: " + e.message);
-                            }
-                        }}
-                        className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all font-bold active:scale-95 text-center text-sm"
-                    >
-                        2. Create & Seed Lists
-                    </button>
+                            }}
+                            className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all font-bold active:scale-95 text-center text-sm"
+                        >
+                            2. Create & Seed Lists
+                        </button>
+                    </div>
+                </div>
+
+                {/* External Sharing Portal Widget */}
+                <div className="bg-slate-900/60 p-8 rounded-3xl border border-slate-800/60 backdrop-blur-xl shadow-2xl flex flex-col justify-between items-start gap-6">
+                    <div className="space-y-2">
+                        <h2 className="text-xl font-black text-white flex items-center gap-3">
+                            <span className="p-2 bg-emerald-600/20 text-emerald-500 rounded-lg"><ShieldCheck size={20} /></span>
+                            Secure External Sharing Portal
+                        </h2>
+                        <p className="text-slate-400 text-sm max-w-xl">
+                            Manage guest access to the <strong>SharesForexternalusers</strong> site. Send secure invites requiring an electronic signature and Terms of Use agreement before access is granted.
+                        </p>
+                    </div>
+                    <div className="w-full">
+                        <a 
+                            href="/sharepoint/external-shares"
+                            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl transition-all font-bold active:scale-95 text-center text-sm w-full md:w-auto shadow-lg shadow-emerald-500/20"
+                        >
+                            <User size={16} /> Manage External Guests
+                        </a>
+                    </div>
                 </div>
             </div>
 
