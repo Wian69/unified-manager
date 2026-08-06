@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getExternalShares, saveExternalShares } from '@/lib/db';
 import { getGraphClient } from '@/lib/graph';
+import { ResponseType } from '@microsoft/microsoft-graph-client';
 import crypto from 'crypto';
 
 export async function GET() {
@@ -69,25 +70,41 @@ export async function POST(request: Request) {
 
         const message = {
             message: {
-                subject: `Secure Document Access: Signature Required`,
+                subject: `Invitation to collaborate on Equinox Group Holdings documents`,
                 body: {
                     contentType: "HTML",
                     content: `<!DOCTYPE html>
 <html>
 <head>
 <style>
-body { font-family: Arial, sans-serif; background-color: #f4f6f8; color: #333; padding: 40px; }
-.container { max-width: 600px; background: #fff; padding: 30px; border-radius: 8px; margin: 0 auto; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-.btn { display: inline-block; padding: 12px 24px; background: #2563eb; color: #fff; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 20px; }
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; line-height: 1.6; }
+.container { max-width: 600px; margin: 0 auto; padding: 20px; }
+.header { border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
+.btn { display: inline-block; padding: 10px 20px; background-color: #005A9E; color: #ffffff !important; text-decoration: none; border-radius: 4px; font-weight: bold; margin: 20px 0; }
+.footer { margin-top: 30px; font-size: 12px; color: #666; border-top: 1px solid #eee; padding-top: 10px; }
 </style>
 </head>
 <body>
 <div class="container">
-<h2>Secure Document Access</h2>
-<p>Equinox Group Holdings has shared secure files with you.</p>
-<p>Before you can access these files, you are required to review the Terms of Use and electronically sign the agreement.</p>
-<a href="${agreeLink}" class="btn">Review & Sign Agreement</a>
-<p style="margin-top: 30px; font-size: 12px; color: #888;">This link is unique to you. Do not forward this email.</p>
+    <div class="header">
+        <h2 style="color: #005A9E; margin: 0;">Equinox Group Holdings</h2>
+    </div>
+    
+    <p>Hello,</p>
+    
+    <p>You have been invited to securely access files shared by Equinox Group Holdings.</p>
+    
+    <p>To ensure the security and confidentiality of our data, we require all external partners to review and accept our standard Terms of Use before access is granted.</p>
+    
+    <a href="${agreeLink}" class="btn">View & Accept Terms</a>
+    
+    <p>If you cannot click the button above, please copy and paste the following link into your browser:</p>
+    <p style="word-break: break-all; font-size: 12px;"><a href="${agreeLink}">${agreeLink}</a></p>
+    
+    <div class="footer">
+        <p>This is an automated security message. Please do not forward this email as the link is unique to your email address.</p>
+        <p>&copy; ${new Date().getFullYear()} Equinox Group Holdings. All rights reserved.</p>
+    </div>
 </div>
 </body>
 </html>`
@@ -99,7 +116,8 @@ body { font-family: Arial, sans-serif; background-color: #f4f6f8; color: #333; p
             saveToSentItems: "false"
         };
 
-        await client.api(`/users/${fromEmail}/sendMail`).post(message);
+        // Use responseType(ResponseType.RAW) to prevent the SDK from hanging while trying to parse the empty 202 Accepted body
+        await client.api(`/users/${fromEmail}/sendMail`).responseType(ResponseType.RAW).post(message);
 
         return NextResponse.json({ success: true, share: newShare });
     } catch (e: any) {
