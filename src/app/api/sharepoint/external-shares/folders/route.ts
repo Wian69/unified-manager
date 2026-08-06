@@ -7,9 +7,22 @@ export async function GET() {
     try {
         const client = getGraphClient();
         
-        // Fetch children of the default document library in the SharesForexternalusers site
-        // Using the path-based addressing for sites
-        const response = await client.api('/sites/xxeqncs.sharepoint.com:/teams/SharesForexternalusers:/drive/root/children')
+        // 1. Search for the site
+        const siteSearch = await client.api('/sites?search=SharesForexternalusers').get();
+        if (!siteSearch.value || siteSearch.value.length === 0) {
+            throw new Error("Could not find site SharesForexternalusers");
+        }
+        const siteId = siteSearch.value[0].id;
+
+        // 2. Get the drives for the site
+        const drives = await client.api(`/sites/${siteId}/drives`).get();
+        if (!drives.value || drives.value.length === 0) {
+            throw new Error("Could not find document library for site");
+        }
+        const driveId = drives.value[0].id;
+
+        // 3. Get the children of the drive root
+        const response = await client.api(`/drives/${driveId}/root/children`)
             .select('id,name,webUrl,folder')
             .get();
 
