@@ -80,6 +80,22 @@ async function copyFolderRecursively(client: any, sourceUser: string, targetUser
         }
     }
 
+    sendLog(`Analyzing target folder to prevent duplicates...`);
+    let existingSignatures = new Set<string>();
+    let existingUrl = `/users/${targetUser}/mailFolders/${targetFolder.id}/messages?$select=subject,receivedDateTime&$top=250`;
+    let hasNextExisting = true;
+    while(hasNextExisting && existingUrl) {
+        try {
+            const exMsgs = await client.api(existingUrl).header('Prefer', 'HonorNonIndexedQueriesWarningMayFailRandomly').get();
+            for (const m of exMsgs.value) {
+                existingSignatures.add(`${m.subject}-${m.receivedDateTime}`);
+            }
+            existingUrl = exMsgs['@odata.nextLink'];
+        } catch (e) {
+            hasNextExisting = false;
+        }
+    }
+
     sendLog(`Copying messages for: ${sourceFolder.displayName}`);
     let hasNextMsg = true;
     let msgUrl = `/users/${sourceUser}/mailFolders/${sourceFolderId}/messages?$top=50`;
@@ -90,6 +106,10 @@ async function copyFolderRecursively(client: any, sourceUser: string, targetUser
         
         for (const msg of msgs.value) {
             try {
+                if (existingSignatures.has(`${msg.subject}-${msg.receivedDateTime}`)) {
+                    continue; // Skip duplicate
+                }
+
                 const fullMsg = await client.api(`/users/${sourceUser}/messages/${msg.id}`).get();
                 
                 const newMsg = {
@@ -106,6 +126,10 @@ async function copyFolderRecursively(client: any, sourceUser: string, targetUser
                         {
                             id: "SystemTime 0x0E06",
                             value: fullMsg.receivedDateTime
+                        },
+                        {
+                            id: "Integer 0x0E07",
+                            value: fullMsg.isRead ? "1" : "0"
                         }
                     ]
                 };
@@ -113,7 +137,7 @@ async function copyFolderRecursively(client: any, sourceUser: string, targetUser
                 await client.api(`/users/${targetUser}/mailFolders/${targetFolder.id}/messages`).post(newMsg);
                 totalCopied++;
                 if (totalCopied % 10 === 0) {
-                    sendLog(`... copied ${totalCopied} messages in ${sourceFolder.displayName}`);
+                    sendLog(`... copied ${totalCopied} new messages in ${sourceFolder.displayName}`);
                 }
             } catch (err: any) {
                 console.error(`Failed to copy message ${msg.subject}: ${err.message}`);
