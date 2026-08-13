@@ -8,7 +8,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         
         // 1. Fetch main device details
         const deviceResponse = await client.api(`/deviceManagement/managedDevices/${id}`)
-            .select('id,deviceName,operatingSystem,osVersion,complianceState,lastSyncDateTime,serialNumber,manufacturer,model,userPrincipalName,userDisplayName,enrolledDateTime,isEncrypted,jailBroken,wifiMacAddress,ethernetMacAddress,totalStorageSpaceInBytes,freeStorageSpaceInBytes')
+            .select('id,deviceName,operatingSystem,osVersion,complianceState,lastSyncDateTime,serialNumber,manufacturer,model,userPrincipalName,userDisplayName,enrolledDateTime,isEncrypted,jailBroken,wifiMacAddress,ethernetMacAddress,totalStorageSpaceInBytes,freeStorageSpaceInBytes,deviceActionResults')
             .get();
 
         // 2. Fetch device compliance policies (Attempt expansion and error capture)

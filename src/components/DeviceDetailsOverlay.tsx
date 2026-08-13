@@ -174,14 +174,25 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
                     <div className="flex items-center gap-6">
                         <h2 className="text-3xl font-bold text-white">Device Details</h2>
                         {deviceData?.device && (
-                            <button
-                                onClick={handleFreshStart}
-                                disabled={actionLoading}
-                                className="px-4 py-2 bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white rounded-lg border border-rose-500/30 text-sm font-bold flex items-center gap-2 transition-colors disabled:opacity-50"
-                            >
-                                <RefreshCw size={16} className={actionLoading ? 'animate-spin' : ''} />
-                                {actionLoading ? 'Initiating...' : 'Fresh Start'}
-                            </button>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={handleFreshStart}
+                                    disabled={actionLoading || (deviceData.device.deviceActionResults?.find((a: any) => a.actionName === 'cleanWindowsDevice')?.actionState === 'pending') || (deviceData.device.deviceActionResults?.find((a: any) => a.actionName === 'cleanWindowsDevice')?.actionState === 'active')}
+                                    className="px-4 py-2 bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white rounded-lg border border-rose-500/30 text-sm font-bold flex items-center gap-2 transition-colors disabled:opacity-50"
+                                >
+                                    <RefreshCw size={16} className={actionLoading || (deviceData.device.deviceActionResults?.find((a: any) => a.actionName === 'cleanWindowsDevice')?.actionState === 'pending') || (deviceData.device.deviceActionResults?.find((a: any) => a.actionName === 'cleanWindowsDevice')?.actionState === 'active') ? 'animate-spin' : ''} />
+                                    {actionLoading ? 'Initiating...' : 'Fresh Start'}
+                                </button>
+                                {deviceData.device.deviceActionResults?.find((a: any) => a.actionName === 'cleanWindowsDevice') && (
+                                    <span className={`text-xs px-2 py-1 rounded font-bold uppercase tracking-wider ${
+                                        deviceData.device.deviceActionResults.find((a: any) => a.actionName === 'cleanWindowsDevice').actionState === 'failed' ? 'bg-rose-500/20 text-rose-400' :
+                                        deviceData.device.deviceActionResults.find((a: any) => a.actionName === 'cleanWindowsDevice').actionState === 'completed' || deviceData.device.deviceActionResults.find((a: any) => a.actionName === 'cleanWindowsDevice').actionState === 'done' ? 'bg-emerald-500/20 text-emerald-400' :
+                                        'bg-amber-500/20 text-amber-400 animate-pulse'
+                                    }`}>
+                                        {deviceData.device.deviceActionResults.find((a: any) => a.actionName === 'cleanWindowsDevice').actionState}
+                                    </span>
+                                )}
+                            </div>
                         )}
                     </div>
                     <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
