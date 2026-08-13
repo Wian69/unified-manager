@@ -13,6 +13,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
         // 1.5 Fetch BitLocker recovery keys
         let bitlockerKeys = [];
+        let bitlockerError = null;
         try {
             if (deviceResponse.azureADDeviceId) {
                 const keysResponse = await client.api(`/informationProtection/bitlocker/recoveryKeys?$filter=deviceId eq '${deviceResponse.azureADDeviceId}'`).get();
@@ -22,9 +23,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
                         bitlockerKeys.push({ id: keyObj.id, createdDateTime: keyObj.createdDateTime, key: keyDetails.key });
                     }
                 }
+            } else {
+                bitlockerError = "Device is missing Azure AD Device ID.";
             }
         } catch (e: any) {
             console.warn('[API] Could not fetch BitLocker keys:', e.message);
+            bitlockerError = e.message;
         }
 
         // 2. Fetch device compliance policies (Attempt expansion and error capture)
@@ -67,7 +71,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
             device: deviceResponse,
             compliancePolicies: complianceStates,
             configurationPolicies: configStates,
-            bitlockerKeys: bitlockerKeys
+            bitlockerKeys: bitlockerKeys,
+            bitlockerError: bitlockerError
         });
 
     } catch (error: any) {

@@ -295,9 +295,14 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
                             </section>
 
                             {/* BitLocker Keys Section */}
-                            {deviceData.bitlockerKeys && deviceData.bitlockerKeys.length > 0 && (
-                                <section>
-                                    <h3 className="text-lg font-bold text-slate-200 mb-4 border-b border-slate-800 pb-2">BitLocker Recovery Keys</h3>
+                            <section>
+                                <h3 className="text-lg font-bold text-slate-200 mb-4 border-b border-slate-800 pb-2">BitLocker Recovery Keys</h3>
+                                {deviceData.bitlockerError ? (
+                                    <div className="bg-rose-500/10 border border-rose-500/20 p-4 rounded-xl text-rose-400 text-sm">
+                                        <div className="font-bold mb-1">Failed to fetch keys</div>
+                                        {deviceData.bitlockerError}
+                                    </div>
+                                ) : deviceData.bitlockerKeys && deviceData.bitlockerKeys.length > 0 ? (
                                     <div className="space-y-3">
                                         {deviceData.bitlockerKeys.map((key: any) => (
                                             <div key={key.id} className="bg-slate-900/40 p-4 rounded-xl border border-blue-500/30 flex flex-col gap-2">
@@ -317,8 +322,10 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
                                             </div>
                                         ))}
                                     </div>
-                                </section>
-                            )}
+                                ) : (
+                                    <div className="text-slate-500 italic text-sm">No BitLocker keys backed up to Entra ID for this device.</div>
+                                )}
+                            </section>
 
                             {/* Security Operations Section */}
                             <section>
