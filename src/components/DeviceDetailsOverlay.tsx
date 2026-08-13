@@ -17,6 +17,29 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
     const [remediating, setRemediating] = useState(false);
     const [remediationLogs, setRemediationLogs] = useState<string[]>([]);
     const [showAgentScript, setShowAgentScript] = useState(false);
+    const [actionLoading, setActionLoading] = useState(false);
+
+    const handleFreshStart = async () => {
+        if (!confirm('Are you sure you want to perform a Fresh Start? This will wipe the device.')) return;
+        setActionLoading(true);
+        try {
+            const res = await fetch(`/api/devices/${deviceId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'freshStart' })
+            });
+            if (res.ok) {
+                alert('Fresh Start initiated successfully.');
+            } else {
+                const data = await res.json();
+                alert(`Error: ${data.error || 'Failed to initiate Fresh Start.'}`);
+            }
+        } catch (e) {
+            alert('Failed to connect to API.');
+        } finally {
+            setActionLoading(false);
+        }
+    };
 
     const fetchDetails = async () => {
         setLoading(true);
@@ -148,7 +171,19 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
         <div className="fixed inset-0 lg:left-64 z-50 bg-[#0b0f19] flex flex-col animate-in fade-in duration-300 overflow-y-auto">
             <div className="w-full flex flex-col min-h-full">
                 <div className="flex justify-between items-center p-8 border-b border-slate-800/60 shrink-0">
-                    <h2 className="text-3xl font-bold text-white">Device Details</h2>
+                    <div className="flex items-center gap-6">
+                        <h2 className="text-3xl font-bold text-white">Device Details</h2>
+                        {deviceData?.device && (
+                            <button
+                                onClick={handleFreshStart}
+                                disabled={actionLoading}
+                                className="px-4 py-2 bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white rounded-lg border border-rose-500/30 text-sm font-bold flex items-center gap-2 transition-colors disabled:opacity-50"
+                            >
+                                <RefreshCw size={16} className={actionLoading ? 'animate-spin' : ''} />
+                                {actionLoading ? 'Initiating...' : 'Fresh Start'}
+                            </button>
+                        )}
+                    </div>
                     <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
                         <X size={24} />
                     </button>

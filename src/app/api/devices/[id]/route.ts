@@ -61,3 +61,21 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         );
     }
 }
+
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+    try {
+        const id = (await params).id;
+        const body = await request.json();
+        const client = getGraphClient();
+
+        if (body.action === 'freshStart') {
+            await client.api(`/deviceManagement/managedDevices/${id}/cleanWindowsDevice`).post({ keepUserData: false });
+            return NextResponse.json({ success: true });
+        }
+        
+        return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+    } catch (error: any) {
+        console.error('[API] Graph API Error (Device Action):', error.message);
+        return NextResponse.json({ error: "Failed to execute action", details: error.message }, { status: 500 });
+    }
+}
