@@ -294,6 +294,32 @@ export default function DeviceDetailsOverlay({ deviceId, onClose }: DeviceDetail
                                 </div>
                             </section>
 
+                            {/* BitLocker Keys Section */}
+                            {deviceData.bitlockerKeys && deviceData.bitlockerKeys.length > 0 && (
+                                <section>
+                                    <h3 className="text-lg font-bold text-slate-200 mb-4 border-b border-slate-800 pb-2">BitLocker Recovery Keys</h3>
+                                    <div className="space-y-3">
+                                        {deviceData.bitlockerKeys.map((key: any) => (
+                                            <div key={key.id} className="bg-slate-900/40 p-4 rounded-xl border border-blue-500/30 flex flex-col gap-2">
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-xs text-slate-500 font-bold uppercase tracking-widest">Key ID: {key.id.split('-')[0]}...</span>
+                                                    <span className="text-xs text-slate-400">{new Date(key.createdDateTime).toLocaleString()}</span>
+                                                </div>
+                                                <div className="flex items-center gap-3 bg-black/40 p-3 rounded-lg border border-slate-800">
+                                                    <code className="text-sm text-blue-400 font-mono tracking-wider flex-1">{key.key}</code>
+                                                    <button 
+                                                        onClick={() => { navigator.clipboard.writeText(key.key); alert("Recovery key copied to clipboard!"); }}
+                                                        className="px-3 py-1 bg-blue-500/20 text-blue-400 hover:bg-blue-500 hover:text-white rounded text-xs font-bold transition-colors"
+                                                    >
+                                                        Copy
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
+                            )}
+
                             {/* Security Operations Section */}
                             <section>
                                 <div className="flex items-center gap-3 mb-6 border-b border-slate-800 pb-2">

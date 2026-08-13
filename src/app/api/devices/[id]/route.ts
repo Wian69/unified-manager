@@ -8,8 +8,24 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         
         // 1. Fetch main device details
         const deviceResponse = await client.api(`/deviceManagement/managedDevices/${id}`)
-            .select('id,deviceName,operatingSystem,osVersion,complianceState,lastSyncDateTime,serialNumber,manufacturer,model,userPrincipalName,userDisplayName,enrolledDateTime,isEncrypted,jailBroken,wifiMacAddress,ethernetMacAddress,totalStorageSpaceInBytes,freeStorageSpaceInBytes,deviceActionResults')
+            .select('id,deviceName,operatingSystem,osVersion,complianceState,lastSyncDateTime,serialNumber,manufacturer,model,userPrincipalName,userDisplayName,enrolledDateTime,isEncrypted,jailBroken,wifiMacAddress,ethernetMacAddress,totalStorageSpaceInBytes,freeStorageSpaceInBytes,deviceActionResults,azureADDeviceId')
             .get();
+
+        // 1.5 Fetch BitLocker recovery keys
+        let bitlockerKeys = [];
+        try {
+            if (deviceResponse.azureADDeviceId) {
+                const keysResponse = await client.api(`/informationProtection/bitlocker/recoveryKeys?$filter=deviceId eq '${deviceResponse.azureADDeviceId}'`).get();
+                if (keysResponse.value && keysResponse.value.length > 0) {
+                    for (const keyObj of keysResponse.value) {
+                        const keyDetails = await client.api(`/informationProtection/bitlocker/recoveryKeys/${keyObj.id}?$select=key`).get();
+                        bitlockerKeys.push({ id: keyObj.id, createdDateTime: keyObj.createdDateTime, key: keyDetails.key });
+                    }
+                }
+            }
+        } catch (e: any) {
+            console.warn('[API] Could not fetch BitLocker keys:', e.message);
+        }
 
         // 2. Fetch device compliance policies (Attempt expansion and error capture)
         let complianceStates = [];
@@ -50,7 +66,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         return NextResponse.json({
             device: deviceResponse,
             compliancePolicies: complianceStates,
-            configurationPolicies: configStates
+            configurationPolicies: configStates,
+            bitlockerKeys: bitlockerKeys
         });
 
     } catch (error: any) {
