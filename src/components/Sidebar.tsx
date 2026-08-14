@@ -50,6 +50,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         { name: 'Email Signatures', icon: Signature, path: '/signatures' },
         { name: 'Email Trace', icon: Mail, path: '/email/trace' },
         { name: 'Security Audit', icon: ShieldAlert, path: '/security?tab=access' },
+        { name: 'Partner Sign-Ins', icon: Users, path: '/sign-in-report' },
         { name: 'Billing', icon: DollarSign, path: '/billing' },
         { name: 'Settings', icon: Settings, path: '/settings' },
     ];
