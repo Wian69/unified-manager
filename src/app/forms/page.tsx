@@ -87,6 +87,36 @@ export default function FormsPage() {
                     </Link>
                 ))}
 
+                <Link href="/forms/ttx">
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.15 }}
+                        className="group relative p-8 bg-slate-900 border border-slate-800 rounded-3xl hover:border-emerald-500/50 transition-all duration-500 overflow-hidden cursor-pointer shadow-2xl"
+                    >
+                        <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity text-emerald-500">
+                            <ClipboardList size={80} />
+                        </div>
+                        
+                        <div className="relative z-10 space-y-6">
+                            <div className="p-3 bg-emerald-600/10 w-fit rounded-2xl group-hover:bg-emerald-600 transition-all duration-500">
+                                <ClipboardList size={24} className="text-emerald-500 group-hover:text-white" />
+                            </div>
+                            <div className="space-y-2">
+                                <h2 className="text-2xl font-bold text-white group-hover:text-emerald-400 transition-colors uppercase tracking-tight">
+                                    Incident Response TTX
+                                </h2>
+                                <p className="text-slate-400 leading-relaxed font-medium">
+                                    Auto-generated Tabletop Exercise (TTX) report for SOC2 / ISO compliance auditing.
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-2 text-emerald-500 font-black text-xs uppercase tracking-widest pt-4 group-hover:gap-4 transition-all">
+                                Generate PDF <ArrowRight size={14} />
+                            </div>
+                        </div>
+                    </motion.div>
+                </Link>
+
                 {/* Coming Soon / Help Card */}
                 <motion.div 
                     initial={{ opacity: 0, scale: 0.9 }}
