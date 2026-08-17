@@ -16,7 +16,7 @@ export default function OnboardingChecklistPage() {
 const inputCls = "border-0 border-b border-gray-400 focus:border-black outline-none w-full bg-transparent px-1 text-gray-900 print:border-gray-400";
 const dateInputCls = "border-0 border-b border-gray-400 focus:border-black outline-none w-32 bg-transparent px-1 text-gray-900 print:border-gray-400 text-sm";
 
-interface CheckItem { id: number; label: string; checked: boolean; date?: string; }
+interface CheckItem { id: number; label: string; checked: boolean; date?: string; comment?: string; }
 interface Section   { id: number; title: string; items: CheckItem[]; hasDate?: boolean; }
 
 let nextId = 1000;
@@ -100,9 +100,10 @@ const DEFAULT_SECTIONS: Section[] = [
 function EditableSection({ sec, onChange }: { sec: Section; onChange: (s: Section) => void }) {
     const addItem = () => onChange({ ...sec, items: [...sec.items, makeItem("")] });
     const removeItem = (id: number) => onChange({ ...sec, items: sec.items.filter(i => i.id !== id) });
-    const toggleItem = (id: number) => onChange({ ...sec, items: sec.items.map(i => i.id === id ? { ...i, checked: !i.checked } : i) });
+    const toggleItem = (id: number) => onChange({ ...sec, items: sec.items.map(i => i.id === id ? { ...i, checked: !i.checked, comment: (!i.checked && !i.comment) ? "Done" : i.comment } : i) });
     const editLabel  = (id: number, label: string) => onChange({ ...sec, items: sec.items.map(i => i.id === id ? { ...i, label } : i) });
     const editDate   = (id: number, date: string) => onChange({ ...sec, items: sec.items.map(i => i.id === id ? { ...i, date } : i) });
+    const editComment= (id: number, comment: string) => onChange({ ...sec, items: sec.items.map(i => i.id === id ? { ...i, comment } : i) });
 
     return (
         <section className="mb-8">
@@ -124,6 +125,14 @@ function EditableSection({ sec, onChange }: { sec: Section; onChange: (s: Sectio
                         onChange={e => editLabel(item.id, e.target.value)}
                         placeholder="Item description..."
                     />
+                    {item.checked && (
+                        <input
+                            className="outline-none bg-transparent border-0 border-b border-gray-400 focus:border-black w-24 text-gray-900 text-sm ml-2"
+                            value={item.comment || ""}
+                            onChange={e => editComment(item.id, e.target.value)}
+                            placeholder="Comment"
+                        />
+                    )}
                     {sec.hasDate && (
                         <input
                             type="text"
