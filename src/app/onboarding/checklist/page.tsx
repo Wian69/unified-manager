@@ -230,6 +230,12 @@ function ChecklistContent() {
         }
     }, [userId, userEmail]);
 
+    // Update document title for PDF saving
+    useEffect(() => {
+        const dateStr = setupDate ? ` ${setupDate.replace(/\//g, '-')}` : '';
+        document.title = `EQN - Checklist ${userName}${dateStr}`.trim();
+    }, [userName, setupDate]);
+
     const updateSection = (updated: Section) =>
         setSections(prev => prev.map(s => s.id === updated.id ? updated : s));
 
