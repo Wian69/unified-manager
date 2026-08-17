@@ -407,6 +407,27 @@ export default function UsersPage() {
                     </div>
 
                     <button 
+                        onClick={() => {
+                            const csvHeader = "Display Name,User Principal Name,Job Title,Department,Office Location,Account Status,Review Decision (Keep/Modify/Revoke),Reviewer Name,Review Date\n";
+                            const csvRows = users.map((u: any) => 
+                                `"${u.displayName || ''}","${u.userPrincipalName || ''}","${u.jobTitle || ''}","${u.department || ''}","${u.officeLocation || ''}","${u.accountEnabled ? 'Active' : 'Disabled'}","","",""`
+                            ).join('\n');
+                            const blob = new Blob([csvHeader + csvRows], { type: 'text/csv' });
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `Entra_Access_Review_${new Date().toISOString().split('T')[0]}.csv`;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                        }}
+                        className="flex items-center gap-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 px-4 py-2 rounded-lg transition-colors border border-emerald-600/30 font-bold text-xs uppercase"
+                    >
+                        <FileText size={16} />
+                        Export SOC2 Review
+                    </button>
+
+                    <button 
                         onClick={fetchUsers}
                         disabled={loading}
                         className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-lg transition-colors border border-slate-700"
