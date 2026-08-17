@@ -46,9 +46,9 @@ export default function TTXReportPage() {
                 </section>
 
                 <section className="mb-6">
-                    <h2 className="font-bold border-b border-black pb-1 mb-2">3. Scenario Tested: "Compromised Executive Account"</h2>
+                    <h2 className="font-bold border-b border-black pb-1 mb-2">3. Scenario Tested: "Exchange Online Outbound Spam Restriction"</h2>
                     <p className="text-justify">
-                        <strong>Scenario Description:</strong> An alert is triggered in Microsoft Defender indicating a "Suspicious inbox manipulation rule" on a senior executive's email account. Shortly after, several employees report receiving unusual emails from the executive asking for urgent wire transfers.
+                        <strong>Scenario Description:</strong> Exchange Online Protection (EOP) triggers a 'User restricted from sending email' alert. Investigation reveals an internal user's account was compromised and is being used to send thousands of spam emails via Exchange Online, risking the tenant's outbound IP reputation.
                     </p>
                 </section>
 
@@ -56,11 +56,11 @@ export default function TTXReportPage() {
                     <h2 className="font-bold border-b border-black pb-1 mb-2">4. Exercise Log & Actions Taken</h2>
                     <p className="italic mb-2">The team walked through the Incident Response Plan to address the scenario. The following actions were simulated:</p>
                     <ul className="list-disc pl-5 space-y-2">
-                        <li><strong>10:00 AM (Identification):</strong> IT receives the Defender alert and employee reports. The incident is classified as a "High Severity Security Incident" in accordance with the IRP.</li>
-                        <li><strong>10:15 AM (Containment):</strong> The IT Support Specialist simulates executing a forced password reset on the executive's Entra ID account and revoking all active SSO sessions to halt unauthorized access.</li>
-                        <li><strong>10:30 AM (Eradication):</strong> The team simulates reviewing the executive's Microsoft 365 audit logs to identify and delete the malicious inbox rules created by the attacker.</li>
-                        <li><strong>11:00 AM (Recovery):</strong> The executive is walked through setting up a new password and re-registering their Multi-Factor Authentication (MFA) device.</li>
-                        <li><strong>11:30 AM (Communication):</strong> The team drafts a simulated internal memo to all staff alerting them to the phishing attempt and reminding them of security protocols.</li>
+                        <li><strong>10:00 AM (Identification):</strong> IT receives the automated alert from Exchange Online. The incident is classified as a "High Severity Security Incident" in accordance with the IRP.</li>
+                        <li><strong>10:15 AM (Containment):</strong> The IT Support Specialist disables the user's account in Entra ID and revokes all active SSO sessions to instantly halt the spam campaign.</li>
+                        <li><strong>10:30 AM (Eradication):</strong> The team utilizes Exchange Admin Center to run a Message Trace, identifying the scope of the outbound spam. Suspicious forwarding rules are identified and removed via PowerShell.</li>
+                        <li><strong>11:00 AM (Recovery):</strong> The user's password is reset, MFA is completely re-registered, and the IT Support Specialist unblocks the user's mailbox via the Microsoft 365 Defender Restricted Entities page.</li>
+                        <li><strong>11:30 AM (Communication):</strong> IT contacts the affected user to verify device security and notifies management that the incident is fully contained.</li>
                     </ul>
                 </section>
 
@@ -68,9 +68,9 @@ export default function TTXReportPage() {
                     <h2 className="font-bold border-b border-black pb-1 mb-2">5. Lessons Learned & Remediation</h2>
                     <p className="italic mb-2">What worked well, and what needs improvement based on this test?</p>
                     <ul className="list-decimal pl-5 space-y-2">
-                        <li><strong>What worked well:</strong> The containment procedure (revoking sessions in Entra ID) was well understood and could be executed in under 5 minutes.</li>
-                        <li><strong>Areas for Improvement:</strong> The team realized that identifying malicious inbox rules via PowerShell took longer than expected.</li>
-                        <li><strong>Action Item:</strong> IT will leverage Unified Manager to rapidly inspect mailbox rules and automatically scan for/remove suspicious inbox rules to speed up eradication in the future.</li>
+                        <li><strong>What worked well:</strong> The containment procedure (revoking sessions in Entra ID) instantly stopped the unauthorized Exchange activity.</li>
+                        <li><strong>Areas for Improvement:</strong> Finding the exact portal to unblock a restricted Exchange user took longer than expected due to recent Microsoft admin center UI changes.</li>
+                        <li><strong>Action Item:</strong> IT will document the exact direct URL for the Restricted Entities portal in the internal IT Wiki to speed up recovery in future incidents.</li>
                     </ul>
                 </section>
 
