@@ -729,6 +729,20 @@ export default function OnboardingAuditWizard() {
                                     </div>
                                 ))}
                             </div>
+                            
+                            <button 
+                                onClick={() => {
+                                    if (selectedUser) {
+                                        window.location.href = `/onboarding/checklist?user=${selectedUser.id}`;
+                                    } else {
+                                        window.location.href = '/onboarding/checklist';
+                                    }
+                                }}
+                                className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold py-4 rounded-3xl mt-4 transition-colors flex items-center justify-center gap-3 text-xs uppercase tracking-widest"
+                            >
+                                <ListChecks size={18} className="text-emerald-500" />
+                                Printable Checklist
+                            </button>
                         </div>
                     </div>
 
