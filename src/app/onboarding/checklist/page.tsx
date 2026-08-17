@@ -256,9 +256,6 @@ function ChecklistContent() {
                     >+ Add Section (With Dates)</button>
                 </div>
 
-                {/* Controls */}
-                <div className="print:break-before-page pt-4 pb-8">
-
                 <div className="mt-12 text-center print:hidden border-t border-gray-200 pt-8 flex flex-wrap justify-center gap-3">
                     <button onClick={saveTemplate} className={`px-8 py-3 text-white text-sm font-bold uppercase tracking-wider transition-colors ${saved ? 'bg-green-700' : 'bg-blue-700 hover:bg-blue-900'}`}>
                         {saved ? '✓ Template Saved' : 'Save as Template'}
