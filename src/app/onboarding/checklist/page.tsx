@@ -260,7 +260,7 @@ function ChecklistContent() {
                 <div className="flex justify-between items-start border-b-2 border-black pb-6 mb-8">
                     <img src={logo} alt="Company Logo" className="h-20 w-auto" />
                     <div className="text-right mt-2">
-                        <h1 className="text-xl font-bold text-gray-900 uppercase">IT Onboarding Checklist</h1>
+                        <h1 className="text-xl font-bold text-gray-900">IT Onboarding Checklist</h1>
                     </div>
                 </div>
 
