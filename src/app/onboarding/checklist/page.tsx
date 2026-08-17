@@ -116,13 +116,6 @@ function ChecklistContent() {
     const [startDate,  setStartDate]  = useState("");
     const [deviceReg,  setDeviceReg]  = useState("");
     const [saved, setSaved] = useState(false);
-    
-    const [hrData, setHrData] = useState({
-        title: "", surname: "", firstName: "", middleName: "", address: "", stateResidence: "",
-        nationality: "", nin: "", maritalStatus: "", dob: "", hours: "", department: "",
-        pensionNumber: "", pfa: "", tin: "", bankName: "", bankAccountName: "", bankAccountNumber: "",
-        bankSortCode: "", mobile: "", personalEmail: ""
-    });
 
     // Load template from localStorage (falls back to defaults)
     const loadTemplate = (): Section[] => {
@@ -141,20 +134,7 @@ function ChecklistContent() {
             fetch(`/api/users/${userId}`)
                 .then(r => r.json())
                 .then(d => {
-                    if (d.displayName) {
-                        setUserName(d.displayName);
-                        if (d.displayName.toLowerCase().includes('precious')) {
-                            setHrData({
-                                title: "Miss", surname: "Ette", firstName: "Precious", middleName: "Anthony",
-                                address: "St Mary's, Urua Akpan", stateResidence: "Akwa Ibom State",
-                                nationality: "Nigerian", nin: "96823557437", maritalStatus: "Single",
-                                dob: "30/09/2001", hours: "40", department: "Account", pensionNumber: "",
-                                pfa: "", tin: "", bankName: "First Bank", bankAccountName: "Precious Anthony Ette",
-                                bankAccountNumber: "3144139045", bankSortCode: "", mobile: "08152533992",
-                                personalEmail: "preciousette30@gmail.com"
-                            });
-                        }
-                    }
+                    if (d.displayName) setUserName(d.displayName);
                     if (d.mail || d.userPrincipalName) setUserEmail(d.mail || d.userPrincipalName);
                     if (d.jobTitle)    setUserTitle(d.jobTitle);
                     if (d.createdDateTime) {
@@ -230,43 +210,6 @@ function ChecklistContent() {
                             ].map(([lbl, val, setter]: any) => (
                                 <tr key={lbl} className="border-b border-gray-100">
                                     <td className="py-2 font-semibold pr-4 align-bottom w-1/3">{lbl}</td>
-                                    <td className="py-2 align-bottom w-2/3"><input className={inputCls} value={val} onChange={e => setter(e.target.value)} /></td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </section>
-
-                {/* HR & Payroll Information */}
-                <section className="mb-8 break-inside-avoid">
-                    <h2 className="font-bold border-b border-black pb-1 mb-3">HR & Payroll Information</h2>
-                    <table className="w-full border-collapse">
-                        <tbody>
-                            {[
-                                ["Title:", hrData.title, (v: string) => setHrData({...hrData, title: v})],
-                                ["First Name:", hrData.firstName, (v: string) => setHrData({...hrData, firstName: v})],
-                                ["Middle Name:", hrData.middleName, (v: string) => setHrData({...hrData, middleName: v})],
-                                ["Surname:", hrData.surname, (v: string) => setHrData({...hrData, surname: v})],
-                                ["Date of Birth:", hrData.dob, (v: string) => setHrData({...hrData, dob: v})],
-                                ["Marital Status:", hrData.maritalStatus, (v: string) => setHrData({...hrData, maritalStatus: v})],
-                                ["Nationality:", hrData.nationality, (v: string) => setHrData({...hrData, nationality: v})],
-                                ["Address:", hrData.address, (v: string) => setHrData({...hrData, address: v})],
-                                ["State of Residence:", hrData.stateResidence, (v: string) => setHrData({...hrData, stateResidence: v})],
-                                ["NIN:", hrData.nin, (v: string) => setHrData({...hrData, nin: v})],
-                                ["TIN:", hrData.tin, (v: string) => setHrData({...hrData, tin: v})],
-                                ["Pension Number:", hrData.pensionNumber, (v: string) => setHrData({...hrData, pensionNumber: v})],
-                                ["Name of PFA:", hrData.pfa, (v: string) => setHrData({...hrData, pfa: v})],
-                                ["Name of Bank:", hrData.bankName, (v: string) => setHrData({...hrData, bankName: v})],
-                                ["Name on Account:", hrData.bankAccountName, (v: string) => setHrData({...hrData, bankAccountName: v})],
-                                ["Bank Account Number:", hrData.bankAccountNumber, (v: string) => setHrData({...hrData, bankAccountNumber: v})],
-                                ["Bank Sort Code:", hrData.bankSortCode, (v: string) => setHrData({...hrData, bankSortCode: v})],
-                                ["Normal Hours Per Week:", hrData.hours, (v: string) => setHrData({...hrData, hours: v})],
-                                ["Department/Project:", hrData.department, (v: string) => setHrData({...hrData, department: v})],
-                                ["Mobile Number:", hrData.mobile, (v: string) => setHrData({...hrData, mobile: v})],
-                                ["Personal E-mail:", hrData.personalEmail, (v: string) => setHrData({...hrData, personalEmail: v})],
-                            ].map(([lbl, val, setter]: any) => (
-                                <tr key={lbl} className="border-b border-gray-100">
-                                    <td className="py-2 font-semibold pr-4 align-bottom w-1/3 text-sm">{lbl}</td>
                                     <td className="py-2 align-bottom w-2/3"><input className={inputCls} value={val} onChange={e => setter(e.target.value)} /></td>
                                 </tr>
                             ))}
