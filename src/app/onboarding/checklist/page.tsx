@@ -25,14 +25,73 @@ function makeItem(label: string, date: string = ""): CheckItem { return { id: ne
 
 const DEFAULT_SECTIONS: Section[] = [
     {
-        id: 2, title: "Company Assets Assigned",
+        id: 1, title: "Account Setup",
         items: [
-            makeItem("Laptop / Desktop"),
-            makeItem("Power supply"),
-            makeItem("External peripherals (mouse, keyboard, headset, adapters)"),
-            makeItem("Mobile phone / SIM"),
-            makeItem("Access cards / security tokens"),
-            makeItem("Laptop Bag"),
+            makeItem("365 password"),
+            makeItem("Add user on 365 admin center"),
+            makeItem("Complete Job title"),
+            makeItem("Complete Department"),
+            makeItem("Complete Office"),
+            makeItem("Email Address"),
+            makeItem("Add user permissions on Sharepoint"),
+            makeItem("Enable local Admin account"),
+            makeItem("Add users to Euphoria"),
+            makeItem("Euphoria extention number"),
+            makeItem("Add user to All user group"),
+            makeItem("Add user to region group"),
+        ],
+    },
+    {
+        id: 2, title: "Enrollment",
+        items: [
+            makeItem("Run Hardware hash"),
+            makeItem("Enroll laptop on autopilot"),
+            makeItem("Laptop Pin"),
+            makeItem("Make sure device is listed in intune"),
+        ],
+    },
+    {
+        id: 3, title: "Applications",
+        items: [
+            makeItem("Adobe"),
+            makeItem("Java"),
+            makeItem("Company Portal"),
+            makeItem("Microsft 365"),
+            makeItem("Google Chrome"),
+            makeItem("Firefox"),
+            makeItem("Sage"),
+        ],
+    },
+    {
+        id: 4, title: "Configuration",
+        items: [
+            makeItem("Outlook"),
+            makeItem("Outlook signature"),
+            makeItem("Email Font (Calibre)"),
+            makeItem("Email size (11)"),
+            makeItem("Printer - 192.168.3.41"),
+            makeItem("Setup email address on printer"),
+            makeItem("Sync Onedrive"),
+            makeItem("Sync Company Sharepoint"),
+            makeItem("Sync Intune policies"),
+            makeItem("Enable System restore"),
+            makeItem("Add Corporate Background for teams"),
+            makeItem("Make sure keboard is correct (SA)"),
+        ],
+    },
+    {
+        id: 5, title: "Fusion CRM",
+        items: [
+            makeItem("Add User"),
+            makeItem("User Permissions"),
+        ],
+    },
+    {
+        id: 6, title: "Completed",
+        items: [
+            makeItem("Name"),
+            makeItem("Date"),
+            makeItem("Update Asset and user list"),
         ],
     },
 ];
@@ -213,21 +272,6 @@ function ChecklistContent() {
                                     <td className="py-2 align-bottom w-2/3"><input className={inputCls} value={val} onChange={e => setter(e.target.value)} /></td>
                                 </tr>
                             ))}
-                        </tbody>
-                    </table>
-                </section>
-
-                {/* IT Administrative */}
-                <section className="mb-8 break-inside-avoid">
-                    <h2 className="font-bold border-b border-black pb-1 mb-3">IT Administrative Setup</h2>
-                    <table className="w-full border-collapse">
-                        <tbody>
-                            <AdminRow label="Account Created in M365 (Entra ID):" />
-                            <AdminRow label="Assigned appropriate M365 Licenses:" />
-                            <AdminRow label="Added to appropriate AD Groups:" />
-                            <AdminRow label="Multi-Factor Authentication (MFA) Setup Verified:" />
-                            <AdminRow label="Device successfully enrolled in Intune:" />
-                            <AdminRow label="Added to Payroll & HR Systems:" />
                         </tbody>
                     </table>
                 </section>
