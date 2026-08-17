@@ -27,7 +27,7 @@ export default function TTXReportPage() {
                 <div className="mb-6">
                     <p><strong>Company Name:</strong> Equinox Group</p>
                     <p><strong>Date of Exercise:</strong> {dateStr}</p>
-                    <p><strong>Exercise Facilitator:</strong> Wian Du Randt, IT Manager</p>
+                    <p><strong>Exercise Facilitator:</strong> Wian Du Randt, IT Support Specialist</p>
                 </div>
 
                 <section className="mb-6">
@@ -40,9 +40,8 @@ export default function TTXReportPage() {
                 <section className="mb-6">
                     <h2 className="font-bold border-b border-black pb-1 mb-2">2. Participants</h2>
                     <ul className="list-disc pl-5">
-                        <li><strong>Wian Du Randt</strong> - IT Manager / Incident Commander</li>
-                        <li><strong>Ramasela</strong> - Operations</li>
-                        <li><strong>Providence</strong> - HR & Administration</li>
+                        <li><strong>Wian Du Randt</strong> - IT Support Specialist / Incident Commander</li>
+                        <li><strong>Amanda</strong> - HR & Administration</li>
                     </ul>
                 </section>
 
@@ -58,7 +57,7 @@ export default function TTXReportPage() {
                     <p className="italic mb-2">The team walked through the Incident Response Plan to address the scenario. The following actions were simulated:</p>
                     <ul className="list-disc pl-5 space-y-2">
                         <li><strong>10:00 AM (Identification):</strong> IT receives the Defender alert and employee reports. The incident is classified as a "High Severity Security Incident" in accordance with the IRP.</li>
-                        <li><strong>10:15 AM (Containment):</strong> The IT Manager simulates executing a forced password reset on the executive's Entra ID account and revoking all active SSO sessions to halt unauthorized access.</li>
+                        <li><strong>10:15 AM (Containment):</strong> The IT Support Specialist simulates executing a forced password reset on the executive's Entra ID account and revoking all active SSO sessions to halt unauthorized access.</li>
                         <li><strong>10:30 AM (Eradication):</strong> The team simulates reviewing the executive's Microsoft 365 audit logs to identify and delete the malicious inbox rules created by the attacker.</li>
                         <li><strong>11:00 AM (Recovery):</strong> The executive is walked through setting up a new password and re-registering their Multi-Factor Authentication (MFA) device.</li>
                         <li><strong>11:30 AM (Communication):</strong> The team drafts a simulated internal memo to all staff alerting them to the phishing attempt and reminding them of security protocols.</li>
@@ -74,18 +73,6 @@ export default function TTXReportPage() {
                         <li><strong>Action Item:</strong> IT will leverage Unified Manager to rapidly inspect mailbox rules and automatically scan for/remove suspicious inbox rules to speed up eradication in the future.</li>
                     </ul>
                 </section>
-
-                <div className="mt-16 flex justify-between items-end">
-                    <div className="text-center">
-                        <div className="w-48 border-b border-black mb-2 h-8" style={{fontFamily:"'Brush Script MT', cursive", fontSize:"20pt"}}>W. Du Randt</div>
-                        <p className="font-bold">Wian Du Randt</p>
-                        <p className="text-sm">IT Manager</p>
-                    </div>
-                    <div className="text-center">
-                        <div className="w-32 border-b border-black mb-2 h-8 flex items-end justify-center pb-1">{dateStr}</div>
-                        <p className="font-bold">Date</p>
-                    </div>
-                </div>
 
                 <div className="mt-12 text-center print:hidden border-t border-gray-200 pt-8">
                     <button 
