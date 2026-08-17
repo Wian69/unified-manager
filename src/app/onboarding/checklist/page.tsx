@@ -125,14 +125,12 @@ function EditableSection({ sec, onChange }: { sec: Section; onChange: (s: Sectio
                         onChange={e => editLabel(item.id, e.target.value)}
                         placeholder="Item description..."
                     />
-                    {item.checked && (
-                        <input
-                            className="outline-none bg-transparent border-0 border-b border-gray-400 focus:border-black w-24 text-gray-900 text-sm ml-2"
-                            value={item.comment || ""}
-                            onChange={e => editComment(item.id, e.target.value)}
-                            placeholder="Comment"
-                        />
-                    )}
+                    <input
+                        className="outline-none bg-transparent border-0 border-b border-gray-400 focus:border-black w-24 text-gray-900 text-sm ml-2 print:border-gray-400"
+                        value={item.comment || ""}
+                        onChange={e => editComment(item.id, e.target.value)}
+                        placeholder="Comment"
+                    />
                     {sec.hasDate && (
                         <input
                             type="text"
