@@ -172,6 +172,7 @@ function ChecklistContent() {
     const [userEmail,  setUserEmail]  = useState("");
     const [userTitle,  setUserTitle]  = useState("");
     const [deviceName, setDeviceName] = useState("");
+    const [setupDate,  setSetupDate]  = useState("");
     const [startDate,  setStartDate]  = useState("");
     const [deviceReg,  setDeviceReg]  = useState("");
     const [saved, setSaved] = useState(false);
@@ -263,6 +264,7 @@ function ChecklistContent() {
                                 ["Employee Name:",  userName,  setUserName],
                                 ["Job Title:", userTitle, setUserTitle],
                                 ["Email Address:",     userEmail, setUserEmail],
+                                ["Setup Date:",  setupDate,   setSetupDate],
                                 ["Start Date:",  startDate,   setStartDate],
                                 ["Assigned Device:",    deviceName,setDeviceName],
                                 ["Intune Enrollment Date:",  deviceReg,   setDeviceReg],
