@@ -121,7 +121,7 @@ information contained in this message or in any attachment.
                     try {
                         await client.api('/users/noreply-automation@eqncs.com/sendMail').post({
                             message: {
-                                subject: "Equinox Group IT Support Acknowledgment",
+                                subject: "Equinox Group IT Support Ticket Status",
                                 body: {
                                     contentType: "HTML",
                                     content: htmlBody
