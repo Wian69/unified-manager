@@ -161,14 +161,8 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
 
     const listName = listId === 'ec7c28b2-d2bc-4d99-8550-499f385fd58d' ? 'IT Support Tickets' : 'New User add';
 
-    // Build visible columns: exclude Attachments, but show everything else (Technical issue, Comments, Date, Status, etc)
-    const displayColumns = columns.filter(c => !['Attachments', 'ContentType'].includes(c.name));
-    
-    // Ensure 'Created' (Date) is at the end if it exists
-    const dateCol = displayColumns.find(c => c.name === 'Created');
-    if (dateCol) {
-        displayColumns.push(displayColumns.splice(displayColumns.indexOf(dateCol), 1)[0]);
-    }
+    // Build visible columns: exclude Attachments, ContentType, and Created
+    const displayColumns = columns.filter(c => !['Attachments', 'ContentType', 'Created'].includes(c.name));
     
     const statusCol = columns.find(c => c.name === 'Status' || c.displayName === 'Status');
     
@@ -268,7 +262,11 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
                                                     ))}
                                                 </select>
                                             ) : (
-                                                <span className="line-clamp-2 max-w-[200px]">
+                                                <span className={
+                                                    col.name.toLowerCase().includes('issue') || col.name.toLowerCase().includes('description') || col.name.toLowerCase().includes('comment') 
+                                                        ? "block min-w-[250px] whitespace-pre-wrap" 
+                                                        : "line-clamp-2 max-w-[200px]"
+                                                }>
                                                     {(col.type === 'datetime' || col.name === 'Created') && item.fields[col.name] 
                                                         ? new Date(item.fields[col.name]).toLocaleDateString() 
                                                         : String(item.fields[col.name] || '—')}
