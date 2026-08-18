@@ -161,6 +161,13 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
 
     const listName = listId === 'ec7c28b2-d2bc-4d99-8550-499f385fd58d' ? 'IT Support Tickets' : 'New User add';
 
+    // Build visible columns: take first 5, plus ensure 'Status' is always visible
+    const displayColumns = columns.slice(0, 5);
+    const statusCol = columns.find(c => c.name === 'Status' || c.displayName === 'Status');
+    if (statusCol && !displayColumns.find(c => c.id === statusCol.id)) {
+        displayColumns.push(statusCol);
+    }
+
     return (
         <div className="p-8 space-y-8 min-h-screen relative overflow-hidden">
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -198,9 +205,9 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-slate-950/50 border-b border-slate-800">
-                                {columns.slice(0, 5).map(col => (
+                                {displayColumns.map(col => (
                                     <th key={col.id} className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-500 truncate max-w-[200px]">
-                                        {col.displayName}
+                                        {col.displayName === 'Title' ? 'Email' : col.displayName}
                                     </th>
                                 ))}
                                 <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-500 text-right">Actions</th>
@@ -215,7 +222,7 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
                                     key={item.id} 
                                     className="hover:bg-slate-800/30 transition-colors group"
                                 >
-                                    {columns.slice(0, 5).map(col => (
+                                    {displayColumns.map(col => (
                                         <td key={col.id} className="p-6 text-sm font-medium text-slate-300">
                                             <span className="line-clamp-2 max-w-[200px]">
                                                 {String(item.fields[col.name] || '—')}
@@ -282,7 +289,7 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
                                     {columns.map(col => (
                                         <div key={col.id} className="space-y-2">
                                             <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block px-1">
-                                                {col.displayName}
+                                                {col.displayName === 'Title' ? 'Email' : col.displayName}
                                             </label>
                                             {col.type === 'choice' ? (
                                                 <select 
