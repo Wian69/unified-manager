@@ -170,6 +170,8 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
         displayColumns.push(displayColumns.splice(displayColumns.indexOf(dateCol), 1)[0]);
     }
     
+    const statusCol = columns.find(c => c.name === 'Status' || c.displayName === 'Status');
+    
     // Fallback choices if SharePoint doesn't provide them
     const statusChoices = statusCol?.choices?.length ? statusCol.choices : ['Incomplete', 'Work in Progress', 'Complete'];
 
