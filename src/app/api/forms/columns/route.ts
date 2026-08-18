@@ -22,7 +22,7 @@ export async function GET(request: Request) {
 
         // Filter and simplify columns for the UI
         const columns = (response.value || [])
-            .filter((col: any) => !col.readOnly && !col.hidden)
+            .filter((col: any) => (!col.readOnly || col.name === 'Created') && !col.hidden)
             .map((col: any) => ({
                 id: col.id,
                 name: col.name,

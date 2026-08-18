@@ -161,16 +161,13 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
 
     const listName = listId === 'ec7c28b2-d2bc-4d99-8550-499f385fd58d' ? 'IT Support Tickets' : 'New User add';
 
-    // Build visible columns: take first 5, plus ensure 'Status' and 'Date' are always visible
-    const displayColumns = columns.slice(0, 5);
-    const statusCol = columns.find(c => c.name === 'Status' || c.displayName === 'Status');
-    if (statusCol && !displayColumns.find(c => c.id === statusCol.id)) {
-        displayColumns.push(statusCol);
-    }
+    // Build visible columns: exclude Attachments, but show everything else (Technical issue, Comments, Date, Status, etc)
+    const displayColumns = columns.filter(c => !['Attachments', 'ContentType'].includes(c.name));
     
-    const dateCol = columns.find(c => c.name === 'Created' || c.displayName === 'Created' || c.name === 'Date' || c.displayName === 'Date');
-    if (dateCol && !displayColumns.find(c => c.id === dateCol.id)) {
-        displayColumns.push(dateCol);
+    // Ensure 'Created' (Date) is at the end if it exists
+    const dateCol = displayColumns.find(c => c.name === 'Created');
+    if (dateCol) {
+        displayColumns.push(displayColumns.splice(displayColumns.indexOf(dateCol), 1)[0]);
     }
     
     // Fallback choices if SharePoint doesn't provide them
