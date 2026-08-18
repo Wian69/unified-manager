@@ -80,9 +80,14 @@ export async function PATCH(request: Request) {
                 const recipientEmail = response.Email || response.Title; 
                 
                 if (recipientEmail && String(recipientEmail).includes('@')) {
-                    const d = new Date();
-                    const dateStr = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
-                    const ticketNumber = `EQN-${dateStr}-${itemId}`;
+                    // Try to use the actual TicketNumber from the SharePoint list item.
+                    // Fallback to generating it based on the item ID if it doesn't exist.
+                    let ticketNumber = response.TicketNumber;
+                    if (!ticketNumber) {
+                        const d = new Date();
+                        const dateStr = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+                        ticketNumber = `EQN-${dateStr}-${itemId}`;
+                    }
                     
                     const htmlBody = `
 <style>
