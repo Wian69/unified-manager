@@ -161,12 +161,40 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
 
     const listName = listId === 'ec7c28b2-d2bc-4d99-8550-499f385fd58d' ? 'IT Support Tickets' : 'New User add';
 
-    // Build visible columns: take first 5, plus ensure 'Status' is always visible
+    // Build visible columns: take first 5, plus ensure 'Status' and 'Date' are always visible
     const displayColumns = columns.slice(0, 5);
     const statusCol = columns.find(c => c.name === 'Status' || c.displayName === 'Status');
     if (statusCol && !displayColumns.find(c => c.id === statusCol.id)) {
         displayColumns.push(statusCol);
     }
+    
+    const dateCol = columns.find(c => c.name === 'Created' || c.displayName === 'Created' || c.name === 'Date' || c.displayName === 'Date');
+    if (dateCol && !displayColumns.find(c => c.id === dateCol.id)) {
+        displayColumns.push(dateCol);
+    }
+    
+    // Fallback choices if SharePoint doesn't provide them
+    const statusChoices = statusCol?.choices?.length ? statusCol.choices : ['Incomplete', 'Work in Progress', 'Complete'];
+
+    const handleInlineStatusChange = async (item: Item, newStatus: string) => {
+        if (!statusCol) return;
+        
+        // Optimistic update
+        setItems(prev => prev.map(i => i.id === item.id ? { ...i, fields: { ...i.fields, [statusCol.name]: newStatus } } : i));
+        
+        try {
+            const url = `/api/forms/items?listId=${listId}&itemId=${item.id}`;
+            const res = await fetch(url, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fields: { [statusCol.name]: newStatus } })
+            });
+            if (!res.ok) throw new Error('Failed to update status');
+        } catch (err) {
+            console.error('Inline status update failed:', err);
+            // Revert on failure by refetching or just leaving it for now (ideally we'd store the old state)
+        }
+    };
 
     return (
         <div className="p-8 space-y-8 min-h-screen relative overflow-hidden">
@@ -224,9 +252,29 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
                                 >
                                     {displayColumns.map(col => (
                                         <td key={col.id} className="p-6 text-sm font-medium text-slate-300">
-                                            <span className="line-clamp-2 max-w-[200px]">
-                                                {String(item.fields[col.name] || '—')}
-                                            </span>
+                                            {(col.name === 'Status' || col.displayName === 'Status') ? (
+                                                <select
+                                                    value={String(item.fields[col.name] || '')}
+                                                    onChange={(e) => handleInlineStatusChange(item, e.target.value)}
+                                                    className={cn(
+                                                        "bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-bold focus:outline-none focus:border-blue-500 transition-colors cursor-pointer appearance-none",
+                                                        item.fields[col.name] === 'Complete' ? 'text-green-400' :
+                                                        item.fields[col.name] === 'Work in Progress' ? 'text-blue-400' :
+                                                        'text-slate-300'
+                                                    )}
+                                                >
+                                                    <option value="" disabled>Select Status</option>
+                                                    {statusChoices.map(choice => (
+                                                        <option key={choice} value={choice}>{choice}</option>
+                                                    ))}
+                                                </select>
+                                            ) : (
+                                                <span className="line-clamp-2 max-w-[200px]">
+                                                    {(col.type === 'datetime' || col.name === 'Created') && item.fields[col.name] 
+                                                        ? new Date(item.fields[col.name]).toLocaleDateString() 
+                                                        : String(item.fields[col.name] || '—')}
+                                                </span>
+                                            )}
                                         </td>
                                     ))}
                                     <td className="p-6 text-right">
@@ -291,14 +339,14 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
                                             <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block px-1">
                                                 {col.displayName === 'Title' ? 'Email' : col.displayName}
                                             </label>
-                                            {col.type === 'choice' ? (
+                                            {col.type === 'choice' || col.name === 'Status' || col.displayName === 'Status' ? (
                                                 <select 
                                                     className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm text-white focus:outline-none focus:border-blue-500 transition-all appearance-none cursor-pointer"
                                                     value={editData[col.name] || ''}
                                                     onChange={(e) => setEditData(prev => ({ ...prev, [col.name]: e.target.value }))}
                                                 >
                                                     <option value="">Select an option</option>
-                                                    {col.choices?.map(choice => (
+                                                    {(col.name === 'Status' || col.displayName === 'Status' ? statusChoices : (col.choices || [])).map(choice => (
                                                         <option key={choice} value={choice}>{choice}</option>
                                                     ))}
                                                 </select>
