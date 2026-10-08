@@ -4,7 +4,7 @@ import NavWrapper from "@/components/NavWrapper";
 
 export default function ClientLayoutWrapper({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
-    const isPublic = pathname?.startsWith('/sharepoint/agree') || pathname?.startsWith('/reply');
+    const isPublic = pathname?.startsWith('/sharepoint/agree') || pathname?.startsWith('/reply') || pathname?.startsWith('/support');
 
     if (isPublic) {
         return <main className="min-h-screen">{children}</main>;
