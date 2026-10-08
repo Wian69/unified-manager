@@ -95,7 +95,7 @@ export async function PATCH(request: Request) {
                         bodyContent += `<p><strong>Comments:</strong><br/>${displayComment.replace(/\n/g, '<br/>')}</p>`;
                     }
 
-                    const appUrl = req.headers.get('origin') || 'https://unified-manager.eqncs.com';
+                    const appUrl = request.headers.get('origin') || 'https://unified-manager.eqncs.com';
                     const replyUrl = `${appUrl}/reply?listId=${listId}&itemId=${itemId}`;
                     
                     bodyContent += `
