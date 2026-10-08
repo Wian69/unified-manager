@@ -122,7 +122,7 @@ export async function PATCH(request: Request) {
                         
                         const displayBlocks = blocks.filter((b: string) => b === latestIt || b === latestUser);
 
-                        const boldedBlocks = displayBlocks.map(block => {
+                        const boldedBlocks = displayBlocks.map((block: string) => {
                             let lines = block.split('\n');
                             if (lines.length > 0 && (lines[0].includes('IT Support:') || lines[0].includes('User Reply:'))) {
                                 lines[0] = `<strong>${lines[0]}</strong>`;
