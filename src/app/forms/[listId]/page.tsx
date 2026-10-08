@@ -25,6 +25,16 @@ function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
+function stripHtml(html: any) {
+    if (!html || typeof html !== 'string') return html;
+    let text = html.replace(/<br\s*[\/]?>/gi, '\n');
+    text = text.replace(/<\/p>/gi, '\n');
+    text = text.replace(/<div[^>]*>/gi, '\n');
+    // Decode common HTML entities
+    text = text.replace(/&nbsp;/gi, ' ').replace(/&amp;/gi, '&').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>');
+    return text.replace(/<[^>]*>?/gm, '').trim();
+}
+
 interface Column {
     id: string;
     name: string;
@@ -88,7 +98,7 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
         // excluding SharePoint system/read-only fields that would cause Graph API to reject the update
         const editableFields: Record<string, any> = {};
         columns.forEach(col => {
-            editableFields[col.name] = item.fields[col.name] ?? '';
+            editableFields[col.name] = stripHtml(item.fields[col.name]) ?? '';
         });
         setEditData(editableFields);
         setSaveStatus('idle');
@@ -269,7 +279,7 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
                                                 }>
                                                     {(col.type === 'datetime' || col.name === 'Created') && item.fields[col.name] 
                                                         ? new Date(item.fields[col.name]).toLocaleDateString() 
-                                                        : String(item.fields[col.name] || '—')}
+                                                        : stripHtml(String(item.fields[col.name] || '—'))}
                                                 </span>
                                             )}
                                         </td>
