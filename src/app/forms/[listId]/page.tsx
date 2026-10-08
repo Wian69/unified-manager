@@ -194,7 +194,8 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
         
         const existingComments = item.fields['Comments'] || '';
         const timestamp = new Date().toLocaleString();
-        customCommentHtml = `<div><strong>[${timestamp}] IT Support:</strong><br/>${comment.replace(/\n/g, '<br/>')}</div><br/>` + existingComments;
+        const newCommentText = `[${timestamp}] IT Support:\n${comment}`;
+        customCommentHtml = existingComments ? `${existingComments}\n\n${newCommentText}` : newCommentText;
         
         // Optimistic update
         setItems(prev => prev.map(i => i.id === item.id ? { 
@@ -313,15 +314,16 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
                                                 </select>
                                             ) : col.name === 'Comments' ? (
                                                 <div className="flex flex-col gap-2 min-w-[250px]">
-                                                    <div className="max-h-24 overflow-y-auto text-xs text-slate-400 bg-slate-900/50 p-2 rounded border border-slate-800" dangerouslySetInnerHTML={{ __html: String(item.fields[col.name] || '') }} />
+                                                    <div className="max-h-24 overflow-y-auto text-xs text-slate-400 bg-slate-900/50 p-2 rounded border border-slate-800" dangerouslySetInnerHTML={{ __html: stripHtml(String(item.fields[col.name] || '')).replace(/\n/g, '<br/>') }} />
                                                     <button
                                                         onClick={() => {
                                                             const comment = window.prompt("Enter your IT Support comment to add to the chat history:");
                                                             if (comment && comment.trim() !== '') {
                                                                 const existingComments = item.fields[col.name] || '';
                                                                 const timestamp = new Date().toLocaleString();
-                                                                const newCommentHtml = `<div><strong>[${timestamp}] IT Support:</strong><br/>${comment.replace(/\n/g, '<br/>')}</div><br/>`;
-                                                                handleInlineFieldChange(item, col.name, newCommentHtml + existingComments);
+                                                                const newCommentText = `[${timestamp}] IT Support:\n${comment}`;
+                                                                const combined = existingComments ? `${existingComments}\n\n${newCommentText}` : newCommentText;
+                                                                handleInlineFieldChange(item, col.name, combined);
                                                             }
                                                         }}
                                                         className="text-[10px] font-bold uppercase tracking-widest bg-blue-900/30 text-blue-400 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded transition-colors self-start"

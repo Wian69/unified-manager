@@ -92,7 +92,22 @@ export async function PATCH(request: Request) {
                     let bodyContent = `<p>Please be advised that your IT Support Ticket: <strong>${ticketNum}</strong> has been updated to: <strong>${displayStatus}</strong></p>`;
                     
                     if (newComment && newComment.trim() !== '') {
-                        bodyContent += `<p><strong>Chat History:</strong><br/>${newComment.replace(/\n/g, '<br/>')}</p>`;
+                        // Strip any lingering HTML from old comments
+                        let normalizedComment = newComment.replace(/<br\s*[\/]?>/gi, '\n')
+                                                          .replace(/<\/p>/gi, '\n')
+                                                          .replace(/<div[^>]*>/gi, '\n')
+                                                          .replace(/<[^>]*>?/gm, '')
+                                                          .trim();
+                        
+                        // Try splitting by double newline (new format)
+                        let blocks = normalizedComment.split(/\n\s*\n/);
+                        if (blocks.length === 1) {
+                            // Fallback: try splitting by timestamp bracket if they are squished
+                            blocks = normalizedComment.split(/(?=\[\d{1,4}[-/]\d{1,2}[-/]\d{1,4})/);
+                        }
+                        
+                        const lastTwoBlocks = blocks.slice(-2).join('\n\n');
+                        bodyContent += `<p><strong>Comments:</strong><br/>${lastTwoBlocks.replace(/\n/g, '<br/>')}</p>`;
                     }
 
                     if (displayStatus !== 'Complete') {

@@ -63,8 +63,8 @@ function TicketReplyForm() {
             const existingComments = ticket.fields?.[mainCommentsField] || '';
             const timestamp = new Date().toLocaleString();
             
-            const newCommentHtml = `<div><strong>[${timestamp}] User Reply:</strong><br/>${comment.replace(/\n/g, '<br/>')}</div><br/>`;
-            const combinedComments = newCommentHtml + (existingComments ? existingComments : '');
+            const newCommentText = `[${timestamp}] User Reply:\n${comment}`;
+            const combinedComments = existingComments ? `${existingComments}\n\n${newCommentText}` : newCommentText;
 
             const res = await fetch(`/api/forms/items?listId=${listId}&itemId=${itemId}`, {
                 method: 'PATCH',
