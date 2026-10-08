@@ -42,7 +42,10 @@ export async function GET(request: Request) {
                 'TechnicalIssue',
                 'DateTime',
                 'Status',
-                'Comments'
+                'Comments',
+                'UserComments',
+                'User_x0020_comments',
+                'User_x0020_Comments'
             ];
             columns.sort((a: any, b: any) => {
                 const indexA = order.indexOf(a.name);
