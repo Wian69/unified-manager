@@ -86,11 +86,9 @@ export async function PATCH(request: Request) {
                 if (targetEmail) {
                     const ticketNum = currentItem.fields.TicketNumber || currentItem.fields.Title || itemId;
                     
-                    let bodyContent = `<p>Please be advised that your IT Support Ticket: <strong>${ticketNum}</strong> has been updated.</p>`;
+                    const displayStatus = newStatus || currentItem.fields.Status || 'Updated';
+                    let bodyContent = `<p>Please be advised that your IT Support Ticket: <strong>${ticketNum}</strong> has been updated to: <strong>${displayStatus}</strong></p>`;
                     
-                    if (statusChanged) {
-                        bodyContent += `<p>Status is now: <strong>${newStatus}</strong></p>`;
-                    }
                     if (commentChanged) {
                         bodyContent += `<p><strong>Comments:</strong><br/>${newComment.replace(/\n/g, '<br/>')}</p>`;
                     }
