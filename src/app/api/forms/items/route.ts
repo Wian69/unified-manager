@@ -92,7 +92,7 @@ export async function PATCH(request: Request) {
                         bodyContent += `<p>Status is now: <strong>${newStatus}</strong></p>`;
                     }
                     if (commentChanged) {
-                        bodyContent += `<p>Comments:<br/><br/><strong>${newComment.replace(/\n/g, '<br/>')}</strong></p>`;
+                        bodyContent += `<p><strong>Comments:</strong><br/>${newComment.replace(/\n/g, '<br/>')}</p>`;
                     }
 
                     const message = {
