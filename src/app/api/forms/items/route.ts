@@ -120,7 +120,7 @@ export async function PATCH(request: Request) {
                             if (!latestUser && blocks[i].includes('User Reply:')) latestUser = blocks[i];
                         }
                         
-                        const displayBlocks = blocks.filter(b => b === latestIt || b === latestUser);
+                        const displayBlocks = blocks.filter((b: string) => b === latestIt || b === latestUser);
 
                         const boldedBlocks = displayBlocks.map(block => {
                             let lines = block.split('\n');
