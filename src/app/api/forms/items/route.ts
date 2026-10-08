@@ -125,7 +125,7 @@ export async function PATCH(request: Request) {
                         const boldedBlocks = displayBlocks.map((block: string) => {
                             let lines = block.split('\n');
                             if (lines.length > 0 && (lines[0].includes('IT Support:') || lines[0].includes('User Reply:'))) {
-                                lines[0] = `<strong>${lines[0]}</strong>`;
+                                lines[0] = `<strong>${lines[0].replace(/\[|\]/g, '').replace(/,\s*/g, ' ')}</strong>`;
                             }
                             return lines.join('<br/>');
                         }).join('<br/><br/>');
