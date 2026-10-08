@@ -23,6 +23,7 @@ import {
     Mail,
     DollarSign,
     Copy,
+    LifeBuoy,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -52,6 +53,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         { name: 'Security Audit', icon: ShieldAlert, path: '/security?tab=access' },
         { name: 'Partner Sign-Ins', icon: Users, path: '/sign-in-report' },
         { name: 'Billing', icon: DollarSign, path: '/billing' },
+        { name: 'IT Support Tickets', icon: LifeBuoy, path: '/forms/ec7c28b2-d2bc-4d99-8550-499f385fd58d' },
         { name: 'Settings', icon: Settings, path: '/settings' },
     ];
 
