@@ -69,30 +69,38 @@ export async function PATCH(request: Request) {
             .update(cleanFields);
 
         if (currentItem) {
-            const commentKey = Object.keys(cleanFields).find(k => k.toLowerCase().includes('comment'));
-            const statusKey = Object.keys(cleanFields).find(k => k.toLowerCase().includes('status'));
+            const itCommentKey = Object.keys(currentItem.fields).find(k => k.toLowerCase().includes('comment') && !k.toLowerCase().includes('user'));
+            const userCommentKey = Object.keys(currentItem.fields).find(k => k.toLowerCase().includes('comment') && k.toLowerCase().includes('user'));
+            const statusKey = Object.keys(currentItem.fields).find(k => k.toLowerCase().includes('status'));
             
-            const newComment = commentKey ? cleanFields[commentKey] : '';
-            const oldComment = commentKey ? currentItem.fields[commentKey] : '';
-            const newStatus = statusKey ? cleanFields[statusKey] : '';
+            const newItComment = (itCommentKey && cleanFields[itCommentKey] !== undefined) ? cleanFields[itCommentKey] : (itCommentKey ? currentItem.fields[itCommentKey] : '');
+            const oldItComment = itCommentKey ? currentItem.fields[itCommentKey] : '';
+            
+            const newUserComment = (userCommentKey && cleanFields[userCommentKey] !== undefined) ? cleanFields[userCommentKey] : (userCommentKey ? currentItem.fields[userCommentKey] : '');
+            const oldUserComment = userCommentKey ? currentItem.fields[userCommentKey] : '';
+            
+            const newStatus = (statusKey && cleanFields[statusKey] !== undefined) ? cleanFields[statusKey] : '';
             const oldStatus = statusKey ? currentItem.fields[statusKey] : '';
             
             let statusChanged = newStatus && newStatus !== oldStatus;
-            let commentChanged = newComment && newComment.trim() !== '' && newComment !== oldComment;
+            let itCommentChanged = newItComment && newItComment.trim() !== '' && newItComment !== oldItComment;
+            let userCommentChanged = newUserComment && newUserComment.trim() !== '' && newUserComment !== oldUserComment;
 
-            if (statusChanged || commentChanged) {
+            if (statusChanged || itCommentChanged || userCommentChanged) {
                 const targetEmail = currentItem.createdBy?.user?.email || currentItem.createdBy?.user?.userPrincipalName;
                 
                 if (targetEmail) {
                     const ticketNum = currentItem.fields.TicketNumber || currentItem.fields.Title || itemId;
                     
                     const displayStatus = newStatus || currentItem.fields.Status || 'Updated';
-                    const displayComment = (newComment !== undefined && newComment !== '') ? newComment : (commentKey ? currentItem.fields[commentKey] : '');
                     
                     let bodyContent = `<p>Please be advised that your IT Support Ticket: <strong>${ticketNum}</strong> has been updated to: <strong>${displayStatus}</strong></p>`;
                     
-                    if (displayComment && displayComment.trim() !== '') {
-                        bodyContent += `<p><strong>Comments:</strong><br/>${displayComment.replace(/\n/g, '<br/>')}</p>`;
+                    if (newItComment && newItComment.trim() !== '') {
+                        bodyContent += `<p><strong>IT Comments:</strong><br/>${newItComment.replace(/\n/g, '<br/>')}</p>`;
+                    }
+                    if (newUserComment && newUserComment.trim() !== '') {
+                        bodyContent += `<p><strong>User Comments:</strong><br/>${newUserComment.replace(/\n/g, '<br/>')}</p>`;
                     }
 
                     const appUrl = request.headers.get('origin') || 'https://unified-manager.eqncs.com';
