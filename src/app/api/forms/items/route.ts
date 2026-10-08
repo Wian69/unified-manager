@@ -89,7 +89,10 @@ export async function PATCH(request: Request) {
 
             if (statusChanged || commentChanged) {
                 const isUserReply = body.isUserReply === true;
-                const userEmail = currentItem.createdBy?.user?.email || currentItem.createdBy?.user?.userPrincipalName;
+                let userEmail = currentItem.fields.Title;
+                if (!userEmail || !userEmail.includes('@')) {
+                    userEmail = currentItem.createdBy?.user?.email || currentItem.createdBy?.user?.userPrincipalName;
+                }
                 const targetEmail = isUserReply ? 'itsupport@eqncs.com' : userEmail;
                 
                 if (targetEmail) {
