@@ -199,6 +199,23 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
         }
     };
 
+    const handleInlineFieldChange = async (item: Item, fieldName: string, newValue: string) => {
+        // Optimistic update
+        setItems(prev => prev.map(i => i.id === item.id ? { ...i, fields: { ...i.fields, [fieldName]: newValue } } : i));
+        
+        try {
+            const url = `/api/forms/items?listId=${listId}&itemId=${item.id}`;
+            const res = await fetch(url, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fields: { [fieldName]: newValue } })
+            });
+            if (!res.ok) throw new Error(`Failed to update ${fieldName}`);
+        } catch (err) {
+            console.error(`Inline ${fieldName} update failed:`, err);
+        }
+    };
+
     return (
         <div className="p-8 space-y-8 min-h-screen relative overflow-hidden">
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -271,6 +288,19 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
                                                         <option key={choice} value={choice}>{choice}</option>
                                                     ))}
                                                 </select>
+                                            ) : col.name === 'Comments' ? (
+                                                <input 
+                                                    type="text" 
+                                                    defaultValue={stripHtml(String(item.fields[col.name] || ''))}
+                                                    onBlur={(e) => {
+                                                        const newVal = e.target.value;
+                                                        if (newVal !== stripHtml(String(item.fields[col.name] || ''))) {
+                                                            handleInlineFieldChange(item, col.name, newVal);
+                                                        }
+                                                    }}
+                                                    className="bg-transparent border-b border-transparent hover:border-slate-700 focus:border-blue-500 focus:bg-slate-900 rounded px-2 py-1.5 outline-none w-full transition-all text-slate-300 placeholder-slate-600 min-w-[200px]"
+                                                    placeholder="Add a comment..."
+                                                />
                                             ) : (
                                                 <span className={
                                                     col.name.toLowerCase().includes('issue') || col.name.toLowerCase().includes('description') || col.name.toLowerCase().includes('comment') 
