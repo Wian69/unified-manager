@@ -113,7 +113,16 @@ export async function PATCH(request: Request) {
                             blocks = normalizedComment.split(/(?=\[\d{1,4}[-/]\d{1,2}[-/]\d{1,4})/);
                         }
                         
-                        const boldedBlocks = blocks.slice(-2).map(block => {
+                        let latestIt = null;
+                        let latestUser = null;
+                        for (let i = blocks.length - 1; i >= 0; i--) {
+                            if (!latestIt && blocks[i].includes('IT Support:')) latestIt = blocks[i];
+                            if (!latestUser && blocks[i].includes('User Reply:')) latestUser = blocks[i];
+                        }
+                        
+                        const displayBlocks = blocks.filter(b => b === latestIt || b === latestUser);
+
+                        const boldedBlocks = displayBlocks.map(block => {
                             let lines = block.split('\n');
                             if (lines.length > 0 && (lines[0].includes('IT Support:') || lines[0].includes('User Reply:'))) {
                                 lines[0] = `<strong>${lines[0]}</strong>`;
