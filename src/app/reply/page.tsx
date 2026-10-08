@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Loader2, Send, CheckCircle2 } from 'lucide-react';
 
-export default function TicketReplyPage() {
+function TicketReplyForm() {
     const searchParams = useSearchParams();
     const listId = searchParams.get('listId');
     const itemId = searchParams.get('itemId');
@@ -25,12 +25,10 @@ export default function TicketReplyPage() {
 
         const fetchTicket = async () => {
             try {
-                // Fetch the specific item
                 const res = await fetch(`/api/forms/items?listId=${listId}&itemId=${itemId}`);
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || 'Failed to fetch ticket');
                 
-                // If the API returns a list, find the item
                 if (data.items) {
                     const item = data.items.find((i: any) => i.id === itemId);
                     setTicket(item || null);
@@ -55,9 +53,6 @@ export default function TicketReplyPage() {
         setError('');
 
         try {
-            // Find the exact name of the User comments column
-            // We assume it contains 'User' and 'Comment'
-            // If not found, fallback to 'UserComments'
             let userCommentsField = 'UserComments';
             if (ticket.fields) {
                 const keys = Object.keys(ticket.fields);
@@ -68,7 +63,6 @@ export default function TicketReplyPage() {
             const existingComments = ticket.fields?.[userCommentsField] || '';
             const timestamp = new Date().toLocaleString();
             
-            // Format professional comment
             const newCommentHtml = `<div><strong>[${timestamp}] User Reply:</strong><br/>${comment.replace(/\n/g, '<br/>')}</div><br/>`;
             const combinedComments = newCommentHtml + (existingComments ? existingComments : '');
 
@@ -181,5 +175,17 @@ export default function TicketReplyPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function TicketReplyPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
+                <Loader2 className="animate-spin text-blue-500" size={48} />
+            </div>
+        }>
+            <TicketReplyForm />
+        </Suspense>
     );
 }
