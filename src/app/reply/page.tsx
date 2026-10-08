@@ -61,9 +61,10 @@ function TicketReplyForm() {
             }
 
             const existingComments = ticket.fields?.[mainCommentsField] || '';
-            const timestamp = new Date().toLocaleString();
+            const d = new Date();
+            const timestamp = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
             
-            const newCommentText = `[${timestamp}] User Reply:\n${comment}`;
+            const newCommentText = `${timestamp} User Reply:\n${comment}`;
             const combinedComments = existingComments ? `${existingComments}\n\n${newCommentText}` : newCommentText;
 
             const res = await fetch(`/api/forms/items?listId=${listId}&itemId=${itemId}`, {

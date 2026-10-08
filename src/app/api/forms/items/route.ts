@@ -113,8 +113,14 @@ export async function PATCH(request: Request) {
                             blocks = normalizedComment.split(/(?=\[\d{1,4}[-/]\d{1,2}[-/]\d{1,4})/);
                         }
                         
-                        const lastTwoBlocks = blocks.slice(-2).join('\n\n');
-                        bodyContent += `<p><strong>Comments:</strong><br/>${lastTwoBlocks.replace(/\n/g, '<br/>')}</p>`;
+                        const boldedBlocks = blocks.slice(-2).map(block => {
+                            let lines = block.split('\n');
+                            if (lines.length > 0 && (lines[0].includes('IT Support:') || lines[0].includes('User Reply:'))) {
+                                lines[0] = `<strong>${lines[0]}</strong>`;
+                            }
+                            return lines.join('<br/>');
+                        }).join('<br/><br/>');
+                        bodyContent += `<p><strong>Comments:</strong><br/>${boldedBlocks}</p>`;
                     }
 
                     if (displayStatus !== 'Complete' && !isUserReply) {

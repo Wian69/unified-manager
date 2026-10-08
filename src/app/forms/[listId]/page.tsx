@@ -193,8 +193,9 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
         }
         
         const existingComments = item.fields['Comments'] || '';
-        const timestamp = new Date().toLocaleString();
-        const newCommentText = `[${timestamp}] IT Support:\n${comment}`;
+        const d = new Date();
+        const timestamp = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        const newCommentText = `${timestamp} IT Support:\n${comment}`;
         customCommentHtml = existingComments ? `${existingComments}\n\n${newCommentText}` : newCommentText;
         
         // Optimistic update
@@ -320,8 +321,9 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
                                                             const comment = window.prompt("Enter your IT Support comment to add to the chat history:");
                                                             if (comment && comment.trim() !== '') {
                                                                 const existingComments = item.fields[col.name] || '';
-                                                                const timestamp = new Date().toLocaleString();
-                                                                const newCommentText = `[${timestamp}] IT Support:\n${comment}`;
+                                                                const d = new Date();
+                                                                const timestamp = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+                                                                const newCommentText = `${timestamp} IT Support:\n${comment}`;
                                                                 const combined = existingComments ? `${existingComments}\n\n${newCommentText}` : newCommentText;
                                                                 handleInlineFieldChange(item, col.name, combined);
                                                             }
