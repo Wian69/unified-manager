@@ -82,14 +82,21 @@ export async function PATCH(request: Request) {
             let commentChanged = newComment && newComment.trim() !== '' && newComment !== oldComment;
 
             if (statusChanged || commentChanged) {
-                const targetEmail = currentItem.createdBy?.user?.email || currentItem.createdBy?.user?.userPrincipalName;
+                const isUserReply = body.isUserReply === true;
+                const userEmail = currentItem.createdBy?.user?.email || currentItem.createdBy?.user?.userPrincipalName;
+                const targetEmail = isUserReply ? 'itsupport@eqncs.com' : userEmail;
                 
                 if (targetEmail) {
                     const ticketNum = currentItem.fields.TicketNumber || currentItem.fields.Title || itemId;
                     
                     const displayStatus = newStatus || currentItem.fields.Status || 'Updated';
                     
-                    let bodyContent = `<p>Please be advised that your IT Support Ticket: <strong>${ticketNum}</strong> has been updated to: <strong>${displayStatus}</strong></p>`;
+                    let bodyContent = '';
+                    if (isUserReply) {
+                        bodyContent = `<p>Please be advised that the user has added a comment to IT Support Ticket: <strong>${ticketNum}</strong></p>`;
+                    } else {
+                        bodyContent = `<p>Please be advised that your IT Support Ticket: <strong>${ticketNum}</strong> has been updated to: <strong>${displayStatus}</strong></p>`;
+                    }
                     
                     if (newComment && newComment.trim() !== '') {
                         // Strip any lingering HTML from old comments
@@ -110,7 +117,7 @@ export async function PATCH(request: Request) {
                         bodyContent += `<p><strong>Comments:</strong><br/>${lastTwoBlocks.replace(/\n/g, '<br/>')}</p>`;
                     }
 
-                    if (displayStatus !== 'Complete') {
+                    if (displayStatus !== 'Complete' && !isUserReply) {
                         const appUrl = request.headers.get('origin') || 'https://unified-manager.eqncs.com';
                         const replyUrl = `${appUrl}/reply?listId=${listId}&itemId=${itemId}`;
                         
@@ -124,7 +131,7 @@ export async function PATCH(request: Request) {
 
                     const message = {
                         message: {
-                            subject: `Update on your IT Request: ${ticketNum}`,
+                            subject: isUserReply ? `User Reply on IT Request: ${ticketNum}` : `Update on your IT Request: ${ticketNum}`,
                             body: {
                                 contentType: "HTML",
                                 content: `
@@ -141,7 +148,7 @@ strong { color: #0d3c61; }
 </style>
 <div class="email-container">
 <h2>IT Support Ticket Update</h2>
-<p><strong>Good Day,</strong></p>
+<p><strong>${isUserReply ? 'Good Day IT Support Team,' : 'Good Day,'}</strong></p>
 ${bodyContent}
 <p><strong>Equinox Group IT Support Team</strong></p>
 <div class="logo">

@@ -72,7 +72,8 @@ function TicketReplyForm() {
                 body: JSON.stringify({ 
                     fields: { 
                         [mainCommentsField]: combinedComments 
-                    } 
+                    },
+                    isUserReply: true
                 })
             });
 
