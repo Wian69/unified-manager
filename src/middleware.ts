@@ -6,9 +6,11 @@ export function middleware(req: NextRequest) {
     
     // Allow public routes
     if (
+        url.pathname.startsWith("/login") ||
         url.pathname.startsWith("/support") ||
         url.pathname.startsWith("/reply") ||
         url.pathname.startsWith("/sharepoint/agree") ||
+        url.pathname.startsWith("/api/auth") ||
         url.pathname.startsWith("/api/support") ||
         url.pathname.startsWith("/api/reply") ||
         url.pathname.startsWith("/_next") ||
@@ -17,26 +19,17 @@ export function middleware(req: NextRequest) {
         return NextResponse.next();
     }
 
-    const basicAuth = req.headers.get("authorization");
-    
-    if (basicAuth) {
-        const authValue = basicAuth.split(" ")[1];
-        const [user, pwd] = atob(authValue).split(":");
+    const token = req.cookies.get("eqn-admin-auth");
+    const validToken = process.env.ADMIN_PASSWORD || "Admin@1649";
 
-        const validUser = "adm_wian@eqncs.com";
-        const validPassword = process.env.ADMIN_PASSWORD || "Admin@1649";
-
-        if (user === validUser && pwd === validPassword) {
-            return NextResponse.next();
-        }
+    if (token && token.value === validToken) {
+        return NextResponse.next();
     }
 
-    url.pathname = "/api/auth";
-
-    return new NextResponse("Auth required", {
-        status: 401,
-        headers: {
-            "WWW-Authenticate": 'Basic realm="Secure Area"'
-        }
-    });
+    const loginUrl = new URL("/login", req.url);
+    return NextResponse.redirect(loginUrl);
 }
+
+export const config = {
+    matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+};
