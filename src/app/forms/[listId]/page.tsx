@@ -183,16 +183,15 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
         if (!statusCol) return;
         
         let customComment = undefined;
-        if (newStatus === 'Incomplete' || newStatus === 'Work in Progress') {
-            const comment = window.prompt(`You are updating the status to "${newStatus}". Please enter a required comment for the user:`);
-            if (comment === null || comment.trim() === '') {
-                alert("A comment is required for this status change.");
-                // Trigger a re-render to reset the select box to the old value
-                setItems(prev => [...prev]);
-                return;
-            }
-            customComment = comment;
+        // Require comment for all status changes
+        const comment = window.prompt(`You are updating the status to "${newStatus}". Please enter a required comment for the user:`);
+        if (comment === null || comment.trim() === '') {
+            alert("A comment is required for this status change.");
+            // Trigger a re-render to reset the select box to the old value
+            setItems(prev => [...prev]);
+            return;
         }
+        customComment = comment;
         
         // Optimistic update
         setItems(prev => prev.map(i => i.id === item.id ? { 
