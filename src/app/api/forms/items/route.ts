@@ -69,24 +69,19 @@ export async function PATCH(request: Request) {
             .update(cleanFields);
 
         if (currentItem) {
-            const itCommentKey = Object.keys(currentItem.fields).find(k => k.toLowerCase().includes('comment') && !k.toLowerCase().includes('user'));
-            const userCommentKey = Object.keys(currentItem.fields).find(k => k.toLowerCase().includes('comment') && k.toLowerCase().includes('user'));
+            const commentKey = Object.keys(currentItem.fields).find(k => k.toLowerCase().includes('comment') && !k.toLowerCase().includes('user'));
             const statusKey = Object.keys(currentItem.fields).find(k => k.toLowerCase().includes('status'));
             
-            const newItComment = (itCommentKey && cleanFields[itCommentKey] !== undefined) ? cleanFields[itCommentKey] : (itCommentKey ? currentItem.fields[itCommentKey] : '');
-            const oldItComment = itCommentKey ? currentItem.fields[itCommentKey] : '';
-            
-            const newUserComment = (userCommentKey && cleanFields[userCommentKey] !== undefined) ? cleanFields[userCommentKey] : (userCommentKey ? currentItem.fields[userCommentKey] : '');
-            const oldUserComment = userCommentKey ? currentItem.fields[userCommentKey] : '';
+            const newComment = (commentKey && cleanFields[commentKey] !== undefined) ? cleanFields[commentKey] : (commentKey ? currentItem.fields[commentKey] : '');
+            const oldComment = commentKey ? currentItem.fields[commentKey] : '';
             
             const newStatus = (statusKey && cleanFields[statusKey] !== undefined) ? cleanFields[statusKey] : '';
             const oldStatus = statusKey ? currentItem.fields[statusKey] : '';
             
             let statusChanged = newStatus && newStatus !== oldStatus;
-            let itCommentChanged = newItComment && newItComment.trim() !== '' && newItComment !== oldItComment;
-            let userCommentChanged = newUserComment && newUserComment.trim() !== '' && newUserComment !== oldUserComment;
+            let commentChanged = newComment && newComment.trim() !== '' && newComment !== oldComment;
 
-            if (statusChanged || itCommentChanged || userCommentChanged) {
+            if (statusChanged || commentChanged) {
                 const targetEmail = currentItem.createdBy?.user?.email || currentItem.createdBy?.user?.userPrincipalName;
                 
                 if (targetEmail) {
@@ -96,11 +91,8 @@ export async function PATCH(request: Request) {
                     
                     let bodyContent = `<p>Please be advised that your IT Support Ticket: <strong>${ticketNum}</strong> has been updated to: <strong>${displayStatus}</strong></p>`;
                     
-                    if (newItComment && newItComment.trim() !== '') {
-                        bodyContent += `<p><strong>IT Comments:</strong><br/>${newItComment.replace(/\n/g, '<br/>')}</p>`;
-                    }
-                    if (newUserComment && newUserComment.trim() !== '') {
-                        bodyContent += `<p><strong>User Comments:</strong><br/>${newUserComment.replace(/\n/g, '<br/>')}</p>`;
+                    if (newComment && newComment.trim() !== '') {
+                        bodyContent += `<p><strong>Chat History:</strong><br/>${newComment.replace(/\n/g, '<br/>')}</p>`;
                     }
 
                     if (displayStatus !== 'Complete') {

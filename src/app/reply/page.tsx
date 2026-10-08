@@ -53,14 +53,14 @@ function TicketReplyForm() {
         setError('');
 
         try {
-            let userCommentsField = 'UserComments';
+            let mainCommentsField = 'Comments';
             if (ticket.fields) {
                 const keys = Object.keys(ticket.fields);
-                const match = keys.find(k => k.toLowerCase().includes('user') && k.toLowerCase().includes('comment'));
-                if (match) userCommentsField = match;
+                const match = keys.find(k => k.toLowerCase() === 'comments');
+                if (match) mainCommentsField = match;
             }
 
-            const existingComments = ticket.fields?.[userCommentsField] || '';
+            const existingComments = ticket.fields?.[mainCommentsField] || '';
             const timestamp = new Date().toLocaleString();
             
             const newCommentHtml = `<div><strong>[${timestamp}] User Reply:</strong><br/>${comment.replace(/\n/g, '<br/>')}</div><br/>`;
@@ -71,7 +71,7 @@ function TicketReplyForm() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     fields: { 
-                        [userCommentsField]: combinedComments 
+                        [mainCommentsField]: combinedComments 
                     } 
                 })
             });

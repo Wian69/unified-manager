@@ -182,7 +182,7 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
     const handleInlineStatusChange = async (item: Item, newStatus: string) => {
         if (!statusCol) return;
         
-        let customComment = undefined;
+        let customCommentHtml = undefined;
         // Require comment for all status changes
         const comment = window.prompt(`You are updating the status to "${newStatus}". Please enter a required comment for the user:`);
         if (comment === null || comment.trim() === '') {
@@ -191,7 +191,10 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
             setItems(prev => [...prev]);
             return;
         }
-        customComment = comment;
+        
+        const existingComments = item.fields['Comments'] || '';
+        const timestamp = new Date().toLocaleString();
+        customCommentHtml = `<div><strong>[${timestamp}] IT Support:</strong><br/>${comment.replace(/\n/g, '<br/>')}</div><br/>` + existingComments;
         
         // Optimistic update
         setItems(prev => prev.map(i => i.id === item.id ? { 
@@ -199,14 +202,14 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
             fields: { 
                 ...i.fields, 
                 [statusCol.name]: newStatus,
-                ...(customComment !== undefined ? { Comments: customComment } : {})
+                ...(customCommentHtml !== undefined ? { Comments: customCommentHtml } : {})
             } 
         } : i));
         
         try {
             const url = `/api/forms/items?listId=${listId}&itemId=${item.id}`;
             const payload: any = { [statusCol.name]: newStatus };
-            if (customComment !== undefined) payload.Comments = customComment;
+            if (customCommentHtml !== undefined) payload.Comments = customCommentHtml;
             
             const res = await fetch(url, {
                 method: 'PATCH',
@@ -309,18 +312,23 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
                                                     ))}
                                                 </select>
                                             ) : col.name === 'Comments' ? (
-                                                <input 
-                                                    type="text" 
-                                                    defaultValue={stripHtml(String(item.fields[col.name] || ''))}
-                                                    onBlur={(e) => {
-                                                        const newVal = e.target.value;
-                                                        if (newVal !== stripHtml(String(item.fields[col.name] || ''))) {
-                                                            handleInlineFieldChange(item, col.name, newVal);
-                                                        }
-                                                    }}
-                                                    className="bg-transparent border-b border-transparent hover:border-slate-700 focus:border-blue-500 focus:bg-slate-900 rounded px-2 py-1.5 outline-none w-full transition-all text-slate-300 placeholder-slate-600 min-w-[200px]"
-                                                    placeholder="Add a comment..."
-                                                />
+                                                <div className="flex flex-col gap-2 min-w-[250px]">
+                                                    <div className="max-h-24 overflow-y-auto text-xs text-slate-400 bg-slate-900/50 p-2 rounded border border-slate-800" dangerouslySetInnerHTML={{ __html: String(item.fields[col.name] || '') }} />
+                                                    <button
+                                                        onClick={() => {
+                                                            const comment = window.prompt("Enter your IT Support comment to add to the chat history:");
+                                                            if (comment && comment.trim() !== '') {
+                                                                const existingComments = item.fields[col.name] || '';
+                                                                const timestamp = new Date().toLocaleString();
+                                                                const newCommentHtml = `<div><strong>[${timestamp}] IT Support:</strong><br/>${comment.replace(/\n/g, '<br/>')}</div><br/>`;
+                                                                handleInlineFieldChange(item, col.name, newCommentHtml + existingComments);
+                                                            }
+                                                        }}
+                                                        className="text-[10px] font-bold uppercase tracking-widest bg-blue-900/30 text-blue-400 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded transition-colors self-start"
+                                                    >
+                                                        + Add Reply
+                                                    </button>
+                                                </div>
                                             ) : (
                                                 <span className={
                                                     col.name.toLowerCase().includes('issue') || col.name.toLowerCase().includes('description') || col.name.toLowerCase().includes('comment') 
