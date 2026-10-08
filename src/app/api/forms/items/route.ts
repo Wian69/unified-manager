@@ -66,25 +66,23 @@ export async function PATCH(request: Request) {
         }
 
         if (currentItem && body.appendComment) {
-            const commentKey = Object.keys(currentItem.fields).find(k => k.toLowerCase().includes('comment') && !k.toLowerCase().includes('user'));
-            if (commentKey) {
-                const existing = currentItem.fields[commentKey] || '';
-                cleanFields[commentKey] = existing ? `${existing}\n\n${body.appendComment}` : body.appendComment;
-            }
+            const commentKey = Object.keys(currentItem.fields).find(k => k.toLowerCase().includes('comment') && !k.toLowerCase().includes('user')) || 'Comments';
+            const existing = currentItem.fields[commentKey] || '';
+            cleanFields[commentKey] = existing ? `${existing}\n\n${body.appendComment}` : body.appendComment;
         }
 
         const response = await client.api(`/sites/${SITE_ID}/lists/${listId}/items/${itemId}/fields`)
             .update(cleanFields);
 
         if (currentItem) {
-            const commentKey = Object.keys(currentItem.fields).find(k => k.toLowerCase().includes('comment') && !k.toLowerCase().includes('user'));
-            const statusKey = Object.keys(currentItem.fields).find(k => k.toLowerCase().includes('status'));
+            const commentKey = Object.keys(currentItem.fields).find(k => k.toLowerCase().includes('comment') && !k.toLowerCase().includes('user')) || 'Comments';
+            const statusKey = Object.keys(currentItem.fields).find(k => k.toLowerCase().includes('status')) || 'Status';
             
-            const newComment = (commentKey && cleanFields[commentKey] !== undefined) ? cleanFields[commentKey] : (commentKey ? currentItem.fields[commentKey] : '');
-            const oldComment = commentKey ? currentItem.fields[commentKey] : '';
+            const newComment = cleanFields[commentKey] !== undefined ? cleanFields[commentKey] : (currentItem.fields[commentKey] || '');
+            const oldComment = currentItem.fields[commentKey] || '';
             
-            const newStatus = (statusKey && cleanFields[statusKey] !== undefined) ? cleanFields[statusKey] : '';
-            const oldStatus = statusKey ? currentItem.fields[statusKey] : '';
+            const newStatus = cleanFields[statusKey] !== undefined ? cleanFields[statusKey] : '';
+            const oldStatus = currentItem.fields[statusKey] || '';
             
             let statusChanged = newStatus && newStatus !== oldStatus;
             let commentChanged = newComment && newComment.trim() !== '' && newComment !== oldComment;
