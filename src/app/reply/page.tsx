@@ -146,32 +146,40 @@ function TicketReplyForm() {
                         </div>
                     )}
                     
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div>
-                            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">
-                                Your Reply
-                            </label>
-                            <textarea
-                                value={comment}
-                                onChange={(e) => setComment(e.target.value)}
-                                placeholder="Type your comment or update here..."
-                                className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm text-white focus:outline-none focus:border-blue-500 transition-all min-h-[150px] resize-y"
-                                required
-                            />
+                    {status === 'Complete' ? (
+                        <div className="text-center p-8 bg-slate-950/50 rounded-2xl border border-slate-800">
+                            <CheckCircle2 className="text-green-500 mx-auto mb-4" size={48} />
+                            <h2 className="text-xl font-bold mb-2">Ticket Resolved</h2>
+                            <p className="text-slate-400 text-sm">This ticket has been marked as complete and is no longer accepting new comments.</p>
                         </div>
-                        
-                        <button
-                            type="submit"
-                            disabled={submitting || !comment.trim()}
-                            className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {submitting ? (
-                                <><Loader2 size={18} className="animate-spin" /> Processing...</>
-                            ) : (
-                                <><Send size={18} /> Submit Comment</>
-                            )}
-                        </button>
-                    </form>
+                    ) : (
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            <div>
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">
+                                    Your Reply
+                                </label>
+                                <textarea
+                                    value={comment}
+                                    onChange={(e) => setComment(e.target.value)}
+                                    placeholder="Type your comment or update here..."
+                                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm text-white focus:outline-none focus:border-blue-500 transition-all min-h-[150px] resize-y"
+                                    required
+                                />
+                            </div>
+                            
+                            <button
+                                type="submit"
+                                disabled={submitting || !comment.trim()}
+                                className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {submitting ? (
+                                    <><Loader2 size={18} className="animate-spin" /> Processing...</>
+                                ) : (
+                                    <><Send size={18} /> Submit Comment</>
+                                )}
+                            </button>
+                        </form>
+                    )}
                 </div>
             </div>
         </div>

@@ -103,15 +103,17 @@ export async function PATCH(request: Request) {
                         bodyContent += `<p><strong>User Comments:</strong><br/>${newUserComment.replace(/\n/g, '<br/>')}</p>`;
                     }
 
-                    const appUrl = request.headers.get('origin') || 'https://unified-manager.eqncs.com';
-                    const replyUrl = `${appUrl}/reply?listId=${listId}&itemId=${itemId}`;
-                    
-                    bodyContent += `
+                    if (displayStatus !== 'Complete') {
+                        const appUrl = request.headers.get('origin') || 'https://unified-manager.eqncs.com';
+                        const replyUrl = `${appUrl}/reply?listId=${listId}&itemId=${itemId}`;
+                        
+                        bodyContent += `
 <div style="text-align: center; margin: 30px 0;">
     <a href="${replyUrl}" style="background-color: #0d3c61; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 14px;">
         Click Here to Reply / Add a Comment
     </a>
 </div>`;
+                    }
 
                     const message = {
                         message: {
