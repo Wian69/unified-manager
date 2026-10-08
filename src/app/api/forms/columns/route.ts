@@ -31,6 +31,29 @@ export async function GET(request: Request) {
                 choices: col.choice?.choices || []
             }));
 
+        // IT Support List Custom Order
+        if (listId === 'ec7c28b2-d2bc-4d99-8550-499f385fd58d') {
+            const order = [
+                'Title',
+                'TicketNumber',
+                'Comments',
+                'Status',
+                'DateTime',
+                'NameSurname',
+                'Region',
+                'Department',
+                'TechnicalIssue'
+            ];
+            columns.sort((a: any, b: any) => {
+                const indexA = order.indexOf(a.name);
+                const indexB = order.indexOf(b.name);
+                if (indexA === -1 && indexB === -1) return 0;
+                if (indexA === -1) return 1;
+                if (indexB === -1) return -1;
+                return indexA - indexB;
+            });
+        }
+
         return NextResponse.json({
             columns
         });

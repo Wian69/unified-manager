@@ -5,7 +5,6 @@ export const dynamic = 'force-dynamic';
 
 const SITE_ID = 'xxeqncs.sharepoint.com,21560bf0-53a4-4067-90c0-a711b01ea3f2,b8018860-10c2-49bf-82a7-811de2ce3c3e';
 
-// SharePoint read-only / system fields that must never be sent in create/update calls
 const READ_ONLY_FIELDS = new Set([
     'id', 'Created', 'Modified', 'AuthorLookupId', 'EditorLookupId',
     '_UIVersionString', 'Attachments', 'Edit', 'LinkTitleNoMenu', 'LinkTitle',
@@ -34,21 +33,14 @@ export async function GET(request: Request) {
 
     try {
         const client = getGraphClient();
-        
-        // Fetch items with fields expanded
         const response = await client.api(`/sites/${SITE_ID}/lists/${listId}/items`)
             .expand('fields')
             .get();
 
-        return NextResponse.json({
-            items: response.value || []
-        });
+        return NextResponse.json({ items: response.value || [] });
     } catch (error: any) {
         console.error('[API] Form Items Error:', error.message);
-        return NextResponse.json(
-            { error: "Failed to fetch form items", details: error.message },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: "Failed to fetch form items", details: error.message }, { status: 500 });
     }
 }
 
@@ -64,32 +56,52 @@ export async function PATCH(request: Request) {
     try {
         const body = await request.json();
         const client = getGraphClient();
-
-        // Strip read-only system fields before sending to Graph API
         const cleanFields = stripReadOnlyFields(body.fields || {});
 
-        // Update the item's fields
+        let currentItem: any = null;
+        try {
+            currentItem = await client.api(`/sites/${SITE_ID}/lists/${listId}/items/${itemId}`).expand('fields').get();
+        } catch(e) {
+            console.error("Failed to fetch current item:", e);
+        }
+
         const response = await client.api(`/sites/${SITE_ID}/lists/${listId}/items/${itemId}/fields`)
             .update(cleanFields);
 
-        // ----------------------------------------------------------------------
-        // IT Support Ticket Email Automation
-        // ----------------------------------------------------------------------
-        if (listId === 'ec7c28b2-d2bc-4d99-8550-499f385fd58d' && cleanFields.Status) {
-            if (cleanFields.Status === 'Work in Progress' || cleanFields.Status === 'Complete') {
-                const recipientEmail = response.Email || response.Title; 
+        if (currentItem) {
+            const commentKey = Object.keys(cleanFields).find(k => k.toLowerCase().includes('comment'));
+            const statusKey = Object.keys(cleanFields).find(k => k.toLowerCase().includes('status'));
+            
+            const newComment = commentKey ? cleanFields[commentKey] : '';
+            const oldComment = commentKey ? currentItem.fields[commentKey] : '';
+            const newStatus = statusKey ? cleanFields[statusKey] : '';
+            const oldStatus = statusKey ? currentItem.fields[statusKey] : '';
+            
+            let statusChanged = newStatus && newStatus !== oldStatus;
+            let commentChanged = newComment && newComment.trim() !== '' && newComment !== oldComment;
+
+            if (statusChanged || commentChanged) {
+                const targetEmail = currentItem.createdBy?.user?.email || currentItem.createdBy?.user?.userPrincipalName;
                 
-                if (recipientEmail && String(recipientEmail).includes('@')) {
-                    // Try to use the actual TicketNumber from the SharePoint list item.
-                    // Fallback to generating it based on the item ID if it doesn't exist.
-                    let ticketNumber = response.TicketNumber;
-                    if (!ticketNumber) {
-                        const d = new Date();
-                        const dateStr = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
-                        ticketNumber = `EQN-${dateStr}-${itemId}`;
-                    }
+                if (targetEmail) {
+                    const ticketNum = currentItem.fields.TicketNumber || currentItem.fields.Title || itemId;
                     
-                    const htmlBody = `
+                    let bodyContent = `<p>Please be advised that your IT Support Ticket: <strong>${ticketNum}</strong> has been updated.</p>`;
+                    
+                    if (statusChanged) {
+                        bodyContent += `<p>Status is now: <strong>${newStatus}</strong></p>`;
+                    }
+                    if (commentChanged) {
+                        bodyContent += `<p>Comments:<br/><br/><strong>${newComment.replace(/\n/g, '<br/>')}</strong></p>`;
+                    }
+
+                    const message = {
+                        message: {
+                            subject: `Update on your IT Request: ${ticketNum}`,
+                            body: {
+                                contentType: "HTML",
+                                content: `
+<title>Equinox Group IT Support Update</title>
 <style>
 body { font-family: Arial, Helvetica, sans-serif; background-color: #f4f6f8; color: #333; margin: 0; padding: 40px; }
 .email-container { max-width: 650px; background-color: #ffffff; border: 1px solid #d9e1ec; border-radius: 8px; padding: 30px 40px; margin: 0 auto; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
@@ -101,9 +113,9 @@ strong { color: #0d3c61; }
 .notice { background-color: #f0f4f8; border-left: 4px solid #0d3c61; padding: 10px 15px; margin-top: 20px; font-size: 13px; color: #555; }
 </style>
 <div class="email-container">
-<h2>IT Support Ticket Status</h2>
+<h2>IT Support Ticket Update</h2>
 <p><strong>Good Day,</strong></p>
-<p>Please be advised that your IT Support Ticket: <strong>${ticketNumber}</strong> has been updated to:<strong> ${cleanFields.Status}</strong></p>
+${bodyContent}
 <p><strong>Equinox Group IT Support Team</strong></p>
 <div class="logo">
 <img src="https://eqncs.com/2025/html/images/logo.png" alt="Company Logo" width="180">
@@ -112,46 +124,35 @@ strong { color: #0d3c61; }
 <strong>Note:</strong> This is an automated message sent from an unattended mailbox. Please do not reply, as responses to this email address are not monitored.
 </div>
 <p class="footer">
-This message is intended solely for the addressee and may contain confidential
-information. If you have received this message in error, please notify us
-immediately and permanently delete it. Do not use, copy, or disclose the
-information contained in this message or in any attachment.
+This message is intended solely for the addressee and may contain confidential information. If you have received this message in error, please notify us immediately and permanently delete it. Do not use, copy, or disclose the information contained in this message or in any attachment.
 </p>
-</div>`;
+</div>
+`
+                            },
+                            toRecipients: [
+                                { emailAddress: { address: targetEmail } }
+                            ]
+                        },
+                        saveToSentItems: "false"
+                    };
+
                     try {
-                        await client.api('/users/noreply-automation@eqncs.com/sendMail').post({
-                            message: {
-                                subject: "Equinox Group IT Support Ticket Status",
-                                body: {
-                                    contentType: "HTML",
-                                    content: htmlBody
-                                },
-                                toRecipients: [
-                                    { emailAddress: { address: recipientEmail } }
-                                ]
-                            }
-                        });
-                        console.log(`[Email] Sent status update to ${recipientEmail}`);
-                    } catch (mailErr: any) {
-                        console.error('[Email] Failed to send status update:', mailErr.message);
+                        await client.api('/users/noreply-automation@eqncs.com/sendMail').post(message);
+                        console.log(`Successfully sent unified update email to ${targetEmail}`);
+                    } catch(emailError) {
+                        console.error("Failed to send IT Support unified email:", emailError);
                     }
                 }
             }
         }
-        // ----------------------------------------------------------------------
 
-        return NextResponse.json({
-            success: true,
-            item: response
-        });
+        return NextResponse.json({ success: true, item: response });
     } catch (error: any) {
         console.error('[API] Form Update Error:', error.message);
-        return NextResponse.json(
-            { error: "Failed to update form item", details: error.message },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: "Failed to update form item", details: error.message }, { status: 500 });
     }
 }
+
 export async function POST(request: Request) {
     const { searchParams } = new URL(request.url);
     const listId = searchParams.get('listId');
@@ -163,25 +164,14 @@ export async function POST(request: Request) {
     try {
         const body = await request.json();
         const client = getGraphClient();
-
-        // Strip read-only system fields before sending to Graph API
         const cleanFields = stripReadOnlyFields(body.fields || {});
 
-        // Create the new item
         const response = await client.api(`/sites/${SITE_ID}/lists/${listId}/items`)
-            .post({
-                fields: cleanFields
-            });
+            .post({ fields: cleanFields });
 
-        return NextResponse.json({
-            success: true,
-            item: response
-        });
+        return NextResponse.json({ success: true, item: response });
     } catch (error: any) {
         console.error('[API] Form Creation Error:', error.message);
-        return NextResponse.json(
-            { error: "Failed to create form item", details: error.message },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: "Failed to create form item", details: error.message }, { status: 500 });
     }
 }
