@@ -65,6 +65,14 @@ export async function PATCH(request: Request) {
             console.error("Failed to fetch current item:", e);
         }
 
+        if (currentItem && body.appendComment) {
+            const commentKey = Object.keys(currentItem.fields).find(k => k.toLowerCase().includes('comment') && !k.toLowerCase().includes('user'));
+            if (commentKey) {
+                const existing = currentItem.fields[commentKey] || '';
+                cleanFields[commentKey] = existing ? `${existing}\n\n${body.appendComment}` : body.appendComment;
+            }
+        }
+
         const response = await client.api(`/sites/${SITE_ID}/lists/${listId}/items/${itemId}/fields`)
             .update(cleanFields);
 
@@ -98,38 +106,14 @@ export async function PATCH(request: Request) {
                         bodyContent = `<p>Please be advised that your IT Support Ticket: <strong>${ticketNum}</strong> has been updated to: <strong>${displayStatus}</strong></p>`;
                     }
                     
-                    if (newComment && newComment.trim() !== '') {
-                        // Strip any lingering HTML from old comments
-                        let normalizedComment = newComment.replace(/<br\s*[\/]?>/gi, '\n')
-                                                          .replace(/<\/p>/gi, '\n')
-                                                          .replace(/<div[^>]*>/gi, '\n')
-                                                          .replace(/<[^>]*>?/gm, '')
-                                                          .trim();
-                        
-                        // Try splitting by double newline (new format)
-                        let blocks = normalizedComment.split(/\n\s*\n/);
-                        if (blocks.length === 1) {
-                            // Fallback: try splitting by timestamp bracket if they are squished
-                            blocks = normalizedComment.split(/(?=\[\d{1,4}[-/]\d{1,2}[-/]\d{1,4})/);
+                    if (body.appendComment && body.appendComment.trim() !== '') {
+                        const block = body.appendComment;
+                        let lines = block.split('\n');
+                        if (lines.length > 0 && (lines[0].includes('IT Support:') || lines[0].includes('User Reply:'))) {
+                            lines[0] = `<strong>${lines[0].replace(/\[|\]/g, '').replace(/,\s*/g, ' ')}</strong>`;
                         }
-                        
-                        let latestIt = null;
-                        let latestUser = null;
-                        for (let i = blocks.length - 1; i >= 0; i--) {
-                            if (!latestIt && blocks[i].includes('IT Support:')) latestIt = blocks[i];
-                            if (!latestUser && blocks[i].includes('User Reply:')) latestUser = blocks[i];
-                        }
-                        
-                        const displayBlocks = blocks.filter((b: string) => b === latestIt || b === latestUser);
-
-                        const boldedBlocks = displayBlocks.map((block: string) => {
-                            let lines = block.split('\n');
-                            if (lines.length > 0 && (lines[0].includes('IT Support:') || lines[0].includes('User Reply:'))) {
-                                lines[0] = `<strong>${lines[0].replace(/\[|\]/g, '').replace(/,\s*/g, ' ')}</strong>`;
-                            }
-                            return lines.join('<br/>');
-                        }).join('<br/><br/>');
-                        bodyContent += `<p><strong>Comments:</strong><br/>${boldedBlocks}</p>`;
+                        const formattedBlock = lines.join('<br/>');
+                        bodyContent += `<p><strong>Comment:</strong><br/>${formattedBlock}</p>`;
                     }
 
                     if (displayStatus !== 'Complete' && !isUserReply) {

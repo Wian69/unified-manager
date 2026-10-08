@@ -211,12 +211,16 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
         try {
             const url = `/api/forms/items?listId=${listId}&itemId=${item.id}`;
             const payload: any = { [statusCol.name]: newStatus };
-            if (customCommentHtml !== undefined) payload.Comments = customCommentHtml;
+            
+            const bodyPayload: any = { fields: payload };
+            if (customCommentHtml !== undefined) {
+                bodyPayload.appendComment = newCommentText;
+            }
             
             const res = await fetch(url, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ fields: payload })
+                body: JSON.stringify(bodyPayload)
             });
             if (!res.ok) throw new Error('Failed to update status');
         } catch (err) {
@@ -224,16 +228,17 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
         }
     };
 
-    const handleInlineFieldChange = async (item: Item, fieldName: string, newValue: string) => {
+    const handleInlineFieldChange = async (item: Item, fieldName: string, newValue: string, appendedChunk?: string) => {
         // Optimistic update
         setItems(prev => prev.map(i => i.id === item.id ? { ...i, fields: { ...i.fields, [fieldName]: newValue } } : i));
         
         try {
             const url = `/api/forms/items?listId=${listId}&itemId=${item.id}`;
+            const payload = appendedChunk ? { appendComment: appendedChunk } : { fields: { [fieldName]: newValue } };
             const res = await fetch(url, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ fields: { [fieldName]: newValue } })
+                body: JSON.stringify(payload)
             });
             if (!res.ok) throw new Error(`Failed to update ${fieldName}`);
         } catch (err) {
@@ -325,7 +330,7 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
                                                                 const timestamp = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
                                                                 const newCommentText = `${timestamp} IT Support:\n${comment}`;
                                                                 const combined = existingComments ? `${existingComments}\n\n${newCommentText}` : newCommentText;
-                                                                handleInlineFieldChange(item, col.name, combined);
+                                                                handleInlineFieldChange(item, col.name, combined, newCommentText);
                                                             }
                                                         }}
                                                         className="text-[10px] font-bold uppercase tracking-widest bg-blue-900/30 text-blue-400 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded transition-colors self-start"
