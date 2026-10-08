@@ -87,10 +87,12 @@ export async function PATCH(request: Request) {
                     const ticketNum = currentItem.fields.TicketNumber || currentItem.fields.Title || itemId;
                     
                     const displayStatus = newStatus || currentItem.fields.Status || 'Updated';
+                    const displayComment = (newComment !== undefined && newComment !== '') ? newComment : (commentKey ? currentItem.fields[commentKey] : '');
+                    
                     let bodyContent = `<p>Please be advised that your IT Support Ticket: <strong>${ticketNum}</strong> has been updated to: <strong>${displayStatus}</strong></p>`;
                     
-                    if (commentChanged) {
-                        bodyContent += `<p><strong>Comments:</strong><br/>${newComment.replace(/\n/g, '<br/>')}</p>`;
+                    if (displayComment && displayComment.trim() !== '') {
+                        bodyContent += `<p><strong>Comments:</strong><br/>${displayComment.replace(/\n/g, '<br/>')}</p>`;
                     }
 
                     const message = {

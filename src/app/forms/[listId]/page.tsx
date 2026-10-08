@@ -182,20 +182,41 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
     const handleInlineStatusChange = async (item: Item, newStatus: string) => {
         if (!statusCol) return;
         
+        let customComment = undefined;
+        if (newStatus === 'Incomplete' || newStatus === 'Work in Progress') {
+            const comment = window.prompt(`You are updating the status to "${newStatus}". Please enter a required comment for the user:`);
+            if (comment === null || comment.trim() === '') {
+                alert("A comment is required for this status change.");
+                // Trigger a re-render to reset the select box to the old value
+                setItems(prev => [...prev]);
+                return;
+            }
+            customComment = comment;
+        }
+        
         // Optimistic update
-        setItems(prev => prev.map(i => i.id === item.id ? { ...i, fields: { ...i.fields, [statusCol.name]: newStatus } } : i));
+        setItems(prev => prev.map(i => i.id === item.id ? { 
+            ...i, 
+            fields: { 
+                ...i.fields, 
+                [statusCol.name]: newStatus,
+                ...(customComment !== undefined ? { Comments: customComment } : {})
+            } 
+        } : i));
         
         try {
             const url = `/api/forms/items?listId=${listId}&itemId=${item.id}`;
+            const payload: any = { [statusCol.name]: newStatus };
+            if (customComment !== undefined) payload.Comments = customComment;
+            
             const res = await fetch(url, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ fields: { [statusCol.name]: newStatus } })
+                body: JSON.stringify({ fields: payload })
             });
             if (!res.ok) throw new Error('Failed to update status');
         } catch (err) {
             console.error('Inline status update failed:', err);
-            // Revert on failure by refetching or just leaving it for now (ideally we'd store the old state)
         }
     };
 
