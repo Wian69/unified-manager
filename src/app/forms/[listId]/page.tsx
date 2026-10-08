@@ -46,6 +46,7 @@ interface Column {
 interface Item {
     id: string;
     fields: Record<string, any>;
+    createdDateTime?: string;
 }
 
 export default function FormDetailsPage({ params }: { params: Promise<{ listId: string }> }) {
@@ -55,6 +56,7 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [search, setSearch] = useState('');
+    const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
     const [selectedItem, setSelectedItem] = useState<Item | null>(null);
     const [editData, setEditData] = useState<Record<string, any>>({});
     const [saving, setSaving] = useState(false);
@@ -259,6 +261,18 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
                 </div>
 
                 <div className="flex items-center gap-4">
+                    {statusCol && (
+                        <div className="flex bg-slate-900 border border-slate-800 rounded-2xl p-1">
+                            <button 
+                                onClick={() => setViewMode('table')}
+                                className={cn("px-4 py-2 rounded-xl text-xs font-bold transition-colors", viewMode === 'table' ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white")}
+                            >Table</button>
+                            <button 
+                                onClick={() => setViewMode('kanban')}
+                                className={cn("px-4 py-2 rounded-xl text-xs font-bold transition-colors", viewMode === 'kanban' ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white")}
+                            >Kanban</button>
+                        </div>
+                    )}
                     <button 
                         onClick={handleAddNew}
                         className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all shadow-lg shadow-blue-600/20 active:scale-95"
@@ -278,101 +292,182 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
                 </div>
             </header>
 
-            <div className="bg-slate-900/50 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl backdrop-blur-xl">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-slate-950/50 border-b border-slate-800">
-                                {displayColumns.map(col => (
-                                    <th key={col.id} className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-500 truncate max-w-[200px]">
-                                        {col.displayName === 'Title' ? 'Email' : col.displayName}
-                                    </th>
-                                ))}
-                                <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-500 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-800">
-                            {filteredItems.map((item, idx) => (
-                                <motion.tr 
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: idx * 0.05 }}
-                                    key={item.id} 
-                                    className="hover:bg-slate-800/30 transition-colors group"
-                                >
+            {viewMode === 'table' ? (
+                <div className="bg-slate-900/50 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl backdrop-blur-xl">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-slate-950/50 border-b border-slate-800">
                                     {displayColumns.map(col => (
-                                        <td key={col.id} className="p-6 text-sm font-medium text-slate-300">
-                                            {(col.name === 'Status' || col.displayName === 'Status') ? (
+                                        <th key={col.id} className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-500 truncate max-w-[200px]">
+                                            {col.displayName === 'Title' ? 'Email' : col.displayName}
+                                        </th>
+                                    ))}
+                                    <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-500 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-800">
+                                {filteredItems.map((item, idx) => (
+                                    <motion.tr 
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: idx * 0.05 }}
+                                        key={item.id} 
+                                        className="hover:bg-slate-800/30 transition-colors group"
+                                    >
+                                        {displayColumns.map(col => (
+                                            <td key={col.id} className="p-6 text-sm font-medium text-slate-300">
+                                                {(col.name === 'Status' || col.displayName === 'Status') ? (
+                                                    <select
+                                                        value={String(item.fields[col.name] || '')}
+                                                        onChange={(e) => handleInlineStatusChange(item, e.target.value)}
+                                                        className={cn(
+                                                            "bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-bold focus:outline-none focus:border-blue-500 transition-colors cursor-pointer appearance-none",
+                                                            item.fields[col.name] === 'Complete' ? 'text-green-400' :
+                                                            item.fields[col.name] === 'Work in Progress' ? 'text-blue-400' :
+                                                            'text-slate-300'
+                                                        )}
+                                                    >
+                                                        <option value="" disabled>Select Status</option>
+                                                        {statusChoices.map(choice => (
+                                                            <option key={choice} value={choice}>{choice}</option>
+                                                        ))}
+                                                    </select>
+                                                ) : col.name === 'Comments' ? (
+                                                    <div className="flex flex-col gap-2 min-w-[250px]">
+                                                        <div className="max-h-24 overflow-y-auto text-xs text-slate-400 bg-slate-900/50 p-2 rounded border border-slate-800" dangerouslySetInnerHTML={{ __html: stripHtml(String(item.fields[col.name] || '')).replace(/\n/g, '<br/>') }} />
+                                                        <button
+                                                            onClick={() => {
+                                                                const comment = window.prompt("Enter your IT Support comment to add to the chat history:");
+                                                                if (comment && comment.trim() !== '') {
+                                                                    const existingComments = item.fields[col.name] || '';
+                                                                    const d = new Date();
+                                                                    const timestamp = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+                                                                    const newCommentText = `${timestamp} IT Support:\n${comment}`;
+                                                                    const combined = existingComments ? `${existingComments}\n\n${newCommentText}` : newCommentText;
+                                                                    handleInlineFieldChange(item, col.name, combined, newCommentText);
+                                                                }
+                                                            }}
+                                                            className="text-[10px] font-bold uppercase tracking-widest bg-blue-900/30 text-blue-400 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded transition-colors self-start"
+                                                        >
+                                                            + Add Reply
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <span className={
+                                                        col.name.toLowerCase().includes('issue') || col.name.toLowerCase().includes('description') || col.name.toLowerCase().includes('comment') 
+                                                            ? "block min-w-[250px] whitespace-pre-wrap" 
+                                                            : "line-clamp-2 max-w-[200px]"
+                                                    }>
+                                                        {(col.type === 'datetime' || col.name === 'Created') && item.fields[col.name] 
+                                                            ? new Date(item.fields[col.name]).toLocaleDateString() 
+                                                            : stripHtml(String(item.fields[col.name] || 'â€”'))}
+                                                    </span>
+                                                )}
+                                            </td>
+                                        ))}
+                                        <td className="p-6 text-right">
+                                            <button 
+                                                onClick={() => handleEdit(item)}
+                                                className="p-2 bg-blue-600/10 text-blue-500 hover:bg-blue-600 hover:text-white rounded-xl transition-all"
+                                            >
+                                                <Edit3 size={16} />
+                                            </button>
+                                        </td>
+                                    </motion.tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                    {filteredItems.length === 0 && (
+                        <div className="p-20 text-center space-y-4">
+                            <div className="bg-slate-800 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto">
+                                <Search className="text-slate-500" size={20} />
+                            </div>
+                            <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">No records found</p>
+                        </div>
+                    )}
+                </div>
+            ) : (
+                <div className="flex gap-6 overflow-x-auto pb-4 snap-x h-[calc(100vh-250px)] items-start">
+                    {statusChoices.map(status => {
+                        const columnItems = filteredItems.filter(i => {
+                            const itemStatus = i.fields[statusCol!.name];
+                            if (!itemStatus) return status === statusChoices[0];
+                            return itemStatus === status;
+                        });
+
+                        return (
+                            <div key={status} className="flex-shrink-0 w-[350px] bg-slate-900/40 rounded-3xl border border-slate-800 p-4 flex flex-col gap-4 snap-start max-h-full overflow-hidden">
+                                <div className="flex items-center justify-between px-2">
+                                    <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                        {status} 
+                                        <span className="bg-slate-800 text-slate-300 px-2.5 py-0.5 rounded-full text-xs">{columnItems.length}</span>
+                                    </h3>
+                                </div>
+                                <div className="flex flex-col gap-4 overflow-y-auto pr-2 pb-4 kanban-scroll">
+                                    {columnItems.map(item => (
+                                        <div 
+                                            key={item.id} 
+                                            className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl hover:border-blue-500/50 transition-colors group cursor-pointer flex flex-col gap-3" 
+                                            onClick={() => handleEdit(item)}
+                                        >
+                                            <div className="flex justify-between items-start">
+                                                <div className="text-[10px] font-black text-blue-400 bg-blue-900/20 px-2 py-1 rounded tracking-widest uppercase">
+                                                    {item.fields.TicketNumber || `ID: ${item.id}`}
+                                                </div>
+                                                <span className="text-[10px] text-slate-500 font-medium">
+                                                    {new Date(item.fields.Created || item.createdDateTime).toLocaleDateString()}
+                                                </span>
+                                            </div>
+                                            
+                                            <div className="text-sm text-white font-bold leading-snug">
+                                                {item.fields.Title}
+                                            </div>
+                                            
+                                            {(item.fields.NameSurname || item.fields.TechnicalIssue || item.fields.Description) && (
+                                                <div className="text-xs text-slate-400 line-clamp-3">
+                                                    {item.fields.NameSurname ? <div className="font-bold mb-1 text-slate-300">{item.fields.NameSurname}</div> : null}
+                                                    {String(item.fields.TechnicalIssue || item.fields.Description || '').replace(/<[^>]*>?/gm, '')}
+                                                </div>
+                                            )}
+                                            
+                                            {item.fields.Comments && (
+                                                <div className="text-[10px] text-slate-500 line-clamp-2 bg-slate-950 p-2 rounded-lg border border-slate-800/50 italic">
+                                                    {String(item.fields.Comments).replace(/<[^>]*>?/gm, '').split('\n').pop() || String(item.fields.Comments).replace(/<[^>]*>?/gm, '')}
+                                                </div>
+                                            )}
+
+                                            <div className="mt-2 flex justify-end" onClick={e => e.stopPropagation()}>
                                                 <select
-                                                    value={String(item.fields[col.name] || '')}
+                                                    value={String(item.fields[statusCol!.name] || '')}
                                                     onChange={(e) => handleInlineStatusChange(item, e.target.value)}
                                                     className={cn(
-                                                        "bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-bold focus:outline-none focus:border-blue-500 transition-colors cursor-pointer appearance-none",
-                                                        item.fields[col.name] === 'Complete' ? 'text-green-400' :
-                                                        item.fields[col.name] === 'Work in Progress' ? 'text-blue-400' :
+                                                        "bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-[10px] font-bold focus:outline-none focus:border-blue-500 transition-colors cursor-pointer appearance-none text-right",
+                                                        item.fields[statusCol!.name] === 'Complete' ? 'text-green-400' :
+                                                        item.fields[statusCol!.name] === 'Work in Progress' ? 'text-blue-400' :
                                                         'text-slate-300'
                                                     )}
                                                 >
-                                                    <option value="" disabled>Select Status</option>
+                                                    <option value="" disabled>Status</option>
                                                     {statusChoices.map(choice => (
                                                         <option key={choice} value={choice}>{choice}</option>
                                                     ))}
                                                 </select>
-                                            ) : col.name === 'Comments' ? (
-                                                <div className="flex flex-col gap-2 min-w-[250px]">
-                                                    <div className="max-h-24 overflow-y-auto text-xs text-slate-400 bg-slate-900/50 p-2 rounded border border-slate-800" dangerouslySetInnerHTML={{ __html: stripHtml(String(item.fields[col.name] || '')).replace(/\n/g, '<br/>') }} />
-                                                    <button
-                                                        onClick={() => {
-                                                            const comment = window.prompt("Enter your IT Support comment to add to the chat history:");
-                                                            if (comment && comment.trim() !== '') {
-                                                                const existingComments = item.fields[col.name] || '';
-                                                                const d = new Date();
-                                                                const timestamp = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-                                                                const newCommentText = `${timestamp} IT Support:\n${comment}`;
-                                                                const combined = existingComments ? `${existingComments}\n\n${newCommentText}` : newCommentText;
-                                                                handleInlineFieldChange(item, col.name, combined, newCommentText);
-                                                            }
-                                                        }}
-                                                        className="text-[10px] font-bold uppercase tracking-widest bg-blue-900/30 text-blue-400 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded transition-colors self-start"
-                                                    >
-                                                        + Add Reply
-                                                    </button>
-                                                </div>
-                                            ) : (
-                                                <span className={
-                                                    col.name.toLowerCase().includes('issue') || col.name.toLowerCase().includes('description') || col.name.toLowerCase().includes('comment') 
-                                                        ? "block min-w-[250px] whitespace-pre-wrap" 
-                                                        : "line-clamp-2 max-w-[200px]"
-                                                }>
-                                                    {(col.type === 'datetime' || col.name === 'Created') && item.fields[col.name] 
-                                                        ? new Date(item.fields[col.name]).toLocaleDateString() 
-                                                        : stripHtml(String(item.fields[col.name] || '—'))}
-                                                </span>
-                                            )}
-                                        </td>
+                                            </div>
+                                        </div>
                                     ))}
-                                    <td className="p-6 text-right">
-                                        <button 
-                                            onClick={() => handleEdit(item)}
-                                            className="p-2 bg-blue-600/10 text-blue-500 hover:bg-blue-600 hover:text-white rounded-xl transition-all"
-                                        >
-                                            <Edit3 size={16} />
-                                        </button>
-                                    </td>
-                                </motion.tr>
-                            ))}
-                        </tbody>
-                    </table>
+                                    {columnItems.length === 0 && (
+                                        <div className="border-2 border-dashed border-slate-800 rounded-2xl p-8 text-center text-slate-600 text-xs font-medium">
+                                            No items in {status}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
-                {filteredItems.length === 0 && (
-                    <div className="p-20 text-center space-y-4">
-                        <div className="bg-slate-800 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto">
-                            <Search className="text-slate-500" size={20} />
-                        </div>
-                        <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">No records found</p>
-                    </div>
-                )}
-            </div>
+            )}
 
             <AnimatePresence>
                 {selectedItem && (
