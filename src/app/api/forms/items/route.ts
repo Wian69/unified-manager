@@ -164,7 +164,7 @@ This message is intended solely for the addressee and may contain confidential i
                                 { emailAddress: { address: targetEmail } }
                             ]
                         },
-                        saveToSentItems: "false"
+                        saveToSentItems: "true"
                     };
 
                     try {
