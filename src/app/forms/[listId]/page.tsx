@@ -118,7 +118,7 @@ export default function FormDetailsPage({ params }: { params: Promise<{ listId: 
             // Only send editable column fields, strip out any system fields
             const cleanFields: Record<string, any> = {};
             columns.forEach(col => {
-                if (editData[col.name] !== undefined && editData[col.name] !== '') {
+                if (editData[col.name] !== undefined) {
                     cleanFields[col.name] = editData[col.name];
                 }
             });
