@@ -13,6 +13,7 @@ export function middleware(req: NextRequest) {
         url.pathname.startsWith("/api/auth") ||
         url.pathname.startsWith("/api/support") ||
         url.pathname.startsWith("/api/reply") ||
+        url.pathname === "/api/forms/items" ||
         url.pathname.startsWith("/_next") ||
         url.pathname.includes("favicon")
     ) {
